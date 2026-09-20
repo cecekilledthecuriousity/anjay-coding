@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Request Training & Development</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="js/app.js" defer></script>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- ================= FORM VIEW ================= -->
+  <main id="formView">
+
+    <div class="doc-header">
+      <div>
+        <p class="kicker">Employee Development Program</p>
+        <h1 class="voice">Request Training & Development</h1>
+      </div>
+    </div>
+
+    <!-- Stepper Navigation Header -->
+    <nav class="stepper-nav" aria-label="Tahapan formulir">
+      <div class="mobile-stepper-info">
+        <span id="mobileStepText">Langkah 1 dari 4: Profil &amp; Sasaran</span>
+        <span id="mobileProgressPercent" style="color:var(--moss);">25%</span>
+      </div>
+
+      <div class="stepper-progress-bar">
+        <div class="stepper-progress-fill" id="stepperProgressFill"></div>
+      </div>
+
+      <div class="stepper-items">
+        <div class="step-tab active" id="stepTab1" onclick="goToStep(1)">
+          <div class="step-tab-num">1</div>
+          <div class="step-tab-info">
+            <span class="step-tab-label">Langkah 01</span>
+            <span class="step-tab-title">Profil &amp; Sasaran</span>
+          </div>
+        </div>
+        <div class="step-tab" id="stepTab2" onclick="goToStep(2)">
+          <div class="step-tab-num">2</div>
+          <div class="step-tab-info">
+            <span class="step-tab-label">Langkah 02</span>
+            <span class="step-tab-title">Pelaksanaan &amp; Peserta</span>
+          </div>
+        </div>
+        <div class="step-tab" id="stepTab3" onclick="goToStep(3)">
+          <div class="step-tab-num">3</div>
+          <div class="step-tab-info">
+            <span class="step-tab-label">Langkah 03</span>
+            <span class="step-tab-title">Biaya &amp; Evaluasi</span>
+          </div>
+        </div>
+        <div class="step-tab" id="stepTab4" onclick="goToStep(4)">
+          <div class="step-tab-num">4</div>
+          <div class="step-tab-info">
+            <span class="step-tab-label">Langkah 04</span>
+            <span class="step-tab-title">Review &amp; Approval</span>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- ================= STEP 1: PROFIL & SASARAN ================= -->
+    <div class="step-panel active" id="stepPanel1">
+      
+      <!-- Card: Identitas Training -->
+      <section class="form-card">
+        <div class="card-head">
+          <div class="card-icon-wrap">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+          </div>
+          <h2>Identitas Training</h2>
+          <span class="card-sub">Informasi dasar pengajuan</span>
+        </div>
+
+        <div class="field-row cols-2">
+          <div class="field">
+            <label>
+              <span>ID Training <span style="color:var(--danger)">*</span></span>
+              <button type="button" class="btn-text-action" onclick="generateNewTrainingId()" title="Buat nomor ID baru">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+                Buat Baru
+              </button>
+            </label>
+            <input type="text" placeholder="TRN-2026-001" id="trainingId" data-field="ID training" readonly style="font-weight:600;color:var(--moss);background:#FAF9F5;" required>
+          </div>
+          <div class="field">
+            <label>Nama Training <span style="color:var(--danger)">*</span></label>
+            <input type="text" placeholder="Masukkan nama / topik pelatihan..." id="trainingName" data-field="Nama training" required>
+          </div>
+        </div>
+
+        <div class="field-row cols-2">
+          <div class="field">
+            <label>Nama Pengaju <span style="color:var(--danger)">*</span></label>
+            <input type="text" placeholder="Nama lengkap pengaju" id="leaderName" data-field="Nama pengaju" required>
+          </div>
+          <div class="field">
+            <label>Departemen / Divisi <span style="color:var(--danger)">*</span></label>
+            <select id="deptName" data-field="Departemen / divisi" onchange="handleDeptChange(this)" required>
+              <option value="">Pilih departemen</option>
+              <option value="HR">HR</option>
+              <option value="GA">GA</option>
+              <option value="LEGAL">LEGAL</option>
+              <option value="FINANCE">FINANCE</option>
+              <option value="ACCOUNTING">ACCOUNTING</option>
+              <option value="TAX">TAX</option>
+              <option value="MARKETING">MARKETING</option>
+              <option value="SALES OPS">SALES OPS</option>
+              <option value="SALES ENABLEMENT">SALES ENABLEMENT</option>
+              <option value="TELEMARKETING">TELEMARKETING</option>
+              <option value="PEC">PEC</option>
+              <option value="CUSTOMER EXPERIENCE">CUSTOMER EXPERIENCE</option>
+              <option value="QA">QA</option>
+              <option value="WEB DEVELOPER">WEB DEVELOPER</option>
+              <option value="INTEGRATION">INTEGRATION</option>
+              <option value="MOBILE DEVELOPER">MOBILE DEVELOPER</option>
+              <option value="UI/UX DESIGNER">UI/UX DESIGNER</option>
+              <option value="AI">AI</option>
+              <option value="BUSINESS ANALYST">BUSINESS ANALYST</option>
+              <option value="IT INFRASTRUCTURE">IT INFRASTRUCTURE</option>
+              <option value="custom">Lainnya (Ketik manual)...</option>
+            </select>
+            <input type="text" id="customDeptInput" placeholder="Ketik nama divisi..." style="display:none;margin-top:6px;">
+          </div>
+        </div>
+
+        <div class="field-row cols-3">
+          <div class="field">
+            <label>Kategori Training</label>
+            <select id="category" data-field="Kategori training">
+              <option value="">Pilih kategori</option>
+              <option selected>Soft Skill</option>
+              <option>Hard Skill</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Kategori Kebutuhan Training <span class="hint">(Urgensi)</span></label>
+            <select id="urgencyCategory" data-field="Kategori kebutuhan training">
+              <option value="">Pilih kategori kebutuhan</option>
+              <option value="Kesenjangan Kinerja">Kesenjangan Kinerja</option>
+              <option value="Kesenjangan Keterampilan">Kesenjangan Keterampilan</option>
+              <option value="Kesenjangan Pengetahuan">Kesenjangan Pengetahuan</option>
+              <option value="Kebutuhan Pengembangan Perilaku">Kebutuhan Pengembangan Perilaku</option>
+              <option value="Perubahan Proses / Sistem">Perubahan Proses / Sistem</option>
+              <option value="Pengembangan Kepemimpinan">Pengembangan Kepemimpinan</option>
+              <option value="Kepatuhan / Wajib">Kepatuhan / Wajib</option>
+              <option value="Kebutuhan Bisnis / Strategis">Kebutuhan Bisnis / Strategis</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Tanggal Pengajuan</label>
+            <input type="date" id="tglPengajuan" data-field="Tanggal pengajuan">
+          </div>
+        </div>
+      </section>
+
+      <!-- Card: Jenis Training -->
+      <section class="form-card">
+        <div class="card-head">
+          <div class="card-icon-wrap">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+          </div>
+          <h2>Jenis Training</h2>
+          <span class="card-sub">Sumber penyelenggara pelatihan</span>
+        </div>
+
+        <div class="field" style="margin-bottom:16px;">
+          <label>Jenis Training</label>
+          <div class="chip-grid" id="jenisChipGrid">
+            <div class="chip-card" onclick="selectChip('jenis', 'Training Eksternal', this)">
+              <div class="chip-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"></path><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"></path><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"></path><path d="M10 6h4"></path><path d="M10 10h4"></path><path d="M10 14h4"></path><path d="M10 18h4"></path></svg>
+              </div>
+              <span>Training Eksternal</span>
+            </div>
+            <div class="chip-card selected" onclick="selectChip('jenis', 'Training Internal', this)">
+              <div class="chip-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><line x1="9" y1="6" x2="9" y2="6.01"></line><line x1="15" y1="6" x2="15" y2="6.01"></line><line x1="9" y1="10" x2="9" y2="10.01"></line><line x1="15" y1="10" x2="15" y2="10.01"></line><line x1="9" y1="14" x2="9" y2="14.01"></line><line x1="15" y1="14" x2="15" y2="14.01"></line></svg>
+              </div>
+              <span>Training Internal</span>
+            </div>
+            <div class="chip-card" onclick="selectChip('jenis', 'Training Mandiri', this)">
+              <div class="chip-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+              </div>
+              <span>Training Mandiri</span>
+            </div>
+          </div>
+          <input type="hidden" id="jenisTraining" data-field="Jenis training" value="Training Internal">
+        </div>
+
+        <div id="vendorDetailsBlock" style="display:none;margin-top:16px;">
+          <div class="field" style="margin-bottom:8px;">
+            <label>Opsi Vendor (Bandingkan minimal 3 opsi)</label>
+          </div>
+          <div class="tbl-wrap">
+            <table class="dyn">
+              <thead>
+                <tr>
+                  <th style="width:36px">#</th>
+                  <th>Nama Vendor</th>
+                  <th style="width:180px">Kontak / PIC</th>
+                  <th style="width:160px">Estimasi Biaya</th>
+                  <th>Catatan / Link Penawaran</th>
+                  <th style="width:40px"></th>
+                </tr>
+              </thead>
+              <tbody id="vendorBody"></tbody>
+            </table>
+          </div>
+          <div class="table-toolbar">
+            <button type="button" class="btn-table-action" onclick="addVendor()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+              Tambah Opsi Vendor
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Card: Sasaran & Materi -->
+      <section class="form-card">
+        <div class="card-head">
+          <div class="card-icon-wrap">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
+          </div>
+          <h2>Sasaran &amp; Materi</h2>
+          <span class="card-sub">Tujuan dan target kompetensi</span>
+        </div>
+
+        <div class="field" style="margin-bottom:16px;">
+          <label>Target Level Kemahiran Peserta</label>
+          <div class="chip-grid" id="levelChipGrid">
+            <div class="chip-card selected" onclick="selectChip('level', 'Beginner', this)">
+              <div class="chip-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+              </div>
+              <span>Beginner</span>
+            </div>
+            <div class="chip-card" onclick="selectChip('level', 'Intermediate', this)">
+              <div class="chip-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+              </div>
+              <span>Intermediate</span>
+            </div>
+            <div class="chip-card" onclick="selectChip('level', 'Advanced', this)">
+              <div class="chip-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+              </div>
+              <span>Advanced</span>
+            </div>
+          </div>
+          <input type="hidden" id="levelKemahiran" data-field="Target level kemahiran" value="Beginner">
+        </div>
+
+        <div class="field-row cols-2">
+          <div class="field">
+            <label>Training Plan Purpose <span class="hint">(Latar belakang)</span></label>
+            <textarea placeholder="Mengapa training internal ini diadakan?" id="purpose" data-field="Training plan purpose"></textarea>
+          </div>
+          <div class="field">
+            <label>Training Goals <span class="hint">(Hasil spesifik)</span></label>
+            <textarea placeholder="Apa hasil spesifik yang ingin dicapai dari training ini?" id="goals" data-field="Training goals"></textarea>
+          </div>
+        </div>
+
+        <div class="field-row cols-3">
+          <div class="field">
+            <label>Prasyarat Peserta <span class="hint">(Opsional)</span></label>
+            <input type="text" placeholder="cth. Minimal staf level, familiar tools X" id="prereq" data-field="Prasyarat peserta">
+          </div>
+          <div class="field">
+            <label>Sertifikasi / Output</label>
+            <input type="text" placeholder="cth. Sertifikat internal, badge skill" id="certOutput" data-field="Sertifikasi / output">
+          </div>
+          <div class="field">
+            <label>Tautan Silabus / Materi <span class="hint">(URL Drive)</span></label>
+            <input type="url" placeholder="https://drive.google.com/..." id="syllabusUrl" data-field="Link silabus materi">
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- ================= STEP 2: PELAKSANAAN & PESERTA ================= -->
+    <div class="step-panel" id="stepPanel2">
+
+      <!-- Card: Format & Pelaksanaan -->
+      <section class="form-card">
+        <div class="card-head">
+          <div class="card-icon-wrap">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          </div>
+          <h2>Format &amp; Jadwal Pelatihan</h2>
+          <span class="card-sub">Waktu, tempat, dan trainer</span>
+        </div>
+
+        <div class="field" style="margin-bottom:16px;">
+          <label>Metode Pelaksanaan</label>
+          <div class="chip-grid" id="methodChipGrid">
+            <div class="chip-card selected" onclick="selectChip('method', 'Onsite', this)">
+              <div class="chip-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><line x1="9" y1="6" x2="9" y2="6.01"></line><line x1="15" y1="6" x2="15" y2="6.01"></line><line x1="9" y1="10" x2="9" y2="10.01"></line><line x1="15" y1="10" x2="15" y2="10.01"></line><line x1="9" y1="14" x2="9" y2="14.01"></line><line x1="15" y1="14" x2="15" y2="14.01"></line></svg>
+              </div>
+              <span>Onsite</span>
+            </div>
+            <div class="chip-card" onclick="selectChip('method', 'Online', this)">
+              <div class="chip-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+              </div>
+              <span>Online</span>
+            </div>
+            <div class="chip-card" onclick="selectChip('method', 'Hybrid', this)">
+              <div class="chip-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
+              </div>
+              <span>Hybrid</span>
+            </div>
+          </div>
+          <input type="hidden" id="metode" data-field="Metode training" value="Onsite">
+        </div>
+
+        <div class="field-row cols-2" id="onlineDetailsRow" style="display:none;">
+          <div class="field">
+            <label>Platform Online</label>
+            <select id="onlinePlatform" data-field="Platform online">
+              <option>Google Meet</option>
+              <option>Zoom Meeting</option>
+              <option>Microsoft Teams</option>
+              <option>Lainnya</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Tautan Ruang Meeting (URL)</label>
+            <input type="url" placeholder="https://meet.google.com/..." id="meetingUrl" data-field="Link meeting online">
+          </div>
+        </div>
+
+        <div class="field-row cols-3">
+          <div class="field">
+            <label>
+              <span>Tanggal Pelaksanaan</span>
+              <span class="hint" style="color:var(--moss);">Otomatis</span>
+            </label>
+            <input type="text" id="tglPelaksanaan" readonly style="background:#FAF9F5;font-weight:600;color:var(--ink);" placeholder="Otomatis dari sesi">
+          </div>
+          <div class="field">
+            <label>
+              <span>Jam Mulai &amp; Selesai</span>
+              <span class="hint" style="color:var(--moss);">Otomatis</span>
+            </label>
+            <input type="text" id="jamPelaksanaan" readonly style="background:#FAF9F5;font-weight:600;color:var(--ink);" placeholder="Otomatis dari sesi">
+            <input type="hidden" id="jamMulai" value="09:00">
+            <input type="hidden" id="jamSelesai" value="15:00">
+            <input type="hidden" id="jadwal" data-field="Tanggal &amp; jam pelaksanaan">
+          </div>
+          <div class="field">
+            <label>
+              <span>Lokasi / Ruangan</span>
+              <span class="hint" style="color:var(--moss);">Otomatis</span>
+            </label>
+            <input type="text" placeholder="Otomatis dari sesi" id="lokasi" data-field="Lokasi / venue" readonly style="background:#FAF9F5;font-weight:600;color:var(--ink);">
+          </div>
+        </div>
+
+        <div class="field-row cols-3">
+          <div class="field">
+            <label>Trainer / Fasilitator</label>
+            <input type="text" placeholder="Nama trainer pengampu" id="trainer" data-field="Trainer">
+          </div>
+          <div class="field">
+            <label>
+              <span>Total Durasi Belajar</span>
+              <span class="hint" style="color:var(--moss);">Otomatis</span>
+            </label>
+            <input type="text" id="totalDuration" data-field="Total durasi belajar" readonly style="background:#FAF9F5;font-weight:600;color:var(--ink);">
+          </div>
+          <div class="field">
+            <label>
+              <span>Jumlah Peserta</span>
+              <span class="hint" style="color:var(--moss);">Sinkron tabel</span>
+            </label>
+            <input type="number" id="plannedParticipants" data-field="Jumlah partisipan (rencana)" readonly style="background:#FAF9F5;font-weight:600;color:var(--ink);">
+          </div>
+        </div>
+      </section>
+
+      <!-- Card: Modul & Sesi Pelatihan -->
+      <section class="form-card">
+        <div class="card-head">
+          <div class="card-icon-wrap">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+          </div>
+          <h2>Modul &amp; Sesi Pelatihan</h2>
+          <span class="card-sub">Topik dan pembagian waktu</span>
+        </div>
+
+        <div class="tbl-wrap">
+          <table class="dyn" style="min-width:1150px;">
+            <thead>
+              <tr>
+                <th style="width:36px">#</th>
+                <th style="width:130px">Tanggal</th>
+                <th style="width:105px">Mulai</th>
+                <th style="width:105px">Selesai</th>
+                <th style="min-width:160px">Nama Modul</th>
+                <th style="width:130px">Durasi</th>
+                <th style="width:140px">Fasilitator</th>
+                <th style="width:125px">Metode Delivery</th>
+                <th style="width:160px">Lokasi / Platform</th>
+                <th style="min-width:170px">Deskripsi Aktivitas</th>
+                <th style="width:40px"></th>
+              </tr>
+            </thead>
+            <tbody id="moduleBody"></tbody>
+          </table>
+        </div>
+        <div class="table-toolbar">
+          <button type="button" class="btn-table-action" onclick="addModule()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            Tambah Baris Modul
+          </button>
+        </div>
+      </section>
+
+      <!-- Card: Daftar Peserta -->
+      <section class="form-card">
+        <div class="card-head">
+          <div class="card-icon-wrap">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+          </div>
+          <h2>Daftar Peserta Pelatihan</h2>
+          <span class="card-sub" id="participantCount">0 peserta</span>
+        </div>
+
+        <div class="tbl-wrap">
+          <table class="dyn">
+            <thead>
+              <tr>
+                <th style="width:36px">No</th>
+                <th>Nama Karyawan</th>
+                <th style="width:240px">Departemen / Divisi</th>
+                <th style="width:40px"></th>
+              </tr>
+            </thead>
+            <tbody id="participantBody"></tbody>
+          </table>
+        </div>
+
+        <div class="table-toolbar">
+          <button type="button" class="btn-table-action" onclick="addParticipant()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            Tambah Peserta
+          </button>
+          <button type="button" class="btn-table-action" onclick="openModal('modalQuickPasteExcel')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
+            Quick Paste dari Excel
+          </button>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- ================= STEP 3: BIAYA & EVALUASI ================= -->
+    <div class="step-panel" id="stepPanel3">
+
+      <!-- Card: Anggaran & Rincian Biaya -->
+      <section class="form-card">
+        <div class="card-head">
+          <div class="card-icon-wrap">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
+          </div>
+          <h2>Anggaran &amp; Estimasi Biaya</h2>
+          <span class="card-sub">Rincian pengeluaran training</span>
+        </div>
+
+        <div class="field-row cols-4" style="margin-bottom:18px;">
+          <div class="field">
+            <label>Fee Trainer / Narasumber</label>
+            <input type="text" inputmode="numeric" placeholder="Rp 0" id="budgetFee" data-field="Fee trainer" oninput="formatRupiah(this); calcBudgetBreakdown();">
+          </div>
+          <div class="field">
+            <label>Konsumsi &amp; Catering</label>
+            <input type="text" inputmode="numeric" placeholder="Rp 0" id="budgetKonsumsi" data-field="Konsumsi & catering" oninput="formatRupiah(this); calcBudgetBreakdown();">
+          </div>
+          <div class="field">
+            <label>Materi / Sertifikat</label>
+            <input type="text" inputmode="numeric" placeholder="Rp 0" id="budgetMateri" data-field="Materi & sertifikat" oninput="formatRupiah(this); calcBudgetBreakdown();">
+          </div>
+          <div class="field">
+            <label>Venue / Sewa Alat</label>
+            <input type="text" inputmode="numeric" placeholder="Rp 0" id="budgetVenue" data-field="Venue & alat" oninput="formatRupiah(this); calcBudgetBreakdown();">
+          </div>
+        </div>
+
+        <div class="budget-grid">
+          <div class="budget-card">
+            <label>Total Estimasi Biaya</label>
+            <input type="text" inputmode="numeric" placeholder="Rp 0" id="estBudget" data-field="Estimasi biaya" oninput="formatRupiah(this)">
+            <p class="budget-variance">Akumulasi seluruh sub-komponen biaya</p>
+          </div>
+          <div class="budget-card">
+            <label>Budget Disetujui</label>
+            <input type="text" inputmode="numeric" placeholder="Rp 0" id="apprBudget" data-field="Budget disetujui" oninput="formatRupiah(this)">
+            <p class="budget-variance">Plafon anggaran dari manajemen</p>
+          </div>
+          <div class="budget-card">
+            <label>Actual Spend</label>
+            <input type="text" inputmode="numeric" placeholder="Rp 0" id="actBudget" data-field="Actual spend" oninput="formatRupiah(this)">
+            <p class="budget-variance" id="varianceText" style="font-weight:600;">Selisih akan muncul di sini</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Card: Evaluasi & Follow-up -->
+      <section class="form-card">
+        <div class="card-head">
+          <div class="card-icon-wrap">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+          </div>
+          <h2>Metode Evaluasi &amp; Follow-up</h2>
+          <span class="card-sub">Tolok ukur efektivitas pelatihan</span>
+        </div>
+
+        <div class="field-row cols-2">
+          <div class="field">
+            <label>Hasil yang Diharapkan</label>
+            <span style="font-size:12px;color:var(--ink-soft);margin-bottom:6px;display:block;">Apa yang diharapkan berubah setelah mengikuti training?</span>
+            <textarea placeholder="Apa yang diharapkan berubah setelah mengikuti training?" id="hasilDiharapkan" data-field="Hasil yang diharapkan" rows="3"></textarea>
+          </div>
+          <div class="field">
+            <label>Penerapan di Pekerjaan</label>
+            <span style="font-size:12px;color:var(--ink-soft);margin-bottom:6px;display:block;">Bagaimana kompetensi tersebut akan diterapkan dalam pekerjaan?</span>
+            <textarea placeholder="Bagaimana kompetensi tersebut akan diterapkan dalam pekerjaan?" id="penerapanPekerjaan" data-field="Penerapan di pekerjaan" rows="3"></textarea>
+          </div>
+        </div>
+
+        <div class="field" style="margin-top:14px;">
+          <label>Indikator Keberhasilan</label>
+          <span style="font-size:12px;color:var(--ink-soft);margin-bottom:6px;display:block;">Apa yang menunjukkan bahwa training ini berhasil?</span>
+          <textarea placeholder="Apa yang menunjukkan bahwa training ini berhasil?" id="indikatorKeberhasilan" data-field="Indikator keberhasilan" rows="3"></textarea>
+        </div>
+
+        <div class="field-row cols-2" style="margin-top:14px;">
+          <div class="field">
+            <label>Waktu Evaluasi</label>
+            <select id="waktuEvaluasi" data-field="Waktu evaluasi">
+              <option selected>Setelah training</option>
+              <option>30 hari</option>
+              <option>60 hari</option>
+              <option>90 hari</option>
+              <option>Lainnya</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>PIC Evaluasi</label>
+            <span style="font-size:12px;color:var(--ink-soft);margin-bottom:6px;display:block;">Nama orang yang akan memantau penerapan hasil training</span>
+            <input type="text" placeholder="Nama orang yang akan memantau penerapan hasil training" id="picEvaluasi" data-field="PIC evaluasi">
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- ================= STEP 4: REVIEW & APPROVAL ================= -->
+    <div class="step-panel" id="stepPanel4">
+
+      <!-- Executive Review Summary Card -->
+      <section class="form-card">
+        <div class="card-head">
+          <div class="card-icon-wrap">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+          </div>
+          <h2>Ringkasan Pengajuan (Preview)</h2>
+          <span class="card-sub">Periksa kembali sebelum mengirim</span>
+        </div>
+
+        <div class="review-box">
+          <div class="review-grid">
+            <div class="review-item"><label>ID Training</label><div id="revId">-</div></div>
+            <div class="review-item"><label>Jenis Training</label><div id="revJenis">-</div></div>
+            <div class="review-item"><label>Nama Training</label><div id="revName">-</div></div>
+            <div class="review-item"><label>Nama Pengaju</label><div id="revLeader">-</div></div>
+            <div class="review-item"><label>Departemen / Divisi</label><div id="revDept">-</div></div>
+            <div class="review-item"><label>Kategori / Level</label><div id="revCategory">-</div></div>
+            <div class="review-item"><label>Kebutuhan (Urgensi)</label><div id="revNeed">-</div></div>
+            <div class="review-item"><label>Metode &amp; Jadwal</label><div id="revSchedule">-</div></div>
+            <div class="review-item"><label>Lokasi / Platform</label><div id="revVenue">-</div></div>
+            <div class="review-item"><label>Trainer</label><div id="revTrainer">-</div></div>
+            <div class="review-item"><label>Durasi &amp; Partisipan</label><div id="revDurationParticipants">-</div></div>
+            <div class="review-item"><label>Budget Disetujui</label><div id="revBudget">-</div></div>
+          </div>
+          <div class="review-divider"></div>
+          <div style="font-size:12.5px;color:var(--ink-faint);">
+            Detail lengkap (seluruh baris peserta, modul, dan approval) akan tersimpan di Google Spreadsheet dan master data.
+          </div>
+        </div>
+      </section>
+
+      <!-- Approval Workflow Steps -->
+      <section class="form-card">
+        <div class="card-head">
+          <div class="card-icon-wrap">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+          </div>
+          <h2>Alur Persetujuan (Approval Workflow)</h2>
+          <span class="card-sub">Hierarki otorisasi</span>
+        </div>
+
+        <div class="tbl-wrap" style="padding:6px 12px;">
+          <div class="approval-steps" id="approvalSteps"></div>
+        </div>
+        <div class="table-toolbar">
+          <button type="button" class="btn-table-action" onclick="addApproval()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            Tambah Level Approval
+          </button>
+        </div>
+      </section>
+
+    </div>
+
+  </main>
+
+  <!-- ================= MASTER / TRAINING DASHBOARD VIEW ================= -->
+  <main id="masterView" style="display:none;">
+    <div class="master-toolbar">
+      <div>
+        <h2 class="voice">Training Dashboard</h2>
+        <span class="helper-note" style="margin:0;">Riwayat pengajuan training internal yang tersimpan.</span>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+        <button type="button" class="btn-secondary" onclick="exportToCsv()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          Export CSV
+        </button>
+        <button type="button" class="btn-secondary" onclick="loadMasterData()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+          Refresh
+        </button>
+        <button type="button" class="btn-secondary" onclick="lockAdminAccess()" title="Kunci sesi admin dan kembali ke formulir">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+          Kunci
+        </button>
+        <button type="button" class="btn-primary" onclick="switchView('form')" style="gap:6px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+          Kembali ke Form
+        </button>
+      </div>
+    </div>
+
+    <!-- Admin View Tabs -->
+    <div class="view-tabs" id="adminTabs" style="margin-bottom: 20px;">
+      <button type="button" id="tabBtnDashboard" class="active" onclick="switchAdminTab('dashboard')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+        Dashboard
+      </button>
+      <button type="button" id="tabBtnDataList" onclick="switchAdminTab('datalist')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+        Data List
+      </button>
+    </div>
+
+    <!-- TAB 1: DASHBOARD -->
+    <div id="adminTabDashboard">
+      <!-- 4 KPI Summary Cards -->
+      <div class="dashboard-kpi-grid">
+        <!-- KPI 1: Total Training (Tahun Berjalan) -->
+        <div class="kpi-card">
+          <div class="kpi-card-header">
+            <span class="kpi-card-title">Total Training</span>
+            <div class="kpi-card-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+            </div>
+          </div>
+          <div class="kpi-card-val" id="kpiTotalTraining">0</div>
+          <div class="kpi-card-sub" id="kpiTotalTrainingSub">Tahun berjalan</div>
+        </div>
+
+        <!-- KPI 2: Status Breakdown -->
+        <div class="kpi-card">
+          <div class="kpi-card-header">
+            <span class="kpi-card-title">Status Pengajuan</span>
+            <div class="kpi-card-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg>
+            </div>
+          </div>
+          <div class="kpi-card-val" id="kpiPendingCount">0 <span style="font-size:13px;font-weight:500;color:var(--ink-soft);">Pending</span></div>
+          <div class="kpi-card-sub" id="kpiStatusBreakdown">
+            <span class="mini-pill approved" style="padding:2px 7px;font-size:11px;"><span class="dot"></span>0 Approved</span>
+            <span class="mini-pill rejected" style="padding:2px 7px;font-size:11px;"><span class="dot"></span>0 Rejected</span>
+          </div>
+        </div>
+
+        <!-- KPI 3: Budget Disetujui vs Realisasi -->
+        <div class="kpi-card">
+          <div class="kpi-card-header">
+            <span class="kpi-card-title">Budget Disetujui &amp; Realisasi</span>
+            <div class="kpi-card-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+            </div>
+          </div>
+          <div class="kpi-card-val" id="kpiBudgetDisetujui">Rp 0</div>
+          <div class="kpi-card-sub" id="kpiBudgetRealisasi">Realisasi: Rp 0</div>
+        </div>
+
+        <!-- KPI 4: Jenis Training -->
+        <div class="kpi-card">
+          <div class="kpi-card-header">
+            <span class="kpi-card-title">Jenis Training</span>
+            <div class="kpi-card-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+            </div>
+          </div>
+          <div class="kpi-card-val" id="kpiJenisTotal">0 Program</div>
+          <div class="kpi-card-sub" id="kpiJenisBreakdown">0 Internal • 0 Eksternal • 0 Mandiri</div>
+        </div>
+      </div>
+
+      <!-- Calendar & Schedule Section -->
+      <div class="calendar-section-grid">
+        <!-- Left: Month Calendar -->
+        <div class="cal-card">
+          <div class="cal-nav-bar">
+            <h3 class="cal-nav-title" id="calMonthTitle">Maret 2026</h3>
+            <div class="cal-nav-btns">
+              <button type="button" class="cal-nav-btn" onclick="prevCalMonth()" title="Bulan Sebelumnya">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                Sebelumnya
+              </button>
+              <button type="button" class="cal-nav-btn" onclick="nextCalMonth()" title="Bulan Berikutnya">
+                Berikutnya
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="cal-weekdays">
+            <span>Sen</span>
+            <span>Sel</span>
+            <span>Rab</span>
+            <span>Kam</span>
+            <span>Jum</span>
+            <span>Sab</span>
+            <span>Min</span>
+          </div>
+
+          <div class="cal-grid" id="calGrid"></div>
+
+          <div class="cal-legend">
+            <span class="cal-legend-item"><span class="cal-dot upcoming"></span> Akan Datang (Upcoming)</span>
+            <span class="cal-legend-item"><span class="cal-dot past"></span> Sudah Lewat (Past)</span>
+          </div>
+        </div>
+
+        <!-- Right: Selected Date & Upcoming Training -->
+        <div>
+          <!-- Selected Date Sessions Card -->
+          <div class="sidebar-card">
+            <div class="sidebar-card-title">
+              <span id="selectedDateTitle">Sesi Tanggal Terpilih</span>
+              <span class="sidebar-card-badge" id="selectedDateBadge">0 Sesi</span>
+            </div>
+            <div class="session-item-list" id="selectedDateList">
+              <div class="session-empty-state">Pilih tanggal dengan indikator dot di kalender untuk melihat daftar sesi training.</div>
+            </div>
+          </div>
+
+          <!-- Upcoming Sessions Card -->
+          <div class="sidebar-card">
+            <div class="sidebar-card-title">
+              <span>Training Akan Datang</span>
+              <span class="sidebar-card-badge" id="upcomingCountBadge">5 Terdekat</span>
+            </div>
+            <div class="session-item-list" id="upcomingList">
+              <div class="session-empty-state">Belum ada agenda training mendatang.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: DATA LIST (Original Table) -->
+    <div id="adminTabDataList" style="display:none;">
+      <div class="master-tbl-wrap">
+        <table class="master">
+          <thead>
+            <tr>
+              <th>ID Training</th>
+              <th>Nama Training</th>
+              <th>Nama Pengaju</th>
+              <th>Departemen</th>
+              <th>Kategori</th>
+              <th>Status</th>
+              <th>Peserta</th>
+              <th>Waktu Submit</th>
+            </tr>
+          </thead>
+          <tbody id="masterBody"></tbody>
+        </table>
+      </div>
+
+      <div id="masterEmpty" class="helper-note" style="display:none;padding:24px;text-align:center;background:var(--panel);border-radius:var(--radius);border:1px dashed var(--line);">
+        Belum ada submission masuk. Data akan tercatat otomatis di sini setelah formulir disubmit.
+      </div>
+    </div>
+
+    <div id="detailPanel"></div>
+  </main>
+
+</div>
+
+<!-- ================= STICKY BOTTOM ACTION BAR ================= -->
+<div class="sticky-bottom-bar" id="stickyBottomBar">
+  <div class="bottom-bar-inner">
+    <div class="bottom-bar-info">
+      <span id="bottomStepIndicator">Langkah 1 dari 4: Profil &amp; Sasaran</span>
+    </div>
+    <div class="bottom-bar-actions">
+      <button type="button" class="btn-secondary" id="prevStepBtn" onclick="prevStep()" disabled>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        Kembali
+      </button>
+      <button type="button" class="btn-primary" id="nextStepBtn" onclick="nextStep()">
+        Lanjutkan
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      </button>
+      <button type="button" class="btn-primary" id="submitBtn" onclick="submitPlan()" style="display:none;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+        Submit Pengajuan
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= MODALS ================= -->
+
+<!-- 1. Modal Quick Paste Excel -->
+<div class="modal-overlay" id="modalQuickPasteExcel">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3 class="voice">Quick Import Peserta dari Excel</h3>
+      <button type="button" class="modal-close" onclick="closeModal('modalQuickPasteExcel')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p>Salin daftar nama peserta dari Excel / Google Sheet / WhatsApp, lalu tempelkan di bawah ini:</p>
+      <textarea id="excelPasteArea" placeholder="Contoh format:&#10;Budi Santoso - IT&#10;Siti Rahma - Finance&#10;Ahmad Fauzi&#10;(Bisa copy-paste langsung 2 kolom dari Excel)" style="width:100%;height:140px;border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-family:'Inter',sans-serif;font-size:13px;"></textarea>
+      <p class="helper-note">Format baris: <code>Nama Peserta [Tab atau Strip] Departemen</code>. Jika departemen tidak dicantumkan, akan menggunakan departemen pengaju.</p>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn-secondary" onclick="closeModal('modalQuickPasteExcel')">Batal</button>
+      <button type="button" class="btn-primary" onclick="importPesertaFromText()">Tambahkan ke Tabel</button>
+    </div>
+  </div>
+</div>
+
+<!-- 2. Modal Konfirmasi Submit -->
+<div class="modal-overlay" id="modalConfirmSubmit">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3 class="voice">Konfirmasi Pengajuan</h3>
+      <button type="button" class="modal-close" onclick="closeModal('modalConfirmSubmit')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p>Apakah rincian formulir training di bawah ini sudah benar dan siap diajukan ke sistem?</p>
+      <div class="summary-box" id="confirmSummaryBox"></div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn-secondary" onclick="closeModal('modalConfirmSubmit')">Periksa Kembali</button>
+      <button type="button" class="btn-primary" onclick="confirmAndExecuteSubmit()">Ya, Kirim Sekarang</button>
+    </div>
+  </div>
+</div>
+
+<!-- 3. Modal Sukses Submit -->
+<div class="modal-overlay" id="modalSuccessSubmit">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3 class="voice">Pengajuan Berhasil Dikirim!</h3>
+      <button type="button" class="modal-close" onclick="closeModal('modalSuccessSubmit')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-icon-badge success">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+      </div>
+      <p>Data training telah tersimpan dan siap diproses oleh tim terkait.</p>
+      <div class="summary-box" id="successSummaryBox"></div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn-secondary" onclick="closeModal('modalSuccessSubmit'); window.scrollTo({ top: 0, behavior: 'smooth' });">Selesai</button>
+      <a class="btn-primary" id="modalSuccessEmailLink" href="#" target="_blank" onclick="closeModal('modalSuccessSubmit')">
+        Kirim Notifikasi Email
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- 4. Modal Admin PIN -->
+<div class="modal-overlay" id="modalAdminPin">
+  <div class="modal-card" style="max-width:400px;">
+    <div class="modal-header">
+      <h3 class="voice">Akses Master Data</h3>
+      <button type="button" class="modal-close" onclick="cancelAdminPin()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-icon-badge info">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+      </div>
+      <p>Masukkan PIN admin untuk melihat riwayat dan master data submission:</p>
+      <form onsubmit="event.preventDefault(); checkAdminPin();" style="margin-top:12px;">
+        <input type="password" id="adminPinInput" class="field" placeholder="PIN Admin (default: ubahpin123)" style="padding:10px 12px;border:1px solid var(--line);border-radius:8px;width:100%;font-size:14px;" autocomplete="current-password">
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn-secondary" onclick="cancelAdminPin()">Batal</button>
+      <button type="button" class="btn-primary" onclick="checkAdminPin()">Buka Data</button>
+    </div>
+  </div>
+</div>
+
+<!-- Container Toast -->
+<div class="toast-container" id="toastContainer"></div>
+
+</body>
+</html>
