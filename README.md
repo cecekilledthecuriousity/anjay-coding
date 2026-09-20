@@ -60,26 +60,47 @@ vercel
 
 ---
 
-## 📊 2. Integrasi Google Spreadsheet
+## 📊 2. Integrasi Google Spreadsheet & Email Dispatcher
 
-URL Google Apps Script Web App sudah diatur secara hardcode di dalam [`js/app.js`](./js/app.js):
+URL Google Apps Script Web App sudah diatur di dalam [`js/app.js`](./js/app.js):
 ```javascript
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_3OrTUdwweTOHFYTR4KMdq06HQTjub54z_Cae4q6ZN26YlW0DLwpovd2ggE2G8Pxb/exec";
 ```
 
-### Memperbarui Kode di Google Apps Script:
-Jika Anda ingin memperbarui header dan kolom spreadsheet agar memuat semua data baru (Level Kemahiran, Meeting Link, Rincian Biaya, Silabus Link, Evaluasi KPI):
-1. Buka Google Sheet Anda.
-2. Buka **Extensions** (Ekstensi) > **Apps Script**.
-3. Salin seluruh kode terbaru dari file [`google-apps-script.js`](./google-apps-script.js) dan tempel di editor Apps Script.
-4. Klik tombol **Save** (disket).
-5. Klik tombol biru **Deploy** > **Manage deployments** > klik ikon **Pensil (Edit)** > pilih Version: **"New version"** > klik **Deploy**.
+### Fitur Otomasi Backend yang Disediakan:
+1. **Penyimpanan Spreadsheet Otomatis**: Setiap pengajuan formulir akan langsung tercatat rapi pada sheet **"Training Submissions"**.
+2. **Email Konfirmasi Instan**: Mengirim email berformat HTML profesional ke setiap peserta yang didaftarkan (lengkap dengan info topik, jadwal, lokasi/link meeting, dan silabus).
+3. **Google Calendar Auto-Invite**: Otomatis membuat jadwal di Google Calendar dan mengundang email peserta (sehingga peserta mendapat notifikasi bawaan kalender di smartphone/laptop).
+4. **Automated Daily Reminder Scheduler (H-1)**: Trigger otomatis jam 08:00 WIB yang memindai spreadsheet dan mengirimkan email pengingat bagi pelatihan yang akan diadakan besok hari.
 
-Setiap pengajuan formulir akan langsung tercatat rapi pada sheet **"Training Submissions"**. Jika koneksi internet pengguna terputus saat submit, data formulir tetap aman tersimpan di **Master Data & Riwayat** lokal browser.
+### Langkah Update Kode di Google Apps Script:
+1. Buka Google Sheet Anda yang terhubung dengan form.
+2. Buka menu **Extensions** (Ekstensi) > **Apps Script**.
+3. Salin seluruh kode terbaru dari file [`google-apps-script.js`](./google-apps-script.js) dan tempelkan (timpa) di editor Apps Script.
+4. Klik tombol **Save** (disket).
+5. **Aktifkan Scheduler Reminder Otomatis**:
+   - Pada dropdown fungsi di toolbar atas Apps Script, pilih fungsi **`setupDailyReminderTrigger`**.
+   - Klik tombol **Run** (Jalankan) sekali.
+   - Izinkan hak akses (OAuth Permission) akun Google Anda saat diminta.
+   - Scheduler harian jam 08:00 WIB sekarang telah aktif otomatis!
+6. **Deploy Versi Terbaru**:
+   - Klik tombol biru **Deploy** > **Manage deployments**.
+   - Klik ikon **Pensil (Edit)**.
+   - Pada opsi Version, pilih: **"New version"**.
+   - Klik tombol **Deploy**.
 
 ---
 
-## 🔐 3. Akses Master Data & Riwayat (Manual Link & Terproteksi Password)
+## 📋 3. Format Quick Paste Peserta dari Excel
+
+Pada Langkah 2 (Pelaksanaan & Peserta), Anda dapat menyalin data peserta langsung dari Excel / Google Sheet / WhatsApp dan menempelkannya ke modal **"Quick Paste dari Excel"**. Format yang didukung:
+- 3 Kolom: `Nama Karyawan [TAB] Email Karyawan [TAB] Departemen`
+- Format Teks: `Nama Karyawan, email@perusahaan.com, Departemen`
+- Sistem secara cerdas akan mendeteksi email jika terdapat simbol `@`. Jika departemen tidak dicantumkan, sistem otomatis menggunakan departemen pengaju training.
+
+---
+
+## 🔐 4. Akses Master Data & Riwayat (Manual Link & Terproteksi Password)
 
 Halaman formulir sengaja dibuat bersih (*clean*) tanpa tombol navigasi master data publik. Untuk mengakses halaman Master Data & Riwayat:
 1. Ketikkan hash `#master` atau `#admin` di akhir URL browser Anda:

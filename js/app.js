@@ -163,6 +163,29 @@ function validateStep(step) {
       return false;
     }
   }
+
+  if (step === 2) {
+    const participantRows = document.querySelectorAll('#participantBody tr');
+    let hasInvalidEmail = false;
+    participantRows.forEach(tr => {
+      const name = (tr.querySelector('.participant-name') || tr.querySelectorAll('input')[0])?.value.trim();
+      const emailInput = tr.querySelector('.participant-email') || tr.querySelectorAll('input')[1];
+      const email = emailInput?.value.trim();
+      if (name) {
+        if (!email || !email.includes('@') || !email.includes('.')) {
+          hasInvalidEmail = true;
+          if (emailInput) emailInput.classList.add('error');
+        } else {
+          if (emailInput) emailInput.classList.remove('error');
+        }
+      }
+    });
+
+    if (hasInvalidEmail) {
+      showToast('Mohon lengkapi alamat email valid untuk setiap peserta yang didaftarkan.', 'error');
+      return false;
+    }
+  }
   return true;
 }
 
@@ -467,7 +490,13 @@ const DEPT_OPTIONS = [
 // ==========================================
 // Dynamic Rows: Participants
 // ==========================================
-function addParticipant(name = '', dept = '') {
+function addParticipant(name = '', email = '', dept = '') {
+  // Backward compatibility jika dipanggil addParticipant(name, dept)
+  if (email && !dept && !email.includes('@')) {
+    dept = email;
+    email = '';
+  }
+
   participantCounter++;
   const tbody = document.getElementById('participantBody');
   const deptSelect = document.getElementById('deptName');
@@ -491,9 +520,10 @@ function addParticipant(name = '', dept = '') {
   const tr = document.createElement('tr');
   tr.innerHTML = `
     <td style="color:var(--ink-faint);font-size:13px;width:36px;">${participantCounter}</td>
-    <td><input type="text" placeholder="Nama lengkap karyawan" value="${name}"></td>
-    <td style="width:240px;">
-      <select>
+    <td style="min-width:180px;"><input type="text" class="participant-name" placeholder="Nama lengkap karyawan" value="${name}"></td>
+    <td style="min-width:220px;"><input type="email" class="participant-email" placeholder="nama.karyawan@perusahaan.com" value="${email}"></td>
+    <td style="width:200px;">
+      <select class="participant-dept">
         ${optionsHtml}
       </select>
     </td>
@@ -524,7 +554,7 @@ function updateParticipantCount() {
   }
 }
 
-// Quick Import from Excel Textarea
+// Quick Import from Excel Textarea (Mendukung Nama, Email, Dept)
 function importPesertaFromText() {
   const textarea = document.getElementById('excelPasteArea');
   if (!textarea || !textarea.value.trim()) {
@@ -541,25 +571,46 @@ function importPesertaFromText() {
     const cleanLine = line.trim();
     if (!cleanLine) return;
 
-    let name = cleanLine;
+    let parts = [];
+    if (cleanLine.includes('\t')) {
+      parts = cleanLine.split('\t').map(p => p.trim());
+    } else if (cleanLine.includes(' - ')) {
+      parts = cleanLine.split(' - ').map(p => p.trim());
+    } else if (cleanLine.includes(';')) {
+      parts = cleanLine.split(';').map(p => p.trim());
+    } else if (cleanLine.includes(',')) {
+      parts = cleanLine.split(',').map(p => p.trim());
+    } else {
+      parts = [cleanLine];
+    }
+
+    let name = parts[0] || '';
+    let email = '';
     let dept = fallbackDept;
 
-    if (cleanLine.includes('\t')) {
-      const parts = cleanLine.split('\t');
-      name = parts[0].trim();
-      dept = parts[1] ? parts[1].trim() : fallbackDept;
-    } else if (cleanLine.includes(' - ')) {
-      const parts = cleanLine.split(' - ');
-      name = parts[0].trim();
-      dept = parts[1] ? parts[1].trim() : fallbackDept;
-    } else if (cleanLine.includes(';')) {
-      const parts = cleanLine.split(';');
-      name = parts[0].trim();
-      dept = parts[1] ? parts[1].trim() : fallbackDept;
+    if (parts.length >= 3) {
+      name = parts[0];
+      // Cek apakah parts[1] atau parts[2] adalah email
+      if (parts[1].includes('@')) {
+        email = parts[1];
+        dept = parts[2] || fallbackDept;
+      } else if (parts[2].includes('@')) {
+        dept = parts[1] || fallbackDept;
+        email = parts[2];
+      } else {
+        email = parts[1];
+        dept = parts[2];
+      }
+    } else if (parts.length === 2) {
+      if (parts[1].includes('@')) {
+        email = parts[1];
+      } else {
+        dept = parts[1];
+      }
     }
 
     if (name) {
-      addParticipant(name, dept);
+      addParticipant(name, email, dept);
       addedCount++;
     }
   });
@@ -876,7 +927,8 @@ function populateReviewSummary() {
   setRev('revTrainer', m['Trainer']);
 
   const countPeserta = (data.participants || []).filter(p => p.nama).length;
-  setRev('revDurationParticipants', `${m['Total durasi belajar'] || '-'} • ${countPeserta} Peserta`);
+  const countEmail = (data.participants || []).filter(p => p.email).length;
+  setRev('revDurationParticipants', `${m['Total durasi belajar'] || '-'} • ${countPeserta} Peserta (${countEmail} Email terdaftar)`);
   setRev('revBudget', m['Budget disetujui'] || m['Estimasi biaya'] || 'Rp 0');
 }
 
@@ -934,10 +986,12 @@ function collectFormData() {
 
   const participants = [];
   document.querySelectorAll('#participantBody tr').forEach(tr => {
-    const inputName = tr.querySelector('input');
-    const selectDept = tr.querySelector('select');
+    const inputName = tr.querySelector('.participant-name') || tr.querySelectorAll('input')[0];
+    const inputEmail = tr.querySelector('.participant-email') || tr.querySelectorAll('input')[1];
+    const selectDept = tr.querySelector('.participant-dept') || tr.querySelector('select');
     participants.push({
       nama: inputName ? inputName.value.trim() : '',
+      email: inputEmail ? inputEmail.value.trim().toLowerCase() : '',
       departemen: selectDept ? selectDept.value.trim() : ''
     });
   });
@@ -999,6 +1053,7 @@ function submitPlan() {
   pendingSubmitData = data;
 
   const countPeserta = (data.participants || []).filter(p => p.nama).length;
+  const countEmail = (data.participants || []).filter(p => p.email).length;
   const summaryBox = document.getElementById('confirmSummaryBox');
   if (summaryBox) {
     let jenisSummary = data.meta['Jenis training'] || 'Training Internal';
@@ -1014,7 +1069,7 @@ function submitPlan() {
       <div><strong>Kategori:</strong> ${data.meta['Kategori training']} / ${data.meta['Metode training']} [${data.meta['Target level kemahiran'] || 'General'}]</div>
       ${data.meta['Kategori kebutuhan training'] ? `<div><strong>Urgensi Kebutuhan:</strong> ${data.meta['Kategori kebutuhan training']}</div>` : ''}
       <div><strong>Jadwal:</strong> ${data.meta['Tanggal & jam pelaksanaan']}</div>
-      <div><strong>Jumlah Peserta:</strong> ${countPeserta} orang terdaftar</div>
+      <div><strong>Jumlah Peserta:</strong> ${countPeserta} orang terdaftar (${countEmail} memiliki email)</div>
       <div><strong>Budget Disetujui:</strong> ${data.meta['Budget disetujui'] || 'Rp 0'}</div>
     `;
   }
@@ -1247,6 +1302,7 @@ function populateSuccessModal(data, sheetSaved, scriptUrl) {
 function buildMailBody(data) {
   const m = data.meta;
   const participantCount = (data.participants || []).filter(p => p.nama).length;
+  const emailCount = (data.participants || []).filter(p => p.email).length;
   const lines = [
     'Halo Tim TnD / HR,',
     '',
@@ -1261,7 +1317,7 @@ function buildMailBody(data) {
     'Jadwal Pelaksanaan : ' + (m['Tanggal & jam pelaksanaan'] || '-'),
     'Lokasi / Platform   : ' + (m['Lokasi / venue'] || '-'),
     'Trainer             : ' + (m['Trainer'] || '-'),
-    'Peserta Terdaftar   : ' + participantCount + ' orang',
+    'Peserta Terdaftar   : ' + participantCount + ' orang (' + emailCount + ' email terdaftar)',
     'Total Durasi        : ' + (m['Total durasi belajar'] || '-'),
     'Budget Disetujui    : ' + (m['Budget disetujui'] || '-'),
     'Status Dokumen      : ' + (data.status || '-'),
@@ -1754,7 +1810,7 @@ function showDetail(entry, index) {
   if (!panel) return;
 
   const participantsList = (entry.participants || []).filter(p => p.nama)
-    .map(p => `• <strong>${p.nama}</strong> &mdash; ${p.departemen || '-'}`)
+    .map(p => `• <strong>${p.nama}</strong> ${p.email ? '(&lt;' + p.email + '&gt;)' : ''} &mdash; ${p.departemen || '-'}`)
     .join('<br>') || 'Belum ada peserta terdaftar.';
 
   const modulesList = (entry.modules || []).filter(mo => mo.modul)

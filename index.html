@@ -441,12 +441,13 @@
         </div>
 
         <div class="tbl-wrap">
-          <table class="dyn">
+          <table class="dyn" style="min-width:700px;">
             <thead>
               <tr>
                 <th style="width:36px">No</th>
-                <th>Nama Karyawan</th>
-                <th style="width:240px">Departemen / Divisi</th>
+                <th style="min-width:180px">Nama Karyawan</th>
+                <th style="min-width:220px">Email Karyawan <span style="color:var(--danger)">*</span></th>
+                <th style="width:200px">Departemen / Divisi</th>
                 <th style="width:40px"></th>
               </tr>
             </thead>
@@ -851,8 +852,8 @@
     </div>
     <div class="modal-body">
       <p>Salin daftar nama peserta dari Excel / Google Sheet / WhatsApp, lalu tempelkan di bawah ini:</p>
-      <textarea id="excelPasteArea" placeholder="Contoh format:&#10;Budi Santoso - IT&#10;Siti Rahma - Finance&#10;Ahmad Fauzi&#10;(Bisa copy-paste langsung 2 kolom dari Excel)" style="width:100%;height:140px;border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-family:'Inter',sans-serif;font-size:13px;"></textarea>
-      <p class="helper-note">Format baris: <code>Nama Peserta [Tab atau Strip] Departemen</code>. Jika departemen tidak dicantumkan, akan menggunakan departemen pengaju.</p>
+      <textarea id="excelPasteArea" placeholder="Contoh format:&#10;Budi Santoso&#9;budi@kantor.com&#9;IT&#10;Siti Rahma&#9;siti@kantor.com&#9;Finance&#10;Ahmad Fauzi&#9;ahmad@kantor.com&#10;(Bisa copy-paste 3 kolom Nama, Email, Dept langsung dari Excel)" style="width:100%;height:140px;border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-family:'Inter',sans-serif;font-size:13px;"></textarea>
+      <p class="helper-note">Format baris: <code>Nama Peserta [Tab / Koma] Email [Tab / Koma] Departemen</code>. Sistem otomatis mendeteksi email jika terdapat simbol <code>@</code>.</p>
     </div>
     <div class="modal-footer">
       <button type="button" class="btn-secondary" onclick="closeModal('modalQuickPasteExcel')">Batal</button>
