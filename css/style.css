@@ -328,8 +328,8 @@ table.master tbody tr:hover { background: rgba(76, 63, 224, 0.05); }
 .mini-pill.draft .dot { background: var(--ink-faint); }
 .mini-pill.rejected { background: var(--danger-tint); color: var(--danger); }
 .mini-pill.rejected .dot { background: var(--danger); }
-.mini-pill.discussion { background: var(--clay-tint); color: var(--clay); }
-.mini-pill.discussion .dot { background: var(--clay); }
+.mini-pill.discussion, .mini-pill.submitted, .mini-pill.pending { background: var(--clay-tint); color: var(--clay); }
+.mini-pill.discussion .dot, .mini-pill.submitted .dot, .mini-pill.pending .dot { background: var(--clay); }
 
 .detail-panel { background: var(--panel); backdrop-filter: blur(var(--blur)); -webkit-backdrop-filter: blur(var(--blur)); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px; box-shadow: var(--shadow-sm); margin-top: 18px; animation: fadeIn 0.2s ease; }
 

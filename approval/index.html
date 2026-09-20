@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Training Approval Portal - Employee Development</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700&family=Sora:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    /* Scoped layout & anti-collision styles for Approval Portal */
+    .approval-page {
+      max-width: 1040px;
+      margin: 0 auto;
+      padding: 32px 20px 64px;
+    }
+    .login-gate-wrap {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 70vh;
+      padding: 24px 12px;
+    }
+    .login-card {
+      max-width: 440px;
+      width: 100%;
+      text-align: center;
+      background: var(--panel-strong);
+      backdrop-filter: blur(var(--blur));
+      -webkit-backdrop-filter: blur(var(--blur));
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      padding: 32px 28px;
+      box-shadow: var(--shadow-lg);
+      animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .login-icon-box {
+      width: 52px;
+      height: 52px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, var(--accent), #7C6CF0);
+      color: #fff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+      box-shadow: 0 8px 20px -4px rgba(76, 63, 224, 0.4);
+    }
+    .approval-filter-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .search-input-wrap {
+      position: relative;
+      flex: 1;
+      min-width: 260px;
+      max-width: 380px;
+    }
+    .search-input-wrap input {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 100px;
+      padding: 10px 16px 10px 40px;
+      font-family: 'Inter', sans-serif;
+      font-size: 13.5px;
+      color: var(--ink);
+      background: var(--panel-strong);
+      backdrop-filter: blur(var(--blur));
+      -webkit-backdrop-filter: blur(var(--blur));
+      outline: none;
+      transition: all 0.18s ease;
+      min-height: 42px;
+    }
+    .search-input-wrap input:focus {
+      border-color: var(--accent);
+      background: var(--panel-solid);
+      box-shadow: 0 0 0 3px var(--accent-tint);
+    }
+    .search-input-wrap svg {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--ink-faint);
+      pointer-events: none;
+    }
+    .modal-card.modal-card-lg {
+      max-width: 760px;
+      width: 100%;
+      max-height: 92vh;
+      display: flex;
+      flex-direction: column;
+      padding: 0;
+      overflow: hidden;
+    }
+    .modal-scrollable-body {
+      padding: 22px 24px;
+      overflow-y: auto;
+      flex: 1;
+      min-height: 0;
+    }
+    .detail-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px 20px;
+      background: rgba(255, 255, 255, 0.55);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      margin-bottom: 18px;
+    }
+    .detail-item {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+    .detail-item .lbl {
+      font-size: 11px;
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      color: var(--ink-faint);
+      margin-bottom: 3px;
+    }
+    .detail-item .val {
+      font-size: 13.5px;
+      font-weight: 500;
+      color: var(--ink);
+      word-break: break-word;
+    }
+    .detail-full {
+      grid-column: 1 / -1;
+    }
+    @media (max-width: 768px) {
+      .approval-page {
+        padding: 20px 14px 48px;
+      }
+      .approval-filter-bar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+      }
+      .search-input-wrap {
+        max-width: 100%;
+        min-width: 0;
+      }
+      .detail-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+        padding: 14px;
+      }
+      .modal-card.modal-card-lg {
+        max-width: 100%;
+        max-height: 96vh;
+        border-radius: var(--radius);
+      }
+      .modal-scrollable-body {
+        padding: 16px 14px;
+      }
+      .view-tabs {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        justify-content: flex-start;
+      }
+      .view-tabs button {
+        white-space: nowrap;
+        padding: 8px 14px;
+        font-size: 12.5px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="approval-page">
+
+  <!-- ================= STATE 1: PIN LOGIN GATE ================= -->
+  <section id="loginGate" class="login-gate-wrap">
+    <div class="login-card">
+      <div class="login-icon-box">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+        </svg>
+      </div>
+
+      <h2 class="voice" style="font-size:22px;margin:0 0 6px;color:var(--ink);">Portal Approval Training</h2>
+      <p class="helper-note" style="margin:0 0 22px;color:var(--ink-soft);font-size:13.5px;">
+        Masukkan Master PIN untuk mengakses verifikasi, evaluasi, dan otorisasi pengajuan training karyawan.
+      </p>
+
+      <div class="field" style="margin-bottom:18px;text-align:left;">
+        <label for="approvalPinInput">
+          <span>Master PIN Approver</span>
+          <span class="hint">Keamanan Portal</span>
+        </label>
+        <div style="position:relative;display:flex;align-items:center;">
+          <input type="password" id="approvalPinInput" placeholder="Masukkan Master PIN..." autocomplete="current-password" style="padding-right:44px;">
+          <button type="button" id="btnTogglePin" aria-label="Lihat PIN" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--ink-faint);padding:6px;display:flex;align-items:center;justify-content:center;border-radius:8px;">
+            <svg id="eyeIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+            <svg id="eyeOffIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+              <line x1="1" y1="1" x2="23" y2="23"></line>
+            </svg>
+          </button>
+        </div>
+        <div id="pinErrorMsg" class="helper-note" style="color:var(--danger);display:none;margin-top:6px;font-weight:600;"></div>
+      </div>
+
+      <button type="button" id="btnPinSubmit" class="btn-primary" style="width:100%;justify-content:center;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+          <path d="M7 11V7a5 5 0 0 1 9.9-1"></path>
+        </svg>
+        Buka Portal
+      </button>
+
+      <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--line-soft);">
+        <a href="../" class="btn-text-action" style="font-size:12.5px;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+          Kembali ke Formulir Pengajuan
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= STATE 2: MAIN APPROVAL DASHBOARD ================= -->
+  <main id="dashboardView" style="display:none;">
+
+    <!-- Top Header Toolbar -->
+    <header class="doc-header" style="flex-wrap:wrap;align-items:flex-start;">
+      <div>
+        <p class="kicker">Employee Development Program</p>
+        <h1 class="voice">Training Approval Portal</h1>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:6px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color:var(--ink-faint);">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 14 14"></polyline>
+          </svg>
+          <span id="syncTimeLabel" class="helper-note" style="margin:0;">Memuat data...</span>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+        <a href="../" class="btn-secondary">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+          Formulir Pengajuan
+        </a>
+        <button type="button" id="btnRefreshData" class="btn-secondary">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <polyline points="1 20 1 14 7 14"></polyline>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+          </svg>
+          Sinkronkan Data
+        </button>
+        <button type="button" id="btnLogout" class="btn-secondary" style="color:var(--danger);border-color:#F5C6BE;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+            <polyline points="16 17 21 12 16 7"></polyline>
+            <line x1="21" y1="12" x2="9" y2="12"></line>
+          </svg>
+          Keluar
+        </button>
+      </div>
+    </header>
+
+    <!-- KPI Cards Grid -->
+    <section class="dashboard-kpi-grid" aria-label="Ringkasan Metrik Pengajuan">
+      <!-- KPI 1: Total Pengajuan -->
+      <div class="kpi-card">
+        <div class="kpi-card-header">
+          <span class="kpi-card-title">Total Pengajuan</span>
+          <div class="kpi-card-icon" style="background:var(--accent-tint);color:var(--accent);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+              <polyline points="10 9 9 9 8 9"></polyline>
+            </svg>
+          </div>
+        </div>
+        <div class="kpi-card-val"><span id="kpiTotal">0</span></div>
+        <div class="kpi-card-sub">Seluruh submission training</div>
+      </div>
+
+      <!-- KPI 2: Menunggu Approval -->
+      <div class="kpi-card">
+        <div class="kpi-card-header">
+          <span class="kpi-card-title">Menunggu Approval</span>
+          <div class="kpi-card-icon" style="background:var(--clay-tint);color:var(--clay);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 14 14"></polyline>
+            </svg>
+          </div>
+        </div>
+        <div class="kpi-card-val"><span id="kpiPending">0</span></div>
+        <div class="kpi-card-sub">Perlu tinjauan leader/HR</div>
+      </div>
+
+      <!-- KPI 3: Disetujui -->
+      <div class="kpi-card">
+        <div class="kpi-card-header">
+          <span class="kpi-card-title">Disetujui</span>
+          <div class="kpi-card-icon" style="background:rgba(46, 125, 50, 0.12);color:#2E7D32;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+          </div>
+        </div>
+        <div class="kpi-card-val"><span id="kpiApproved">0</span></div>
+        <div class="kpi-card-sub">Siap dijalankan</div>
+      </div>
+
+      <!-- KPI 4: Ditolak -->
+      <div class="kpi-card">
+        <div class="kpi-card-header">
+          <span class="kpi-card-title">Ditolak</span>
+          <div class="kpi-card-icon" style="background:var(--danger-tint);color:var(--danger);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="15" y1="9" x2="9" y2="15"></line>
+              <line x1="9" y1="9" x2="15" y2="15"></line>
+            </svg>
+          </div>
+        </div>
+        <div class="kpi-card-val"><span id="kpiRejected">0</span></div>
+        <div class="kpi-card-sub">Revisi / Tidak disetujui</div>
+      </div>
+    </section>
+
+    <!-- Filter Tabs & Search Bar -->
+    <div class="approval-filter-bar">
+      <div class="view-tabs" role="tablist" aria-label="Filter status pengajuan">
+        <button type="button" class="tab-btn active" data-filter="all" id="tabAll">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="7"></rect>
+            <rect x="14" y="3" width="7" height="7"></rect>
+            <rect x="14" y="14" width="7" height="7"></rect>
+            <rect x="3" y="14" width="7" height="7"></rect>
+          </svg>
+          Semua
+        </button>
+        <button type="button" class="tab-btn" data-filter="pending" id="tabPending">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 14 14"></polyline>
+          </svg>
+          Menunggu Approval
+        </button>
+        <button type="button" class="tab-btn" data-filter="approved" id="tabApproved">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          Disetujui
+        </button>
+        <button type="button" class="tab-btn" data-filter="rejected" id="tabRejected">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+          Ditolak
+        </button>
+      </div>
+
+      <div class="search-input-wrap">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input type="text" id="approvalSearchInput" placeholder="Cari ID, nama training, pengaju, divisi...">
+      </div>
+    </div>
+
+    <!-- Submissions Table -->
+    <div class="tbl-wrap">
+      <table class="master" id="approvalTable">
+        <thead>
+          <tr>
+            <th>ID Training</th>
+            <th>Tanggal Pengajuan</th>
+            <th>Nama Training &amp; Kategori</th>
+            <th>Pengaju &amp; Divisi</th>
+            <th>Jadwal Pelaksanaan</th>
+            <th>Budget Disetujui</th>
+            <th>Status</th>
+            <th style="text-align:center;">Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="approvalTableBody"></tbody>
+      </table>
+    </div>
+
+    <!-- Empty State Placeholder -->
+    <div id="approvalEmptyState" style="display:none;padding:40px 20px;text-align:center;background:var(--panel);border-radius:var(--radius);border:1px dashed var(--line);margin-bottom:20px;">
+      <div style="width:48px;height:48px;border-radius:50%;background:rgba(29, 27, 49, 0.06);color:var(--ink-faint);display:inline-flex;align-items:center;justify-content:center;margin-bottom:12px;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+        </svg>
+      </div>
+      <div style="font-weight:600;font-size:15px;color:var(--ink);margin-bottom:4px;">Tidak Ada Pengajuan Ditemukan</div>
+      <div class="helper-note" style="margin:0;">Tidak ada dokumen pengajuan training yang cocok dengan filter atau pencarian saat ini.</div>
+    </div>
+
+  </main>
+
+</div>
+
+<!-- ================= DETAIL & DECISION MODAL ================= -->
+<div class="modal-overlay" id="modalReviewApproval" role="dialog" aria-modal="true" aria-labelledby="modalTitleText">
+  <div class="modal-card modal-card-lg">
+    <!-- Header -->
+    <div class="modal-header" style="padding:20px 24px 16px;border-bottom:1px solid var(--line-soft);margin-bottom:0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+        <div class="modal-icon-badge info" style="width:36px;height:36px;border-radius:10px;margin-bottom:0;flex-shrink:0;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+          </svg>
+        </div>
+        <div>
+          <h3 class="voice" id="modalTitleText" style="font-size:18px;margin:0;color:var(--ink);">Detail Pengajuan Training</h3>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:2px;">
+            <span id="modalTrainingId" style="font-size:13px;font-weight:700;color:var(--accent);">TRN-0000-000</span>
+            <span id="modalStatusPill" class="mini-pill" style="font-size:11.5px;padding:2px 8px;">Pending</span>
+          </div>
+        </div>
+      </div>
+      <button type="button" class="modal-close" id="modalCloseBtn" aria-label="Tutup modal">&times;</button>
+    </div>
+
+    <!-- Scrollable Modal Body -->
+    <div class="modal-scrollable-body">
+      <!-- Details Container (Populated dynamically by approval.js) -->
+      <div id="modalDetailsContent">
+        <div style="padding:28px 16px;text-align:center;color:var(--ink-faint);">
+          Memuat rincian dokumen pengajuan training...
+        </div>
+      </div>
+
+      <!-- Decision Action Box -->
+      <div id="modalDecisionBox" class="form-card" style="margin-top:20px;margin-bottom:0;padding:20px;border:1px solid rgba(76, 63, 224, 0.2);background:rgba(255, 255, 255, 0.88);">
+        <div class="card-head" style="margin-bottom:14px;padding-bottom:10px;">
+          <div class="card-icon-wrap" style="width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg, #2E7D32, #4CAF50);box-shadow:none;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            </svg>
+          </div>
+          <h2 style="font-size:16px;">Keputusan Persetujuan (Approval Decision)</h2>
+        </div>
+
+        <div class="field-row" style="margin-bottom:14px;">
+          <div class="field">
+            <label for="approverNameInput">
+              <span>Nama Approver / Reviewer <strong style="color:var(--danger)">*</strong></span>
+              <span class="hint">Wajib diisi</span>
+            </label>
+            <input type="text" id="approverNameInput" placeholder="Contoh: Budi Santoso - HR Manager">
+          </div>
+        </div>
+
+        <div class="field-row" style="margin-bottom:16px;">
+          <div class="field">
+            <label for="approverNotesInput">
+              <span>Catatan / Arahan Tindak Lanjut</span>
+              <span class="hint">Wajib jika ditolak</span>
+            </label>
+            <textarea id="approverNotesInput" rows="3" placeholder="Tambahkan catatan, arahan tindak lanjut, atau alasan penolakan..."></textarea>
+          </div>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap;padding-top:4px;">
+          <button type="button" id="btnRejectAction" class="btn-secondary" style="color:var(--danger);border-color:#F5C6BE;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="15" y1="9" x2="9" y2="15"></line>
+              <line x1="9" y1="9" x2="15" y2="15"></line>
+            </svg>
+            Tolak Training
+          </button>
+          <button type="button" id="btnApproveAction" class="btn-primary" style="background:#2E7D32;box-shadow:0 8px 20px -6px rgba(46, 125, 50, 0.5);">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            Setujui Training
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= TOAST NOTIFICATION CONTAINER ================= -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ================= SCRIPTS ================= -->
+<script>
+  // Simple UI helpers for password toggle and modal dismiss fallback
+  document.addEventListener('DOMContentLoaded', () => {
+    const toggleBtn = document.getElementById('btnTogglePin');
+    const pinInput = document.getElementById('approvalPinInput');
+    const eyeIcon = document.getElementById('eyeIcon');
+    const eyeOffIcon = document.getElementById('eyeOffIcon');
+    if (toggleBtn && pinInput) {
+      toggleBtn.addEventListener('click', () => {
+        const isPass = pinInput.type === 'password';
+        pinInput.type = isPass ? 'text' : 'password';
+        if (eyeIcon && eyeOffIcon) {
+          eyeIcon.style.display = isPass ? 'none' : 'block';
+          eyeOffIcon.style.display = isPass ? 'block' : 'none';
+        }
+      });
+    }
+
+    const modalCloseBtn = document.getElementById('modalCloseBtn');
+    const modal = document.getElementById('modalReviewApproval');
+    if (modalCloseBtn && modal) {
+      modalCloseBtn.addEventListener('click', () => {
+        modal.classList.remove('active');
+      });
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          modal.classList.remove('active');
+        }
+      });
+    }
+  });
+</script>
+<script src="approval.js"></script>
+
+</body>
+</html>
