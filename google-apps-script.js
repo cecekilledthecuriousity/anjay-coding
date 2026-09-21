@@ -44,8 +44,7 @@ const HEADERS = [
   "Total Durasi Belajar",
   "Rincian Biaya (Fee/Konsumsi/Materi/Venue)",
   "Estimasi Biaya",
-  "Budget Disetujui",
-  "Actual Spend",
+  "Budget Diajukan",
   "Tujuan & Purpose",
   "Goals (Target)",
   "Prasyarat & Output",
@@ -195,8 +194,7 @@ function doPost(e) {
       "Total Durasi Belajar": meta["Total durasi belajar"] || "-",
       "Rincian Biaya (Fee/Konsumsi/Materi/Venue)": rincianBiaya,
       "Estimasi Biaya": meta["Estimasi biaya"] || "-",
-      "Budget Disetujui": meta["Budget disetujui"] || "-",
-      "Actual Spend": meta["Actual spend"] || "-",
+      "Budget Diajukan": meta["Budget diajukan"] || "-",
       "Tujuan & Purpose": meta["Training plan purpose"] || "-",
       "Goals (Target)": meta["Training goals"] || "-",
       "Prasyarat & Output": prasyaratOutput,
@@ -422,7 +420,7 @@ function sendRegistrationEmails(meta, participants, modules) {
         <div style="padding:28px;">
           <p style="margin:0 0 16px;font-size:15px;line-height:1.5;">Halo <strong>${recipientName}</strong>,</p>
           <p style="margin:0 0 20px;font-size:14px;line-height:1.6;color:#4A4D4A;">
-            Anda telah resmi didaftarkan untuk mengikuti program pelatihan internal berikut. Silakan catat jadwal dan detail pelaksanaannya di bawah ini:
+            Anda telah resmi didaftarkan untuk mengikuti program pelatihan internal berikut. Silahkan mencatat jadwal dan detail pelaksanaannya di bawah ini:
           </p>
 
           <table style="width:100%;border-collapse:collapse;background:#FFFFFF;border-radius:8px;border:1px solid #E6E4DD;margin-bottom:22px;">
@@ -447,13 +445,14 @@ function sendRegistrationEmails(meta, participants, modules) {
               <td style="padding:10px 14px;border-bottom:1px solid #EFEFEA;font-size:13px;">${lokasiOrLink}</td>
             </tr>
             <tr>
-              <td style="padding:10px 14px;border-bottom:1px solid #EFEFEA;font-size:12px;color:#7A7D7A;">Trainer / Fasilitator</td>
-              <td style="padding:10px 14px;border-bottom:1px solid #EFEFEA;font-size:13px;">${trainer}</td>
+              <td style="padding:10px 14px;font-size:12px;color:#7A7D7A;">Trainer / Fasilitator</td>
+              <td style="padding:10px 14px;font-size:13px;">${trainer}</td>
             </tr>
+            ${meta["Link silabus materi"] && String(meta["Link silabus materi"]).trim() !== "-" && String(meta["Link silabus materi"]).trim() !== "" ? `
             <tr>
-              <td style="padding:10px 14px;font-size:12px;color:#7A7D7A;">Materi / Silabus</td>
-              <td style="padding:10px 14px;font-size:13px;">${silabusLink}</td>
-            </tr>
+              <td style="padding:10px 14px;border-top:1px solid #EFEFEA;font-size:12px;color:#7A7D7A;">Materi / Silabus</td>
+              <td style="padding:10px 14px;border-top:1px solid #EFEFEA;font-size:13px;">${silabusLink}</td>
+            </tr>` : ''}
           </table>
 
           <div style="background:#EBF0EC;border-left:4px solid #3F5A44;padding:12px 16px;border-radius:4px;margin-bottom:22px;font-size:13px;line-height:1.5;color:#2D3E31;">
@@ -462,7 +461,7 @@ function sendRegistrationEmails(meta, participants, modules) {
 
           <p style="margin:0;font-size:13px;color:#7A7D7A;line-height:1.5;">
             Salam hangat,<br>
-            <strong>Tim Training & Development / People & Culture</strong>
+            <strong>Tim Training & People Development</strong>
           </p>
         </div>
 
@@ -505,7 +504,7 @@ function sendApprovalDecisionEmail(rowObj, status, approverName, notes) {
   const metode = rowObj["Metode Training"] || "-";
   const venue = rowObj["Lokasi / Venue"] || rowObj["Platform & Link Meeting"] || "-";
   const estimasiBiaya = rowObj["Estimasi Biaya"] || "-";
-  const budgetDisetujui = rowObj["Budget Disetujui"] || "-";
+  const budgetDiajukan = rowObj["Budget Diajukan"] || "-";
   const approver = approverName || rowObj["Approver"] || "Approver";
   const catatan = notes || rowObj["Catatan Approver"] || "-";
   const tanggalApproval = rowObj["Tanggal Approval"] || Utilities.formatDate(new Date(), TIME_ZONE, "yyyy-MM-dd HH:mm");
@@ -625,7 +624,7 @@ function sendApprovalDecisionEmail(rowObj, status, approverName, notes) {
           </tr>
           <tr>
             <td style="padding:10px 14px;font-size:12px;color:#7A7D7A;">Budget / Estimasi</td>
-            <td style="padding:10px 14px;font-size:13px;font-weight:600;color:#3F5A44;">${budgetDisetujui !== "-" ? budgetDisetujui : estimasiBiaya}</td>
+            <td style="padding:10px 14px;font-size:13px;font-weight:600;color:#3F5A44;">${budgetDiajukan !== "-" ? budgetDiajukan : estimasiBiaya}</td>
           </tr>
         </table>
 
@@ -708,7 +707,7 @@ function createCalendarEvent(meta, participants, modules) {
   }
 
   const title = `[Training] ${trainingName} (${trainingId})`;
-  const description = `Program Pelatihan Karyawan:\nID Training: ${trainingId}\nTopik: ${trainingName}\nTrainer: ${meta["Trainer"] || "-"}\nSilabus: ${meta["Link silabus materi"] || "-"}\n\nEmail ini otomatis dibuat oleh Portal Training.`;
+  const description = `Program Pelatihan Karyawan:\nID Training: ${trainingId}\nTopik: ${trainingName}\nTrainer: ${meta["Trainer"] || "-"}${meta["Link silabus materi"] && String(meta["Link silabus materi"]).trim() !== "-" && String(meta["Link silabus materi"]).trim() !== "" ? `\nSilabus: ${meta["Link silabus materi"]}` : ""}\n\nEmail ini otomatis dibuat oleh Portal Training.`;
 
   const calendar = CalendarApp.getDefaultCalendar();
   const event = calendar.createEvent(title, startDate, endDate, {
@@ -718,9 +717,14 @@ function createCalendarEvent(meta, participants, modules) {
     sendInvites: true // Otomatis mengirim undangan kalender resmi
   });
 
-  // Tambahkan reminder default 15 menit & 1 hari sebelumnya
+  // Tambahkan reminder otomatis ke seluruh peserta:
+  // 1. Pop-up alarm notifikasi di HP & laptop 10 menit sebelum training dimulai
+  event.addPopupReminder(10);
+  // 2. Email pengingat resmi ke inbox peserta tepat 10 menit sebelum sesi dimulai
+  event.addEmailReminder(10);
+  // 3. Pop-up pengingat tambahan 15 menit & pengingat H-1 (1440 menit / 1 hari) sebelumnya
   event.addPopupReminder(15);
-  event.addEmailReminder(1440); // 1440 menit = 1 hari
+  event.addEmailReminder(1440);
 
   return event.getId();
 }
@@ -1096,8 +1100,9 @@ function sendReminderEmails(meta, participants, modules, executionDate) {
             <div style="font-size:16px;font-weight:600;color:#3F5A44;margin-bottom:8px;">${trainingName}</div>
             <div style="font-size:13px;color:#6A6D6A;margin-bottom:12px;">ID: ${trainingId} &bull; Metode: ${metode}</div>
             <div style="font-size:13.5px;margin-bottom:6px;">⏰ <strong>Waktu:</strong> ${jadwal}</div>
-            <div style="font-size:13.5px;margin-bottom:6px;">📍 <strong>Tempat / Tautan:</strong> ${lokasiOrLink}</div>
-            <div style="font-size:13.5px;">📂 <strong>Silabus:</strong> ${silabusLink}</div>
+            <div style="font-size:13.5px;">📍 <strong>Tempat / Tautan:</strong> ${lokasiOrLink}</div>
+            ${meta["Link silabus materi"] && String(meta["Link silabus materi"]).trim() !== "-" && String(meta["Link silabus materi"]).trim() !== "" ? `
+            <div style="font-size:13.5px;margin-top:6px;">📂 <strong>Silabus:</strong> ${silabusLink}</div>` : ''}
           </div>
 
           <div style="background:#FFF9E6;border-left:4px solid #B78628;padding:12px 16px;border-radius:4px;margin-bottom:22px;font-size:13px;line-height:1.5;color:#664B11;">
@@ -1105,14 +1110,14 @@ function sendReminderEmails(meta, participants, modules, executionDate) {
             <ul style="margin:6px 0 0;padding-left:18px;">
               <li>Hadir tepat waktu (minimal 5-10 menit sebelum sesi dimulai).</li>
               <li>Pastikan laptop/koneksi internet dalam kondisi stabil jika daring.</li>
-              <li>Pelajari silabus awal jika tersedia.</li>
+              <li>Siapkan materi atau prasyarat yang telah diinformasikan.</li>
             </ul>
           </div>
 
           <p style="margin:0;font-size:13px;color:#7A7D7A;line-height:1.5;">
             Semoga pelatihannya berjalan lancar dan bermanfaat bagi pengembangan kompetensi Anda.<br><br>
             Salam hangat,<br>
-            <strong>Tim Training & Development / People & Culture</strong>
+            <strong>Tim Training & People Development</strong>
           </p>
         </div>
 
@@ -1252,7 +1257,7 @@ function testSendApprovalDecisionEmail() {
     "Lokasi / Venue": "Google Meet",
     "Trainer / Fasilitator": "Duta TnD",
     "Estimasi Biaya": "Rp 3.500.000",
-    "Budget Disetujui": "Rp 3.500.000",
+    "Budget Diajukan": "Rp 3.500.000",
     "Approver": "Manager Development",
     "Catatan Approver": "Disetujui untuk dilaksanakan sesuai jadwal yang diajukan.",
     "Email Pengaju": myEmail

@@ -841,13 +841,11 @@ function formatRupiah(input) {
   let digits = input.value.replace(/\D/g, '');
   if (digits === '') {
     input.value = '';
-    calcVariance();
     return;
   }
   digits = digits.replace(/^0+(?=\d)/, '');
   const formatted = 'Rp ' + new Intl.NumberFormat('id-ID').format(parseInt(digits, 10));
   input.value = formatted;
-  calcVariance();
 }
 
 function rupiahToNumber(str) {
@@ -865,29 +863,6 @@ function calcBudgetBreakdown() {
   const estInput = document.getElementById('estBudget');
   if (estInput) {
     estInput.value = total > 0 ? 'Rp ' + new Intl.NumberFormat('id-ID').format(total) : '';
-  }
-  calcVariance();
-}
-
-function calcVariance() {
-  const appr = rupiahToNumber(document.getElementById('apprBudget')?.value);
-  const act = rupiahToNumber(document.getElementById('actBudget')?.value);
-  const el = document.getElementById('varianceText');
-  if (!el) return;
-
-  if (appr === 0 && act === 0) {
-    el.textContent = 'Selisih akan muncul di sini';
-    el.style.color = 'var(--ink-faint)';
-    return;
-  }
-  const diff = appr - act;
-  const formatted = new Intl.NumberFormat('id-ID').format(Math.abs(diff));
-  if (diff >= 0) {
-    el.textContent = `Hemat Rp ${formatted} dari budget disetujui`;
-    el.style.color = 'var(--moss)';
-  } else {
-    el.textContent = `Melebihi budget Rp ${formatted}`;
-    el.style.color = 'var(--danger)';
   }
 }
 
@@ -1081,7 +1056,7 @@ function populateReviewSummary() {
   const countPeserta = (data.participants || []).filter(p => p.nama).length;
   const countEmail = (data.participants || []).filter(p => p.email).length;
   setRev('revDurationParticipants', `${m['Total durasi belajar'] || '-'} • ${countPeserta} Peserta (${countEmail} Email terdaftar)`);
-  setRev('revBudget', m['Budget disetujui'] || m['Estimasi biaya'] || 'Rp 0');
+  setRev('revBudget', m['Budget diajukan'] || m['Estimasi biaya'] || 'Rp 0');
 }
 
 // ==========================================
@@ -1222,7 +1197,7 @@ function submitPlan() {
       ${data.meta['Kategori kebutuhan training'] ? `<div><strong>Urgensi Kebutuhan:</strong> ${data.meta['Kategori kebutuhan training']}</div>` : ''}
       <div><strong>Jadwal:</strong> ${data.meta['Tanggal & jam pelaksanaan']}</div>
       <div><strong>Jumlah Peserta:</strong> ${countPeserta} orang terdaftar (${countEmail} memiliki email)</div>
-      <div><strong>Budget Disetujui:</strong> ${data.meta['Budget disetujui'] || 'Rp 0'}</div>
+      <div><strong>Budget Diajukan:</strong> ${data.meta['Budget diajukan'] || 'Rp 0'}</div>
     `;
   }
 
@@ -1362,14 +1337,7 @@ function resetForm() {
   const onlinePlatform = document.getElementById('onlinePlatform');
   if (onlinePlatform) onlinePlatform.value = 'Google Meet';
 
-  // 8. Reset Variance text
-  const varEl = document.getElementById('varianceText');
-  if (varEl) {
-    varEl.textContent = 'Selisih akan muncul di sini';
-    varEl.style.color = 'var(--ink-faint)';
-  }
-
-  // 9. Reset Tables to clean initial state
+  // 8. Reset Tables to clean initial state
   const pBody = document.getElementById('participantBody');
   if (pBody) {
     pBody.innerHTML = '';
@@ -1460,7 +1428,6 @@ function buildMailBody(data) {
     'Metode Pelatihan    : ' + (m['Metode training'] || '-'),
     'Lokasi / Link Meet  : ' + (m['Lokasi / venue'] || '-'),
     'Trainer / Pemateri  : ' + (m['Trainer'] || '-'),
-    'Materi / Silabus    : ' + (m['Link silabus materi'] || '-'),
     '--------------------------------------------------',
     'Daftar Peserta      : ' + (participantNames || '-'),
     '',
@@ -1470,7 +1437,7 @@ function buildMailBody(data) {
     '• Siapkan materi / prasyarat pelatihan yang telah diinformasikan.',
     '',
     'Salam hangat,',
-    'Tim Training & Development / People & Culture'
+    'Tim Training & People Development'
   ];
   return lines.join('\n');
 }
@@ -1672,23 +1639,21 @@ function renderDashboardKPIs(entries) {
     `;
   }
 
-  // 3. Budget Disetujui vs Realisasi
-  let totalDisetujui = 0, totalRealisasi = 0;
+  // 3. Total Budget Diajukan
+  let totalDiajukan = 0;
   (entries || []).forEach(e => {
     const m = e.meta || {};
-    totalDisetujui += rupiahToNumber(m['Budget disetujui'] || m['Estimasi biaya'] || '0');
-    totalRealisasi += rupiahToNumber(m['Actual spend'] || '0');
+    totalDiajukan += rupiahToNumber(m['Budget diajukan'] || m['Estimasi biaya'] || '0');
   });
 
-  const budgetDisetujuiEl = document.getElementById('kpiBudgetDisetujui');
-  if (budgetDisetujuiEl) {
-    budgetDisetujuiEl.textContent = 'Rp ' + new Intl.NumberFormat('id-ID').format(totalDisetujui);
+  const budgetDiajukanEl = document.getElementById('kpiBudgetDiajukan');
+  if (budgetDiajukanEl) {
+    budgetDiajukanEl.textContent = 'Rp ' + new Intl.NumberFormat('id-ID').format(totalDiajukan);
   }
 
   const budgetRealisasiEl = document.getElementById('kpiBudgetRealisasi');
   if (budgetRealisasiEl) {
-    const formattedReal = new Intl.NumberFormat('id-ID').format(totalRealisasi);
-    budgetRealisasiEl.textContent = `Realisasi: Rp ${formattedReal}`;
+    budgetRealisasiEl.textContent = 'Akumulasi pengajuan';
   }
 
   // 4. Jenis Training
@@ -2018,13 +1983,13 @@ function showDetail(entry, index) {
         <div class="review-item"><label>Jadwal Pelaksanaan</label><div>${m['Tanggal & jam pelaksanaan'] || '-'}</div></div>
         <div class="review-item"><label>Lokasi / Venue</label><div>${m['Lokasi / venue'] || '-'}</div></div>
         <div class="review-item"><label>Trainer</label><div>${m['Trainer'] || '-'}</div></div>
-        <div class="review-item"><label>Budget Disetujui</label><div>${m['Budget disetujui'] || '-'}</div></div>
+        <div class="review-item"><label>Budget Diajukan</label><div>${m['Budget diajukan'] || '-'}</div></div>
       </div>
       <div style="font-weight:600;margin:14px 0 6px;">Tujuan & Goals:</div>
       <div style="font-size:13px;line-height:1.6;margin-bottom:12px;">
         <div><strong>Purpose:</strong> ${m['Training plan purpose'] || '-'}</div>
         <div><strong>Goals:</strong> ${m['Training goals'] || '-'}</div>
-        <div><strong>Link Silabus:</strong> ${m['Link silabus materi'] ? `<a href="${m['Link silabus materi']}" target="_blank">${m['Link silabus materi']}</a>` : '-'}</div>
+        ${m['Link silabus materi'] ? `<div><strong>Link Silabus:</strong> <a href="${m['Link silabus materi']}" target="_blank">${m['Link silabus materi']}</a></div>` : ''}
       </div>
       <div style="font-weight:600;margin:14px 0 6px;">Evaluasi & Follow-up:</div>
       <div style="font-size:13px;line-height:1.6;margin-bottom:12px;">
@@ -2158,7 +2123,7 @@ function exportToCsv() {
     return;
   }
 
-  const headers = ['ID Training', 'Nama Training', 'Jenis Training', 'Nama Pengaju', 'Departemen', 'Kategori', 'Urgensi Kebutuhan', 'Level', 'Metode', 'Jadwal', 'Lokasi', 'Trainer', 'Jumlah Peserta', 'Budget Disetujui', 'Status', 'Tanggal Dikirim'];
+  const headers = ['ID Training', 'Nama Training', 'Jenis Training', 'Nama Pengaju', 'Departemen', 'Kategori', 'Urgensi Kebutuhan', 'Level', 'Metode', 'Jadwal', 'Lokasi', 'Trainer', 'Jumlah Peserta', 'Budget Diajukan', 'Status', 'Tanggal Dikirim'];
   const rows = entries.map(entry => {
     const m = entry.meta || {};
     const countPeserta = (entry.participants || []).filter(p => p.nama).length;
@@ -2176,7 +2141,7 @@ function exportToCsv() {
       `"${(m['Lokasi / venue'] || '').replace(/"/g, '""')}"`,
       `"${(m['Trainer'] || '').replace(/"/g, '""')}"`,
       countPeserta,
-      `"${(m['Budget disetujui'] || '').replace(/"/g, '""')}"`,
+      `"${(m['Budget diajukan'] || '').replace(/"/g, '""')}"`,
       `"${(entry.status || '').replace(/"/g, '""')}"`,
       `"${entry.submittedAt || ''}"`
     ].join(',');

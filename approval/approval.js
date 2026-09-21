@@ -271,7 +271,7 @@ function normalizeSubmission(raw) {
   const venue = String(meta['Lokasi / venue'] || meta['Platform online'] || meta['Link meeting online'] || raw['Lokasi / Venue'] || raw['Platform & Link Meeting'] || raw.venue || '-').trim();
   const trainer = String(meta['Trainer'] || raw['Trainer / Fasilitator'] || raw.trainer || '-').trim();
   const durasi = String(meta['Total durasi belajar'] || raw['Total Durasi Belajar'] || raw.durasi || '-').trim();
-  const budget = String(meta['Budget disetujui'] || meta['Estimasi biaya'] || raw['Budget Disetujui'] || raw['Estimasi Biaya'] || raw.budget || '-').trim();
+  const budget = String(meta['Budget diajukan'] || meta['Estimasi biaya'] || raw['Budget Diajukan'] || raw['Estimasi Biaya'] || raw.budget || '-').trim();
   const submittedAt = raw.submittedAt || meta['Tanggal pengajuan'] || raw['Waktu Submit'] || raw['Tanggal Pengajuan'] || '-';
   const approver = String(raw.approver || meta['Approver'] || raw['Approver'] || '-').trim();
   const tanggalApproval = String(raw.tanggalApproval || meta['Tanggal Approval'] || raw['Tanggal Approval'] || '-').trim();
@@ -695,7 +695,7 @@ function renderModalDetails(item) {
         <span class="val" style="font-size:15px;font-weight:600;color:var(--ink);">${escapeHtml(item.namaTraining)}</span>
       </div>
       <div class="detail-item">
-        <span class="lbl">Leader Pengaju</span>
+        <span class="lbl">Nama Pengaju</span>
         <span class="val">${escapeHtml(item.pengaju)}</span>
       </div>
       <div class="detail-item">
@@ -747,7 +747,7 @@ function renderModalDetails(item) {
     <div style="background:rgba(255,255,255,0.55);border:1px solid var(--line);border-radius:var(--radius);padding:16px 20px;margin-bottom:18px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
         <span style="font-weight:700;font-size:13.5px;color:var(--ink);">Rincian Anggaran &amp; Budget</span>
-        <span style="font-weight:700;font-size:14px;color:var(--accent);">Budget Disetujui: ${escapeHtml(item.budget)}</span>
+        <span style="font-weight:700;font-size:14px;color:var(--accent);">Budget Diajukan: ${escapeHtml(item.budget)}</span>
       </div>
       ${meta['Fee trainer'] ? `
         <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(130px, 1fr));gap:10px;font-size:12.5px;">

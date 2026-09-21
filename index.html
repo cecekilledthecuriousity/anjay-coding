@@ -224,13 +224,13 @@
         </div>
       </section>
 
-      <!-- Card: Sasaran & Materi -->
+      <!-- Card: Sasaran Pelatihan -->
       <section class="form-card">
         <div class="card-head">
           <div class="card-icon-wrap">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
           </div>
-          <h2>Sasaran &amp; Materi</h2>
+          <h2>Sasaran Pelatihan</h2>
           <span class="card-sub">Tujuan dan target kompetensi</span>
         </div>
 
@@ -270,7 +270,7 @@
           </div>
         </div>
 
-        <div class="field-row cols-3">
+        <div class="field-row cols-2">
           <div class="field">
             <label>Prasyarat Peserta <span class="hint">(Opsional)</span></label>
             <input type="text" placeholder="cth. Minimal staf level, familiar tools X" id="prereq" data-field="Prasyarat peserta">
@@ -278,10 +278,6 @@
           <div class="field">
             <label>Sertifikasi / Output</label>
             <input type="text" placeholder="cth. Sertifikat internal, badge skill" id="certOutput" data-field="Sertifikasi / output">
-          </div>
-          <div class="field">
-            <label>Tautan Silabus / Materi <span class="hint">(URL Drive)</span></label>
-            <input type="url" placeholder="https://drive.google.com/..." id="syllabusUrl" data-field="Link silabus materi">
           </div>
         </div>
       </section>
@@ -507,14 +503,9 @@
             <p class="budget-variance">Akumulasi seluruh sub-komponen biaya</p>
           </div>
           <div class="budget-card">
-            <label>Budget Disetujui</label>
-            <input type="text" inputmode="numeric" placeholder="Rp 0" id="apprBudget" data-field="Budget disetujui" oninput="formatRupiah(this)">
-            <p class="budget-variance">Plafon anggaran dari manajemen</p>
-          </div>
-          <div class="budget-card">
-            <label>Actual Spend</label>
-            <input type="text" inputmode="numeric" placeholder="Rp 0" id="actBudget" data-field="Actual spend" oninput="formatRupiah(this)">
-            <p class="budget-variance" id="varianceText" style="font-weight:600;">Selisih akan muncul di sini</p>
+            <label>Budget yang Diajukan</label>
+            <input type="text" inputmode="numeric" placeholder="Rp 0" id="apprBudget" data-field="Budget diajukan" oninput="formatRupiah(this)">
+            <p class="budget-variance">Untuk training yang membutuhkan vendor (Training Eksternal)</p>
           </div>
         </div>
       </section>
@@ -595,7 +586,7 @@
             <div class="review-item"><label>Lokasi / Platform</label><div id="revVenue">-</div></div>
             <div class="review-item"><label>Trainer</label><div id="revTrainer">-</div></div>
             <div class="review-item"><label>Durasi &amp; Partisipan</label><div id="revDurationParticipants">-</div></div>
-            <div class="review-item"><label>Budget Disetujui</label><div id="revBudget">-</div></div>
+            <div class="review-item"><label>Budget Diajukan</label><div id="revBudget">-</div></div>
           </div>
           <div class="review-divider"></div>
           <div style="font-size:12.5px;color:var(--ink-faint);">
@@ -682,16 +673,16 @@
           </div>
         </div>
 
-        <!-- KPI 3: Budget Disetujui vs Realisasi -->
+        <!-- KPI 3: Total Budget Diajukan -->
         <div class="kpi-card">
           <div class="kpi-card-header">
-            <span class="kpi-card-title">Budget Disetujui &amp; Realisasi</span>
+            <span class="kpi-card-title">Total Budget Diajukan</span>
             <div class="kpi-card-icon">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
             </div>
           </div>
-          <div class="kpi-card-val" id="kpiBudgetDisetujui">Rp 0</div>
-          <div class="kpi-card-sub" id="kpiBudgetRealisasi">Realisasi: Rp 0</div>
+          <div class="kpi-card-val" id="kpiBudgetDiajukan">Rp 0</div>
+          <div class="kpi-card-sub" id="kpiBudgetRealisasi">Akumulasi pengajuan</div>
         </div>
 
         <!-- KPI 4: Jenis Training -->

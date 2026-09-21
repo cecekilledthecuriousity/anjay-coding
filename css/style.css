@@ -263,7 +263,7 @@ table.dyn select:focus { outline: none; background-color: var(--panel-solid); bo
 .btn-table-action:hover { background: var(--accent-tint-strong); border-color: rgba(76, 63, 224, 0.25); }
 
 /* BUDGET & VARIANCE CARDS */
-.budget-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px; }
+.budget-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 20px; }
 .budget-card { background: rgba(255, 255, 255, 0.55); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; }
 .budget-card label { display: block; font-size: 11.5px; color: var(--ink-faint); font-weight: 600; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.02em; }
 .budget-card input { width: 100%; border: none; font-size: 20px; font-family: 'Sora', sans-serif; padding: 0; background: transparent; color: var(--ink); font-weight: 600; }
