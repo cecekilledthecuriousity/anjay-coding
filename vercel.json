@@ -8,6 +8,10 @@
       "dest": "/approval/index.html"
     },
     {
+      "src": "/approval.js",
+      "dest": "/approval/approval.js"
+    },
+    {
       "src": "/(.*)",
       "dest": "/$1"
     }

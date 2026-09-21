@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
-  <script src="js/app.js" defer></script>
+  <script src="js/app.js?v=20260921_final" defer></script>
 </head>
 <body>
 
@@ -23,10 +23,10 @@
         <h1 class="voice">Request Training & Development</h1>
       </div>
       <div style="display:flex;gap:8px;align-items:center;">
-        <a href="approval" class="btn-secondary" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;font-size:13px;font-weight:600;text-decoration:none;border-radius:var(--radius-sm);">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+        <button type="button" class="btn-secondary" onclick="requestApprovalAccess()" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;font-size:13px;font-weight:600;border-radius:var(--radius-sm);" title="Akses Khusus Approver (Terkunci PIN)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
           Portal Approval
-        </a>
+        </button>
       </div>
     </div>
 
@@ -67,7 +67,7 @@
           <div class="step-tab-num">4</div>
           <div class="step-tab-info">
             <span class="step-tab-label">Langkah 04</span>
-            <span class="step-tab-title">Review &amp; Approval</span>
+            <span class="step-tab-title">Review &amp; Konfirmasi</span>
           </div>
         </div>
       </div>
@@ -88,14 +88,8 @@
 
         <div class="field-row cols-2">
           <div class="field">
-            <label>
-              <span>ID Training <span style="color:var(--danger)">*</span></span>
-              <button type="button" class="btn-text-action" onclick="generateNewTrainingId()" title="Buat nomor ID baru">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
-                Buat Baru
-              </button>
-            </label>
-            <input type="text" placeholder="TRN-2026-001" id="trainingId" data-field="ID training" readonly style="font-weight:600;color:var(--moss);background:#FAF9F5;" required>
+            <label>ID Training <span style="color:var(--danger)">*</span></label>
+            <input type="text" placeholder="Lengkapi Tanggal, Departemen &amp; Kategori terlebih dahulu" id="trainingId" data-field="ID training" readonly style="font-weight:600;color:var(--moss);background:#FAF9F5;" required>
           </div>
           <div class="field">
             <label>Nama Training <span style="color:var(--danger)">*</span></label>
@@ -110,7 +104,7 @@
           </div>
           <div class="field">
             <label>Departemen / Divisi <span style="color:var(--danger)">*</span></label>
-            <select id="deptName" data-field="Departemen / divisi" onchange="handleDeptChange(this)" required>
+            <select id="deptName" data-field="Departemen / divisi" onchange="handleDeptChange(this); updateTrainingId();" required>
               <option value="">Pilih departemen</option>
               <option value="HR">HR</option>
               <option value="GA">GA</option>
@@ -134,17 +128,16 @@
               <option value="IT INFRASTRUCTURE">IT INFRASTRUCTURE</option>
               <option value="custom">Lainnya (Ketik manual)...</option>
             </select>
-            <input type="text" id="customDeptInput" placeholder="Ketik nama divisi..." style="display:none;margin-top:6px;">
+            <input type="text" id="customDeptInput" placeholder="Ketik nama divisi..." style="display:none;margin-top:6px;" oninput="updateTrainingId()">
           </div>
         </div>
 
         <div class="field-row cols-3">
           <div class="field">
             <label>Kategori Training</label>
-            <select id="category" data-field="Kategori training">
-              <option value="">Pilih kategori</option>
-              <option selected>Soft Skill</option>
-              <option>Hard Skill</option>
+            <select id="category" data-field="Kategori training" onchange="updateTrainingId()">
+              <option value="Soft skill" selected>Soft skill</option>
+              <option value="Hard skill">Hard skill</option>
             </select>
           </div>
           <div class="field">
@@ -163,7 +156,7 @@
           </div>
           <div class="field">
             <label>Tanggal Pengajuan</label>
-            <input type="date" id="tglPengajuan" data-field="Tanggal pengajuan">
+            <input type="date" id="tglPengajuan" data-field="Tanggal pengajuan" onchange="updateTrainingId()">
           </div>
         </div>
       </section>
@@ -576,7 +569,7 @@
 
     </div>
 
-    <!-- ================= STEP 4: REVIEW & APPROVAL ================= -->
+    <!-- ================= STEP 4: REVIEW & KONFIRMASI ================= -->
     <div class="step-panel" id="stepPanel4">
 
       <!-- Executive Review Summary Card -->
@@ -606,29 +599,8 @@
           </div>
           <div class="review-divider"></div>
           <div style="font-size:12.5px;color:var(--ink-faint);">
-            Detail lengkap (seluruh baris peserta, modul, dan approval) akan tersimpan di Google Spreadsheet dan master data.
+            Detail lengkap (seluruh baris peserta dan modul) akan tersimpan di Google Spreadsheet dan master data.
           </div>
-        </div>
-      </section>
-
-      <!-- Approval Workflow Steps -->
-      <section class="form-card">
-        <div class="card-head">
-          <div class="card-icon-wrap">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-          </div>
-          <h2>Alur Persetujuan (Approval Workflow)</h2>
-          <span class="card-sub">Hierarki otorisasi</span>
-        </div>
-
-        <div class="tbl-wrap" style="padding:6px 12px;">
-          <div class="approval-steps" id="approvalSteps"></div>
-        </div>
-        <div class="table-toolbar">
-          <button type="button" class="btn-table-action" onclick="addApproval()">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-            Tambah Level Approval
-          </button>
         </div>
       </section>
 
@@ -655,6 +627,10 @@
         <button type="button" class="btn-secondary" onclick="lockAdminAccess()" title="Kunci sesi admin dan kembali ke formulir">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
           Kunci
+        </button>
+        <button type="button" class="btn-secondary" onclick="requestApprovalAccess()" style="display:inline-flex;align-items:center;gap:6px;" title="Buka Portal Approval">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+          Portal Approval
         </button>
         <button type="button" class="btn-primary" onclick="switchView('form')" style="gap:6px;">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
@@ -897,14 +873,21 @@
       <div class="modal-icon-badge success">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
       </div>
-      <p>Data training telah tersimpan dan siap diproses oleh tim terkait.</p>
+      <p>Data training telah tersimpan dan siap diproses.</p>
       <div class="summary-box" id="successSummaryBox"></div>
+
+      <div style="background:#EBF0EC;border:1px solid #C4D7C7;border-radius:8px;padding:14px 16px;margin-top:14px;font-size:13px;color:#2D3E31;line-height:1.6;">
+        <strong style="display:flex;align-items:center;gap:6px;margin-bottom:4px;color:var(--moss);">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          Email Konfirmasi Otomatis Dikirim dari training@cpssoft.com
+        </strong>
+        Sistem backend otomatis mengirimkan undangan dan jadwal training langsung ke seluruh email peserta terdaftar. Pengaju tidak perlu mengirim email manual.
+      </div>
     </div>
-    <div class="modal-footer">
-      <button type="button" class="btn-secondary" onclick="closeModal('modalSuccessSubmit'); window.scrollTo({ top: 0, behavior: 'smooth' });">Selesai</button>
-      <a class="btn-primary" id="modalSuccessEmailLink" href="#" target="_blank" onclick="closeModal('modalSuccessSubmit')">
-        Kirim Notifikasi Email
-      </a>
+    <div class="modal-footer" style="display:flex;justify-content:flex-end;">
+      <button type="button" class="btn-primary" onclick="closeModal('modalSuccessSubmit'); window.scrollTo({ top: 0, behavior: 'smooth' });">
+        Selesai &amp; Tutup
+      </button>
     </div>
   </div>
 </div>
@@ -928,6 +911,30 @@
     <div class="modal-footer">
       <button type="button" class="btn-secondary" onclick="cancelAdminPin()">Batal</button>
       <button type="button" class="btn-primary" onclick="checkAdminPin()">Buka Data</button>
+    </div>
+  </div>
+</div>
+
+<!-- 5. Modal Approval PIN -->
+<div class="modal-overlay" id="modalApprovalPin">
+  <div class="modal-card" style="max-width:400px;">
+    <div class="modal-header">
+      <h3 class="voice">Portal Approval (Terkunci)</h3>
+      <button type="button" class="modal-close" onclick="cancelApprovalPin()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-icon-badge info">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+      </div>
+      <p>Portal Approval khusus untuk Leader/Approver dan HR Management. Masukkan PIN untuk verifikasi akses:</p>
+      <form onsubmit="event.preventDefault(); verifyAndOpenApproval();" style="margin-top:12px;">
+        <input type="password" id="approvalGatePinInput" class="field" placeholder="PIN Akses Approval" style="padding:10px 12px;border:1px solid var(--line);border-radius:8px;width:100%;font-size:14px;" autocomplete="current-password">
+        <div id="approvalGatePinError" style="display:none;color:#b91c1c;font-size:12px;margin-top:6px;font-weight:500;"></div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn-secondary" onclick="cancelApprovalPin()">Batal</button>
+      <button type="button" class="btn-primary" onclick="verifyAndOpenApproval()">Buka Portal</button>
     </div>
   </div>
 </div>

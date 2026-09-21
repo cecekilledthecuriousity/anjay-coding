@@ -7,6 +7,9 @@
  * 2. Kirim Email Konfirmasi Instan (HTML) ke setiap peserta yang memiliki email
  * 3. Otomatis buat event Google Calendar & undang email peserta (Google Calendar Invite)
  * 4. Automated Daily Scheduler: Kirim Email Reminder H-1 sebelum training dimulai
+ * 5. Multi-Source Date Extraction (Mendukung ID Baru TRN-YYYYMMDD-..., Modul, Teks Jadwal, JSON)
+ * 6. Fallback Ekstraksi Peserta jika Raw Data JSON tidak lengkap
+ * 7. Test Runners Lengkap: testSendSampleEmail, testSendReminderEmail, testSendApprovalDecisionEmail, forceSendReminderToFirstRow
  * ==============================================================================
  * Petunjuk Instalasi & Update:
  * 1. Buka Google Sheets Anda yang terhubung dengan form ini.
@@ -19,6 +22,7 @@
  */
 
 const SHEET_NAME = "Training Submissions";
+const TIME_ZONE = "Asia/Jakarta";
 
 const HEADERS = [
   "Waktu Submit",
@@ -100,6 +104,9 @@ function doPost(e) {
     const modules = data.modules || [];
     const approvals = data.approvals || [];
 
+    // Pastikan ID Training tersimpan dengan rapi
+    const trainingId = meta["ID training"] || data.id || "TRN";
+
     // Format ringkasan peserta (termasuk email)
     const participantsSummary = participants
       .filter(p => p.nama)
@@ -169,10 +176,10 @@ function doPost(e) {
     // Petakan data ke urutan header aktual sheet agar tidak terjadi pergeseran kolom
     const currentHeaders = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0].map(h => String(h).trim());
     const rowMap = {
-      "Waktu Submit": data.submittedAt || new Date().toISOString(),
-      "ID Training": meta["ID training"] || "-",
+      "Waktu Submit": data.submittedAt || Utilities.formatDate(new Date(), TIME_ZONE, "yyyy-MM-dd HH:mm:ss"),
+      "ID Training": trainingId,
       "Nama Training": meta["Nama training"] || "-",
-      "Status Dokumen": data.status || "Pending approval",
+      "Status Dokumen": data.status || "Diajukan",
       "Nama Pengaju": meta["Nama pengaju"] || meta["Leader pengaju"] || "-",
       "Departemen / Divisi": meta["Departemen / divisi"] || "-",
       "Kategori Training": meta["Kategori training"] || "-",
@@ -215,7 +222,7 @@ function doPost(e) {
       JSON.stringify({
         status: "success",
         message: "Data tersimpan & email konfirmasi diproses",
-        id: meta["ID training"],
+        id: trainingId,
         emailStatus: confirmationEmailStatus,
         calendarId: calendarEventId
       })
@@ -232,7 +239,7 @@ function doPost(e) {
 // 1.1 HANDLER UPDATE APPROVAL STATUS & CATATAN
 // ==============================================================================
 function handleUpdateApproval(sheet, data) {
-  const trainingId = data.id || data.idTraining || data["ID Training"];
+  const trainingId = data.id || data.idTraining || data["ID Training"] || "";
   const status = data.status || "Disetujui";
   const approverName = data.approverName || data.approver || "Approver";
   const notes = data.notes || data.catatan || "-";
@@ -250,12 +257,14 @@ function handleUpdateApproval(sheet, data) {
     ).setMimeType(ContentService.MimeType.JSON);
   }
 
-  const headers = values[0].map(h => String(h).trim());
-  const colId = headers.indexOf("ID Training");
-  const colDocStatus = headers.indexOf("Status Dokumen");
-  const colApprover = headers.indexOf("Approver");
-  const colApprovalDate = headers.indexOf("Tanggal Approval");
-  const colApprovalNotes = headers.indexOf("Catatan Approver");
+  const rawHeaders = values[0].map(h => String(h).trim());
+  const headersLower = rawHeaders.map(h => h.toLowerCase());
+
+  const colId = headersLower.indexOf("id training");
+  const colDocStatus = headersLower.indexOf("status dokumen");
+  const colApprover = headersLower.indexOf("approver");
+  const colApprovalDate = headersLower.indexOf("tanggal approval");
+  const colApprovalNotes = headersLower.indexOf("catatan approver");
 
   if (colId === -1) {
     return ContentService.createTextOutput(
@@ -264,8 +273,11 @@ function handleUpdateApproval(sheet, data) {
   }
 
   let foundRowIdx = -1;
+  const targetIdClean = String(trainingId).trim().toUpperCase();
+
   for (let i = 1; i < values.length; i++) {
-    if (String(values[i][colId]).trim() === String(trainingId).trim()) {
+    const rowId = String(values[i][colId]).trim().toUpperCase();
+    if (rowId === targetIdClean) {
       foundRowIdx = i;
       break;
     }
@@ -278,8 +290,7 @@ function handleUpdateApproval(sheet, data) {
   }
 
   const targetRowNum = foundRowIdx + 1;
-  const timeZone = Session.getScriptTimeZone() || "Asia/Jakarta";
-  const timestamp = Utilities.formatDate(new Date(), timeZone, "yyyy-MM-dd HH:mm");
+  const timestamp = Utilities.formatDate(new Date(), TIME_ZONE, "yyyy-MM-dd HH:mm");
 
   if (colDocStatus !== -1) {
     sheet.getRange(targetRowNum, colDocStatus + 1).setValue(status);
@@ -296,7 +307,7 @@ function handleUpdateApproval(sheet, data) {
 
   // Bangun objek data row untuk keperluan notifikasi email
   const rowObj = {};
-  headers.forEach((h, idx) => {
+  rawHeaders.forEach((h, idx) => {
     rowObj[h] = values[foundRowIdx][idx];
   });
   rowObj["Status Dokumen"] = status;
@@ -337,7 +348,8 @@ function setupSheetHeaders(sheet) {
   } else {
     // Sinkronkan kolom baru jika ada header yang belum tercantum pada row 1
     const currentHeaders = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0].map(h => String(h).trim());
-    const missingHeaders = HEADERS.filter(h => !currentHeaders.includes(h));
+    const currentHeadersLower = currentHeaders.map(h => h.toLowerCase());
+    const missingHeaders = HEADERS.filter(h => !currentHeadersLower.includes(h.toLowerCase()));
     if (missingHeaders.length > 0) {
       const startCol = currentHeaders.length + 1;
       sheet.getRange(1, startCol, 1, missingHeaders.length).setValues([missingHeaders]);
@@ -353,8 +365,25 @@ function setupSheetHeaders(sheet) {
 // 3. PENGIRIMAN EMAIL KONFIRMASI INSTAN KE PESERTA
 // ==============================================================================
 function sendRegistrationEmails(meta, participants, modules) {
-  const validParticipants = participants.filter(p => p.email && p.email.includes("@") && p.email.includes("."));
+  let validParticipants = (participants || []).filter(p => {
+    const email = String(p.email || '').trim();
+    return email.includes('@') && email.includes('.');
+  });
+
+  // Fallback jika participants kosong tapi ada email pengaju di meta
+  if (validParticipants.length === 0 && meta) {
+    const pengajuEmail = meta["Email pengaju"] || meta["Email leader"] || meta["Email"] || "";
+    if (pengajuEmail && String(pengajuEmail).includes("@")) {
+      validParticipants.push({
+        nama: meta["Nama pengaju"] || meta["Leader pengaju"] || "Rekan Karyawan",
+        email: String(pengajuEmail).trim(),
+        departemen: meta["Departemen / divisi"] || ""
+      });
+    }
+  }
+
   if (validParticipants.length === 0) {
+    Logger.log("Peringatan sendRegistrationEmails: Tidak ada email peserta valid dalam data.");
     return "Tidak ada email valid";
   }
 
@@ -376,8 +405,10 @@ function sendRegistrationEmails(meta, participants, modules) {
     : "-";
 
   let sentCount = 0;
+  let errorMsgs = [];
 
   validParticipants.forEach(p => {
+    const recipientEmail = String(p.email).trim();
     const recipientName = p.nama || "Rekan Karyawan";
     const subject = `[Konfirmasi Pendaftaran] Pelatihan: ${trainingName} (${trainingId})`;
 
@@ -444,16 +475,20 @@ function sendRegistrationEmails(meta, participants, modules) {
     const plainText = `Halo ${recipientName},\n\nAnda telah terdaftar dalam pelatihan internal:\nTopik: ${trainingName}\nID: ${trainingId}\nJadwal: ${jadwal}\nLokasi/Link: ${meta["Lokasi / venue"] || meta["Link meeting online"] || "-"}\nTrainer: ${trainer}\n\nSalam,\nTim TnD`;
 
     try {
-      GmailApp.sendEmail(p.email, subject, plainText, {
+      GmailApp.sendEmail(recipientEmail, subject, plainText, {
         htmlBody: htmlBody,
         name: "Training & Development Portal"
       });
       sentCount++;
     } catch (err) {
-      Logger.log(`Gagal kirim ke ${p.email}: ${err.toString()}`);
+      Logger.log(`Gagal kirim ke ${recipientEmail}: ${err.toString()}`);
+      errorMsgs.push(`${recipientEmail}: ${err.message}`);
     }
   });
 
+  if (errorMsgs.length > 0 && sentCount === 0) {
+    return `Error (${errorMsgs[0]})`;
+  }
   return `Terkirim (${sentCount}/${validParticipants.length})`;
 }
 
@@ -473,8 +508,7 @@ function sendApprovalDecisionEmail(rowObj, status, approverName, notes) {
   const budgetDisetujui = rowObj["Budget Disetujui"] || "-";
   const approver = approverName || rowObj["Approver"] || "Approver";
   const catatan = notes || rowObj["Catatan Approver"] || "-";
-  const timeZone = Session.getScriptTimeZone() || "Asia/Jakarta";
-  const tanggalApproval = rowObj["Tanggal Approval"] || Utilities.formatDate(new Date(), timeZone, "yyyy-MM-dd HH:mm");
+  const tanggalApproval = rowObj["Tanggal Approval"] || Utilities.formatDate(new Date(), TIME_ZONE, "yyyy-MM-dd HH:mm");
 
   // 1. Temukan email penerima
   let recipientEmail = "";
@@ -489,11 +523,11 @@ function sendApprovalDecisionEmail(rowObj, status, approverName, notes) {
 
       // Prioritas 1: Field email pengaju langsung di meta
       const metaEmail = meta["Email pengaju"] || meta["Email leader"] || meta["Email"] || meta["email"];
-      if (metaEmail && metaEmail.includes("@") && metaEmail.includes(".")) {
-        recipientEmail = metaEmail.trim();
+      if (metaEmail && String(metaEmail).includes("@")) {
+        recipientEmail = String(metaEmail).trim();
       } else if (participants.length > 0) {
         // Prioritas 2: Email peserta pertama yang valid
-        const firstValid = participants.find(p => p.email && p.email.includes("@") && p.email.includes("."));
+        const firstValid = participants.find(p => p.email && p.email.includes("@"));
         if (firstValid) {
           recipientEmail = firstValid.email.trim();
           if (firstValid.nama) {
@@ -516,7 +550,7 @@ function sendApprovalDecisionEmail(rowObj, status, approverName, notes) {
     const summaryStr = String(rowObj["Daftar Peserta (Ringkasan)"]);
     const emailMatch = summaryStr.match(/<([^>]+@[^>]+)>/) || summaryStr.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
     if (emailMatch) {
-      recipientEmail = emailMatch[1] || emailMatch[0];
+      recipientEmail = (emailMatch[1] || emailMatch[0]).trim();
     }
   }
 
@@ -637,9 +671,9 @@ function sendApprovalDecisionEmail(rowObj, status, approverName, notes) {
 // 4. GOOGLE CALENDAR EVENT CREATOR (AUTO-INVITE GUESTS)
 // ==============================================================================
 function createCalendarEvent(meta, participants, modules) {
-  const guestEmails = participants
-    .filter(p => p.email && p.email.includes("@"))
-    .map(p => p.email.trim())
+  const guestEmails = (participants || [])
+    .filter(p => p.email && String(p.email).includes("@"))
+    .map(p => String(p.email).trim())
     .join(",");
 
   const trainingName = meta["Nama training"] || "Pelatihan Karyawan";
@@ -652,15 +686,24 @@ function createCalendarEvent(meta, participants, modules) {
 
   if (modules && modules.length > 0 && modules[0].tanggal) {
     const firstMod = modules[0];
-    const tgl = firstMod.tanggal; // YYYY-MM-DD
+    const tgl = String(firstMod.tanggal).trim(); // YYYY-MM-DD
     const startStr = firstMod.jamMulai || "09:00";
     const endStr = firstMod.jamSelesai || "15:00";
     startDate = new Date(`${tgl}T${startStr}:00`);
     endDate = new Date(`${tgl}T${endStr}:00`);
   }
 
+  // Fallback tanggal dari ID jika modul kosong: TRN-YYYYMMDD-...
   if (!startDate || isNaN(startDate.getTime())) {
-    // Fallback jika format tanggal custom
+    const idMatch = String(trainingId).match(/TRN-(\d{4})(\d{2})(\d{2})/i) || String(trainingId).match(/(\d{4})(\d{2})(\d{2})/);
+    if (idMatch) {
+      const dateIso = `${idMatch[1]}-${idMatch[2]}-${idMatch[3]}`;
+      startDate = new Date(`${dateIso}T09:00:00`);
+      endDate = new Date(`${dateIso}T15:00:00`);
+    }
+  }
+
+  if (!startDate || isNaN(startDate.getTime())) {
     return "Jadwal custom (tidak dibuat event kalender otomatis)";
   }
 
@@ -688,9 +731,13 @@ function createCalendarEvent(meta, participants, modules) {
 /**
  * Fungsi ini dipanggil secara otomatis oleh Time-Driven Trigger setiap hari jam 08:00 WIB.
  * Memeriksa seluruh jadwal training pada spreadsheet yang akan berlangsung besok (H-1)
- * dan mengirim email pengingat kepada seluruh peserta.
+ * atau hari ini, lalu mengirim email pengingat kepada seluruh peserta.
+ *
+ * Parameter opsional forceTargetId:
+ * Jika diisi ID training (misal: "TRN-20260921-WBD-SOFT" atau "ALL"),
+ * sistem akan mengirim reminder tanpa batasan tanggal untuk keperluan pengujian.
  */
-function checkAndSendReminders() {
+function checkAndSendReminders(forceTargetId) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName(SHEET_NAME);
   if (!sheet) {
@@ -704,26 +751,38 @@ function checkAndSendReminders() {
     return;
   }
 
-  const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
-  const colId = headers.indexOf("ID Training") + 1;
-  const colName = headers.indexOf("Nama Training") + 1;
-  const colDocStatus = headers.indexOf("Status Dokumen") + 1;
-  const colJadwal = headers.indexOf("Jadwal Pelaksanaan") + 1;
-  const colReminder = headers.indexOf("Status Email Reminder H-1") + 1;
-  const colJson = headers.indexOf("Raw Data JSON") + 1;
+  const rawHeaders = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  const headersLower = rawHeaders.map(h => String(h).trim().toLowerCase());
 
-  if (!colReminder || !colJson) {
-    Logger.log("Kolom tracking reminder atau JSON tidak ditemukan.");
-    return;
+  const getColIndex = (name) => {
+    const idx = headersLower.indexOf(name.toLowerCase());
+    return idx !== -1 ? idx + 1 : 0;
+  };
+
+  const colId = getColIndex("ID Training");
+  const colName = getColIndex("Nama Training");
+  const colDocStatus = getColIndex("Status Dokumen");
+  const colJadwal = getColIndex("Jadwal Pelaksanaan");
+  const colReminder = getColIndex("Status Email Reminder H-1");
+  const colJson = getColIndex("Raw Data JSON");
+  const colSummaryPeserta = getColIndex("Daftar Peserta (Ringkasan)");
+  const colTglPengajuan = getColIndex("Tanggal Pengajuan");
+
+  if (!colReminder) {
+    Logger.log("Kolom 'Status Email Reminder H-1' belum ada. Menjalankan sinkronisasi header...");
+    setupSheetHeaders(sheet);
   }
 
   const today = new Date();
   const tomorrow = new Date(today.getTime() + (24 * 60 * 60 * 1000));
-  const timeZone = Session.getScriptTimeZone() || "Asia/Jakarta";
-  const tomorrowStr = Utilities.formatDate(tomorrow, timeZone, "yyyy-MM-dd");
-  const todayStr = Utilities.formatDate(today, timeZone, "yyyy-MM-dd");
+  const tomorrowStr = Utilities.formatDate(tomorrow, TIME_ZONE, "yyyy-MM-dd");
+  const todayStr = Utilities.formatDate(today, TIME_ZONE, "yyyy-MM-dd");
 
-  Logger.log(`Mengecek reminder untuk tanggal pelaksanaan: Besok (${tomorrowStr}) atau Hari Ini (${todayStr})`);
+  Logger.log(`[Reminder Check] Waktu sekarang: ${Utilities.formatDate(today, TIME_ZONE, "yyyy-MM-dd HH:mm:ss")} WIB`);
+  Logger.log(`[Reminder Check] Target tanggal: Besok H-1 (${tomorrowStr}) atau Hari Ini (${todayStr})`);
+  if (forceTargetId) {
+    Logger.log(`[Reminder Check] MODE FORCE AKTIF untuk target ID: ${forceTargetId}`);
+  }
 
   const numRows = lastRow - 1;
   const dataRange = sheet.getRange(2, 1, numRows, sheet.getLastColumn()).getValues();
@@ -733,71 +792,268 @@ function checkAndSendReminders() {
   for (let i = 0; i < dataRange.length; i++) {
     const row = dataRange[i];
     const rowNum = i + 2;
-    const currentReminderStatus = String(row[colReminder - 1] || "");
-    const docStatus = String(row[colDocStatus - 1] || "");
+    const trainingId = String(colId ? row[colId - 1] : "").trim();
+    const trainingName = String(colName ? row[colName - 1] : "").trim();
+    const currentReminderStatus = String(colReminder ? row[colReminder - 1] : "").trim();
+    const docStatus = String(colDocStatus ? row[colDocStatus - 1] : "").trim();
 
-    // Lewati jika sudah pernah dikirim reminder atau dokumen dibatalkan/ditolak
-    if (currentReminderStatus.startsWith("Terkirim") || docStatus.toLowerCase().includes("batal") || docStatus.toLowerCase().includes("tolak")) {
-      continue;
-    }
+    // Mode force untuk testing training tertentu
+    const isTargetForced = forceTargetId && (forceTargetId === "ALL" || trainingId.toUpperCase() === String(forceTargetId).trim().toUpperCase());
 
-    const rawJsonStr = row[colJson - 1];
-    if (!rawJsonStr) continue;
-
-    let parsedData;
-    try {
-      parsedData = JSON.parse(rawJsonStr);
-    } catch (e) {
-      continue;
-    }
-
-    const meta = parsedData.meta || {};
-    const modules = parsedData.modules || [];
-    const participants = parsedData.participants || [];
-
-    // Cek apakah tanggal pelaksanaan training adalah besok (H-1) atau hari ini
-    let isMatchDate = false;
-    let targetDateStr = "";
-
-    // 1. Cek dari tanggal modul
-    for (let m = 0; m < modules.length; m++) {
-      const modDate = modules[m].tanggal;
-      if (modDate === tomorrowStr || modDate === todayStr) {
-        isMatchDate = true;
-        targetDateStr = modDate;
-        break;
+    if (!isTargetForced) {
+      // Lewati jika sudah pernah dikirim reminder
+      if (currentReminderStatus.startsWith("Terkirim")) {
+        continue;
+      }
+      // Lewati jika dokumen dibatalkan atau ditolak
+      if (docStatus.toLowerCase().includes("batal") || docStatus.toLowerCase().includes("tolak")) {
+        continue;
       }
     }
 
-    // 2. Cek dari teks jadwal jika modul kosong
-    if (!isMatchDate && row[colJadwal - 1]) {
-      const jadwalStr = String(row[colJadwal - 1]);
-      if (jadwalStr.includes(tomorrowStr) || jadwalStr.includes(todayStr)) {
-        isMatchDate = true;
-        targetDateStr = tomorrowStr;
+    // Parsing data JSON atau fallback kolom
+    let meta = {};
+    let modules = [];
+    let participants = [];
+
+    const rawJsonStr = colJson ? row[colJson - 1] : "";
+    if (rawJsonStr) {
+      try {
+        const parsed = JSON.parse(rawJsonStr);
+        meta = parsed.meta || {};
+        modules = parsed.modules || [];
+        participants = parsed.participants || [];
+      } catch (e) {
+        Logger.log(`[Baris ${rowNum}] Gagal parse Raw Data JSON (${e.message}). Menggunakan fallback data kolom.`);
+      }
+    }
+
+    // Pastikan data meta minimum terisi
+    meta["ID training"] = meta["ID training"] || trainingId || "-";
+    meta["Nama training"] = meta["Nama training"] || trainingName || "-";
+    if (colJadwal && !meta["Tanggal & jam pelaksanaan"]) {
+      meta["Tanggal & jam pelaksanaan"] = String(row[colJadwal - 1] || "");
+    }
+
+    // Fallback peserta dari kolom "Daftar Peserta (Ringkasan)" jika JSON kosong
+    if ((!participants || participants.length === 0) && colSummaryPeserta) {
+      participants = extractParticipantsFromSummary(row[colSummaryPeserta - 1]);
+    }
+
+    // Ekstraksi seluruh tanggal pelaksanaan training dari berbagai sumber
+    const jadwalText = colJadwal ? String(row[colJadwal - 1] || "") : "";
+    const tglPengajuanText = colTglPengajuan ? String(row[colTglPengajuan - 1] || "") : "";
+
+    const candidateDates = extractAllTrainingDates(trainingId, modules, jadwalText, tglPengajuanText, meta);
+    Logger.log(`[Baris ${rowNum}] ${trainingId}: Tanggal terdeteksi -> [${candidateDates.join(", ")}]`);
+
+    let isMatchDate = false;
+    let targetDateStr = "";
+
+    if (isTargetForced) {
+      isMatchDate = true;
+      targetDateStr = candidateDates[0] || todayStr;
+    } else {
+      for (let d = 0; d < candidateDates.length; d++) {
+        const cDate = candidateDates[d];
+        if (cDate === tomorrowStr || cDate === todayStr) {
+          isMatchDate = true;
+          targetDateStr = cDate;
+          break;
+        }
       }
     }
 
     if (isMatchDate) {
-      Logger.log(`Mengirim Reminder H-1 untuk ${meta["ID training"]} (${meta["Nama training"]})...`);
+      Logger.log(`--> MENGIRIM REMINDER untuk ${trainingId} (${trainingName}) target tanggal: ${targetDateStr}...`);
       const sentResult = sendReminderEmails(meta, participants, modules, targetDateStr);
       
-      // Update cell status reminder pada sheet
-      const timestamp = Utilities.formatDate(new Date(), timeZone, "yyyy-MM-dd HH:mm");
-      sheet.getRange(rowNum, colReminder).setValue(`Terkirim (${timestamp} - ${sentResult})`);
+      const timestamp = Utilities.formatDate(new Date(), TIME_ZONE, "yyyy-MM-dd HH:mm");
+      if (colReminder) {
+        sheet.getRange(rowNum, colReminder).setValue(`Terkirim (${timestamp} - ${sentResult})`);
+      }
       remindersSentTotal++;
+      Logger.log(`--> HASIL: ${sentResult}`);
     }
   }
 
-  Logger.log(`Selesai mengecek reminder. Total training yang dikirimi reminder: ${remindersSentTotal}`);
+  Logger.log(`[Reminder Check Selesai] Total training yang dikirimi reminder: ${remindersSentTotal}`);
+}
+
+// ==============================================================================
+// 5.1 HELPER EKSTRAKSI TANGGAL & PESERTA (SMART PARSER)
+// ==============================================================================
+/**
+ * Mengekstrak seluruh kemungkinan tanggal pelaksanaan:
+ * 1. Dari ID Training (format baru: TRN-YYYYMMDD-DEPT-CATEGORY)
+ * 2. Dari array modules (m.tanggal)
+ * 3. Dari teks jadwal (mendukung bahasa Indonesia: "21 Sep 2026", "21 September 2026", dll)
+ * 4. Dari field Tanggal Pengajuan
+ */
+function extractAllTrainingDates(trainingId, modules, jadwalText, tglPengajuanText, meta) {
+  const dates = [];
+  const addDate = (d) => {
+    if (d && dates.indexOf(d) === -1) {
+      dates.push(d);
+    }
+  };
+
+  // 1. Ekstraksi dari Training ID: TRN-YYYYMMDD-DEPT-CATEGORY
+  if (trainingId) {
+    const idMatch = String(trainingId).match(/TRN-(\d{4})(\d{2})(\d{2})/i) || String(trainingId).match(/(\d{4})(\d{2})(\d{2})/);
+    if (idMatch) {
+      addDate(`${idMatch[1]}-${idMatch[2]}-${idMatch[3]}`);
+    }
+  }
+
+  // 2. Ekstraksi dari array modul
+  if (modules && Array.isArray(modules)) {
+    modules.forEach(m => {
+      if (m && m.tanggal) {
+        const t = String(m.tanggal).trim();
+        if (t.match(/^\d{4}-\d{2}-\d{2}$/)) {
+          addDate(t);
+        }
+      }
+    });
+  }
+
+  // 3. Ekstraksi dari teks jadwal pelaksanaan
+  if (jadwalText) {
+    const parsed = parseDatesFromText(jadwalText);
+    parsed.forEach(d => addDate(d));
+  }
+
+  // 4. Ekstraksi dari meta Tanggal & jam pelaksanaan
+  if (meta && meta["Tanggal & jam pelaksanaan"] && meta["Tanggal & jam pelaksanaan"] !== jadwalText) {
+    const parsed = parseDatesFromText(meta["Tanggal & jam pelaksanaan"]);
+    parsed.forEach(d => addDate(d));
+  }
+
+  // 5. Fallback ke Tanggal Pengajuan jika belum ada tanggal terdeteksi
+  if (dates.length === 0) {
+    if (tglPengajuanText && tglPengajuanText.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      addDate(tglPengajuanText);
+    } else if (meta && meta["Tanggal pengajuan"] && String(meta["Tanggal pengajuan"]).match(/^\d{4}-\d{2}-\d{2}$/)) {
+      addDate(String(meta["Tanggal pengajuan"]));
+    }
+  }
+
+  return dates;
+}
+
+/**
+ * Parsing tanggal dari berbagai format teks (Indonesia, ISO, Slash)
+ */
+function parseDatesFromText(text) {
+  if (!text) return [];
+  const results = [];
+  const str = String(text);
+
+  // A. ISO format: YYYY-MM-DD
+  const isoRegex = /\b(\d{4})-(\d{1,2})-(\d{1,2})\b/g;
+  let mIso;
+  while ((mIso = isoRegex.exec(str)) !== null) {
+    const y = mIso[1];
+    const mo = mIso[2].length === 1 ? '0' + mIso[2] : mIso[2];
+    const d = mIso[3].length === 1 ? '0' + mIso[3] : mIso[3];
+    results.push(y + '-' + mo + '-' + d);
+  }
+
+  // B. Indonesian text: e.g. "21 Sep 2026", "21 September 2026", "05 Jan 2026"
+  const indoMonths = {
+    jan: "01", januari: "01",
+    feb: "02", februari: "02",
+    mar: "03", maret: "03",
+    apr: "04", april: "04",
+    mei: "05",
+    jun: "06", juni: "06",
+    jul: "07", juli: "07",
+    agu: "08", agustus: "08",
+    sep: "09", september: "09",
+    okt: "10", oktober: "10",
+    nov: "11", november: "11",
+    des: "12", desember: "12"
+  };
+
+  const indoRegex = /\b(\d{1,2})\s+([a-zA-Z]{3,9})\s+(\d{4})\b/g;
+  let mIndo;
+  while ((mIndo = indoRegex.exec(str)) !== null) {
+    const d = mIndo[1].length === 1 ? '0' + mIndo[1] : mIndo[1];
+    const mName = mIndo[2].toLowerCase();
+    const y = mIndo[3];
+    if (indoMonths[mName]) {
+      results.push(y + '-' + indoMonths[mName] + '-' + d);
+    }
+  }
+
+  // C. Slash or dash: DD/MM/YYYY or DD-MM-YYYY (pola [-/] aman dari interpretasi range)
+  const slashRegex = /\b(\d{1,2})[-/](\d{1,2})[-/](\d{4})\b/g;
+  let mSlash;
+  while ((mSlash = slashRegex.exec(str)) !== null) {
+    const d = mSlash[1].length === 1 ? '0' + mSlash[1] : mSlash[1];
+    const mo = mSlash[2].length === 1 ? '0' + mSlash[2] : mSlash[2];
+    const y = mSlash[3];
+    const moNum = parseInt(mo, 10);
+    if (moNum >= 1 && moNum <= 12) {
+      results.push(y + '-' + mo + '-' + d);
+    }
+  }
+
+  // Filter unik tanpa spread Set
+  const uniqueResults = [];
+  for (let i = 0; i < results.length; i++) {
+    if (uniqueResults.indexOf(results[i]) === -1) {
+      uniqueResults.push(results[i]);
+    }
+  }
+  return uniqueResults;
+}
+
+/**
+ * Ekstraksi nama dan email peserta dari kolom string ringkasan
+ * Format per baris: "1. Budi Santoso <budi@kantor.com> (IT)"
+ */
+function extractParticipantsFromSummary(summaryText) {
+  if (!summaryText) return [];
+  const lines = String(summaryText).split('\n');
+  const list = [];
+  lines.forEach(line => {
+    const emailMatch = line.match(/<([^>]+@[^>]+)>/) || line.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
+    if (emailMatch) {
+      const email = (emailMatch[1] || emailMatch[0]).trim();
+      let name = line.replace(/^[0-9]+\.\s*/, '').replace(/<[^>]+>/, '').replace(/\(.*?\)/g, '').trim();
+      list.push({ nama: name || "Peserta", email: email, departemen: "" });
+    }
+  });
+  return list;
 }
 
 // ==============================================================================
 // 6. HELPER EMAIL REMINDER H-1 TEMPLATE
 // ==============================================================================
 function sendReminderEmails(meta, participants, modules, executionDate) {
-  const validParticipants = participants.filter(p => p.email && p.email.includes("@") && p.email.includes("."));
-  if (validParticipants.length === 0) return "0 email valid";
+  let validParticipants = (participants || []).filter(p => {
+    const email = String(p.email || '').trim();
+    return email.includes('@') && email.includes('.');
+  });
+
+  // Fallback jika participants kosong tapi ada email pengaju di meta
+  if (validParticipants.length === 0 && meta) {
+    const pengajuEmail = meta["Email pengaju"] || meta["Email leader"] || meta["Email"] || "";
+    if (pengajuEmail && String(pengajuEmail).includes("@")) {
+      validParticipants.push({
+        nama: meta["Nama pengaju"] || meta["Leader pengaju"] || "Rekan Karyawan",
+        email: String(pengajuEmail).trim(),
+        departemen: meta["Departemen / divisi"] || ""
+      });
+    }
+  }
+
+  if (validParticipants.length === 0) {
+    Logger.log("Peringatan sendReminderEmails: Tidak ada email peserta valid.");
+    return "0 email valid";
+  }
 
   const trainingName = meta["Nama training"] || "Pelatihan Internal";
   const trainingId = meta["ID training"] || "TRN";
@@ -816,8 +1072,10 @@ function sendReminderEmails(meta, participants, modules, executionDate) {
     : "-";
 
   let count = 0;
+  let errorMsgs = [];
 
   validParticipants.forEach(p => {
+    const recipientEmail = String(p.email).trim();
     const recipientName = p.nama || "Rekan Karyawan";
     const subject = `[REMINDER H-1] Pelatihan Besok: ${trainingName} (${trainingId})`;
 
@@ -867,16 +1125,20 @@ function sendReminderEmails(meta, participants, modules, executionDate) {
     const plainText = `Halo ${recipientName},\n\nReminder pelatihan Anda besok:\nTopik: ${trainingName} (${trainingId})\nWaktu: ${jadwal}\nTempat/Link: ${meta["Lokasi / venue"] || meta["Link meeting online"] || "-"}\n\nSalam,\nTim TnD`;
 
     try {
-      GmailApp.sendEmail(p.email, subject, plainText, {
+      GmailApp.sendEmail(recipientEmail, subject, plainText, {
         htmlBody: htmlBody,
         name: "Training & Development Portal"
       });
       count++;
     } catch (e) {
-      Logger.log(`Gagal kirim reminder ke ${p.email}: ${e.toString()}`);
+      Logger.log(`Gagal kirim reminder ke ${recipientEmail}: ${e.toString()}`);
+      errorMsgs.push(`${recipientEmail}: ${e.message}`);
     }
   });
 
+  if (errorMsgs.length > 0 && count === 0) {
+    return `Gagal (${errorMsgs[0]})`;
+  }
   return `${count} email`;
 }
 
@@ -885,7 +1147,7 @@ function sendReminderEmails(meta, participants, modules, executionDate) {
 // ==============================================================================
 /**
  * Jalankan fungsi ini SATU KALI dari editor Apps Script
- * untuk memasang trigger harian otomatis jam 08:00 pagi.
+ * untuk memasang trigger harian otomatis jam 08:00 pagi WIB.
  */
 function setupDailyReminderTrigger() {
   // Hapus trigger lama jika ada agar tidak terjadi duplikasi
@@ -903,25 +1165,26 @@ function setupDailyReminderTrigger() {
     .atHour(8)
     .create();
 
-  Logger.log("SUKSES: Trigger harian 'checkAndSendReminders' berhasil dipasang setiap hari pukul 08:00 pagi!");
+  Logger.log("SUKSES: Trigger harian 'checkAndSendReminders' berhasil dipasang setiap hari pukul 08:00 pagi WIB!");
 }
 
 // ==============================================================================
-// 8. FUNGSI PENGUJIAN MANUAL (TEST RUNNER)
+// 8. FUNGSI PENGUJIAN MANUAL & DIAGNOSTIK (TEST RUNNERS)
 // ==============================================================================
+
 /**
- * Jalankan fungsi ini untuk mengetes pengiriman email sample ke akun email Anda sendiri.
+ * 1. Test Kirim Email Konfirmasi Pendaftaran ke Email Akun Anda Sendiri
  */
 function testSendSampleEmail() {
   const myEmail = Session.getActiveUser().getEmail();
   if (!myEmail) {
-    Logger.log("Tidak dapat mendeteksi email aktif.");
+    Logger.log("ERROR: Tidak dapat mendeteksi email aktif. Jalankan otorisasi izin script.");
     return;
   }
 
   const sampleMeta = {
-    "ID training": "TRN-TEST-001",
-    "Nama training": "Workshop Google Workspace Automation",
+    "ID training": "TRN-20260921-WBD-SOFT",
+    "Nama training": "Workshop Google Workspace Automation (Test)",
     "Tanggal & jam pelaksanaan": "21 September 2026, 09:00 - 15:00 WIB",
     "Metode training": "Online",
     "Platform online": "Google Meet",
@@ -931,25 +1194,56 @@ function testSendSampleEmail() {
   };
 
   const sampleParticipants = [
-    { nama: "Testing User", email: myEmail, departemen: "DEVELOPER" }
+    { nama: "Testing User", email: myEmail, departemen: "WEB DEVELOPER" }
   ];
 
+  Logger.log(`Menjalankan testSendSampleEmail ke ${myEmail}...`);
   const result = sendRegistrationEmails(sampleMeta, sampleParticipants, []);
-  Logger.log("Hasil pengujian email: " + result + " ke " + myEmail);
+  Logger.log("Hasil: " + result);
 }
 
 /**
- * Jalankan fungsi ini untuk mengetes pengiriman email keputusan approval sample ke email Anda sendiri.
+ * 2. Test Kirim Email Reminder H-1 ke Email Akun Anda Sendiri
+ */
+function testSendReminderEmail() {
+  const myEmail = Session.getActiveUser().getEmail();
+  if (!myEmail) {
+    Logger.log("ERROR: Tidak dapat mendeteksi email aktif. Jalankan otorisasi izin script.");
+    return;
+  }
+
+  const sampleMeta = {
+    "ID training": "TRN-20260922-WBD-SOFT",
+    "Nama training": "Workshop Google Workspace Automation (Reminder Test)",
+    "Tanggal & jam pelaksanaan": "Besok, 09:00 - 15:00 WIB",
+    "Metode training": "Online",
+    "Platform online": "Google Meet",
+    "Link meeting online": "https://meet.google.com/abc-defg-hij",
+    "Trainer": "Duta TnD",
+    "Link silabus materi": "https://drive.google.com"
+  };
+
+  const sampleParticipants = [
+    { nama: "Testing User (Reminder)", email: myEmail, departemen: "WEB DEVELOPER" }
+  ];
+
+  Logger.log(`Menjalankan testSendReminderEmail ke ${myEmail}...`);
+  const result = sendReminderEmails(sampleMeta, sampleParticipants, [], "2026-09-22");
+  Logger.log("Hasil: " + result);
+}
+
+/**
+ * 3. Test Kirim Email Keputusan Approval ke Email Akun Anda Sendiri
  */
 function testSendApprovalDecisionEmail() {
   const myEmail = Session.getActiveUser().getEmail();
   if (!myEmail) {
-    Logger.log("Tidak dapat mendeteksi email aktif.");
+    Logger.log("ERROR: Tidak dapat mendeteksi email aktif. Jalankan otorisasi izin script.");
     return;
   }
 
   const sampleRow = {
-    "ID Training": "TRN-TEST-001",
+    "ID Training": "TRN-20260921-WBD-SOFT",
     "Nama Training": "Workshop Google Workspace Automation",
     "Nama Pengaju": "Testing Pengaju",
     "Departemen / Divisi": "WEB DEVELOPER",
@@ -964,8 +1258,60 @@ function testSendApprovalDecisionEmail() {
     "Email Pengaju": myEmail
   };
 
+  Logger.log(`Menjalankan testSendApprovalDecisionEmail ke ${myEmail}...`);
   const result = sendApprovalDecisionEmail(sampleRow, "Disetujui", "Manager Development", sampleRow["Catatan Approver"]);
-  Logger.log("Hasil pengujian email approval: " + result);
+  Logger.log("Hasil: " + result);
+}
+
+/**
+ * 4. Test Seluruh Email Sekaligus (3-in-1 Test)
+ */
+function testSendAllEmails() {
+  Logger.log("=== MEMULAI TEST SEMUA EMAIL ===");
+  testSendSampleEmail();
+  testSendReminderEmail();
+  testSendApprovalDecisionEmail();
+  checkEmailQuota();
+  Logger.log("=== TEST SEMUA EMAIL SELESAI ===");
+}
+
+/**
+ * 5. Cek Kuota & Status Izin Pengiriman Email Akun Google
+ */
+function checkEmailQuota() {
+  const quota = MailApp.getRemainingDailyQuota();
+  const user = Session.getActiveUser().getEmail();
+  Logger.log(`[INFO AKUN] Email Pemilik: ${user}`);
+  Logger.log(`[INFO KUOTA] Sisa kuota email Gmail hari ini: ${quota} email`);
+  if (quota <= 0) {
+    Logger.log("PERINGATAN: Kuota pengiriman email Anda telah habis untuk hari ini!");
+  } else {
+    Logger.log("STATUS: Pengiriman email siap digunakan.");
+  }
+}
+
+/**
+ * 6. Paksa Kirim Reminder untuk Baris Pertama Data Training pada Sheet
+ * Fungsi ini mengabaikan tanggal besok / H-1 dan status lama, sehingga sangat cocok
+ * digunakan untuk menguji coba pengiriman reminder langsung dari data aktual di spreadsheet!
+ */
+function forceSendReminderToFirstRow() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(SHEET_NAME);
+  if (!sheet || sheet.getLastRow() <= 1) {
+    Logger.log("Belum ada data submission pada sheet untuk dites.");
+    return;
+  }
+  const rawHeaders = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  const headersLower = rawHeaders.map(h => String(h).trim().toLowerCase());
+  const colIdIdx = headersLower.indexOf("id training");
+  if (colIdIdx === -1) {
+    Logger.log("Kolom ID Training tidak ditemukan.");
+    return;
+  }
+  const firstId = String(sheet.getRange(2, colIdIdx + 1).getValue()).trim();
+  Logger.log(`Memaksa kirim reminder untuk baris pertama dengan ID: '${firstId}'`);
+  checkAndSendReminders(firstId);
 }
 
 // ==============================================================================
@@ -997,3 +1343,15 @@ function doGet(e) {
     return ContentService.createTextOutput(JSON.stringify({ error: err.toString() })).setMimeType(ContentService.MimeType.JSON);
   }
 }
+
+/**
+ * 10. HELPER: CETAK LINK GOOGLE SPREADSHEET
+ */
+function getLinkSpreadsheet() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const url = ss ? ss.getUrl() : "Tidak terhubung ke spreadsheet";
+  Logger.log("=== LINK GOOGLE SPREADSHEET ANDA ===");
+  Logger.log(url);
+  return url;
+}
+

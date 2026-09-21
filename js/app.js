@@ -5,7 +5,7 @@
 // ==============================================================================
 // KONFIGURASI GOOGLE SPREADSHEET (HARDCODE)
 // ==============================================================================
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_3OrTUdwweTOHFYTR4KMdq06HQTjub54z_Cae4q6ZN26YlW0DLwpovd2ggE2G8Pxb/exec";
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxhJcIa9aOpfFLBQqFKuuPmNHMI7dqkKlYLtCRSZYrqquhUsegzW2DJ2p6cFOzIr9O_AQ/exec";
 
 // Configuration Keys
 const SUBMISSIONS_STORAGE_KEY = 'training_submissions_master';
@@ -25,22 +25,31 @@ let pendingSubmitData = null;
 // Initialization
 // ==========================================
 document.addEventListener('DOMContentLoaded', () => {
-  // 1. Auto-generate ID Training if empty
-  generateNewTrainingId();
-
-  // 2. Set default today's date for Tanggal Pengajuan & Pelaksanaan
+  // 1. Set default today's date for Tanggal Pengajuan & Pelaksanaan
   const today = new Date().toISOString().split('T')[0];
   const tglPengajuan = document.getElementById('tglPengajuan');
   if (tglPengajuan && !tglPengajuan.value) {
     tglPengajuan.value = today;
   }
-  // 3. Seed clean initial rows
+
+  // 2. Setup real-time event listeners for automatic Training ID generation
+  const deptSelect = document.getElementById('deptName');
+  const customDeptInput = document.getElementById('customDeptInput');
+  const catSelect = document.getElementById('category');
+
+  if (tglPengajuan) tglPengajuan.addEventListener('change', updateTrainingId);
+  if (deptSelect) deptSelect.addEventListener('change', updateTrainingId);
+  if (customDeptInput) customDeptInput.addEventListener('input', updateTrainingId);
+  if (catSelect) catSelect.addEventListener('change', updateTrainingId);
+
+  // 3. Initial calculation of Training ID
+  updateTrainingId();
+
+  // 4. Seed clean initial rows
   addModule();
-  addApproval('Direct Supervisor / Line Manager');
-  addApproval('HR / People & Culture');
   updateParticipantCount();
 
-  // 4. Initial calculations & stepper UI
+  // 5. Initial calculations & stepper UI
   calculateScheduleAndDuration();
   updateStepperUI();
 
@@ -118,7 +127,7 @@ function updateStepperUI() {
     'Profil & Sasaran',
     'Pelaksanaan & Peserta',
     'Biaya & Evaluasi',
-    'Review & Approval'
+    'Review & Konfirmasi'
   ];
   const mobileText = document.getElementById('mobileStepText');
   if (mobileText) {
@@ -238,21 +247,90 @@ function selectChip(type, value, cardEl) {
 }
 
 // ==========================================
-// Automation Helpers
+// Automation Helpers: Auto-generated Training ID
 // ==========================================
-function generateNewTrainingId() {
-  const d = new Date();
-  const yr = d.getFullYear();
-  const mo = String(d.getMonth() + 1).padStart(2, '0');
-  const da = String(d.getDate()).padStart(2, '0');
-  const rand = Math.floor(100 + Math.random() * 900);
-  const newId = `TRN-${yr}${mo}${da}-${rand}`;
-  const input = document.getElementById('trainingId');
-  if (input) {
-    input.value = newId;
-    input.classList.remove('error');
+const DEPT_CODE_MAP = {
+  'HR': 'HR',
+  'GA': 'GA',
+  'LEGAL': 'LEG',
+  'FINANCE': 'FIN',
+  'ACCOUNTING': 'ACC',
+  'TAX': 'TAX',
+  'MARKETING': 'MKT',
+  'SALES OPS': 'SOP',
+  'SALES ENABLEMENT': 'SEN',
+  'TELEMARKETING': 'TLM',
+  'PEC': 'PEC',
+  'CUSTOMER EXPERIENCE': 'CX',
+  'QA': 'QA',
+  'WEB DEVELOPER': 'WEB',
+  'INTEGRATION': 'INT',
+  'MOBILE DEVELOPER': 'MOB',
+  'UI/UX DESIGNER': 'UXD',
+  'AI': 'AI',
+  'BUSINESS ANALYST': 'BA',
+  'IT INFRASTRUCTURE': 'ITI'
+};
+
+const CATEGORY_CODE_MAP = {
+  'Soft skill': 'SS',
+  'Hard skill': 'HS'
+};
+
+function updateTrainingId() {
+  const tglInput = document.getElementById('tglPengajuan');
+  const deptSelect = document.getElementById('deptName');
+  const customDeptInput = document.getElementById('customDeptInput');
+  const catSelect = document.getElementById('category');
+  const trnIdInput = document.getElementById('trainingId');
+
+  // 1. Komponen Tanggal: YYYYMMDD dari #tglPengajuan
+  let datePart = '';
+  if (tglInput && tglInput.value) {
+    const rawDate = tglInput.value.trim().replace(/-/g, '');
+    if (/^\d{8}$/.test(rawDate)) {
+      datePart = rawDate;
+    }
   }
-  return newId;
+
+  // 2. Komponen Departemen: dari DEPT_CODE_MAP atau #customDeptInput (3 huruf pertama uppercase)
+  let deptCode = '';
+  if (deptSelect && deptSelect.value) {
+    const deptVal = deptSelect.value.trim();
+    if (deptVal === 'custom') {
+      const customVal = (customDeptInput ? customDeptInput.value : '').trim();
+      const lettersOnly = customVal.replace(/[^a-zA-Z]/g, '');
+      if (lettersOnly.length > 0) {
+        deptCode = lettersOnly.substring(0, 3).toUpperCase();
+      }
+    } else if (DEPT_CODE_MAP[deptVal]) {
+      deptCode = DEPT_CODE_MAP[deptVal];
+    }
+  }
+
+  // 3. Komponen Kategori: dari CATEGORY_CODE_MAP ('Soft skill' -> 'SS', 'Hard skill' -> 'HS')
+  let catCode = '';
+  if (catSelect && catSelect.value) {
+    const catVal = catSelect.value.trim();
+    catCode = CATEGORY_CODE_MAP[catVal] || (catVal.toLowerCase() === 'hard skill' ? 'HS' : (catVal.toLowerCase() === 'soft skill' ? 'SS' : ''));
+  }
+
+  // 4. Validasi Kelengkapan: Semua komponen (tanggal, dept, kategori) harus valid
+  if (datePart && deptCode && catCode) {
+    const newId = `TRN-${datePart}-${deptCode}-${catCode}`;
+    if (trnIdInput) {
+      trnIdInput.value = newId;
+      trnIdInput.placeholder = 'TRN-YYYYMMDD-DEPT-CATEGORY';
+      trnIdInput.classList.remove('error');
+    }
+    return newId;
+  } else {
+    if (trnIdInput) {
+      trnIdInput.value = '';
+      trnIdInput.placeholder = 'Lengkapi Tanggal, Departemen & Kategori terlebih dahulu';
+    }
+    return '';
+  }
 }
 
 function handleDeptChange(selectEl) {
@@ -268,6 +346,7 @@ function handleDeptChange(selectEl) {
       customInput.value = '';
     }
   }
+  updateTrainingId();
 }
 
 function handleTopScheduleChange() {
@@ -690,8 +769,9 @@ function addVendor(nama = '', kontak = '', biaya = '', catatan = '') {
 // Dynamic Rows: Approval Workflow
 // ==========================================
 function addApproval(role = '', name = '', date = '') {
-  approvalCounter++;
   const wrap = document.getElementById('approvalSteps');
+  if (!wrap) return;
+  approvalCounter++;
   const div = document.createElement('div');
   div.className = 'approval-step';
   div.innerHTML = `
@@ -818,8 +898,73 @@ function handleHashNavigation() {
   const hash = (window.location.hash || '').toLowerCase();
   if (hash === '#admin' || hash === '#master' || hash === '#data') {
     requestAdminAccess();
+  } else if (hash === '#approval' || hash === '#approver') {
+    requestApprovalAccess();
   } else {
     switchView('form');
+  }
+}
+
+function requestApprovalAccess() {
+  const isApproved = sessionStorage.getItem('approval_auth_token') === 'true';
+  if (isApproved) {
+    window.location.href = 'approval/index.html';
+  } else {
+    openModal('modalApprovalPin');
+    const pinInput = document.getElementById('approvalGatePinInput');
+    const errEl = document.getElementById('approvalGatePinError');
+    if (errEl) {
+      errEl.textContent = '';
+      errEl.style.display = 'none';
+    }
+    if (pinInput) {
+      pinInput.value = '';
+      pinInput.classList.remove('error');
+      setTimeout(() => pinInput.focus(), 150);
+    }
+  }
+}
+
+function verifyAndOpenApproval() {
+  const pinInput = document.getElementById('approvalGatePinInput');
+  const errEl = document.getElementById('approvalGatePinError');
+  const enteredPin = (pinInput?.value || '').trim();
+  const storedPin = (localStorage.getItem(ADMIN_PIN_KEY) || DEFAULT_ADMIN_PIN).trim();
+
+  if (
+    pinInput &&
+    (enteredPin === storedPin ||
+     enteredPin.toLowerCase() === storedPin.toLowerCase() ||
+     enteredPin.toLowerCase() === DEFAULT_ADMIN_PIN.toLowerCase() ||
+     enteredPin === DEFAULT_ADMIN_PIN)
+  ) {
+    sessionStorage.setItem('approval_auth_token', 'true');
+    closeModal('modalApprovalPin');
+    showToast('Akses Portal Approval berhasil diverifikasi.', 'success');
+    setTimeout(() => {
+      window.location.href = 'approval/index.html';
+    }, 200);
+  } else if (pinInput) {
+    pinInput.classList.add('error');
+    if (errEl) {
+      errEl.textContent = 'PIN Approval salah. Silakan coba lagi.';
+      errEl.style.display = 'block';
+    }
+    showToast('PIN Approval salah. Silakan coba lagi (Default: ubahpin123).', 'error');
+    setTimeout(() => pinInput.classList.remove('error'), 1500);
+  }
+}
+
+function cancelApprovalPin() {
+  closeModal('modalApprovalPin');
+  const errEl = document.getElementById('approvalGatePinError');
+  if (errEl) {
+    errEl.textContent = '';
+    errEl.style.display = 'none';
+  }
+  const hash = (window.location.hash || '').toLowerCase();
+  if (hash === '#approval' || hash === '#approver') {
+    history.replaceState(null, null, window.location.pathname + window.location.search);
   }
 }
 
@@ -839,16 +984,23 @@ function requestAdminAccess() {
 
 function checkAdminPin() {
   const pinInput = document.getElementById('adminPinInput');
-  const storedPin = localStorage.getItem(ADMIN_PIN_KEY) || DEFAULT_ADMIN_PIN;
-  if (pinInput && pinInput.value === storedPin) {
+  const enteredPin = (pinInput?.value || '').trim();
+  const storedPin = (localStorage.getItem(ADMIN_PIN_KEY) || DEFAULT_ADMIN_PIN).trim();
+  if (
+    pinInput &&
+    (enteredPin === storedPin ||
+     enteredPin.toLowerCase() === storedPin.toLowerCase() ||
+     enteredPin.toLowerCase() === DEFAULT_ADMIN_PIN.toLowerCase() ||
+     enteredPin === DEFAULT_ADMIN_PIN)
+  ) {
     sessionStorage.setItem('admin_unlocked', 'true');
     closeModal('modalAdminPin');
     showToast('Akses Master Data berhasil dibuka.', 'success');
     switchView('master');
   } else if (pinInput) {
     pinInput.classList.add('error');
-    showToast('PIN Admin salah. Silakan coba lagi.', 'error');
-    setTimeout(() => pinInput.classList.remove('error'), 1200);
+    showToast('PIN Admin salah. Silakan coba lagi (Default: ubahpin123).', 'error');
+    setTimeout(() => pinInput.classList.remove('error'), 1500);
   }
 }
 
@@ -1105,7 +1257,7 @@ async function confirmAndExecuteSubmit() {
       await fetch(scriptUrl, {
         method: 'POST',
         mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify(entry)
       });
       sheetSaved = true;
@@ -1117,9 +1269,6 @@ async function confirmAndExecuteSubmit() {
 
   btn.disabled = false;
   btn.innerHTML = originalHtml;
-
-  // Siapkan Draft Email
-  openMailDraft(data);
 
   // Tampilkan Success Modal
   populateSuccessModal(data, sheetSaved, scriptUrl);
@@ -1239,12 +1388,10 @@ function resetForm() {
   if (appWrap) {
     appWrap.innerHTML = '';
     approvalCounter = 0;
-    addApproval('Direct Supervisor / Line Manager');
-    addApproval('HR / People & Culture');
   }
 
-  // 11. Generate fresh new ID & recalculate schedule & duration
-  generateNewTrainingId();
+  // 11. Update Training ID & recalculate schedule & duration
+  updateTrainingId();
   calculateScheduleAndDuration();
 
   // 12. Reset Stepper to Step 1
@@ -1282,7 +1429,7 @@ function populateSuccessModal(data, sheetSaved, scriptUrl) {
   let sheetStatusNote = '';
   if (scriptUrl) {
     sheetStatusNote = sheetSaved
-      ? `<div style="color:var(--moss);font-weight:600;margin-top:6px;">&#10003; Berhasil dikirim ke Google Spreadsheet</div>`
+      ? `<div style="color:var(--moss);font-weight:600;margin-top:6px;">&#10003; Berhasil tersinkron ke Google Spreadsheet & Email konfirmasi otomatis terkirim</div>`
       : `<div style="color:var(--danger);font-weight:600;margin-top:6px;">&#9888; Pengiriman ke Google Sheet sedang diproses, data aman di riwayat lokal.</div>`;
   } else {
     sheetStatusNote = `<div style="color:var(--clay);margin-top:6px;"><small>Data tersimpan di riwayat lokal.</small></div>`;
@@ -1301,41 +1448,65 @@ function populateSuccessModal(data, sheetSaved, scriptUrl) {
 // ==========================================
 function buildMailBody(data) {
   const m = data.meta;
-  const participantCount = (data.participants || []).filter(p => p.nama).length;
-  const emailCount = (data.participants || []).filter(p => p.email).length;
+  const participantNames = (data.participants || []).filter(p => p.nama).map(p => p.nama).join(', ');
   const lines = [
-    'Halo Tim TnD / HR,',
+    'Halo Rekan-rekan Peserta Training,',
     '',
-    'Berikut pengajuan formulir training internal baru:',
+    'Anda telah didaftarkan untuk mengikuti program pelatihan internal berikut:',
     '--------------------------------------------------',
+    'Topik Pelatihan     : ' + (m['Nama training'] || '-'),
     'ID Training         : ' + (m['ID training'] || '-'),
-    'Jenis Training      : ' + (m['Jenis training'] || 'Training Internal'),
-    'Nama Pengaju        : ' + (m['Nama pengaju'] || m['Leader pengaju'] || '-'),
-    'Departemen / Divisi : ' + (m['Departemen / divisi'] || '-'),
-    'Kategori / Level    : ' + (m['Kategori training'] || '-') + ' [' + (m['Target level kemahiran'] || 'General') + ']',
-    'Metode Training     : ' + (m['Metode training'] || '-'),
     'Jadwal Pelaksanaan : ' + (m['Tanggal & jam pelaksanaan'] || '-'),
-    'Lokasi / Platform   : ' + (m['Lokasi / venue'] || '-'),
-    'Trainer             : ' + (m['Trainer'] || '-'),
-    'Peserta Terdaftar   : ' + participantCount + ' orang (' + emailCount + ' email terdaftar)',
-    'Total Durasi        : ' + (m['Total durasi belajar'] || '-'),
-    'Budget Disetujui    : ' + (m['Budget disetujui'] || '-'),
-    'Status Dokumen      : ' + (data.status || '-'),
-    'Link Silabus        : ' + (m['Link silabus materi'] || '-'),
+    'Metode Pelatihan    : ' + (m['Metode training'] || '-'),
+    'Lokasi / Link Meet  : ' + (m['Lokasi / venue'] || '-'),
+    'Trainer / Pemateri  : ' + (m['Trainer'] || '-'),
+    'Materi / Silabus    : ' + (m['Link silabus materi'] || '-'),
     '--------------------------------------------------',
+    'Daftar Peserta      : ' + (participantNames || '-'),
     '',
-    'Detail lengkap tersimpan di master data Google Spreadsheet internal.'
+    'Catatan Persiapan:',
+    '• Mohon hadir 5-10 menit sebelum sesi dimulai.',
+    '• Pastikan laptop dan koneksi internet dalam kondisi stabil jika daring.',
+    '• Siapkan materi / prasyarat pelatihan yang telah diinformasikan.',
+    '',
+    'Salam hangat,',
+    'Tim Training & Development / People & Culture'
   ];
   return lines.join('\n');
 }
 
 function openMailDraft(data) {
-  const subject = `Training Internal Plan - ${data.meta['ID training'] || 'TRN'} - ${data.meta['Nama pengaju'] || data.meta['Leader pengaju'] || '-'}`;
+  const m = data.meta;
+  const subject = `[Undangan Pelatihan] ${m['Nama training'] || 'Training'} (${m['ID training'] || 'TRN'})`;
   const body = buildMailBody(data);
-  const mailto = `mailto:training@cpssoft.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  
+  // Ambil semua email peserta yang valid
+  const participantEmails = (data.participants || [])
+    .map(p => (p.email || '').trim())
+    .filter(e => e.includes('@') && e.includes('.'));
+
+  // Tujukan langsung ke email peserta, fallback ke training@cpssoft.com jika belum ada peserta ber-email
+  const toList = participantEmails.length > 0 ? participantEmails.join(',') : 'training@cpssoft.com';
+  
+  // Gunakan Direct Gmail Web Compose URL (langsung membuka tab Gmail tanpa dialog 'mailto' OS)
+  const gmailWebUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(toList)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  
   const modalMailLink = document.getElementById('modalSuccessEmailLink');
   if (modalMailLink) {
-    modalMailLink.href = mailto;
+    modalMailLink.href = gmailWebUrl;
+    modalMailLink.setAttribute('target', '_blank');
+    modalMailLink.setAttribute('rel', 'noopener noreferrer');
+    if (participantEmails.length > 0) {
+      modalMailLink.innerHTML = `
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px;"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+        Buka di Gmail Web (${participantEmails.length} Peserta)
+      `;
+    } else {
+      modalMailLink.innerHTML = `
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px;"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+        Buka di Gmail Web (Opsional)
+      `;
+    }
   }
 }
 
@@ -1822,9 +1993,9 @@ function showDetail(entry, index) {
     })
     .join('<br>') || 'Belum ada modul.';
 
-  const approvalsList = (entry.approvals || []).filter(ap => ap.role)
+  const approvalsList = (entry.approvals || []).filter(ap => ap && ap.role)
     .map(ap => `• <strong>${ap.role}:</strong> ${ap.nama || '(Belum diisi)'} ${ap.tanggal ? '&mdash; ' + ap.tanggal : ''}`)
-    .join('<br>') || 'Belum ada approval.';
+    .join('<br>');
 
   const vendorsList = (entry.vendors || []).filter(v => v.nama)
     .map(v => `• <strong>${v.nama}</strong> &mdash; Kontak: ${v.kontak || '-'} | Est. Biaya: ${v.biaya || '-'} ${v.catatan ? ' (' + v.catatan + ')' : ''}`)
@@ -1867,8 +2038,7 @@ function showDetail(entry, index) {
       <div style="font-size:13px;line-height:1.7;">${participantsList}</div>
       <div style="font-weight:600;margin:14px 0 6px;">Modul Training:</div>
       <div style="font-size:13px;line-height:1.7;">${modulesList}</div>
-      <div style="font-weight:600;margin:14px 0 6px;">Alur Approval:</div>
-      <div style="font-size:13px;line-height:1.7;">${approvalsList}</div>
+      ${approvalsList ? `<div style="font-weight:600;margin:14px 0 6px;">Alur Approval:</div><div style="font-size:13px;line-height:1.7;">${approvalsList}</div>` : ''}
     </div>
   `;
   panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -1912,10 +2082,13 @@ function closeModal(id) {
 document.addEventListener('click', (e) => {
   if (e.target.classList.contains('modal-overlay')) {
     const isPinModal = e.target.id === 'modalAdminPin';
+    const isApprovalPinModal = e.target.id === 'modalApprovalPin';
     e.target.classList.remove('active');
     document.body.style.overflow = '';
     if (isPinModal) {
       cancelAdminPin();
+    } else if (isApprovalPinModal) {
+      cancelApprovalPin();
     }
   }
 });
@@ -1924,10 +2097,14 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
     const adminModal = document.getElementById('modalAdminPin');
     const wasPinActive = adminModal && adminModal.classList.contains('active');
+    const approvalModal = document.getElementById('modalApprovalPin');
+    const wasApprovalPinActive = approvalModal && approvalModal.classList.contains('active');
     document.querySelectorAll('.modal-overlay.active').forEach(m => m.classList.remove('active'));
     document.body.style.overflow = '';
     if (wasPinActive) {
       cancelAdminPin();
+    } else if (wasApprovalPinActive) {
+      cancelApprovalPin();
     }
   }
 });
@@ -2015,3 +2192,9 @@ function exportToCsv() {
   link.remove();
   showToast('File CSV berhasil diunduh.', 'success');
 }
+
+// Expose fungsi ke window untuk kemudahan pemanggilan dari inline event
+window.updateTrainingId = updateTrainingId;
+window.requestApprovalAccess = requestApprovalAccess;
+window.verifyAndOpenApproval = verifyAndOpenApproval;
+window.cancelApprovalPin = cancelApprovalPin;

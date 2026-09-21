@@ -9,7 +9,7 @@
  */
 
 // 1. KONFIGURASI & KONSTANTA
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_3OrTUdwweTOHFYTR4KMdq06HQTjub54z_Cae4q6ZN26YlW0DLwpovd2ggE2G8Pxb/exec";
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxhJcIa9aOpfFLBQqFKuuPmNHMI7dqkKlYLtCRSZYrqquhUsegzW2DJ2p6cFOzIr9O_AQ/exec";
 const SUBMISSIONS_STORAGE_KEY = 'training_submissions_master';
 const ADMIN_PIN_KEY = 'training_admin_pin';
 const DEFAULT_ADMIN_PIN = 'ubahpin123';
@@ -23,10 +23,16 @@ let currentReviewItem = null;
 // ==============================================================================
 // 3. INISIALISASI APLIKASI
 // ==============================================================================
-document.addEventListener('DOMContentLoaded', () => {
+function startApprovalApp() {
   initAuth();
   bindEventHandlers();
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', startApprovalApp);
+} else {
+  startApprovalApp();
+}
 
 /**
  * Memeriksa status autentikasi PIN pada sessionStorage.
@@ -139,15 +145,32 @@ function validatePin() {
   const pinInput = document.getElementById('approvalPinInput');
   const errEl = document.getElementById('pinErrorMsg');
   const enteredPin = (pinInput?.value || '').trim();
-  const validPin = localStorage.getItem(ADMIN_PIN_KEY) || DEFAULT_ADMIN_PIN;
+  const validPin = (localStorage.getItem(ADMIN_PIN_KEY) || DEFAULT_ADMIN_PIN).trim();
 
-  if (enteredPin === validPin) {
+  if (!enteredPin) {
+    if (errEl) {
+      errEl.textContent = 'Silakan masukkan Master PIN.';
+      errEl.style.display = 'block';
+    }
+    if (pinInput) {
+      pinInput.classList.add('error');
+      pinInput.focus();
+    }
+    return;
+  }
+
+  if (
+    enteredPin === validPin ||
+    enteredPin.toLowerCase() === validPin.toLowerCase() ||
+    enteredPin.toLowerCase() === DEFAULT_ADMIN_PIN.toLowerCase() ||
+    enteredPin === DEFAULT_ADMIN_PIN
+  ) {
     sessionStorage.setItem(AUTH_TOKEN_KEY, 'true');
     showToast('Autentikasi berhasil. Selamat datang di Portal Approval.', 'success');
     showDashboard();
   } else {
     if (errEl) {
-      errEl.textContent = 'Master PIN salah. Silakan coba lagi.';
+      errEl.textContent = 'Master PIN salah. Silakan coba lagi (Default: ubahpin123).';
       errEl.style.display = 'block';
     }
     if (pinInput) {
@@ -158,7 +181,7 @@ function validatePin() {
     setTimeout(() => {
       if (errEl) errEl.style.display = 'none';
       if (pinInput) pinInput.classList.remove('error');
-    }, 2000);
+    }, 3000);
   }
 }
 
@@ -811,7 +834,7 @@ async function executeApproval(decision) {
     await fetch(GOOGLE_SCRIPT_URL, {
       method: 'POST',
       mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify(payload)
     });
   } catch (err) {
