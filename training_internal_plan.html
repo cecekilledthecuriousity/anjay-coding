@@ -379,7 +379,7 @@
               <span>Tanggal Pelaksanaan</span>
               <span class="hint" style="color:var(--moss);">Otomatis</span>
             </label>
-            <input type="text" id="tglPelaksanaan" readonly style="background:#FAF9F5;font-weight:600;color:var(--ink);" placeholder="Otomatis dari sesi">
+            <input type="text" id="tglPelaksanaan" data-field="Tanggal pelaksanaan (raw)" readonly style="background:#FAF9F5;font-weight:600;color:var(--ink);" placeholder="Otomatis dari sesi">
           </div>
           <div class="field">
             <label>
@@ -387,8 +387,8 @@
               <span class="hint" style="color:var(--moss);">Otomatis</span>
             </label>
             <input type="text" id="jamPelaksanaan" readonly style="background:#FAF9F5;font-weight:600;color:var(--ink);" placeholder="Otomatis dari sesi">
-            <input type="hidden" id="jamMulai" value="09:00">
-            <input type="hidden" id="jamSelesai" value="15:00">
+            <input type="hidden" id="jamMulai" data-field="Jam mulai (raw)" value="09:00">
+            <input type="hidden" id="jamSelesai" data-field="Jam selesai (raw)" value="15:00">
             <input type="hidden" id="jadwal" data-field="Tanggal &amp; jam pelaksanaan">
           </div>
         </div>

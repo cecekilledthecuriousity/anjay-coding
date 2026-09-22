@@ -25,6 +25,13 @@ const SHEET_NAME = "Training Submissions";
 const TIME_ZONE = "Asia/Jakarta";
 const LOGO_IMAGE_URL = "https://raw.githubusercontent.com/cecekilledthecuriousity/anjay-coding/main/favicon/apple-touch-icon.png";
 
+const ROOM_CALENDAR_MAP = {
+  'Ruangan Meeting Neptunus': 'c_1881kdt0gqog6js3lg0umkabhcc5s@resource.calendar.google.com',
+  'Ruangan Meeting Saturnus': 'c_1888qp0vkrf3mi6ri2sci3qi57o62@resource.calendar.google.com',
+  'Ruangan Meeting Mars': 'c_188af71f94iieh7oif5rf055i47pi@resource.calendar.google.com',
+  'Ruangan Meeting Merkurius': 'c_188850vcfda0kjn4lgnm6olsfs098@resource.calendar.google.com'
+};
+
 const HEADERS = [
   "Waktu Submit",
   "ID Training",
@@ -217,14 +224,10 @@ function doPost(e) {
     const rowData = currentHeaders.map(h => (rowMap[h] !== undefined ? rowMap[h] : "-"));
     sheet.appendRow(rowData);
 
+    const bookingResult = bookMeetingRoom(meta);
+
     return ContentService.createTextOutput(
-      JSON.stringify({
-        status: "success",
-        message: "Data tersimpan & email konfirmasi diproses",
-        id: trainingId,
-        emailStatus: confirmationEmailStatus,
-        calendarId: calendarEventId
-      })
+      JSON.stringify({ status: "success", message: "Data saved to Google Sheets successfully", id: meta["ID training"] || trainingId, roomBooking: bookingResult })
     ).setMimeType(ContentService.MimeType.JSON);
 
   } catch (error) {
@@ -686,8 +689,94 @@ function sendApprovalDecisionEmail(rowObj, status, approverName, notes) {
 }
 
 // ==============================================================================
-// 4. GOOGLE CALENDAR EVENT CREATOR (AUTO-INVITE GUESTS)
+// 4. GOOGLE CALENDAR EVENT CREATOR (AUTO-BOOKING RUANGAN & AUTO-INVITE)
 // ==============================================================================
+/**
+ * Auto-booking ke Google Calendar ruangan meeting yang dipilih
+ * Menambahkan email resource ruangan meeting sebagai guests ke event kalender.
+ */
+function bookMeetingRoom(meta) {
+  try {
+    const lokasi = meta["Lokasi / venue"];
+    const roomEmail = ROOM_CALENDAR_MAP[lokasi];
+    if (!roomEmail || roomEmail.indexOf('GANTI_DENGAN') === 0) {
+      return { booked: false, reason: "Lokasi bukan ruangan meeting internal atau email resource belum diisi" };
+    }
+    const tglRaw = meta["Tanggal pelaksanaan (raw)"];
+    const jamMulaiRaw = meta["Jam mulai (raw)"] || "09:00";
+    const jamSelesaiRaw = meta["Jam selesai (raw)"] || "15:00";
+    if (!tglRaw) {
+      return { booked: false, reason: "Tanggal pelaksanaan kosong" };
+    }
+    let startTime = new Date(`${tglRaw}T${jamMulaiRaw}:00`);
+    let endTime = new Date(`${tglRaw}T${jamSelesaiRaw}:00`);
+    if (isNaN(startTime.getTime()) && typeof parseDatesFromText === "function") {
+      const parsed = parseDatesFromText(tglRaw);
+      if (parsed && parsed.length > 0) {
+        startTime = new Date(`${parsed[0]}T${jamMulaiRaw}:00`);
+        endTime = new Date(`${parsed[0]}T${jamSelesaiRaw}:00`);
+      }
+    }
+    const title = `Training: ${meta["ID training"] || "-"} - ${meta["Kategori training"] || "Training"}`;
+    const description = [
+      `Leader Pengaju: ${meta["Leader pengaju"] || "-"}`,
+      `Departemen: ${meta["Departemen / divisi"] || "-"}`,
+      `ID Training: ${meta["ID training"] || "-"}`
+    ].join("\n");
+    const event = CalendarApp.createEvent(title, startTime, endTime, {
+      guests: roomEmail,
+      description: description,
+      sendInvites: true
+    });
+    return { booked: true, eventId: event.getId(), room: lokasi };
+  } catch (err) {
+    return { booked: false, reason: err.toString() };
+  }
+}
+
+/**
+ * Mendapatkan instance Calendar target berdasarkan nama ruangan meeting yang dipilih.
+ * Mendukung pencarian ID kalender khusus ruangan di ROOM_CALENDAR_MAP,
+ * dan otomatis fallback ke kalender default jika ID kosong atau belum dikonfigurasi.
+ */
+function getTargetCalendar(roomName) {
+  if (!roomName) return CalendarApp.getDefaultCalendar();
+
+  const cleanRoom = String(roomName).trim();
+  let calId = ROOM_CALENDAR_MAP[cleanRoom];
+
+  // Pencocokan fleksibel jika roomName mengandung nama planet
+  if (!calId) {
+    const lower = cleanRoom.toLowerCase();
+    for (const key in ROOM_CALENDAR_MAP) {
+      if (lower.includes(key.toLowerCase()) || key.toLowerCase().includes(lower)) {
+        calId = ROOM_CALENDAR_MAP[key];
+        break;
+      }
+      const planetOnly = key.replace(/Ruangan Meeting\s*/i, '').trim().toLowerCase();
+      if (lower.includes(planetOnly)) {
+        calId = ROOM_CALENDAR_MAP[key];
+        break;
+      }
+    }
+  }
+
+  if (calId && String(calId).trim() !== "" && !String(calId).includes("xxxx")) {
+    try {
+      const roomCal = CalendarApp.getCalendarById(calId.trim());
+      if (roomCal) {
+        Logger.log(`[Google Calendar] Auto-booking ke kalender ruangan: ${roomCal.getName()} (${calId})`);
+        return roomCal;
+      }
+    } catch (calErr) {
+      Logger.log(`[Google Calendar] Gagal akses kalender ${cleanRoom} (${calId}): ${calErr.message}. Fallback ke kalender default.`);
+    }
+  }
+
+  Logger.log(`[Google Calendar] Booking ke Kalender Utama (Default) untuk lokasi: ${cleanRoom || "Default"}`);
+  return CalendarApp.getDefaultCalendar();
+}
+
 function createCalendarEvent(meta, participants, modules) {
   const guestEmails = (participants || [])
     .filter(p => p.email && String(p.email).includes("@"))
@@ -698,26 +787,53 @@ function createCalendarEvent(meta, participants, modules) {
   const trainingId = meta["ID training"] || "TRN";
   let location = meta["Lokasi / venue"] || meta["Link meeting online"] || "";
 
-  // Tentukan tanggal & waktu
+  // Tentukan tanggal & waktu pelaksanaan
   let startDate = null;
   let endDate = null;
 
+  // 1. Ekstraksi dari modul sesi pertama
   if (modules && modules.length > 0 && modules[0].tanggal) {
     const firstMod = modules[0];
     const tgl = String(firstMod.tanggal).trim(); // YYYY-MM-DD
-    const startStr = firstMod.jamMulai || "09:00";
-    const endStr = firstMod.jamSelesai || "15:00";
+    const startStr = firstMod.jamMulai || meta["Jam mulai"] || "09:00";
+    const endStr = firstMod.jamSelesai || meta["Jam selesai"] || "15:00";
     startDate = new Date(`${tgl}T${startStr}:00`);
     endDate = new Date(`${tgl}T${endStr}:00`);
   }
 
-  // Fallback tanggal dari ID jika modul kosong: TRN-YYYYMMDD-...
+  // 2. Ekstraksi dari field Tanggal pelaksanaan / Tanggal & jam pelaksanaan
+  if (!startDate || isNaN(startDate.getTime())) {
+    const rawTgl = meta["Tanggal pelaksanaan"] || meta["Tanggal & jam pelaksanaan"] || "";
+    const parsedDates = parseDatesFromText(rawTgl);
+    if (parsedDates && parsedDates.length > 0) {
+      const tgl = parsedDates[0];
+      const startStr = meta["Jam mulai"] || "09:00";
+      const endStr = meta["Jam selesai"] || "15:00";
+      startDate = new Date(`${tgl}T${startStr}:00`);
+      endDate = new Date(`${tgl}T${endStr}:00`);
+    }
+  }
+
+  // 3. Fallback tanggal dari ID: TRN-YYYYMMDD-...
   if (!startDate || isNaN(startDate.getTime())) {
     const idMatch = String(trainingId).match(/TRN-(\d{4})(\d{2})(\d{2})/i) || String(trainingId).match(/(\d{4})(\d{2})(\d{2})/);
     if (idMatch) {
       const dateIso = `${idMatch[1]}-${idMatch[2]}-${idMatch[3]}`;
-      startDate = new Date(`${dateIso}T09:00:00`);
-      endDate = new Date(`${dateIso}T15:00:00`);
+      const startStr = meta["Jam mulai"] || "09:00";
+      const endStr = meta["Jam selesai"] || "15:00";
+      startDate = new Date(`${dateIso}T${startStr}:00`);
+      endDate = new Date(`${dateIso}T${endStr}:00`);
+    }
+  }
+
+  // 4. Fallback dari Tanggal pengajuan jika ada
+  if (!startDate || isNaN(startDate.getTime())) {
+    const tglPengajuan = meta["Tanggal pengajuan"];
+    if (tglPengajuan && String(tglPengajuan).match(/^\d{4}-\d{2}-\d{2}$/)) {
+      const startStr = meta["Jam mulai"] || "09:00";
+      const endStr = meta["Jam selesai"] || "15:00";
+      startDate = new Date(`${tglPengajuan}T${startStr}:00`);
+      endDate = new Date(`${tglPengajuan}T${endStr}:00`);
     }
   }
 
@@ -726,15 +842,22 @@ function createCalendarEvent(meta, participants, modules) {
   }
 
   const title = `[Training] ${trainingName} (${trainingId})`;
-  const description = `Program Pelatihan Karyawan:\nID Training: ${trainingId}\nTopik: ${trainingName}\nTrainer: ${meta["Trainer"] || "-"}${meta["Link silabus materi"] && String(meta["Link silabus materi"]).trim() !== "-" && String(meta["Link silabus materi"]).trim() !== "" ? `\nSilabus: ${meta["Link silabus materi"]}` : ""}\n\nEmail ini otomatis dibuat oleh Portal Training.`;
+  const description = `Program Pelatihan Karyawan:\nID Training: ${trainingId}\nTopik: ${trainingName}\nTrainer: ${meta["Trainer"] || "-"}\nLokasi / Ruangan: ${location || "-"}${meta["Link silabus materi"] && String(meta["Link silabus materi"]).trim() !== "-" && String(meta["Link silabus materi"]).trim() !== "" ? `\nSilabus: ${meta["Link silabus materi"]}` : ""}\n\nEmail ini otomatis dibuat oleh Portal Training.`;
 
-  const calendar = CalendarApp.getDefaultCalendar();
-  const event = calendar.createEvent(title, startDate, endDate, {
+  // Dapatkan kalender target (kalender khusus ruangan meeting atau default)
+  const calendar = getTargetCalendar(location);
+
+  const eventOptions = {
     description: description,
-    location: location,
-    guests: guestEmails,
-    sendInvites: true // Otomatis mengirim undangan kalender resmi
-  });
+    location: location
+  };
+
+  if (guestEmails) {
+    eventOptions.guests = guestEmails;
+    eventOptions.sendInvites = Boolean(SEND_CALENDAR_INVITES);
+  }
+
+  const event = calendar.createEvent(title, startDate, endDate, eventOptions);
 
   // Tambahkan reminder otomatis ke seluruh peserta:
   // 1. Pop-up alarm notifikasi di HP & laptop 10 menit sebelum training dimulai
@@ -745,7 +868,8 @@ function createCalendarEvent(meta, participants, modules) {
   event.addPopupReminder(15);
   event.addEmailReminder(1440);
 
-  return event.getId();
+  const calName = calendar.getName() ? ` (${calendar.getName()})` : "";
+  return `${event.getId()}${calName}`;
 }
 
 // ==============================================================================
@@ -1345,6 +1469,33 @@ function forceSendReminderToFirstRow() {
   const firstId = String(sheet.getRange(2, colIdIdx + 1).getValue()).trim();
   Logger.log(`Memaksa kirim reminder untuk baris pertama dengan ID: '${firstId}'`);
   checkAndSendReminders(firstId);
+}
+
+/**
+ * 7. Test Auto-Booking Ruangan Google Calendar
+ * Jalankan fungsi ini langsung dari editor Apps Script untuk menguji
+ * booking kalender ruangan (Neptunus/Saturnus/Mars/Merkurius).
+ */
+function testCreateRoomCalendarBooking() {
+  const sampleMeta = {
+    "ID training": "TRN-TEST-SATURNUS",
+    "Nama training": "Workshop Google Calendar Saturnus",
+    "Kategori training": "Teknis",
+    "Lokasi / venue": "Ruangan Meeting Saturnus",
+    "Tanggal pelaksanaan (raw)": "2026-09-25",
+    "Jam mulai (raw)": "10:00",
+    "Jam selesai (raw)": "12:00",
+    "Trainer": "Trainer Fasilitator",
+    "Leader pengaju": "Leader Saturnus",
+    "Departemen / divisi": "WEB DEVELOPER",
+    "Link silabus materi": "https://drive.google.com"
+  };
+
+  Logger.log("=== MEMULAI TEST BOOKING KALENDER RUANGAN SATURNUS ===");
+  Logger.log(`Target Ruangan: ${sampleMeta["Lokasi / venue"]}`);
+  const result = bookMeetingRoom(sampleMeta);
+  Logger.log(`Hasil booking kalender: ${JSON.stringify(result)}`);
+  return result;
 }
 
 // ==============================================================================

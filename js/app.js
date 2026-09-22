@@ -520,8 +520,14 @@ function calculateScheduleAndDuration() {
     jamDisplay.value = timeText || '-';
     jamDisplay.setAttribute('value', timeText || '-');
   }
-  if (jamHiddenMulai && earliest) jamHiddenMulai.value = earliest;
-  if (jamHiddenSelesai && latest) jamHiddenSelesai.value = latest;
+  if (jamHiddenMulai && earliest) {
+    jamHiddenMulai.value = earliest;
+    jamHiddenMulai.setAttribute('value', earliest);
+  }
+  if (jamHiddenSelesai && latest) {
+    jamHiddenSelesai.value = latest;
+    jamHiddenSelesai.setAttribute('value', latest);
+  }
 
   // 4. Lokasi / Ruangan (hanya jika tidak menggunakan chip grid lokasi)
   if (!document.getElementById('lokasiChipGrid')) {
@@ -1099,6 +1105,9 @@ function collectFormData() {
 
   // Ensure schedule, duration, and participant counts are fresh
   meta['Tanggal & jam pelaksanaan'] = document.getElementById('jadwal')?.value || meta['Tanggal & jam pelaksanaan'] || '';
+  meta['Tanggal pelaksanaan (raw)'] = document.getElementById('tglPelaksanaan')?.value || meta['Tanggal pelaksanaan (raw)'] || '';
+  meta['Jam mulai (raw)'] = document.getElementById('jamMulai')?.value || meta['Jam mulai (raw)'] || '';
+  meta['Jam selesai (raw)'] = document.getElementById('jamSelesai')?.value || meta['Jam selesai (raw)'] || '';
   meta['Total durasi belajar'] = document.getElementById('totalDuration')?.value || meta['Total durasi belajar'] || '';
   meta['Jumlah partisipan (rencana)'] = document.getElementById('plannedParticipants')?.value || meta['Jumlah partisipan (rencana)'] || '';
   meta['Lokasi / venue'] = document.getElementById('lokasi')?.value || meta['Lokasi / venue'] || '';
