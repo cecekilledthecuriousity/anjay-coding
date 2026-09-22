@@ -23,6 +23,7 @@
 
 const SHEET_NAME = "Training Submissions";
 const TIME_ZONE = "Asia/Jakarta";
+const LOGO_IMAGE_URL = "https://raw.githubusercontent.com/cecekilledthecuriousity/anjay-coding/main/favicon/apple-touch-icon.png";
 
 const HEADERS = [
   "Waktu Submit",
@@ -135,7 +136,7 @@ function doPost(e) {
     }
 
     // Format rincian biaya breakdown
-    const rincianBiaya = `Fee: ${meta["Fee trainer"] || "0"} | Konsumsi: ${meta["Konsumsi & catering"] || "0"} | Materi: ${meta["Materi & sertifikat"] || "0"} | Venue: ${meta["Venue & alat"] || "0"}`;
+    const rincianBiaya = `Fee: ${meta["Fee trainer"] || "0"} | Konsumsi: ${meta["Konsumsi & catering"] || "0"} | Materi: ${meta["Materi & sertifikat"] || "0"} | Transportasi: ${meta["Transportasi"] || "0"}`;
 
     // Format prasyarat & output
     const prasyaratOutput = `Prasyarat: ${meta["Prasyarat peserta"] || "-"} | Output: ${meta["Sertifikasi / output"] || "-"}`;
@@ -412,9 +413,18 @@ function sendRegistrationEmails(meta, participants, modules) {
 
     const htmlBody = `
       <div style="font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;max-width:600px;margin:0 auto;background:#FAF9F5;border:1px solid #E6E4DD;border-radius:12px;overflow:hidden;color:#1F2421;">
-        <div style="background:#3F5A44;color:#FFFFFF;padding:24px 28px;">
-          <p style="margin:0;font-size:11px;text-transform:uppercase;letter-spacing:0.08em;opacity:0.85;">Employee Development Program</p>
-          <h2 style="margin:6px 0 0;font-size:20px;font-weight:600;">Konfirmasi Pendaftaran Pelatihan</h2>
+        <div style="background:#3F5A44;color:#FFFFFF;padding:22px 28px;">
+          <table style="width:100%;border-collapse:collapse;" role="presentation">
+            <tr>
+              <td style="vertical-align:middle;width:48px;">
+                <img src="${LOGO_IMAGE_URL}" alt="Logo" width="44" height="44" style="border-radius:10px;display:block;border:0;" />
+              </td>
+              <td style="vertical-align:middle;padding-left:14px;">
+                <p style="margin:0;font-size:11px;text-transform:uppercase;letter-spacing:0.08em;opacity:0.85;color:#FFFFFF;">Employee Development Program</p>
+                <h2 style="margin:4px 0 0;font-size:20px;font-weight:600;color:#FFFFFF;">Konfirmasi Pendaftaran Pelatihan</h2>
+              </td>
+            </tr>
+          </table>
         </div>
         
         <div style="padding:28px;">
@@ -574,9 +584,18 @@ function sendApprovalDecisionEmail(rowObj, status, approverName, notes) {
   const htmlBody = `
     <div style="font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;max-width:620px;margin:0 auto;background:#FAF9F5;border:1px solid #E6E4DD;border-radius:12px;overflow:hidden;color:#1F2421;">
       <!-- Header -->
-      <div style="background:#3F5A44;color:#FFFFFF;padding:24px 28px;">
-        <p style="margin:0;font-size:11px;text-transform:uppercase;letter-spacing:0.08em;opacity:0.85;">Employee Development & Training Portal</p>
-        <h2 style="margin:6px 0 0;font-size:20px;font-weight:600;">Status Pengajuan: Training ${trainingId}</h2>
+      <div style="background:#3F5A44;color:#FFFFFF;padding:22px 28px;">
+        <table style="width:100%;border-collapse:collapse;" role="presentation">
+          <tr>
+            <td style="vertical-align:middle;width:48px;">
+              <img src="${LOGO_IMAGE_URL}" alt="Logo" width="44" height="44" style="border-radius:10px;display:block;border:0;" />
+            </td>
+            <td style="vertical-align:middle;padding-left:14px;">
+              <p style="margin:0;font-size:11px;text-transform:uppercase;letter-spacing:0.08em;opacity:0.85;color:#FFFFFF;">Employee Development &amp; Training Portal</p>
+              <h2 style="margin:4px 0 0;font-size:20px;font-weight:600;color:#FFFFFF;">Status Pengajuan: Training ${trainingId}</h2>
+            </td>
+          </tr>
+        </table>
       </div>
 
       <!-- Main Content -->
@@ -1086,8 +1105,17 @@ function sendReminderEmails(meta, participants, modules, executionDate) {
     const htmlBody = `
       <div style="font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;max-width:600px;margin:0 auto;background:#FAF9F5;border:1px solid #E6E4DD;border-radius:12px;overflow:hidden;color:#1F2421;">
         <div style="background:#B78628;color:#FFFFFF;padding:22px 28px;">
-          <p style="margin:0;font-size:11px;text-transform:uppercase;letter-spacing:0.08em;opacity:0.9;">Pengingat Jadwal Pelatihan</p>
-          <h2 style="margin:6px 0 0;font-size:20px;font-weight:600;">Reminder: Pelatihan Anda Berlangsung Besok!</h2>
+          <table style="width:100%;border-collapse:collapse;" role="presentation">
+            <tr>
+              <td style="vertical-align:middle;width:48px;">
+                <img src="${LOGO_IMAGE_URL}" alt="Logo" width="44" height="44" style="border-radius:10px;display:block;border:0;" />
+              </td>
+              <td style="vertical-align:middle;padding-left:14px;">
+                <p style="margin:0;font-size:11px;text-transform:uppercase;letter-spacing:0.08em;opacity:0.9;color:#FFFFFF;">Pengingat Jadwal Pelatihan</p>
+                <h2 style="margin:4px 0 0;font-size:20px;font-weight:600;color:#FFFFFF;">Reminder: Pelatihan Anda Berlangsung Besok!</h2>
+              </td>
+            </tr>
+          </table>
         </div>
 
         <div style="padding:28px;">

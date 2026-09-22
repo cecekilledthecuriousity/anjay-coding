@@ -579,7 +579,7 @@ function renderModalDetails(item) {
   const feeTrainer = meta['Fee trainer'] || '-';
   const konsumsi = meta['Konsumsi & catering'] || '-';
   const materi = meta['Materi & sertifikat'] || '-';
-  const venueCost = meta['Venue & alat'] || '-';
+  const transportCost = meta['Transportasi'] || '-';
   const rincianBiayaText = raw['Rincian Biaya (Fee/Konsumsi/Materi/Venue)'];
 
   // 4. Daftar Peserta
@@ -754,7 +754,7 @@ function renderModalDetails(item) {
           <div style="background:rgba(0,0,0,0.02);padding:8px 12px;border-radius:6px;border:1px solid var(--line-soft);">Fee Trainer: <strong>${escapeHtml(feeTrainer)}</strong></div>
           <div style="background:rgba(0,0,0,0.02);padding:8px 12px;border-radius:6px;border:1px solid var(--line-soft);">Konsumsi: <strong>${escapeHtml(konsumsi)}</strong></div>
           <div style="background:rgba(0,0,0,0.02);padding:8px 12px;border-radius:6px;border:1px solid var(--line-soft);">Materi &amp; Sertifikat: <strong>${escapeHtml(materi)}</strong></div>
-          <div style="background:rgba(0,0,0,0.02);padding:8px 12px;border-radius:6px;border:1px solid var(--line-soft);">Venue &amp; Alat: <strong>${escapeHtml(venueCost)}</strong></div>
+          <div style="background:rgba(0,0,0,0.02);padding:8px 12px;border-radius:6px;border:1px solid var(--line-soft);">Transportasi: <strong>${escapeHtml(transportCost)}</strong></div>
         </div>
       ` : `
         <div style="font-size:13px;color:var(--ink-soft);">${escapeHtml(rincianBiayaText || 'Tidak ada perincian biaya tambahan')}</div>

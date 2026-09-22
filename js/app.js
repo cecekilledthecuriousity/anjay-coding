@@ -243,6 +243,25 @@ function selectChip(type, value, cardEl) {
         vendorBlock.style.display = 'none';
       }
     }
+  } else if (type === 'lokasi') {
+    document.querySelectorAll('#lokasiChipGrid .chip-card').forEach(c => c.classList.remove('selected'));
+    cardEl.classList.add('selected');
+    const input = document.getElementById('lokasi');
+    const customInput = document.getElementById('customLokasiInput');
+
+    if (value === 'custom') {
+      if (input) input.value = 'custom';
+      if (customInput) {
+        customInput.style.display = 'block';
+        customInput.focus();
+      }
+    } else {
+      if (input) input.value = value;
+      if (customInput) {
+        customInput.style.display = 'none';
+        customInput.value = '';
+      }
+    }
   }
 }
 
@@ -504,19 +523,21 @@ function calculateScheduleAndDuration() {
   if (jamHiddenMulai && earliest) jamHiddenMulai.value = earliest;
   if (jamHiddenSelesai && latest) jamHiddenSelesai.value = latest;
 
-  // 4. Lokasi / Ruangan
-  const distinctLocs = [...new Set(locations)];
-  let locText = '';
-  if (distinctLocs.length === 0) {
-    locText = '';
-  } else if (distinctLocs.length === 1) {
-    locText = distinctLocs[0];
-  } else {
-    locText = `${distinctLocs.length} lokasi berbeda`;
-  }
-  if (lokasiDisplay) {
-    lokasiDisplay.value = locText;
-    lokasiDisplay.setAttribute('value', locText);
+  // 4. Lokasi / Ruangan (hanya jika tidak menggunakan chip grid lokasi)
+  if (!document.getElementById('lokasiChipGrid')) {
+    const distinctLocs = [...new Set(locations)];
+    let locText = '';
+    if (distinctLocs.length === 0) {
+      locText = '';
+    } else if (distinctLocs.length === 1) {
+      locText = distinctLocs[0];
+    } else {
+      locText = `${distinctLocs.length} lokasi berbeda`;
+    }
+    if (lokasiDisplay) {
+      lokasiDisplay.value = locText;
+      lokasiDisplay.setAttribute('value', locText);
+    }
   }
 
   // 5. Hidden Jadwal text for data-field="Tanggal & jam pelaksanaan"
@@ -857,9 +878,9 @@ function calcBudgetBreakdown() {
   const fee = rupiahToNumber(document.getElementById('budgetFee')?.value);
   const konsumsi = rupiahToNumber(document.getElementById('budgetKonsumsi')?.value);
   const materi = rupiahToNumber(document.getElementById('budgetMateri')?.value);
-  const venue = rupiahToNumber(document.getElementById('budgetVenue')?.value);
+  const transport = rupiahToNumber(document.getElementById('budgetTransport')?.value);
 
-  const total = fee + konsumsi + materi + venue;
+  const total = fee + konsumsi + materi + transport;
   const estInput = document.getElementById('estBudget');
   if (estInput) {
     estInput.value = total > 0 ? 'Rp ' + new Intl.NumberFormat('id-ID').format(total) : '';
@@ -1082,6 +1103,12 @@ function collectFormData() {
   meta['Jumlah partisipan (rencana)'] = document.getElementById('plannedParticipants')?.value || meta['Jumlah partisipan (rencana)'] || '';
   meta['Lokasi / venue'] = document.getElementById('lokasi')?.value || meta['Lokasi / venue'] || '';
 
+  // Handle custom location if selected
+  if (meta['Lokasi / venue'] === 'custom') {
+    const customLoc = document.getElementById('customLokasiInput');
+    meta['Lokasi / venue'] = customLoc && customLoc.value.trim() ? customLoc.value.trim() : 'Lainnya';
+  }
+
   // Aliases for compatibility
   meta['Nama pengaju'] = meta['Nama pengaju'] || meta['Leader pengaju'] || '';
   meta['Leader pengaju'] = meta['Nama pengaju'];
@@ -1290,8 +1317,16 @@ function resetForm() {
   if (tglPelaksanaan) tglPelaksanaan.value = '';
   const jamPelaksanaan = document.getElementById('jamPelaksanaan');
   if (jamPelaksanaan) jamPelaksanaan.value = '';
+  // Reset Lokasi Chips & Custom Lokasi Input
+  const lokasiChips = document.querySelectorAll('#lokasiChipGrid .chip-card');
+  lokasiChips.forEach(c => c.classList.remove('selected'));
   const lokasi = document.getElementById('lokasi');
   if (lokasi) lokasi.value = '';
+  const customLokasi = document.getElementById('customLokasiInput');
+  if (customLokasi) {
+    customLokasi.style.display = 'none';
+    customLokasi.value = '';
+  }
 
   // 5. Reset Level Chips (Beginner)
   const levelChips = document.querySelectorAll('#levelChipGrid .chip-card');
