@@ -38,6 +38,7 @@ const HEADERS = [
   "Nama Training",
   "Status Dokumen",
   "Nama Pengaju",
+  "Email Pengaju",
   "Departemen / Divisi",
   "Kategori Training",
   "Kategori Kebutuhan Training",
@@ -188,6 +189,7 @@ function doPost(e) {
       "Nama Training": meta["Nama training"] || "-",
       "Status Dokumen": data.status || "Diajukan",
       "Nama Pengaju": meta["Nama pengaju"] || meta["Leader pengaju"] || "-",
+      "Email Pengaju": meta["Email pengaju"] || meta["Email leader"] || "-",
       "Departemen / Divisi": meta["Departemen / divisi"] || "-",
       "Kategori Training": meta["Kategori training"] || "-",
       "Kategori Kebutuhan Training": meta["Kategori kebutuhan training"] || "-",
@@ -224,7 +226,15 @@ function doPost(e) {
     const rowData = currentHeaders.map(h => (rowMap[h] !== undefined ? rowMap[h] : "-"));
     sheet.appendRow(rowData);
 
-    const bookingResult = bookMeetingRoom(meta);
+    const bookingResult = bookMeetingRoom(meta, participants);
+
+    // Update ID event kalender pada spreadsheet jika auto-booking ruangan berhasil
+    if (bookingResult && bookingResult.booked && bookingResult.eventId) {
+      const colCalId = currentHeaders.indexOf("ID Event Google Calendar");
+      if (colCalId !== -1) {
+        sheet.getRange(sheet.getLastRow(), colCalId + 1).setValue(bookingResult.eventId);
+      }
+    }
 
     return ContentService.createTextOutput(
       JSON.stringify({ status: "success", message: "Data saved to Google Sheets successfully", id: meta["ID training"] || trainingId, roomBooking: bookingResult })
@@ -693,9 +703,10 @@ function sendApprovalDecisionEmail(rowObj, status, approverName, notes) {
 // ==============================================================================
 /**
  * Auto-booking ke Google Calendar ruangan meeting yang dipilih
- * Menambahkan email resource ruangan meeting sebagai guests ke event kalender.
+ * Menambahkan email resource ruangan meeting, email pengaju (Organizer/Host),
+ * dan seluruh email peserta sebagai Guests ke event kalender.
  */
-function bookMeetingRoom(meta) {
+function bookMeetingRoom(meta, participants) {
   try {
     const lokasi = meta["Lokasi / venue"];
     const roomEmail = ROOM_CALENDAR_MAP[lokasi];
@@ -717,18 +728,58 @@ function bookMeetingRoom(meta) {
         endTime = new Date(`${parsed[0]}T${jamSelesaiRaw}:00`);
       }
     }
-    const title = `Training: ${meta["ID training"] || "-"} - ${meta["Kategori training"] || "Training"}`;
+    const title = `Training: ${meta["ID training"] || "-"} - ${meta["Nama training"] || meta["Kategori training"] || "Training"}`;
+
+    const leaderName = meta["Nama pengaju"] || meta["Leader pengaju"] || "-";
+    const leaderEmail = (meta["Email pengaju"] || meta["Email leader"] || "").trim().toLowerCase();
+
+    // 1. Kumpulkan seluruh email peserta dari form pengajuan
+    const pesertaList = (participants || meta.participants || []);
+    const participantEmails = pesertaList
+      .filter(p => p.email && String(p.email).includes("@"))
+      .map(p => String(p.email).trim().toLowerCase());
+
+    // 2. Gabungkan seluruh tamu untuk Google Calendar:
+    // - Email Resource Ruangan (agar kalender ruangan ter-booking otomatis)
+    // - Email Pengaju (tampil sebagai Organizer / Host di kalender)
+    // - Email Peserta Training (tampil sebagai Guest / Tamu)
+    const guestList = [];
+    if (roomEmail && roomEmail.includes("@")) {
+      guestList.push(roomEmail.trim());
+    }
+    if (leaderEmail && leaderEmail.includes("@") && !guestList.includes(leaderEmail)) {
+      guestList.push(leaderEmail);
+    }
+    participantEmails.forEach(email => {
+      if (!guestList.includes(email)) {
+        guestList.push(email);
+      }
+    });
+
     const description = [
-      `Leader Pengaju: ${meta["Leader pengaju"] || "-"}`,
+      `Organizer / Pengaju: ${leaderName}${leaderEmail ? ` <${leaderEmail}>` : ""}`,
       `Departemen: ${meta["Departemen / divisi"] || "-"}`,
-      `ID Training: ${meta["ID training"] || "-"}`
-    ].join("\n");
+      `ID Training: ${meta["ID training"] || "-"}`,
+      `Lokasi / Ruangan: ${lokasi || "-"}`,
+      meta["Trainer"] ? `Trainer: ${meta["Trainer"]}` : "",
+      participantEmails.length > 0 ? `Daftar Peserta (${participantEmails.length} orang):\n${pesertaList.filter(p => p.nama || p.email).map((p, idx) => `${idx + 1}. ${p.nama || "Peserta"}${p.email ? ` <${p.email}>` : ""} (${p.departemen || "-"})`).join("\n")}` : "",
+      meta["Link silabus materi"] ? `Silabus: ${meta["Link silabus materi"]}` : ""
+    ].filter(Boolean).join("\n\n");
+
     const event = CalendarApp.createEvent(title, startTime, endTime, {
-      guests: roomEmail,
+      guests: guestList.join(","),
       description: description,
       sendInvites: true
     });
-    return { booked: true, eventId: event.getId(), room: lokasi };
+
+    return { 
+      booked: true, 
+      eventId: event.getId(), 
+      room: lokasi, 
+      organizer: leaderEmail || leaderName,
+      guestCount: participantEmails.length,
+      guests: participantEmails 
+    };
   } catch (err) {
     return { booked: false, reason: err.toString() };
   }
@@ -778,6 +829,14 @@ function getTargetCalendar(roomName) {
 }
 
 function createCalendarEvent(meta, participants, modules) {
+  const location = meta["Lokasi / venue"] || meta["Link meeting online"] || "";
+
+  // Jika lokasi adalah salah satu ruangan meeting internal yang dikelola oleh bookMeetingRoom,
+  // lewati agar tidak membuat event duplikat di kalender utama
+  if (ROOM_CALENDAR_MAP[location] && !String(ROOM_CALENDAR_MAP[location]).startsWith('GANTI_DENGAN')) {
+    return "Event dikelola via bookMeetingRoom";
+  }
+
   const guestEmails = (participants || [])
     .filter(p => p.email && String(p.email).includes("@"))
     .map(p => String(p.email).trim())
@@ -1477,6 +1536,7 @@ function forceSendReminderToFirstRow() {
  * booking kalender ruangan (Neptunus/Saturnus/Mars/Merkurius).
  */
 function testCreateRoomCalendarBooking() {
+  const myEmail = Session.getActiveUser().getEmail();
   const sampleMeta = {
     "ID training": "TRN-TEST-SATURNUS",
     "Nama training": "Workshop Google Calendar Saturnus",
@@ -1487,13 +1547,20 @@ function testCreateRoomCalendarBooking() {
     "Jam selesai (raw)": "12:00",
     "Trainer": "Trainer Fasilitator",
     "Leader pengaju": "Leader Saturnus",
+    "Email pengaju": myEmail,
     "Departemen / divisi": "WEB DEVELOPER",
     "Link silabus materi": "https://drive.google.com"
   };
 
+  const sampleParticipants = [
+    { nama: "Test Peserta 1", email: myEmail, departemen: "WEB DEVELOPER" }
+  ];
+
   Logger.log("=== MEMULAI TEST BOOKING KALENDER RUANGAN SATURNUS ===");
   Logger.log(`Target Ruangan: ${sampleMeta["Lokasi / venue"]}`);
-  const result = bookMeetingRoom(sampleMeta);
+  Logger.log(`Email Pengaju: ${sampleMeta["Email pengaju"]}`);
+  Logger.log(`Peserta: ${JSON.stringify(sampleParticipants)}`);
+  const result = bookMeetingRoom(sampleMeta, sampleParticipants);
   Logger.log(`Hasil booking kalender: ${JSON.stringify(result)}`);
   return result;
 }

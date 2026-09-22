@@ -1065,7 +1065,8 @@ function populateReviewSummary() {
   }
   setRev('revJenis', jenisDisplay);
   setRev('revName', m['Nama training']);
-  setRev('revLeader', m['Nama pengaju'] || m['Leader pengaju']);
+  const leaderDisplay = (m['Nama pengaju'] || m['Leader pengaju'] || '-') + (m['Email pengaju'] ? ` <${m['Email pengaju']}>` : '');
+  setRev('revLeader', leaderDisplay);
   setRev('revDept', m['Departemen / divisi']);
   setRev('revCategory', `${m['Kategori training'] || '-'} (${m['Target level kemahiran'] || 'All Level'})`);
   setRev('revNeed', m['Kategori kebutuhan training'] || '-');
@@ -1205,10 +1206,16 @@ function submitPlan() {
   const idValue = (data.meta['ID training'] || '').trim();
   const nameValue = (data.meta['Nama training'] || '').trim();
   const leader = (data.meta['Nama pengaju'] || data.meta['Leader pengaju'] || '').trim();
+  const leaderEmail = (data.meta['Email pengaju'] || '').trim();
   const dept = (data.meta['Departemen / divisi'] || '').trim();
 
-  if (!idValue || !nameValue || !leader || !dept) {
-    showToast('Lengkapi field wajib (ID Training, Nama Training, Nama Pengaju, Departemen)', 'error');
+  if (!idValue || !nameValue || !leader || !leaderEmail || !dept) {
+    showToast('Lengkapi field wajib (ID Training, Nama Training, Nama Pengaju, Email Pengaju, Departemen)', 'error');
+    goToStep(1);
+    return;
+  }
+  if (!leaderEmail.includes('@') || !leaderEmail.includes('.')) {
+    showToast('Format Email Pengaju tidak valid (contoh: nama.pengaju@perusahaan.com)', 'error');
     goToStep(1);
     return;
   }
@@ -1296,8 +1303,8 @@ async function confirmAndExecuteSubmit() {
 function resetForm() {
   const formView = document.getElementById('formView');
   if (formView) {
-    // 1. Clear text, number, url, and textarea inputs (preserve auto-calculated IDs)
-    formView.querySelectorAll('input[type="text"], input[type="number"], input[type="url"], textarea').forEach(input => {
+    // 1. Clear text, email, number, url, and textarea inputs (preserve auto-calculated IDs)
+    formView.querySelectorAll('input[type="text"], input[type="email"], input[type="number"], input[type="url"], textarea').forEach(input => {
       if (input.id !== 'trainingId' && input.id !== 'totalDuration' && input.id !== 'plannedParticipants') {
         input.value = '';
       }
