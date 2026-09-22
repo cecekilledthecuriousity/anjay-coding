@@ -844,7 +844,7 @@ function createCalendarEvent(meta, participants, modules) {
 
   const trainingName = meta["Nama training"] || "Pelatihan Karyawan";
   const trainingId = meta["ID training"] || "TRN";
-  let location = meta["Lokasi / venue"] || meta["Link meeting online"] || "";
+  // Gunakan lokasi yang sudah dideklarasikan di awal fungsi.
 
   // Tentukan tanggal & waktu pelaksanaan
   let startDate = null;
