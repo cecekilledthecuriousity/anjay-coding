@@ -23,7 +23,7 @@ form-training/
 ## 🌟 Fitur Unggulan & Penyempurnaan
 
 1. **Desain Stepper 4-Tahap yang Interaktif**:
-   - **Langkah 1: Profil & Sasaran**: Auto ID Training (`TRN-2026-XXX`), Leader pengaju, Departemen dropdown dinamis (+ opsi ketik divisi kustom), Target Level Kemahiran (chips: *Beginner / Intermediate / Advanced*), Purpose, Goals, Prasyarat peserta, Sertifikasi/Output, dan Tautan Silabus/Materi (Google Drive).
+   - **Langkah 1: Profil & Sasaran**: Auto ID Training (`TRN-2026-XXX`), Leader pengaju, Departemen dropdown dinamis (+ opsi ketik divisi kustom), Target Level Kemahiran (chips: *Basic / Intermediate / Advanced*), Purpose, Goals, Prasyarat peserta, Sertifikasi/Output, dan Tautan Silabus/Materi (Google Drive).
    - **Langkah 2: Pelaksanaan & Peserta**: Metode kartu (*Onsite / Online / Hybrid / On-the-job*), Platform online (*Google Meet, Zoom, Teams*) & tautan meeting URL, Jadwal picker (tanggal & jam mulai-selesai), kalkulator durasi otomatis, Tabel Modul Pelatihan, dan Tabel Peserta terintegrasi fitur **"Quick Paste dari Excel"**.
    - **Langkah 3: Biaya & Evaluasi**: Rincian sub-biaya (*Fee Trainer, Konsumsi/Catering, Materi/Sertifikat, Venue/Sewa Alat*), akumulasi otomatis ke Estimasi Biaya, Budget Disetujui, Actual Spend, perhitungan selisih hemat/over budget real-time, serta sasaran KPI evaluasi.
    - **Langkah 4: Review & Approval**: Live Executive Summary preview sebelum submit, dan hierarki approval bertingkat yang dapat ditambah secara dinamis.

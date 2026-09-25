@@ -248,11 +248,11 @@
         <div class="field" style="margin-bottom:16px;">
           <label>Target Level Kemahiran Peserta</label>
           <div class="chip-grid" id="levelChipGrid">
-            <div class="chip-card selected" onclick="selectChip('level', 'Beginner', this)">
+            <div class="chip-card selected" onclick="selectChip('level', 'Basic', this)">
               <div class="chip-icon">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
               </div>
-              <span>Beginner</span>
+              <span>Basic</span>
             </div>
             <div class="chip-card" onclick="selectChip('level', 'Intermediate', this)">
               <div class="chip-icon">
@@ -267,7 +267,7 @@
               <span>Advanced</span>
             </div>
           </div>
-          <input type="hidden" id="levelKemahiran" data-field="Target level kemahiran" value="Beginner">
+          <input type="hidden" id="levelKemahiran" data-field="Target level kemahiran" value="Basic">
         </div>
 
         <div class="field-row cols-2">
@@ -333,81 +333,139 @@
           <input type="hidden" id="metode" data-field="Metode training" value="Onsite">
         </div>
 
-        <div class="field-row cols-2" id="onlineDetailsRow" style="display:none;">
-          <div class="field">
-            <label>Platform Online</label>
-            <select id="onlinePlatform" data-field="Platform online">
-              <option>Google Meet</option>
-              <option>Zoom Meeting</option>
-              <option>Microsoft Teams</option>
-              <option>Lainnya</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>Tautan Ruang Meeting (URL)</label>
-            <input type="url" placeholder="https://meet.google.com/..." id="meetingUrl" data-field="Link meeting online">
+        <!-- Bagian Konfigurasi Online (Google Meet Otomatis / Vendor Eksternal) -->
+        <div class="field" id="onlineConfigSection" style="display:none;margin-bottom:16px;">
+          <div class="online-config-box">
+            <div class="field-row cols-2" id="onlineDetailsRow" style="margin-bottom:0;">
+              <div class="field">
+                <label>Pilihan Platform Online</label>
+                <select id="onlinePlatform" data-field="Platform online" onchange="handleOnlinePlatformChange(this.value)">
+                  <option value="Google Meet">Google Meet (Internal - Otomatis)</option>
+                  <option value="Zoom Meeting">Zoom Meeting (Vendor Eksternal)</option>
+                  <option value="Microsoft Teams">Microsoft Teams</option>
+                  <option value="Lainnya">Platform Lainnya (Webinar / LMS)</option>
+                </select>
+              </div>
+              <div class="field" id="meetingUrlWrapper">
+                <label style="display:inline-flex;align-items:center;justify-content:space-between;width:100%;">
+                  <span id="meetingUrlLabel">Tautan Google Meet</span>
+                  <span class="hint" id="meetingUrlHint" style="color:var(--moss);font-weight:600;">(Otomatis Digenerate)</span>
+                </label>
+                <div style="display:flex;gap:6px;align-items:center;">
+                  <input type="url" placeholder="https://meet.google.com/..." id="meetingUrl" data-field="Link meeting online" style="flex:1;">
+                  <button type="button" class="btn-avail-action" id="btnCopyMeetUrl" onclick="copyMeetUrl()" title="Salin link Google Meet" style="padding:7px 11px;height:38px;flex-shrink:0;">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                    <span>Salin</span>
+                  </button>
+                  <button type="button" class="btn-avail-action" id="btnRegenMeetUrl" onclick="regenerateGoogleMeetLink()" title="Generate ulang kode Google Meet baru" style="padding:7px 9px;height:38px;flex-shrink:0;">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div id="meetAutoNotice" style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--moss);margin-top:10px;font-weight:500;background:rgba(63, 158, 92, 0.08);padding:8px 12px;border-radius:6px;border:1px solid rgba(63, 158, 92, 0.2);">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+              <span>Link Google Meet ini akan digunakan untuk seluruh sesi pelatihan (Sesi 1, 2, dst.) dan otomatis tertaut di Google Calendar seluruh peserta.</span>
+            </div>
           </div>
         </div>
 
-        <div class="field" style="margin-bottom:16px;">
-          <label>Lokasi / Ruangan</label>
+        <!-- Bagian Ruangan Meeting (Hanya Onsite & Hybrid) -->
+        <div class="field" id="lokasiSection" style="margin-bottom:16px;">
+          <div class="room-avail-header">
+            <label style="margin-bottom:0;display:inline-flex;align-items:center;gap:6px;">
+              <span>Lokasi / Ruangan Meeting</span>
+              <span class="hint" style="color:var(--moss);">Live Calendar</span>
+            </label>
+            <div style="display:inline-flex;align-items:center;gap:8px;">
+              <span class="room-avail-info" id="roomAvailInfo">
+                <span class="room-avail-badge avail-free" style="padding:1px 6px;">●</span> 4 Ruangan Siap Dipilih
+              </span>
+              <button type="button" class="btn-avail-action" onclick="fetchRoomAvailability(true)" title="Cek ulang ketersediaan ruangan di Google Calendar">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
+                <span>Cek Ulang</span>
+              </button>
+            </div>
+          </div>
           <div class="chip-grid" id="lokasiChipGrid">
-            <div class="chip-card" onclick="selectChip('lokasi', 'Ruangan Meeting Neptunus', this)">
+            <div class="chip-card room-chip" data-room="Ruangan Meeting Neptunus" onclick="selectChip('lokasi', 'Ruangan Meeting Neptunus', this)">
               <div class="chip-icon"><svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="9" fill="#4C6FE0"/></svg></div>
-              <span>Neptunus</span>
+              <div class="chip-content">
+                <span class="chip-title">Neptunus</span>
+                <span class="room-avail-badge avail-free" id="badge-neptunus">Tersedia</span>
+              </div>
             </div>
-            <div class="chip-card" onclick="selectChip('lokasi', 'Ruangan Meeting Saturnus', this)">
+            <div class="chip-card room-chip" data-room="Ruangan Meeting Saturnus" onclick="selectChip('lokasi', 'Ruangan Meeting Saturnus', this)">
               <div class="chip-icon"><svg viewBox="0 0 24 24" width="20" height="20"><ellipse cx="12" cy="13" rx="11" ry="3.2" fill="none" stroke="#D9A441" stroke-width="1.6" transform="rotate(-18 12 13)"/><circle cx="12" cy="12" r="6" fill="#E8C170"/></svg></div>
-              <span>Saturnus</span>
+              <div class="chip-content">
+                <span class="chip-title">Saturnus</span>
+                <span class="room-avail-badge avail-free" id="badge-saturnus">Tersedia</span>
+              </div>
             </div>
-            <div class="chip-card" onclick="selectChip('lokasi', 'Ruangan Meeting Mars', this)">
+            <div class="chip-card room-chip" data-room="Ruangan Meeting Mars" onclick="selectChip('lokasi', 'Ruangan Meeting Mars', this)">
               <div class="chip-icon"><svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="9" fill="#C1440E"/></svg></div>
-              <span>Mars</span>
+              <div class="chip-content">
+                <span class="chip-title">Mars</span>
+                <span class="room-avail-badge avail-free" id="badge-mars">Tersedia</span>
+              </div>
             </div>
-            <div class="chip-card" onclick="selectChip('lokasi', 'Ruangan Meeting Merkurius', this)">
+            <div class="chip-card room-chip" data-room="Ruangan Meeting Merkurius" onclick="selectChip('lokasi', 'Ruangan Meeting Merkurius', this)">
               <div class="chip-icon"><svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="9" fill="#9AA0A6"/></svg></div>
-              <span>Merkurius</span>
+              <div class="chip-content">
+                <span class="chip-title">Merkurius</span>
+                <span class="room-avail-badge avail-free" id="badge-merkurius">Tersedia</span>
+              </div>
             </div>
-            <div class="chip-card" onclick="selectChip('lokasi', 'custom', this)">
+            <div class="chip-card room-chip" data-room="custom" onclick="selectChip('lokasi', 'custom', this)">
               <div class="chip-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"></path><circle cx="12" cy="10" r="3"></circle></svg></div>
-              <span>Lainnya</span>
+              <div class="chip-content">
+                <span class="chip-title">Lainnya</span>
+                <span class="room-avail-badge avail-custom">Eksternal</span>
+              </div>
             </div>
           </div>
           <input type="hidden" id="lokasi" data-field="Lokasi / venue" value="">
           <input type="text" id="customLokasiInput" placeholder="cth. Hotel Mulia Jakarta, atau nama/alamat venue dari vendor training" style="display:none;margin-top:8px;">
         </div>
 
-        <div class="field-row cols-2">
+        <!-- Input Jadwal Utama (Top-Down Flow: Aktif & Mengendalikan Live Calendar) -->
+        <div class="field-row cols-3" id="mainScheduleRow">
           <div class="field">
             <label>
               <span>Tanggal Pelaksanaan</span>
-              <span class="hint" style="color:var(--moss);">Otomatis</span>
+              <span style="color:var(--danger)">*</span>
             </label>
-            <input type="text" id="tglPelaksanaan" data-field="Tanggal pelaksanaan (raw)" readonly style="background:#FAF9F5;font-weight:600;color:var(--ink);" placeholder="Otomatis dari sesi">
+            <input type="date" id="tglPelaksanaan" data-field="Tanggal pelaksanaan (raw)" onchange="handleMainScheduleChange()" required>
           </div>
           <div class="field">
             <label>
-              <span>Jam Mulai &amp; Selesai</span>
-              <span class="hint" style="color:var(--moss);">Otomatis</span>
+              <span>Jam Mulai</span>
+              <span style="color:var(--danger)">*</span>
             </label>
-            <input type="text" id="jamPelaksanaan" readonly style="background:#FAF9F5;font-weight:600;color:var(--ink);" placeholder="Otomatis dari sesi">
-            <input type="hidden" id="jamMulai" data-field="Jam mulai (raw)" value="09:00">
-            <input type="hidden" id="jamSelesai" data-field="Jam selesai (raw)" value="15:00">
-            <input type="hidden" id="jadwal" data-field="Tanggal &amp; jam pelaksanaan">
+            <input type="time" id="jamMulai" data-field="Jam mulai (raw)" value="09:00" onchange="handleMainScheduleChange()" required>
+          </div>
+          <div class="field">
+            <label>
+              <span>Jam Selesai</span>
+              <span style="color:var(--danger)">*</span>
+            </label>
+            <input type="time" id="jamSelesai" data-field="Jam selesai (raw)" value="15:00" onchange="handleMainScheduleChange()" required>
           </div>
         </div>
+        <input type="hidden" id="jadwal" data-field="Tanggal &amp; jam pelaksanaan">
+        <input type="hidden" id="jamPelaksanaan">
 
         <div class="field-row cols-3">
           <div class="field">
-            <label>Trainer / Fasilitator</label>
-            <input type="text" placeholder="Nama trainer pengampu" id="trainer" data-field="Trainer">
+            <label>Trainer / Fasilitator Utama</label>
+            <input type="text" placeholder="Nama trainer pengampu" id="trainer" data-field="Trainer" oninput="syncTrainerToModules()">
           </div>
           <div class="field">
             <label>
               <span>Total Durasi Belajar</span>
-              <span class="hint" style="color:var(--moss);">Otomatis</span>
+              <span class="hint" style="color:var(--moss);">Akumulasi Sesi</span>
             </label>
-            <input type="text" id="totalDuration" data-field="Total durasi belajar" readonly style="background:#FAF9F5;font-weight:600;color:var(--ink);">
+            <input type="text" id="totalDuration" data-field="Total durasi belajar" readonly style="background:#FAF9F5;font-weight:600;color:var(--ink);" placeholder="Otomatis">
           </div>
           <div class="field">
             <label>
@@ -426,22 +484,22 @@
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
           </div>
           <h2>Modul &amp; Sesi Pelatihan</h2>
-          <span class="card-sub">Topik dan pembagian waktu</span>
+          <span class="card-sub">Rincian materi &amp; jadwal per sesi (otomatis tersinkron dari jadwal utama di atas)</span>
         </div>
 
         <div class="tbl-wrap">
           <table class="dyn" style="min-width:1150px;">
             <thead>
               <tr>
-                <th style="width:36px">#</th>
+                <th style="width:36px">Sesi</th>
                 <th style="width:130px">Tanggal</th>
                 <th style="width:105px">Mulai</th>
                 <th style="width:105px">Selesai</th>
-                <th style="min-width:160px">Nama Modul</th>
-                <th style="width:130px">Durasi</th>
-                <th style="width:140px">Fasilitator</th>
-                <th style="width:125px">Metode Delivery</th>
-                <th style="width:160px">Lokasi / Platform</th>
+                <th style="min-width:170px">Topik / Nama Modul</th>
+                <th style="width:115px">Durasi</th>
+                <th style="width:140px">Trainer / PIC</th>
+                <th style="width:125px">Metode</th>
+                <th style="width:150px">Lokasi / Platform</th>
                 <th style="min-width:170px">Deskripsi Aktivitas</th>
                 <th style="width:40px"></th>
               </tr>
@@ -452,7 +510,7 @@
         <div class="table-toolbar">
           <button type="button" class="btn-table-action" onclick="addModule()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-            Tambah Baris Modul
+            Tambah Sesi / Modul Baru
           </button>
         </div>
       </section>
@@ -856,13 +914,13 @@
       <button type="button" class="modal-close" onclick="closeModal('modalQuickPasteExcel')">&times;</button>
     </div>
     <div class="modal-body">
-      <p>Salin daftar nama peserta dari Excel / Google Sheet / WhatsApp, lalu tempelkan di bawah ini:</p>
-      <textarea id="excelPasteArea" placeholder="Contoh format:&#10;Budi Santoso&#9;budi@kantor.com&#9;IT&#10;Siti Rahma&#9;siti@kantor.com&#9;Finance&#10;Ahmad Fauzi&#9;ahmad@kantor.com&#10;(Bisa copy-paste 3 kolom Nama, Email, Dept langsung dari Excel)" style="width:100%;height:140px;border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-family:'Inter',sans-serif;font-size:13px;"></textarea>
-      <p class="helper-note">Format baris: <code>Nama Peserta [Tab / Koma] Email [Tab / Koma] Departemen</code>. Sistem otomatis mendeteksi email jika terdapat simbol <code>@</code>.</p>
+      <p>Salin daftar nama peserta dari Excel / Google Sheet / WhatsApp, lalu tempelkan di bawah ini. Tabel peserta akan langsung terisi otomatis tanpa perlu menambah baris secara manual:</p>
+      <textarea id="excelPasteArea" placeholder="Contoh format (Copy 3 kolom Nama, Email, Dept dari Excel):&#10;Budi Santoso&#9;budi@kantor.com&#9;IT&#10;Siti Rahma&#9;siti@kantor.com&#9;Finance&#10;Ahmad Fauzi&#9;ahmad@kantor.com&#9;HR&#10;(Tabel akan langsung otomatis terisi sesuai daftar tanpa perlu menambah baris satu per satu)" style="width:100%;height:140px;border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-family:'Inter',sans-serif;font-size:13px;"></textarea>
+      <p class="helper-note">Format baris: <code>Nama Peserta [Tab / Koma] Email [Tab / Koma] Departemen</code>. Sistem otomatis mendeteksi email jika terdapat simbol <code>@</code> dan langsung membentuk baris tabel sesuai daftar.</p>
     </div>
     <div class="modal-footer">
       <button type="button" class="btn-secondary" onclick="closeModal('modalQuickPasteExcel')">Batal</button>
-      <button type="button" class="btn-primary" onclick="importPesertaFromText()">Tambahkan ke Tabel</button>
+      <button type="button" class="btn-primary" onclick="importPesertaFromText()">Impor ke Tabel Peserta</button>
     </div>
   </div>
 </div>

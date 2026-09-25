@@ -210,6 +210,19 @@ function showLoginGate() {
   if (dashboardView) dashboardView.style.display = 'none';
   if (loginGate) loginGate.style.display = 'flex';
 
+  // Cek jika terdapat parameter URL deep-link ?id=TRN-XXXX
+  const deepNotice = document.getElementById('deepLinkNotice');
+  const deepTarget = document.getElementById('deepLinkTargetId');
+  const targetId = new URLSearchParams(window.location.search).get('id');
+  if (deepNotice && deepTarget) {
+    if (targetId) {
+      deepTarget.textContent = targetId.trim();
+      deepNotice.style.display = 'block';
+    } else {
+      deepNotice.style.display = 'none';
+    }
+  }
+
   if (pinInput) {
     pinInput.value = '';
     pinInput.classList.remove('error');
@@ -381,6 +394,28 @@ async function fetchSubmissions(forceRefresh = false) {
 
   renderKPIs();
   applyFilterAndSearch();
+  checkUrlDeepLink();
+}
+
+let deepLinkHandled = false;
+/**
+ * Otomatis membuka modal review jika terdapat URL parameter ?id=TRN-XXXX
+ */
+function checkUrlDeepLink() {
+  if (deepLinkHandled) return;
+  const urlParams = new URLSearchParams(window.location.search);
+  const targetId = urlParams.get('id');
+  if (!targetId) return;
+
+  const cleanId = String(targetId).trim().toUpperCase();
+  const item = allSubmissions.find(s => String(s.id).trim().toUpperCase() === cleanId);
+  if (item) {
+    deepLinkHandled = true;
+    setTimeout(() => {
+      openReviewModal(item.id);
+      showToast(`Membuka pengajuan training ${item.id} secara otomatis.`, 'info');
+    }, 120);
+  }
 }
 
 // ==============================================================================

@@ -53,7 +53,7 @@ anjay-coding/
 ## 4. 🔄 Alur Kerja Stepper & Struktur Data
 
 Formulir terdiri dari 4 tahapan stepper wizard:
-* **Langkah 1: Profil & Sasaran**: ID Training (`TRN-YYYY-XXX`), Nama Pelatihan, Leader Pengaju, Departemen (+ opsi custom), Level Kemahiran (Chips: Beginner/Intermediate/Advanced), Purpose, Goals, Prasyarat, Output Sertifikasi, dan Link Silabus Drive.
+* **Langkah 1: Profil & Sasaran**: ID Training (`TRN-YYYY-XXX`), Nama Pelatihan, Leader Pengaju, Departemen (+ opsi custom), Level Kemahiran (Chips: Basic/Intermediate/Advanced), Purpose, Goals, Prasyarat, Output Sertifikasi, dan Link Silabus Drive.
 * **Langkah 2: Pelaksanaan & Peserta**: Metode (Onsite/Online/Hybrid), Detail Link Meeting Online, Jadwal & Jam, Tabel Modul (dengan kalkulasi durasi otomatis), dan Tabel Peserta (Nama, Email, Departemen) terintegrasi fitur **Quick Paste dari Excel**.
 * **Langkah 3: Biaya & Evaluasi**: Breakdown biaya (Fee Trainer, Konsumsi, Materi, Venue), akumulasi otomatis, budget disetujui, dan KPI Evaluasi.
 * **Langkah 4: Review & Approval**: Live summary executive card dan approval workflow dinamis.
