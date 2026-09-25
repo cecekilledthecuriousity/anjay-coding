@@ -28,8 +28,17 @@
   --blur: 18px;
 }
 
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
 html, body { margin: 0; padding: 0; }
+
+button, .chip-card, .step-tab, .status-pill, .mini-pill, .row-remove, .modal-close {
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
 
 body {
   background:
@@ -67,6 +76,7 @@ body {
   cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 8px;
 }
 .view-tabs button:hover { color: var(--ink); }
+.view-tabs button:active { transform: scale(0.96); }
 .view-tabs button.active { background: var(--accent); color: #fff; box-shadow: 0 4px 14px rgba(76, 63, 224, 0.35); }
 
 /* DOC HEADER */
@@ -130,6 +140,7 @@ body {
   transition: all 0.2s ease; display: flex; align-items: center; gap: 10px;
 }
 .step-tab:hover { border-color: rgba(76, 63, 224, 0.3); background: var(--panel-strong); transform: translateY(-1px); }
+.step-tab:active { transform: scale(0.98); }
 .step-tab.active { border-color: rgba(76, 63, 224, 0.35); background: var(--panel-strong); box-shadow: var(--shadow); }
 .step-tab.completed { border-color: rgba(76, 63, 224, 0.2); }
 
@@ -224,6 +235,7 @@ select option { background: var(--panel-solid); color: var(--ink); padding: 8px 
   cursor: pointer; transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1); display: flex; align-items: center; gap: 10px; user-select: none;
 }
 .chip-card:hover { border-color: rgba(76, 63, 224, 0.3); background: var(--panel-solid); transform: translateY(-1px); }
+.chip-card:active:not(.chip-busy) { transform: scale(0.97); }
 .chip-card.selected { border-color: var(--accent); background: var(--accent-tint-strong); color: var(--accent-dark); box-shadow: 0 0 0 1px var(--accent), 0 6px 16px -6px rgba(76, 63, 224, 0.4); }
 .chip-icon { width: 22px; height: 22px; color: var(--ink-soft); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .chip-card.selected .chip-icon { color: var(--accent-dark); }
@@ -243,9 +255,10 @@ select option { background: var(--panel-solid); color: var(--ink); padding: 8px 
 .btn-avail-action {
   display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 600; color: var(--accent);
   background: var(--panel-solid); border: 1px solid var(--line); border-radius: 8px; padding: 5px 9px; cursor: pointer;
-  transition: all 0.15s ease; font-family: 'Inter', sans-serif;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1); font-family: 'Inter', sans-serif;
 }
 .btn-avail-action:hover { background: var(--accent-tint-strong); border-color: var(--accent); }
+.btn-avail-action:active { transform: scale(0.96); }
 .room-chip .chip-content { display: flex; flex-direction: column; gap: 3px; min-width: 0; text-align: left; }
 .room-chip .chip-title { font-size: 13.5px; font-weight: 600; line-height: 1.2; }
 .room-avail-badge {
@@ -281,17 +294,20 @@ table.dyn select {
 table.dyn select:hover { background-color: var(--panel-solid); border-color: var(--line); }
 table.dyn select:focus { outline: none; background-color: var(--panel-solid); border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-tint); }
 
-.row-remove { background: none; border: none; cursor: pointer; color: var(--ink-faint); width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; line-height: 1; transition: all 0.15s ease; }
+.row-remove { background: none; border: none; cursor: pointer; color: var(--ink-faint); width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; line-height: 1; transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1); }
 .row-remove:hover { background: var(--danger-tint); color: var(--danger); }
+.row-remove:active { transform: scale(0.88); }
 
 .attend-toggle { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; font-size: 12px; }
-.attend-toggle button { border: none; background: rgba(255, 255, 255, 0.6); padding: 6px 12px; cursor: pointer; color: var(--ink-faint); font-family: 'Inter', sans-serif; font-weight: 600; transition: all 0.15s ease; }
+.attend-toggle button { border: none; background: rgba(255, 255, 255, 0.6); padding: 6px 12px; cursor: pointer; color: var(--ink-faint); font-family: 'Inter', sans-serif; font-weight: 600; transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1); }
 .attend-toggle button.active-present { background: var(--accent-tint-strong); color: var(--accent-dark); }
 .attend-toggle button.active-absent { background: var(--danger-tint); color: var(--danger); }
+.attend-toggle button:active { transform: scale(0.95); }
 
 .table-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
-.btn-table-action { background: rgba(76, 63, 224, 0.08); border: 1px solid var(--line); color: var(--accent-dark); padding: 8px 14px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s ease; }
+.btn-table-action { background: rgba(76, 63, 224, 0.08); border: 1px solid var(--line); color: var(--accent-dark); padding: 8px 14px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1); }
 .btn-table-action:hover { background: var(--accent-tint-strong); border-color: rgba(76, 63, 224, 0.25); }
+.btn-table-action:active { transform: scale(0.97); background: var(--accent-tint-strong); }
 
 /* BUDGET & VARIANCE CARDS */
 .budget-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 20px; }
@@ -324,21 +340,24 @@ table.dyn select:focus { outline: none; background-color: var(--panel-solid); bo
 
 .btn-primary {
   background: linear-gradient(135deg, var(--accent), #6657E8); color: #fff; border: none; padding: 11px 24px; border-radius: 100px;
-  font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.18s ease;
+  font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
   display: inline-flex; align-items: center; gap: 8px; min-height: 42px; box-shadow: 0 8px 20px -6px rgba(76, 63, 224, 0.5);
 }
 .btn-primary:hover { background: linear-gradient(135deg, var(--accent-dark), var(--accent)); transform: translateY(-1px); box-shadow: 0 10px 24px -6px rgba(76, 63, 224, 0.6); }
-.btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+.btn-primary:active { transform: scale(0.97); filter: brightness(0.96); box-shadow: 0 4px 12px -4px rgba(76, 63, 224, 0.4); }
+.btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none; }
 
 .btn-secondary {
   background: rgba(255, 255, 255, 0.7); border: 1px solid var(--line); color: var(--ink); padding: 10px 20px; border-radius: 100px;
-  font-family: 'Inter', sans-serif; font-size: 13.5px; font-weight: 600; cursor: pointer; transition: all 0.15s ease;
+  font-family: 'Inter', sans-serif; font-size: 13.5px; font-weight: 600; cursor: pointer; transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
   display: inline-flex; align-items: center; gap: 8px; min-height: 42px;
 }
 .btn-secondary:hover { background: var(--panel-solid); border-color: rgba(76, 63, 224, 0.25); }
+.btn-secondary:active { transform: scale(0.97); background: var(--panel-strong); }
 
-.btn-text-action { background: none; border: none; color: var(--accent); font-size: 11.5px; font-weight: 600; cursor: pointer; padding: 2px 6px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px; transition: background 0.15s ease; }
+.btn-text-action { background: none; border: none; color: var(--accent); font-size: 11.5px; font-weight: 600; cursor: pointer; padding: 2px 6px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px; transition: all 0.15s ease; }
 .btn-text-action:hover { background: var(--accent-tint); }
+.btn-text-action:active { transform: scale(0.95); }
 
 /* MASTER DATA VIEW */
 .master-toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; gap: 16px; flex-wrap: wrap; }
@@ -696,9 +715,9 @@ table.master tbody tr:hover { background: rgba(76, 63, 224, 0.05); }
 .modal-card { background: rgba(255, 255, 255, 0.92); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border-radius: var(--radius-lg); max-width: 500px; width: 100%; padding: 26px; box-shadow: var(--shadow-lg); transform: scale(0.95); transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1); border: 1px solid rgba(255, 255, 255, 0.8); max-height: 90vh; overflow-y: auto; }
 .modal-overlay.active .modal-card { transform: scale(1); }
 .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
-.modal-header h3 { margin: 0; font-family: 'Sora', sans-serif; font-size: 18px; font-weight: 600; }
-.modal-close { background: none; border: none; font-size: 24px; color: var(--ink-faint); cursor: pointer; padding: 4px; line-height: 1; border-radius: 8px; }
+.modal-close { background: none; border: none; font-size: 24px; color: var(--ink-faint); cursor: pointer; padding: 4px; line-height: 1; border-radius: 8px; transition: all 0.15s ease; }
 .modal-close:hover { color: var(--ink); }
+.modal-close:active { transform: scale(0.90); }
 .modal-body { font-size: 13.5px; color: var(--ink-soft); line-height: 1.6; margin-bottom: 20px; }
 .modal-body .summary-box { background: rgba(76, 63, 224, 0.05); border: 1px solid var(--line-soft); border-radius: 12px; padding: 14px 16px; margin-top: 12px; font-size: 13px; color: var(--ink); }
 .modal-body .summary-box div { margin-bottom: 5px; }
@@ -750,8 +769,20 @@ table.master tbody tr:hover { background: rgba(76, 63, 224, 0.05); }
   .calendar-section-grid { grid-template-columns: 1fr; }
 }
 
+/* KEYBOARD ACCESSIBILITY FOCUS RING */
+button:focus-visible,
+.chip-card:focus-visible,
+.step-tab:focus-visible,
+.view-tabs button:focus-visible,
+.row-remove:focus-visible,
+.modal-close:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 @media (max-width: 480px) {
   .dashboard-kpi-grid { grid-template-columns: 1fr; }
+  .table-toolbar .btn-table-action { flex: 1 1 100%; justify-content: center; }
 }
 
 @media print {
