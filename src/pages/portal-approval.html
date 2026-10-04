@@ -1,0 +1,142 @@
+      <section class="tds-page" id="page-portal-approval">
+        <!-- ================= MASTER / TRAINING DASHBOARD VIEW ================= -->
+        <main id="masterView">
+          <!-- Operations Header -->
+          <header class="dash-op-header" style="margin-bottom:20px;">
+            <div class="dash-op-text">
+              <div class="dash-op-kicker">
+                <span class="dash-op-dot"></span>
+                <span>Otorisasi &amp; Master Data</span>
+              </div>
+              <h1 class="dash-op-title voice">Portal Approval &amp; Master Data</h1>
+              <p class="dash-op-desc">Ringkasan evaluasi kelayakan program, otorisasi pengajuan, dan audit data historis pelatihan.</p>
+            </div>
+            <div class="dash-op-actions">
+              <button type="button" class="btn-secondary" onclick="exportToCsv()" style="font-size:12.5px;padding:8px 14px;gap:6px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                <span>Export CSV</span>
+              </button>
+              <button type="button" class="btn-secondary" onclick="loadMasterData()" style="font-size:12.5px;padding:8px 14px;gap:6px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                <span>Refresh</span>
+              </button>
+              <button type="button" class="btn-secondary" onclick="lockAdminAccess()" title="Kunci sesi admin dan kembali ke dashboard" style="font-size:12.5px;padding:8px 14px;gap:6px;color:var(--danger);border-color:var(--danger-tint);">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                <span>Kunci</span>
+              </button>
+              <button type="button" class="btn-primary" onclick="goToPage('dashboard')" style="font-size:12.5px;padding:8px 14px;gap:6px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                <span>Dashboard</span>
+              </button>
+            </div>
+          </header>
+
+          <!-- Admin View Tabs -->
+          <div class="view-tabs" id="adminTabs" style="margin-bottom: 22px;">
+            <button type="button" id="tabBtnDashboard" class="active" onclick="switchAdminTab('dashboard')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+              <span>Ringkasan Metrik</span>
+            </button>
+            <button type="button" id="tabBtnDataList" onclick="switchAdminTab('datalist')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+              <span>Daftar Pengajuan</span>
+            </button>
+          </div>
+
+          <!-- TAB 1: DASHBOARD METRICS -->
+          <div id="adminTabDashboard">
+            <div class="dash-metrics-grid">
+              <!-- Priority Card: Antrean Persetujuan -->
+              <div class="dash-metric-card priority" onclick="switchAdminTab('datalist')" style="cursor:pointer;" title="Klik untuk lihat daftar pengajuan">
+                <div class="dash-metric-top">
+                  <span class="dash-metric-label">Status Persetujuan</span>
+                  <span class="dash-metric-tag alert">Perlu Aksi</span>
+                </div>
+                <div class="dash-metric-main">
+                  <span class="dash-metric-val"><span id="kpiPendingCount">0</span> <small>Pending</small></span>
+                </div>
+                <div class="dash-metric-meta" id="kpiStatusBreakdown">
+                  <span class="mini-pill approved" style="padding:2px 7px;font-size:11px;"><span class="dot"></span>0 Approved</span>
+                  <span class="mini-pill rejected" style="padding:2px 7px;font-size:11px;"><span class="dot"></span>0 Rejected</span>
+                </div>
+              </div>
+
+              <!-- Program Tahun Berjalan -->
+              <div class="dash-metric-card">
+                <div class="dash-metric-top">
+                  <span class="dash-metric-label">Program Terdaftar</span>
+                  <span class="dash-metric-tag" id="kpiTotalTrainingSub">Tahun berjalan</span>
+                </div>
+                <div class="dash-metric-main">
+                  <span class="dash-metric-val" id="kpiTotalTraining">0</span>
+                  <span class="dash-metric-unit">Program</span>
+                </div>
+                <div class="dash-metric-meta" id="kpiJenisBreakdown" style="font-size:11.5px;color:var(--ink-soft);">
+                  0 Internal &bull; 0 Eksternal &bull; 0 Mandiri
+                </div>
+                <span id="kpiJenisTotal" style="display:none;">0 Program</span>
+              </div>
+
+              <!-- Total Budget Diajukan -->
+              <div class="dash-metric-card">
+                <div class="dash-metric-top">
+                  <span class="dash-metric-label">Estimasi Anggaran</span>
+                  <span class="dash-metric-tag neutral" id="kpiBudgetRealisasi">Akumulasi pengajuan</span>
+                </div>
+                <div class="dash-metric-main">
+                  <span class="dash-metric-val" id="kpiBudgetDiajukan" style="font-size:20px;">Rp 0</span>
+                </div>
+                <div class="dash-metric-meta" style="font-size:11.5px;color:var(--ink-soft);">
+                  Akumulasi biaya pengajuan dalam sistem
+                </div>
+              </div>
+            </div>
+
+            <!-- Quick Action Info Box -->
+            <div class="dash-side-card" style="margin-top:16px;flex-direction:row;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;">
+              <div style="display:flex;align-items:center;gap:12px;">
+                <div class="dash-ql-icon">
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+                </div>
+                <div>
+                  <div style="font-size:13.5px;font-weight:600;color:var(--ink);">Audit Seluruh Dokumen Pengajuan</div>
+                  <div style="font-size:12px;color:var(--ink-soft);">Buka tab Daftar Pengajuan untuk meninjau rincian peserta, durasi modul, dan mengubah status pengajuan.</div>
+                </div>
+              </div>
+              <button type="button" class="btn-secondary" onclick="switchAdminTab('datalist')" style="font-size:12px;padding:6px 14px;gap:6px;">
+                <span>Buka Data List</span>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- TAB 2: DATA LIST -->
+          <div id="adminTabDataList" style="display:none;">
+            <div class="tbl-wrap" style="background:var(--panel-solid);border:1px solid var(--line);border-radius:12px;overflow-x:auto;box-shadow:var(--shadow-sm);">
+              <table class="master" style="width:100%;margin:0;border-collapse:collapse;">
+                <thead>
+                  <tr style="background:var(--paper);border-bottom:1px solid var(--line);">
+                    <th style="padding:10px 14px;text-align:left;font-size:12px;font-weight:600;color:var(--ink-soft);white-space:nowrap;">ID Training</th>
+                    <th style="padding:10px 14px;text-align:left;font-size:12px;font-weight:600;color:var(--ink-soft);white-space:nowrap;">Nama Training</th>
+                    <th style="padding:10px 14px;text-align:left;font-size:12px;font-weight:600;color:var(--ink-soft);white-space:nowrap;">Nama Pengaju</th>
+                    <th style="padding:10px 14px;text-align:left;font-size:12px;font-weight:600;color:var(--ink-soft);white-space:nowrap;">Departemen</th>
+                    <th style="padding:10px 14px;text-align:left;font-size:12px;font-weight:600;color:var(--ink-soft);white-space:nowrap;">Kategori</th>
+                    <th style="padding:10px 14px;text-align:left;font-size:12px;font-weight:600;color:var(--ink-soft);white-space:nowrap;">Status</th>
+                    <th style="padding:10px 14px;text-align:left;font-size:12px;font-weight:600;color:var(--ink-soft);white-space:nowrap;">Peserta</th>
+                    <th style="padding:10px 14px;text-align:left;font-size:12px;font-weight:600;color:var(--ink-soft);white-space:nowrap;">Waktu Submit</th>
+                  </tr>
+                </thead>
+                <tbody id="masterBody"></tbody>
+              </table>
+            </div>
+
+            <div id="masterEmpty" class="dash-empty-box" style="display:none;margin-top:16px;">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color:var(--ink-faint);margin-bottom:8px;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+              <div style="font-weight:600;font-size:13.5px;color:var(--ink);margin-bottom:3px;">Belum Ada Pengajuan Masuk</div>
+              <div style="font-size:12px;color:var(--ink-soft);">Data submission akan tercatat secara otomatis setelah pengajuan training dikirim.</div>
+            </div>
+          </div>
+
+          <div id="detailPanel"></div>
+        </main>
+      </section>

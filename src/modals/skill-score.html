@@ -1,0 +1,25 @@
+<div class="modal-overlay" id="modalSkillScorePicker">
+  <div class="modal-card" style="max-width:440px;">
+    <div class="modal-header">
+      <div>
+        <h3 class="voice" style="margin:0 0 2px 0;font-size:16px;">Penilaian Kompetensi</h3>
+        <div id="modalSkillScoreSubtitle" style="font-size:12px;color:var(--ink-soft);">-</div>
+      </div>
+      <button type="button" class="modal-close" onclick="closeModal('modalSkillScorePicker')">&times;</button>
+    </div>
+    <div class="modal-body" style="padding:16px 20px;">
+      <div style="font-size:12px;font-weight:600;color:var(--ink-soft);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.02em;">Pilih Skor Penguasaan:</div>
+      <div style="display:flex;flex-direction:column;gap:8px;" id="skillScoreOptionsContainer">
+        <!-- Populated dynamically -->
+      </div>
+    </div>
+    <div class="modal-footer" style="display:flex;justify-content:space-between;align-items:center;">
+      <button type="button" class="btn-secondary" style="color:var(--danger);font-size:12px;padding:7px 12px;" onclick="saveSelectedSkillScore(null)">
+        Hapus / Belum Dinilai
+      </button>
+      <button type="button" class="btn-secondary" style="font-size:12px;padding:7px 14px;" onclick="closeModal('modalSkillScorePicker')">
+        Tutup
+      </button>
+    </div>
+  </div>
+</div>

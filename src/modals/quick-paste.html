@@ -1,0 +1,17 @@
+<div class="modal-overlay" id="modalQuickPasteExcel">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3 class="voice">Quick Import Peserta dari Excel</h3>
+      <button type="button" class="modal-close" onclick="closeModal('modalQuickPasteExcel')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p>Salin daftar nama peserta dari Excel / Google Sheet / WhatsApp, lalu tempelkan di bawah ini. Tabel peserta akan langsung terisi otomatis tanpa perlu menambah baris secara manual:</p>
+      <textarea id="excelPasteArea" placeholder="Contoh format (Copy 3 kolom Nama, Email, Dept dari Excel):&#10;Budi Santoso&#9;budi@kantor.com&#9;IT&#10;Siti Rahma&#9;siti@kantor.com&#9;Finance&#10;Ahmad Fauzi&#9;ahmad@kantor.com&#9;HR&#10;(Tabel akan langsung otomatis terisi sesuai daftar tanpa perlu menambah baris satu per satu)" style="width:100%;height:140px;border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-family:'Inter',sans-serif;font-size:13px;"></textarea>
+      <p class="helper-note">Format baris: <code>Nama Peserta [Tab / Koma] Email [Tab / Koma] Departemen</code>. Sistem otomatis mendeteksi email jika terdapat simbol <code>@</code> dan langsung membentuk baris tabel sesuai daftar.</p>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn-secondary" onclick="closeModal('modalQuickPasteExcel')">Batal</button>
+      <button type="button" class="btn-primary" onclick="importPesertaFromText()">Impor ke Tabel Peserta</button>
+    </div>
+  </div>
+</div>

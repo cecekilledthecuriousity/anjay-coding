@@ -14,12 +14,253 @@ const DEFAULT_ADMIN_PIN = 'ubahpin123';
 
 // State Management
 let currentStep = 1;
-const totalSteps = 4;
+const totalSteps = 2;
 let participantCounter = 0;
 let moduleCounter = 0;
 let approvalCounter = 0;
 let vendorCounter = 0;
 let pendingSubmitData = null;
+
+// ==========================================
+// Custom Date Picker Component (Notion / Linear Style Popover)
+// ==========================================
+const datePickerState = {};
+
+function formatDisplayDate(dateStr) {
+  if (!dateStr) return 'Pilih tanggal';
+  const parts = dateStr.split('-');
+  if (parts.length !== 3) return dateStr;
+  const year = parseInt(parts[0], 10);
+  const month = parseInt(parts[1], 10) - 1;
+  const day = parseInt(parts[2], 10);
+  const monthNames = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+  return `${day} ${monthNames[month] || ''} ${year}`;
+}
+window.formatDisplayDate = formatDisplayDate;
+
+function setDatePickerValue(fieldId, dateStr) {
+  const input = document.getElementById(fieldId);
+  const display = document.getElementById(fieldId + '_display');
+  if (input) {
+    input.value = dateStr || '';
+    input.setAttribute('value', dateStr || '');
+  }
+  if (display) {
+    display.textContent = formatDisplayDate(dateStr);
+  }
+  if (dateStr) {
+    const parts = dateStr.split('-');
+    if (parts.length === 3) {
+      datePickerState[fieldId] = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+    }
+  }
+}
+window.setDatePickerValue = setDatePickerValue;
+
+function toggleDatePicker(fieldId) {
+  const popover = document.getElementById(fieldId + '_popover');
+  const wrap = popover?.closest('.date-picker-wrap');
+  if (!popover) return;
+  const isOpen = popover.style.display !== 'none';
+  
+  // Close all other open popovers
+  document.querySelectorAll('.date-picker-popover').forEach(p => {
+    p.style.display = 'none';
+    p.closest('.date-picker-wrap')?.classList.remove('open');
+  });
+
+  if (!isOpen) {
+    const existingVal = document.getElementById(fieldId)?.value;
+    if (existingVal) {
+      const parts = existingVal.split('-');
+      if (parts.length === 3) {
+        datePickerState[fieldId] = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+      } else {
+        datePickerState[fieldId] = new Date();
+      }
+    } else if (!datePickerState[fieldId]) {
+      datePickerState[fieldId] = new Date();
+    }
+
+    if (wrap) wrap.classList.add('open');
+    popover.style.display = 'block';
+    renderDatePicker(fieldId);
+
+    // Smart positioning if inside table to prevent clipping by overflow-x: auto
+    const trigger = wrap?.querySelector('.date-picker-trigger');
+    if (trigger && popover.closest('table')) {
+      const rect = trigger.getBoundingClientRect();
+      popover.style.position = 'fixed';
+      popover.style.zIndex = '9999';
+      let top = rect.bottom + 6;
+      let left = rect.left;
+      if (top + 340 > window.innerHeight && rect.top > 350) {
+        top = rect.top - 340;
+      }
+      if (left + 310 > window.innerWidth) {
+        left = Math.max(10, window.innerWidth - 320);
+      }
+      popover.style.top = `${top}px`;
+      popover.style.left = `${left}px`;
+    } else {
+      popover.style.position = 'absolute';
+      popover.style.zIndex = '100';
+      popover.style.top = 'calc(100% + 8px)';
+      popover.style.left = '0';
+    }
+  }
+}
+window.toggleDatePicker = toggleDatePicker;
+
+function renderDatePicker(fieldId) {
+  const popover = document.getElementById(fieldId + '_popover');
+  if (!popover) return;
+  const viewDate = datePickerState[fieldId] || new Date();
+  const year = viewDate.getFullYear();
+  const month = viewDate.getMonth();
+  const monthNames = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+  
+  const today = new Date();
+  const todayYear = today.getFullYear();
+  const todayMonth = today.getMonth();
+  const todayDate = today.getDate();
+
+  const selectedVal = document.getElementById(fieldId)?.value || '';
+  let selYear = -1, selMonth = -1, selDay = -1;
+  if (selectedVal) {
+    const parts = selectedVal.split('-');
+    if (parts.length === 3) {
+      selYear = parseInt(parts[0], 10);
+      selMonth = parseInt(parts[1], 10) - 1;
+      selDay = parseInt(parts[2], 10);
+    }
+  }
+
+  const firstDay = new Date(year, month, 1);
+  const startOffset = firstDay.getDay(); // 0 is Sunday
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const daysInPrevMonth = new Date(year, month, 0).getDate();
+
+  let daysHtml = '';
+  // Days from previous month
+  for (let i = startOffset - 1; i >= 0; i--) {
+    const prevD = daysInPrevMonth - i;
+    const prevMonthIdx = month === 0 ? 11 : month - 1;
+    const prevYearVal = month === 0 ? year - 1 : year;
+    daysHtml += `<button type="button" class="dp-day outside-month" onclick="selectDate('${fieldId}', ${prevYearVal}, ${prevMonthIdx}, ${prevD})">${prevD}</button>`;
+  }
+  // Days of current month
+  for (let d = 1; d <= daysInMonth; d++) {
+    const classes = ['dp-day'];
+    if (year === todayYear && month === todayMonth && d === todayDate) classes.push('today');
+    if (year === selYear && month === selMonth && d === selDay) classes.push('selected');
+    daysHtml += `<button type="button" class="${classes.join(' ')}" onclick="selectDate('${fieldId}', ${year}, ${month}, ${d})">${d}</button>`;
+  }
+  // Days of next month to fill 7-col grid
+  const totalCells = startOffset + daysInMonth;
+  const remaining = (7 - (totalCells % 7)) % 7;
+  for (let d = 1; d <= remaining; d++) {
+    const nextMonthIdx = month === 11 ? 0 : month + 1;
+    const nextYearVal = month === 11 ? year + 1 : year;
+    daysHtml += `<button type="button" class="dp-day outside-month" onclick="selectDate('${fieldId}', ${nextYearVal}, ${nextMonthIdx}, ${d})">${d}</button>`;
+  }
+
+  popover.innerHTML = `
+    <div class="dp-header">
+      <button type="button" class="dp-nav-btn" onclick="shiftDatePickerMonth('${fieldId}', -1)" title="Bulan sebelumnya">&#8249;</button>
+      <span class="dp-title">${monthNames[month]} ${year}</span>
+      <button type="button" class="dp-nav-btn" onclick="shiftDatePickerMonth('${fieldId}', 1)" title="Bulan berikutnya">&#8250;</button>
+    </div>
+    <div class="dp-weekdays"><span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span></div>
+    <div class="dp-days">${daysHtml}</div>
+    <div class="dp-footer">
+      <button type="button" class="dp-footer-btn" onclick="clearDatePicker('${fieldId}')">Clear</button>
+      <button type="button" class="dp-footer-btn" onclick="selectToday('${fieldId}')">Hari Ini</button>
+    </div>
+  `;
+}
+window.renderDatePicker = renderDatePicker;
+
+function shiftDatePickerMonth(fieldId, delta) {
+  const d = datePickerState[fieldId] || new Date();
+  datePickerState[fieldId] = new Date(d.getFullYear(), d.getMonth() + delta, 1);
+  renderDatePicker(fieldId);
+}
+window.shiftDatePickerMonth = shiftDatePickerMonth;
+
+function selectDate(fieldId, year, month, day) {
+  const mStr = String(month + 1).padStart(2, '0');
+  const dStr = String(day).padStart(2, '0');
+  const iso = `${year}-${mStr}-${dStr}`;
+  const input = document.getElementById(fieldId);
+  if (input) {
+    input.value = iso;
+    input.setAttribute('value', iso);
+  }
+  datePickerState[fieldId] = new Date(year, month, day);
+
+  const displayEl = document.getElementById(fieldId + '_display');
+  if (displayEl) {
+    displayEl.textContent = formatDisplayDate(iso);
+  }
+  const popover = document.getElementById(fieldId + '_popover');
+  if (popover) {
+    popover.style.display = 'none';
+    popover.closest('.date-picker-wrap')?.classList.remove('open');
+  }
+  if (input) {
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+}
+window.selectDate = selectDate;
+
+function selectToday(fieldId) {
+  const t = new Date();
+  selectDate(fieldId, t.getFullYear(), t.getMonth(), t.getDate());
+}
+window.selectToday = selectToday;
+
+function clearDatePicker(fieldId) {
+  const input = document.getElementById(fieldId);
+  if (input) {
+    input.value = '';
+    input.setAttribute('value', '');
+  }
+  const displayEl = document.getElementById(fieldId + '_display');
+  if (displayEl) {
+    displayEl.textContent = 'Pilih tanggal';
+  }
+  const popover = document.getElementById(fieldId + '_popover');
+  if (popover) {
+    popover.style.display = 'none';
+    popover.closest('.date-picker-wrap')?.classList.remove('open');
+  }
+  datePickerState[fieldId] = new Date();
+  if (input) {
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+}
+window.clearDatePicker = clearDatePicker;
+
+// Close popovers on click outside
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.date-picker-wrap') && !e.target.closest('.date-picker-popover')) {
+    document.querySelectorAll('.date-picker-popover').forEach(p => {
+      p.style.display = 'none';
+      p.closest('.date-picker-wrap')?.classList.remove('open');
+    });
+  }
+});
+
+// Close fixed table popovers on scroll to prevent detaching
+window.addEventListener('scroll', function() {
+  document.querySelectorAll('.date-picker-popover').forEach(p => {
+    if (p.style.display !== 'none' && p.style.position === 'fixed') {
+      p.style.display = 'none';
+      p.closest('.date-picker-wrap')?.classList.remove('open');
+    }
+  });
+}, true);
 
 // ==========================================
 // Initialization
@@ -29,7 +270,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const today = new Date().toISOString().split('T')[0];
   const tglPengajuan = document.getElementById('tglPengajuan');
   if (tglPengajuan && !tglPengajuan.value) {
-    tglPengajuan.value = today;
+    setDatePickerValue('tglPengajuan', today);
+  } else if (tglPengajuan && tglPengajuan.value) {
+    setDatePickerValue('tglPengajuan', tglPengajuan.value);
+  }
+  const tglPelaksanaan = document.getElementById('tglPelaksanaan');
+  if (tglPelaksanaan && tglPelaksanaan.value) {
+    setDatePickerValue('tglPelaksanaan', tglPelaksanaan.value);
   }
 
   // 2. Setup real-time event listeners for automatic Training ID generation
@@ -54,9 +301,22 @@ document.addEventListener('DOMContentLoaded', () => {
   calculateScheduleAndDuration();
   updateStepperUI();
 
+  // Load calendar data
+  loadCalendarEntries();
+
   // Handle URL Hash on load
   handleHashNavigation();
   window.addEventListener('hashchange', handleHashNavigation);
+
+  // Secret admin/approver shortcut: Alt+A or Ctrl+Shift+A
+  window.addEventListener('keydown', (e) => {
+    if ((e.altKey && (e.key === 'a' || e.key === 'A')) ||
+        (e.ctrlKey && e.shiftKey && (e.key === 'a' || e.key === 'A')) ||
+        (e.metaKey && e.shiftKey && (e.key === 'a' || e.key === 'A'))) {
+      e.preventDefault();
+      requestAdminAccess();
+    }
+  });
 });
 
 // ==========================================
@@ -77,10 +337,6 @@ function goToStep(step) {
     if (typeof fetchRoomAvailability === 'function') {
       fetchRoomAvailability();
     }
-  }
-
-  if (currentStep === 4) {
-    populateReviewSummary();
   }
 
   // Scroll to top of form
@@ -132,13 +388,11 @@ function updateStepperUI() {
   // 4. Mobile Text
   const stepTitles = [
     'Profil & Sasaran',
-    'Pelaksanaan & Peserta',
-    'Biaya & Evaluasi',
-    'Review & Konfirmasi'
+    'Pelaksanaan & Evaluasi'
   ];
   const mobileText = document.getElementById('mobileStepText');
   if (mobileText) {
-    mobileText.textContent = `Langkah ${currentStep} dari 4: ${stepTitles[currentStep - 1]}`;
+    mobileText.textContent = `Langkah ${currentStep} dari 2: ${stepTitles[currentStep - 1]}`;
   }
   const mobilePercent = document.getElementById('mobileProgressPercent');
   if (mobilePercent) mobilePercent.textContent = `${percent}%`;
@@ -146,7 +400,7 @@ function updateStepperUI() {
   // 5. Bottom Sticky Bar
   const bottomInfo = document.getElementById('bottomStepIndicator');
   if (bottomInfo) {
-    bottomInfo.textContent = `Langkah ${currentStep} dari 4: ${stepTitles[currentStep - 1]}`;
+    bottomInfo.textContent = `Langkah ${currentStep} dari 2: ${stepTitles[currentStep - 1]}`;
   }
 
   const prevBtn = document.getElementById('prevStepBtn');
@@ -184,15 +438,18 @@ function validateStep(step) {
     const tglVal = (document.getElementById('tglPelaksanaan')?.value || '').trim();
     if (!tglVal) {
       showToast('Mohon tentukan Tanggal Pelaksanaan training terlebih dahulu.', 'error');
-      document.getElementById('tglPelaksanaan')?.focus();
+      const trigger = document.getElementById('tglPelaksanaan')?.closest('.date-picker-wrap')?.querySelector('.date-picker-trigger');
+      if (trigger) trigger.focus();
       return false;
     }
 
     const metode = document.getElementById('metode')?.value || 'Onsite';
     if (metode === 'Onsite') {
       const lokasi = (document.getElementById('lokasi')?.value || '').trim();
-      if (!lokasi) {
-        showToast('Mohon pilih salah satu Ruangan Meeting (Neptunus, Saturnus, Mars, Merkurius, atau Lainnya).', 'error');
+      const customVal = (document.getElementById('customLokasiInput')?.value || '').trim();
+      if (!lokasi || (lokasi === 'custom' && !customVal)) {
+        showToast('Mohon pilih Ruangan Meeting atau ketik nama/alamat lokasi ruangan jika memilih Lainnya.', 'error');
+        (document.getElementById('roomDropdownTrigger') || document.getElementById('lokasiSelect'))?.focus();
         return false;
       }
     }
@@ -205,7 +462,8 @@ function validateStep(step) {
       const emailInput = tr.querySelector('.participant-email') || tr.querySelectorAll('input')[1];
       const email = emailInput?.value.trim();
       if (name) {
-        if (!email || !email.includes('@') || !email.includes('.')) {
+        // Email peserta bersifat opsional; jika diisi, validasi formatnya
+        if (email && (!email.includes('@') || !email.includes('.'))) {
           hasInvalidEmail = true;
           if (emailInput) emailInput.classList.add('error');
         } else {
@@ -215,7 +473,7 @@ function validateStep(step) {
     });
 
     if (hasInvalidEmail) {
-      showToast('Mohon lengkapi alamat email valid untuk setiap peserta yang didaftarkan.', 'error');
+      showToast('Format email peserta tidak valid (contoh: nama@perusahaan.com).', 'error');
       return false;
     }
   }
@@ -252,9 +510,10 @@ function selectChip(type, value, cardEl) {
       if (lokasiSection) lokasiSection.style.display = 'block';
       if (onlineSection) onlineSection.style.display = 'none';
       // Reset kembali ke pilihan ruangan yang sedang aktif jika ada
-      const activeRoom = document.querySelector('#lokasiChipGrid .chip-card.selected')?.getAttribute('data-room') || '';
+      const activeRoom = document.getElementById('lokasiSelect')?.value || document.querySelector('#roomDropdownMenu .room-dropdown-item.selected')?.getAttribute('data-room') || document.querySelector('#lokasiChipGrid .chip-card.selected')?.getAttribute('data-room') || '';
+      const customVal = document.getElementById('customLokasiInput')?.value || '';
       const lokasiInput = document.getElementById('lokasi');
-      if (lokasiInput) lokasiInput.value = activeRoom;
+      if (lokasiInput) lokasiInput.value = (activeRoom === 'custom' ? customVal : activeRoom);
       scheduleRoomAvailabilityCheck();
     } else if (value === 'Hybrid') {
       // 3. Hybrid: Tampilkan keduanya (ruangan fisik & meeting online)
@@ -306,6 +565,174 @@ function selectChip(type, value, cardEl) {
         customInput.value = '';
       }
     }
+  }
+}
+
+const ROOM_ICONS = {
+  'Ruangan Meeting Neptunus': `<svg viewBox="0 0 24 24" width="22" height="22"><circle cx="12" cy="12" r="9" fill="#4C6FE0"/></svg>`,
+  'Ruangan Meeting Saturnus': `<svg viewBox="0 0 24 24" width="24" height="24"><ellipse cx="12" cy="13" rx="11" ry="3.2" fill="none" stroke="#D9A441" stroke-width="1.6" transform="rotate(-18 12 13)"/><circle cx="12" cy="12" r="6" fill="#E8C170"/></svg>`,
+  'Ruangan Meeting Mars': `<svg viewBox="0 0 24 24" width="22" height="22"><circle cx="12" cy="12" r="9" fill="#C1440E"/></svg>`,
+  'Ruangan Meeting Merkurius': `<svg viewBox="0 0 24 24" width="22" height="22"><circle cx="12" cy="12" r="9" fill="#9AA0A6"/></svg>`,
+  'custom': `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>`,
+  'default': `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>`
+};
+
+function toggleRoomDropdown() {
+  const container = document.getElementById('roomDropdownContainer');
+  const trigger = document.getElementById('roomDropdownTrigger');
+  if (!container) return;
+  const isOpen = container.classList.toggle('open');
+  if (trigger) trigger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+}
+
+function closeRoomDropdown() {
+  const container = document.getElementById('roomDropdownContainer');
+  const trigger = document.getElementById('roomDropdownTrigger');
+  if (container) container.classList.remove('open');
+  if (trigger) trigger.setAttribute('aria-expanded', 'false');
+}
+
+function selectCustomRoom(roomValue) {
+  const hiddenInput = document.getElementById('lokasi');
+  const selectMirror = document.getElementById('lokasiSelect');
+  const customInput = document.getElementById('customLokasiInput');
+  const triggerIcon = document.getElementById('roomTriggerIcon');
+  const triggerLabel = document.getElementById('roomTriggerLabel');
+  const triggerBadge = document.getElementById('roomTriggerBadge');
+
+  if (selectMirror) selectMirror.value = roomValue;
+
+  // Highlight selected item in menu
+  document.querySelectorAll('#roomDropdownMenu .room-dropdown-item').forEach(item => {
+    if (item.getAttribute('data-room') === roomValue) {
+      item.classList.add('selected');
+    } else {
+      item.classList.remove('selected');
+    }
+  });
+
+  if (roomValue === 'custom') {
+    if (hiddenInput) hiddenInput.value = customInput?.value.trim() || 'custom';
+    if (triggerIcon) triggerIcon.innerHTML = ROOM_ICONS['custom'];
+    if (triggerLabel) {
+      triggerLabel.textContent = 'Lainnya / Ruangan Eksternal';
+      triggerLabel.classList.remove('placeholder');
+    }
+    if (triggerBadge) {
+      triggerBadge.className = 'room-avail-badge avail-custom';
+      triggerBadge.textContent = 'Eksternal';
+      triggerBadge.style.display = 'inline-flex';
+    }
+    if (customInput) {
+      customInput.style.display = 'block';
+      customInput.focus();
+    }
+  } else {
+    if (hiddenInput) hiddenInput.value = roomValue;
+    if (triggerIcon) triggerIcon.innerHTML = ROOM_ICONS[roomValue] || ROOM_ICONS['default'];
+    if (triggerLabel) {
+      triggerLabel.textContent = roomValue;
+      triggerLabel.classList.remove('placeholder');
+    }
+    if (customInput) {
+      customInput.style.display = 'none';
+      customInput.value = '';
+    }
+
+    const itemEl = document.querySelector(`#roomDropdownMenu .room-dropdown-item[data-room="${roomValue}"]`);
+    const itemBadge = itemEl?.querySelector('.room-avail-badge');
+    if (triggerBadge && itemBadge) {
+      triggerBadge.className = itemBadge.className;
+      triggerBadge.textContent = itemBadge.textContent;
+      triggerBadge.style.display = 'inline-flex';
+    } else if (triggerBadge) {
+      triggerBadge.style.display = 'none';
+    }
+  }
+
+  closeRoomDropdown();
+  updateRoomStatusNotice(roomValue);
+  syncLocationToModules();
+}
+
+function handleLokasiSelectChange(value) {
+  selectCustomRoom(value);
+}
+
+function handleCustomLokasiInput(text) {
+  const input = document.getElementById('lokasi');
+  if (input) input.value = text.trim() || 'custom';
+  syncLocationToModules();
+}
+
+function syncLocationToModules() {
+  const topLokasi = (document.getElementById('lokasi')?.value || '').trim();
+  document.querySelectorAll('#moduleBody tr .module-location').forEach(input => {
+    if (!input.value || input.dataset.autoSynced === 'true' || input.value.startsWith('Ruangan Meeting') || input.value === 'Google Meet' || input.value === 'Zoom Meeting' || input.value === 'Microsoft Teams') {
+      input.value = topLokasi;
+      input.dataset.autoSynced = 'true';
+    }
+  });
+}
+
+function updateRoomStatusNotice(selectedRoom) {
+  const notice = document.getElementById('roomStatusNotice');
+  if (!notice) return;
+
+  if (!selectedRoom) {
+    notice.style.display = 'none';
+    notice.innerHTML = '';
+    return;
+  }
+
+  const planetIcon = ROOM_ICONS[selectedRoom] || '';
+
+  if (selectedRoom === 'custom') {
+    notice.style.display = 'flex';
+    notice.innerHTML = `<span style="background:var(--accent-tint);color:var(--ink);border:1px solid var(--accent-tint-strong);font-size:12px;padding:6px 12px;border-radius:8px;display:inline-flex;align-items:center;gap:8px;font-weight:500;">
+      <span style="display:inline-flex;align-items:center;justify-content:center;">${ROOM_ICONS['custom']}</span>
+      <span>Silahkan ketik nama gedung / alamat venue pada kolom di bawah.</span>
+    </span>`;
+    return;
+  }
+
+  const topDate = document.getElementById('tglPelaksanaan')?.value || '';
+  const topStart = document.getElementById('jamMulai')?.value || '09:00';
+  const topEnd = document.getElementById('jamSelesai')?.value || '15:00';
+  const cacheKey = `${topDate}_${topStart}_${topEnd}`;
+  const cachedRooms = roomAvailabilityCache.get(cacheKey);
+
+  if (isCheckingRoomAvail) {
+    notice.style.display = 'flex';
+    notice.innerHTML = `<span style="color:var(--accent);font-size:12px;display:inline-flex;align-items:center;gap:6px;">
+      <span class="spinner" style="width:12px;height:12px;border-width:2px;display:inline-block;"></span> Memeriksa kalender ruangan...
+    </span>`;
+    return;
+  }
+
+  const cleanName = selectedRoom.replace('Ruangan Meeting ', '');
+  if (cachedRooms && cachedRooms[selectedRoom]) {
+    const info = cachedRooms[selectedRoom];
+    if (info.available) {
+      notice.style.display = 'flex';
+      notice.innerHTML = `<span style="background:rgba(44,122,75,0.09);color:#1F5E36;border:1px solid rgba(44,122,75,0.22);font-size:12px;padding:6px 12px;border-radius:8px;display:inline-flex;align-items:center;gap:8px;font-weight:500;">
+        <span style="display:inline-flex;align-items:center;justify-content:center;">${planetIcon}</span>
+        <span>Ruangan <strong>${cleanName}</strong> siap &amp; tersedia untuk jam ${topStart} - ${topEnd} WIB.</span>
+      </span>`;
+    } else {
+      const conflict = info.conflicts && info.conflicts[0] ? info.conflicts[0].timeRange : 'Ada jadwal lain';
+      notice.style.display = 'flex';
+      notice.innerHTML = `<span style="background:rgba(210,72,59,0.09);color:#96271D;border:1px solid rgba(210,72,59,0.22);font-size:12px;padding:6px 12px;border-radius:8px;display:inline-flex;align-items:center;gap:8px;font-weight:500;">
+        <span style="display:inline-flex;align-items:center;justify-content:center;">${planetIcon}</span>
+        <span>Ruangan <strong>${cleanName}</strong> terdeteksi sibuk (${conflict}). Anda tetap dapat mengajukannya atau pilih ruangan lain yang kosong.</span>
+      </span>`;
+    }
+  } else {
+    notice.style.display = 'flex';
+    notice.innerHTML = `<span style="background:rgba(44,122,75,0.09);color:#1F5E36;border:1px solid rgba(44,122,75,0.22);font-size:12px;padding:6px 12px;border-radius:8px;display:inline-flex;align-items:center;gap:8px;font-weight:500;">
+      <span style="display:inline-flex;align-items:center;justify-content:center;">${planetIcon}</span>
+      <span>Ruangan <strong>${cleanName}</strong> terpilih.</span>
+    </span>`;
   }
 }
 
@@ -470,7 +897,7 @@ async function fetchRoomAvailability(force = false) {
   const topStart = document.getElementById('jamMulai')?.value || '09:00';
   const topEnd = document.getElementById('jamSelesai')?.value || '15:00';
 
-  const dateInput = document.querySelector('#moduleBody tr input[type="date"]');
+  const dateInput = document.querySelector('#moduleBody tr .module-date');
   const startInput = document.querySelector('#moduleBody tr input[type="time"]');
   const allTimeInputs = document.querySelectorAll('#moduleBody tr input[type="time"]');
   const endInput = allTimeInputs.length > 1 ? allTimeInputs[1] : null;
@@ -502,8 +929,12 @@ async function fetchRoomAvailability(force = false) {
   }
 
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 2500); // 2.5s max, don't hold up UI
+
     const url = `${GOOGLE_SCRIPT_URL}?action=checkRooms&date=${encodeURIComponent(dateVal)}&startTime=${encodeURIComponent(startTimeVal)}&endTime=${encodeURIComponent(endTimeVal)}`;
-    const res = await fetch(url, { method: 'GET', cache: 'no-cache' });
+    const res = await fetch(url, { method: 'GET', cache: 'no-cache', signal: controller.signal });
+    clearTimeout(timeoutId);
     const json = await res.json();
 
     if (json && json.success && json.rooms) {
@@ -513,14 +944,20 @@ async function fetchRoomAvailability(force = false) {
       handleRoomCheckFallback('Ketersediaan belum disinkron');
     }
   } catch (err) {
-    console.warn('Gagal cek ketersediaan ruangan via Apps Script:', err);
-    handleRoomCheckFallback('Offline / Kalender tidak merespons');
+    handleRoomCheckFallback('Tersedia (Default)');
   } finally {
     isCheckingRoomAvail = false;
   }
 }
 
 function setRoomBadgesChecking() {
+  document.querySelectorAll('#roomDropdownMenu .room-dropdown-item:not([data-room="custom"])').forEach(item => {
+    const badge = item.querySelector('.room-avail-badge');
+    if (badge) {
+      badge.className = 'room-avail-badge avail-checking';
+      badge.textContent = 'Mengecek...';
+    }
+  });
   document.querySelectorAll('#lokasiChipGrid .room-chip:not([data-room="custom"])').forEach(chip => {
     const badge = chip.querySelector('.room-avail-badge');
     if (badge) {
@@ -528,9 +965,35 @@ function setRoomBadgesChecking() {
       badge.textContent = 'Mengecek...';
     }
   });
+  const currentSelected = document.getElementById('lokasiSelect')?.value || document.getElementById('lokasi')?.value;
+  if (currentSelected && currentSelected !== 'custom') {
+    const triggerBadge = document.getElementById('roomTriggerBadge');
+    if (triggerBadge) {
+      triggerBadge.className = 'room-avail-badge avail-checking';
+      triggerBadge.textContent = 'Mengecek...';
+      triggerBadge.style.display = 'inline-flex';
+    }
+  }
+  if (currentSelected && typeof updateRoomStatusNotice === 'function') {
+    updateRoomStatusNotice(currentSelected);
+  }
 }
 
 function resetRoomBadges(statusText = 'Tersedia') {
+  document.querySelectorAll('#roomDropdownMenu .room-dropdown-item').forEach(item => {
+    item.classList.remove('room-busy');
+    item.removeAttribute('data-conflict');
+    const badge = item.querySelector('.room-avail-badge');
+    if (badge) {
+      if (item.getAttribute('data-room') === 'custom') {
+        badge.className = 'room-avail-badge avail-custom';
+        badge.textContent = 'Eksternal';
+      } else {
+        badge.className = 'room-avail-badge avail-free';
+        badge.textContent = statusText;
+      }
+    }
+  });
   document.querySelectorAll('#lokasiChipGrid .room-chip').forEach(chip => {
     chip.classList.remove('chip-busy');
     chip.removeAttribute('data-conflict');
@@ -545,6 +1008,19 @@ function resetRoomBadges(statusText = 'Tersedia') {
       }
     }
   });
+
+  const currentSelected = document.getElementById('lokasiSelect')?.value || document.getElementById('lokasi')?.value;
+  if (currentSelected && currentSelected !== 'custom') {
+    const triggerBadge = document.getElementById('roomTriggerBadge');
+    if (triggerBadge) {
+      triggerBadge.className = 'room-avail-badge avail-free';
+      triggerBadge.textContent = statusText;
+      triggerBadge.style.display = 'inline-flex';
+    }
+  }
+  if (currentSelected && typeof updateRoomStatusNotice === 'function') {
+    updateRoomStatusNotice(currentSelected);
+  }
 }
 
 function handleRoomCheckFallback(note = '') {
@@ -562,28 +1038,72 @@ function renderRoomAvailability(rooms) {
 
   for (const [roomName, info] of Object.entries(rooms)) {
     totalInternal++;
-    const chip = document.querySelector(`#lokasiChipGrid .room-chip[data-room="${roomName}"]`);
-    if (!chip) continue;
 
-    const badge = chip.querySelector('.room-avail-badge');
-    if (info.available) {
-      availableCount++;
-      chip.classList.remove('chip-busy');
-      chip.removeAttribute('data-conflict');
-      if (badge) {
-        badge.className = 'room-avail-badge avail-free';
-        badge.textContent = 'Tersedia';
+    // Update Custom Room Dropdown Menu Items
+    const item = document.querySelector(`#roomDropdownMenu .room-dropdown-item[data-room="${roomName}"]`);
+    if (item) {
+      const badge = item.querySelector('.room-avail-badge');
+      if (info.available) {
+        availableCount++;
+        item.classList.remove('room-busy');
+        item.removeAttribute('data-conflict');
+        if (badge) {
+          badge.className = 'room-avail-badge avail-free';
+          badge.textContent = 'Tersedia';
+        }
+      } else {
+        item.classList.add('room-busy');
+        const conflict = info.conflicts && info.conflicts[0] ? info.conflicts[0] : null;
+        const timeRange = conflict ? conflict.timeRange : 'Ada Jadwal';
+        item.setAttribute('data-conflict', timeRange);
+        if (badge) {
+          badge.className = 'room-avail-badge avail-busy';
+          badge.textContent = `Terpakai (${timeRange.replace(' WIB', '')})`;
+        }
       }
     } else {
-      chip.classList.add('chip-busy');
-      const conflict = info.conflicts && info.conflicts[0] ? info.conflicts[0] : null;
-      const timeRange = conflict ? conflict.timeRange : 'Ada Jadwal';
-      chip.setAttribute('data-conflict', timeRange);
-      if (badge) {
-        badge.className = 'room-avail-badge avail-busy';
-        badge.textContent = `Terpakai (${timeRange.replace(' WIB', '')})`;
+      if (info.available) availableCount++;
+    }
+
+    // Fallback: update chip if present
+    const chip = document.querySelector(`#lokasiChipGrid .room-chip[data-room="${roomName}"]`);
+    if (chip) {
+      const badge = chip.querySelector('.room-avail-badge');
+      if (info.available) {
+        chip.classList.remove('chip-busy');
+        chip.removeAttribute('data-conflict');
+        if (badge) {
+          badge.className = 'room-avail-badge avail-free';
+          badge.textContent = 'Tersedia';
+        }
+      } else {
+        chip.classList.add('chip-busy');
+        const conflict = info.conflicts && info.conflicts[0] ? info.conflicts[0] : null;
+        const timeRange = conflict ? conflict.timeRange : 'Ada Jadwal';
+        chip.setAttribute('data-conflict', timeRange);
+        if (badge) {
+          badge.className = 'room-avail-badge avail-busy';
+          badge.textContent = `Terpakai (${timeRange.replace(' WIB', '')})`;
+        }
       }
     }
+  }
+
+  // Update Trigger Badge if a room is currently active
+  const currentSelected = document.getElementById('lokasiSelect')?.value || document.getElementById('lokasi')?.value;
+  if (currentSelected && currentSelected !== 'custom') {
+    const activeItem = document.querySelector(`#roomDropdownMenu .room-dropdown-item[data-room="${currentSelected}"]`);
+    const activeBadge = activeItem?.querySelector('.room-avail-badge');
+    const triggerBadge = document.getElementById('roomTriggerBadge');
+    if (triggerBadge && activeBadge) {
+      triggerBadge.className = activeBadge.className;
+      triggerBadge.textContent = activeBadge.textContent;
+      triggerBadge.style.display = 'inline-flex';
+    }
+  }
+
+  if (currentSelected && typeof updateRoomStatusNotice === 'function') {
+    updateRoomStatusNotice(currentSelected);
   }
 
   const infoEl = document.getElementById('roomAvailInfo');
@@ -701,6 +1221,16 @@ function handleDeptChange(selectEl) {
   updateTrainingId();
 }
 
+function formatDateLongId(dateStr) {
+  if (!dateStr) return '';
+  const parts = dateStr.split('-');
+  if (parts.length !== 3) return dateStr;
+  const d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+  if (isNaN(d.getTime())) return dateStr;
+  return d.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+}
+window.formatDateLongId = formatDateLongId;
+
 function handleMainScheduleChange() {
   const tglInput = document.getElementById('tglPelaksanaan');
   const startInput = document.getElementById('jamMulai');
@@ -715,7 +1245,12 @@ function handleMainScheduleChange() {
   if (moduleRows.length === 1) {
     const firstInputs = moduleRows[0].querySelectorAll('input');
     if (firstInputs.length >= 3) {
-      if (tgl) firstInputs[0].value = tgl;
+      if (tgl) {
+        firstInputs[0].value = tgl;
+        if (firstInputs[0].id) {
+          setDatePickerValue(firstInputs[0].id, tgl);
+        }
+      }
       if (start) firstInputs[1].value = start;
       if (end) firstInputs[2].value = end;
     }
@@ -899,8 +1434,8 @@ function calculateScheduleAndDuration() {
     jamHiddenSelesai.setAttribute('value', latest);
   }
 
-  // 4. Lokasi / Ruangan (hanya jika tidak menggunakan chip grid lokasi)
-  if (!document.getElementById('lokasiChipGrid')) {
+  // 4. Lokasi / Ruangan (hanya jika tidak menggunakan chip grid lokasi atau dropdown lokasi)
+  if (!document.getElementById('lokasiChipGrid') && !document.getElementById('lokasiSelect')) {
     const distinctLocs = [...new Set(locations)];
     let locText = '';
     if (distinctLocs.length === 0) {
@@ -938,6 +1473,45 @@ function calculateScheduleAndDuration() {
   if (jadwalHidden) {
     jadwalHidden.value = scheduleText;
   }
+
+  // 6. Update Executive Schedule Card (Pill & Live Summary)
+  const durationTextEl = document.getElementById('mainScheduleDurationText');
+  const liveSummaryTextEl = document.getElementById('mainScheduleLiveSummaryText');
+  const curTopDate = tglDisplay ? tglDisplay.value : '';
+  const curStart = (jamHiddenMulai ? jamHiddenMulai.value : '') || '09:00';
+  const curEnd = (jamHiddenSelesai ? jamHiddenSelesai.value : '') || '15:00';
+  const curMinutes = calculateMinutesBetween(curStart, curEnd);
+  const curDurFormatted = curMinutes > 0 ? formatMinutes(curMinutes) : '';
+
+  if (durationTextEl) {
+    if (totalDurStr && totalDurStr !== '-') {
+      durationTextEl.textContent = `${totalDurStr} Pembelajaran`;
+    } else if (curDurFormatted) {
+      durationTextEl.textContent = `${curDurFormatted} Pembelajaran`;
+    } else {
+      durationTextEl.textContent = 'Durasi Otomatis';
+    }
+  }
+
+  if (liveSummaryTextEl) {
+    if (moduleRows.length > 1) {
+      liveSummaryTextEl.innerHTML = `<strong>${dateText || 'Multi-sesi'}</strong> &bull; <strong>${totalDurStr !== '-' ? totalDurStr : '6 Jam'} Pembelajaran</strong> (${moduleRows.length} Sesi Terjadwal)`;
+    } else if (curTopDate) {
+      const longDate = formatDateLongId(curTopDate);
+      if (curStart && curEnd && curMinutes > 0) {
+        liveSummaryTextEl.innerHTML = `<strong>${longDate}</strong> &bull; <strong>${curStart} - ${curEnd} WIB</strong> (${curDurFormatted || totalDurStr})`;
+      } else {
+        liveSummaryTextEl.innerHTML = `<strong>${longDate}</strong> &bull; <em>Tentukan jam pelaksanaan</em>`;
+      }
+    } else {
+      if (curStart && curEnd && curMinutes > 0) {
+        liveSummaryTextEl.innerHTML = `Rentang Jam: <strong>${curStart} - ${curEnd} WIB</strong> (${curDurFormatted}) &bull; <em>Pilih tanggal pelaksanaan di atas</em>`;
+      } else {
+        liveSummaryTextEl.innerHTML = `<em>Silahkan pilih tanggal dan jam pelaksanaan pelatihan</em>`;
+      }
+    }
+  }
+
   if (typeof scheduleRoomAvailabilityCheck === 'function') {
     scheduleRoomAvailabilityCheck();
   }
@@ -969,11 +1543,31 @@ const DEPT_OPTIONS = [
 // ==========================================
 // Dynamic Rows: Participants
 // ==========================================
-function addParticipant(name = '', email = '', dept = '') {
-  // Backward compatibility jika dipanggil addParticipant(name, dept)
-  if (email && !dept && !email.includes('@')) {
-    dept = email;
+function addParticipant(a1 = '', a2 = '', a3 = 'present', a4 = '') {
+  let name = a1 || '';
+  let email = '';
+  let dept = '';
+
+  // Dukungan fleksibel untuk berbagai format pemanggilan:
+  // 1. addParticipant(name, dept, attendance, email)
+  if (a4 || (a3 && a3 !== 'present' && a3.includes('@'))) {
+    dept = a2 || '';
+    email = a4 || (a3.includes('@') ? a3 : '');
+  }
+  // 2. addParticipant(name, email, dept)
+  else if (a2 && a2.includes('@')) {
+    email = a2;
+    dept = (a3 && a3 !== 'present') ? a3 : '';
+  }
+  // 3. addParticipant(name, dept)
+  else if (a2 && !a2.includes('@') && (!a3 || a3 === 'present')) {
+    dept = a2;
     email = '';
+  }
+  // 4. Default fallback
+  else {
+    email = a2 || '';
+    dept = (a3 && a3 !== 'present') ? a3 : '';
   }
 
   const tbody = document.getElementById('participantBody');
@@ -1005,7 +1599,7 @@ function addParticipant(name = '', email = '', dept = '') {
   tr.innerHTML = `
     <td style="color:var(--ink-faint);font-size:13px;width:36px;">${participantCounter}</td>
     <td style="min-width:180px;"><input type="text" class="participant-name" placeholder="Nama lengkap karyawan" value="${name}"></td>
-    <td style="min-width:220px;"><input type="email" class="participant-email" placeholder="nama.karyawan@perusahaan.com" value="${email}"></td>
+    <td style="width:190px;"><input type="email" class="participant-email" placeholder="nama@email.com" value="${email}"></td>
     <td style="width:200px;">
       <select class="participant-dept">
         ${optionsHtml}
@@ -1112,7 +1706,7 @@ function parseParticipantLine(line, fallbackDept = '') {
 function importPesertaFromText() {
   const textarea = document.getElementById('excelPasteArea');
   if (!textarea || !textarea.value.trim()) {
-    showToast('Teks daftar peserta masih kosong. Silakan tempelkan data dari Excel terlebih dahulu.', 'error');
+    showToast('Teks daftar peserta masih kosong. Silahkan tempelkan data dari Excel terlebih dahulu.', 'error');
     return;
   }
 
@@ -1234,8 +1828,8 @@ function addModule(tanggal = '', jamMulai = '', jamSelesai = '', mod = '', pic =
   const lastRow = document.querySelector('#moduleBody tr:last-child');
   let fallbackDate = topDate || new Date().toISOString().split('T')[0];
   if (lastRow) {
-    const lastInputs = lastRow.querySelectorAll('input');
-    if (lastInputs[0] && lastInputs[0].value) fallbackDate = lastInputs[0].value;
+    const lastDateInput = lastRow.querySelector('.module-date');
+    if (lastDateInput && lastDateInput.value) fallbackDate = lastDateInput.value;
   }
 
   const defaultDate = tanggal || fallbackDate;
@@ -1247,10 +1841,23 @@ function addModule(tanggal = '', jamMulai = '', jamSelesai = '', mod = '', pic =
   const diff = calculateMinutesBetween(defaultStart, defaultEnd);
   const rowDur = diff > 0 ? formatMinutes(diff) : '-';
 
+  const rowDateId = `moduleDate_${moduleCounter}_${Date.now()}`;
+  const displayDateText = defaultDate ? formatDisplayDate(defaultDate) : 'Pilih tanggal';
+
   const tr = document.createElement('tr');
   tr.innerHTML = `
     <td style="color:var(--ink-faint);font-size:13px;width:36px;text-align:center;font-weight:600;">${moduleCounter}</td>
-    <td style="width:130px;"><input type="date" class="module-date" value="${defaultDate}" onchange="calculateScheduleAndDuration()"></td>
+    <td style="width:160px;position:relative;">
+      <div class="date-picker-wrap">
+        <div class="date-picker-trigger date-picker-trigger-sm" onclick="toggleDatePicker('${rowDateId}')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="flex-shrink:0;"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          <span id="${rowDateId}_display" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${displayDateText}</span>
+          <svg class="chevron" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-left:auto;"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </div>
+        <input type="hidden" id="${rowDateId}" class="module-date" value="${defaultDate}" onchange="calculateScheduleAndDuration()">
+        <div class="date-picker-popover" id="${rowDateId}_popover" style="display:none;"></div>
+      </div>
+    </td>
     <td style="width:105px;"><input type="time" class="module-start" value="${defaultStart}" onchange="calculateScheduleAndDuration()"></td>
     <td style="width:105px;"><input type="time" class="module-end" value="${defaultEnd}" onchange="calculateScheduleAndDuration()"></td>
     <td style="min-width:170px;"><input type="text" class="module-title" placeholder="Nama modul / topik" value="${mod}"></td>
@@ -1270,6 +1877,14 @@ function addModule(tanggal = '', jamMulai = '', jamSelesai = '', mod = '', pic =
     <td style="width:40px;"><button type="button" class="row-remove" onclick="removeRow(this)" title="Hapus baris">&times;</button></td>
   `;
   tbody.appendChild(tr);
+
+  if (defaultDate) {
+    const p = defaultDate.split('-');
+    if (p.length === 3) {
+      datePickerState[rowDateId] = new Date(parseInt(p[0], 10), parseInt(p[1], 10) - 1, parseInt(p[2], 10));
+    }
+  }
+
   calculateScheduleAndDuration();
 }
 
@@ -1400,18 +2015,725 @@ function calcBudgetBreakdown() {
 }
 
 // ==========================================
-// Navigation & Admin Gate
+// Helper: HTML Escaping
 // ==========================================
+function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+// ==========================================
+// Navigation & Routing (TDS Multi-Page Portal)
+// ==========================================
+let currentPage = 'dashboard';
+
+function goToPage(page) {
+  if (!page) page = 'dashboard';
+
+  // Normalize aliases
+  if (page === 'form') page = 'ajukan';
+  if (page === 'calendar' || page === 'jadwal') page = 'kalender';
+  if (page === 'studio' || page === 'ai') page = 'ai-studio';
+  if (page === 'admin' || page === 'master' || page === 'data' || page === 'portal-approval' || page === 'approval' || page === 'approver') page = 'portal-approval';
+  if (page === 'my-training' || page === 'mytraining') page = 'training-saya';
+  if (page === 'vendors' || page === 'directory') page = 'vendor';
+  if (page === 'skill-matrix' || page === 'matrix' || page === 'skillmatrix' || page === 'skills') page = 'skill-matrix';
+  if (page === 'post-training' || page === 'trampoline' || page === 'post-test' || page === 'evidence' || page === 'posttraining') page = 'post-training';
+
+  // Gate for portal-approval (requires PIN unlock)
+  if (page === 'portal-approval') {
+    const isUnlocked = sessionStorage.getItem('admin_unlocked') === 'true';
+    if (!isUnlocked) {
+      requestAdminAccess();
+      return;
+    }
+  }
+
+  currentPage = page;
+
+  // 1. Hide all .tds-page
+  document.querySelectorAll('.tds-page').forEach(p => {
+    p.style.display = 'none';
+    p.classList.remove('active');
+  });
+
+  // 2. Display requested page
+  const targetPage = document.getElementById(`page-${page}`);
+  if (targetPage) {
+    targetPage.style.display = 'block';
+    targetPage.classList.add('active');
+  }
+
+  // 3. Update sidebar active item
+  document.querySelectorAll('.tds-nav-item').forEach(item => {
+    if (item.getAttribute('data-page') === page) {
+      item.classList.add('active');
+    } else {
+      item.classList.remove('active');
+    }
+  });
+
+  // 4. Sticky Bottom Bar: Only displayed on 'ajukan' page
+  const stickyBar = document.getElementById('stickyBottomBar');
+  if (stickyBar) {
+    stickyBar.style.display = (page === 'ajukan') ? '' : 'none';
+  }
+
+  // 5. URL Hash sync
+  const targetHash = `#${page}`;
+  if (window.location.hash !== targetHash) {
+    history.replaceState(null, null, targetHash);
+  }
+
+  // 6. Ensure freshest data from localStorage
+  loadCalendarEntries();
+
+  // 7. Page-specific render triggers
+  if (page === 'dashboard') {
+    renderDashboardLandingPage();
+  } else if (page === 'skill-matrix') {
+    renderSkillMatrix();
+  } else if (page === 'ai-studio') {
+    initAiStudioPage();
+  } else if (page === 'kalender') {
+    renderCalendar();
+  } else if (page === 'training-saya') {
+    const searchInput = document.getElementById('myTrainingSearchInput');
+    if (searchInput && searchInput.value.trim()) {
+      searchMyTrainings();
+    } else {
+      resetMyTrainingSearch();
+    }
+  } else if (page === 'vendor') {
+    renderVendorDirectoryPage();
+  } else if (page === 'post-training') {
+    populateTrampolineTrainingDropdowns();
+  } else if (page === 'portal-approval') {
+    const masterView = document.getElementById('masterView');
+    if (masterView) masterView.style.display = '';
+    switchAdminTab(adminCurrentTab || 'dashboard');
+    loadMasterData();
+  }
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Backward compatibility helper
+function switchPublicView(view) {
+  if (view === 'calendar') goToPage('kalender');
+  else goToPage('ajukan');
+}
+
 function handleHashNavigation() {
-  const hash = (window.location.hash || '').toLowerCase();
-  if (hash === '#admin' || hash === '#master' || hash === '#data') {
-    requestAdminAccess();
-  } else if (hash === '#approval' || hash === '#approver') {
+  const rawHash = (window.location.hash || '').replace('#', '').toLowerCase();
+  if (rawHash === 'approval-page' || rawHash === 'approver-portal') {
     requestApprovalAccess();
+  } else if (!rawHash || rawHash === 'dashboard' || rawHash === 'home') {
+    goToPage('dashboard');
+  } else if (rawHash === 'ajukan' || rawHash === 'form') {
+    goToPage('ajukan');
+  } else if (rawHash === 'skill-matrix' || rawHash === 'matrix' || rawHash === 'skillmatrix' || rawHash === 'skills') {
+    goToPage('skill-matrix');
+  } else if (rawHash === 'ai-studio' || rawHash === 'studio' || rawHash === 'ai') {
+    goToPage('ai-studio');
+  } else if (rawHash === 'kalender' || rawHash === 'calendar' || rawHash === 'jadwal') {
+    goToPage('kalender');
+  } else if (rawHash === 'training-saya' || rawHash === 'my-training' || rawHash === 'mytraining') {
+    goToPage('training-saya');
+  } else if (rawHash === 'vendor' || rawHash === 'vendors' || rawHash === 'directory') {
+    goToPage('vendor');
+  } else if (rawHash === 'post-training' || rawHash === 'trampoline' || rawHash === 'evidence' || rawHash === 'posttest') {
+    goToPage('post-training');
+  } else if (rawHash === 'portal-approval' || rawHash === 'approval' || rawHash === 'approver' || rawHash === 'admin' || rawHash === 'master' || rawHash === 'data') {
+    goToPage('portal-approval');
   } else {
-    switchView('form');
+    goToPage('dashboard');
   }
 }
+
+// ==========================================
+// POST TRAINING TRAMPOLINE LOGIC
+// ==========================================
+function switchTrampolineTab(tabName) {
+  const panelEvidence = document.getElementById('trampolinePanelEvidence');
+  const panelPostTest = document.getElementById('trampolinePanelPostTest');
+  const btnEvidence = document.getElementById('tabBtnEvidence');
+  const btnPostTest = document.getElementById('tabBtnPostTest');
+
+  if (tabName === 'evidence') {
+    if (panelEvidence) panelEvidence.style.display = 'block';
+    if (panelPostTest) panelPostTest.style.display = 'none';
+    if (btnEvidence) btnEvidence.classList.add('active');
+    if (btnPostTest) btnPostTest.classList.remove('active');
+  } else {
+    if (panelEvidence) panelEvidence.style.display = 'none';
+    if (panelPostTest) panelPostTest.style.display = 'block';
+    if (btnEvidence) btnEvidence.classList.remove('active');
+    if (btnPostTest) btnPostTest.classList.add('active');
+  }
+}
+window.switchTrampolineTab = switchTrampolineTab;
+
+function populateTrampolineTrainingDropdowns() {
+  const selEvidence = document.getElementById('evidenceTrainingSelect');
+  const selPostTest = document.getElementById('postTestTrainingSelect');
+  if (!selEvidence && !selPostTest) return;
+
+  let list = [];
+  try {
+    const raw = localStorage.getItem(SUBMISSIONS_STORAGE_KEY);
+    if (raw) list = JSON.parse(raw);
+  } catch (e) {
+    list = [];
+  }
+
+  // Collect unique trainings
+  const trainingMap = new Map();
+  list.forEach(item => {
+    const meta = item.meta || {};
+    const name = (meta['Nama training'] || item.namaTraining || '').trim();
+    if (name) {
+      trainingMap.set(name, {
+        nama: name,
+        id: meta['ID training'] || item.id || '',
+        divisi: meta['Departemen / divisi'] || item.divisi || '',
+        kategori: meta['Kategori training'] || meta['Kategori'] || 'Soft skill'
+      });
+    }
+  });
+
+  // Fallbacks if no submission stored yet
+  const sampleTrainings = [
+    { nama: 'Workshop Golang Backend High Performance', divisi: 'WEB DEVELOPER', kategori: 'Hard skill' },
+    { nama: 'Advanced UI/UX Figma Design System', divisi: 'UI/UX DESIGNER', kategori: 'Hard skill' },
+    { nama: 'Effective Leadership & People Management', divisi: 'HR', kategori: 'Soft skill' },
+    { nama: 'Service Excellence & Customer Communications', divisi: 'CUSTOMER EXPERIENCE', kategori: 'Soft skill' }
+  ];
+  sampleTrainings.forEach(sample => {
+    if (!trainingMap.has(sample.nama)) {
+      trainingMap.set(sample.nama, sample);
+    }
+  });
+
+  window._trampolineTrainingsData = trainingMap;
+
+  const curEvidenceVal = selEvidence ? selEvidence.value : '';
+  const curPostTestVal = selPostTest ? selPostTest.value : '';
+
+  let optionsHtml = '<option value="">-- Silahkan Pilih Training --</option>';
+  trainingMap.forEach((val, key) => {
+    optionsHtml += `<option value="${escapeHtml(key)}">${escapeHtml(key)}${val.divisi ? ' (' + escapeHtml(val.divisi) + ')' : ''}</option>`;
+  });
+
+  if (selEvidence) {
+    selEvidence.innerHTML = optionsHtml;
+    if (curEvidenceVal && trainingMap.has(curEvidenceVal)) {
+      selEvidence.value = curEvidenceVal;
+    }
+  }
+  if (selPostTest) {
+    selPostTest.innerHTML = optionsHtml;
+    if (curPostTestVal && trainingMap.has(curPostTestVal)) {
+      selPostTest.value = curPostTestVal;
+    }
+  }
+}
+window.populateTrampolineTrainingDropdowns = populateTrampolineTrainingDropdowns;
+
+function handleEvidenceTrainingChange(trainingName) {
+  if (!window._trampolineTrainingsData) return;
+  const data = window._trampolineTrainingsData.get(trainingName);
+  if (data) {
+    if (data.divisi) {
+      const divisiSel = document.getElementById('evidenceDivisi');
+      if (divisiSel) divisiSel.value = data.divisi;
+    }
+    if (data.kategori) {
+      selectEvidenceCategory(data.kategori);
+    }
+  }
+}
+window.handleEvidenceTrainingChange = handleEvidenceTrainingChange;
+
+function handlePostTestTrainingChange(trainingName) {
+  if (!window._trampolineTrainingsData) return;
+  const data = window._trampolineTrainingsData.get(trainingName);
+  if (data) {
+    if (data.divisi) {
+      const divisiSel = document.getElementById('postTestDivisi');
+      if (divisiSel) divisiSel.value = data.divisi;
+    }
+  }
+}
+window.handlePostTestTrainingChange = handlePostTestTrainingChange;
+
+function selectEvidenceCategory(cat) {
+  const hidden = document.getElementById('evidenceKategori');
+  const chipSoft = document.getElementById('chipCatSoft');
+  const chipHard = document.getElementById('chipCatHard');
+  if (hidden) hidden.value = cat;
+
+  if (cat === 'Hard skill') {
+    chipHard?.classList.add('selected');
+    chipSoft?.classList.remove('selected');
+  } else {
+    chipSoft?.classList.add('selected');
+    chipHard?.classList.remove('selected');
+  }
+}
+window.selectEvidenceCategory = selectEvidenceCategory;
+
+// File Upload Handling
+let selectedEvidenceFiles = []; // Array of { file, name, size, type, base64 }
+
+function handleEvidenceFileSelect(e) {
+  const files = Array.from(e.target.files || []);
+  processEvidenceFiles(files);
+  e.target.value = '';
+}
+window.handleEvidenceFileSelect = handleEvidenceFileSelect;
+
+function handleEvidenceDragOver(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  document.getElementById('evidenceDropzone')?.classList.add('dragover');
+}
+window.handleEvidenceDragOver = handleEvidenceDragOver;
+
+function handleEvidenceDragLeave(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  document.getElementById('evidenceDropzone')?.classList.remove('dragover');
+}
+window.handleEvidenceDragLeave = handleEvidenceDragLeave;
+
+function handleEvidenceDrop(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  document.getElementById('evidenceDropzone')?.classList.remove('dragover');
+  const files = Array.from(e.dataTransfer.files || []);
+  processEvidenceFiles(files);
+}
+window.handleEvidenceDrop = handleEvidenceDrop;
+
+function processEvidenceFiles(newFiles) {
+  if (!newFiles || newFiles.length === 0) return;
+
+  const maxFiles = 5;
+  const maxBytes = 5 * 1024 * 1024; // 5 MB
+  const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+
+  for (let i = 0; i < newFiles.length; i++) {
+    const file = newFiles[i];
+
+    if (selectedEvidenceFiles.length >= maxFiles) {
+      showToast(`Maksimal hanya dapat memilih ${maxFiles} foto evidence.`, 'warning');
+      break;
+    }
+
+    const ext = file.name.split('.').pop().toLowerCase();
+    const isAllowed = allowedTypes.includes(file.type) || ['jpg', 'jpeg', 'png'].includes(ext);
+    if (!isAllowed) {
+      showToast(`File "${file.name}" ditolak. Hanya format JPG dan PNG yang diperbolehkan.`, 'error');
+      continue;
+    }
+
+    if (file.size > maxBytes) {
+      showToast(`File "${file.name}" melebihi batas ukuran 5 MB (${(file.size / (1024 * 1024)).toFixed(1)} MB). Silahkan pilih file yang lebih kecil.`, 'error');
+      continue;
+    }
+
+    const isDuplicate = selectedEvidenceFiles.some(f => f.name === file.name && f.size === file.size);
+    if (isDuplicate) {
+      continue;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const dataUrl = event.target.result;
+      const img = new Image();
+      img.onload = () => {
+        // Optimasi dimensi maksimal (1600px HD) agar foto tajam, cepat diunggah, & hemat kuota
+        const maxDim = 1600;
+        let width = img.width;
+        let height = img.height;
+        if (width > maxDim || height > maxDim) {
+          if (width > height) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          } else {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        const mime = ext === 'png' ? 'image/png' : 'image/jpeg';
+        const optimizedDataUrl = canvas.toDataURL(mime, 0.85);
+        const pureBase64 = optimizedDataUrl.substring(optimizedDataUrl.indexOf('base64,') + 7);
+
+        selectedEvidenceFiles.push({
+          file: file,
+          name: file.name,
+          size: Math.round((optimizedDataUrl.length * 3) / 4),
+          type: mime,
+          previewUrl: optimizedDataUrl,
+          base64: pureBase64
+        });
+        renderEvidencePreview();
+      };
+      img.onerror = () => {
+        const pureBase64 = dataUrl.indexOf('base64,') !== -1 ? dataUrl.substring(dataUrl.indexOf('base64,') + 7) : dataUrl;
+        selectedEvidenceFiles.push({
+          file: file,
+          name: file.name,
+          size: file.size,
+          type: file.type || (ext === 'png' ? 'image/png' : 'image/jpeg'),
+          previewUrl: dataUrl,
+          base64: pureBase64
+        });
+        renderEvidencePreview();
+      };
+      img.src = dataUrl;
+    };
+    reader.readAsDataURL(file);
+  }
+}
+
+function renderEvidencePreview() {
+  const section = document.getElementById('evidencePreviewSection');
+  const countEl = document.getElementById('evidencePreviewCount');
+  const grid = document.getElementById('evidencePreviewGrid');
+  if (!section || !grid) return;
+
+  if (selectedEvidenceFiles.length === 0) {
+    section.style.display = 'none';
+    grid.innerHTML = '';
+    return;
+  }
+
+  section.style.display = 'block';
+  if (countEl) countEl.textContent = `${selectedEvidenceFiles.length} dari 5 Foto Terpilih`;
+
+  grid.innerHTML = selectedEvidenceFiles.map((item, index) => {
+    const sizeKb = (item.size / 1024).toFixed(0);
+    const sizeStr = item.size > 1024 * 1024 ? (item.size / (1024 * 1024)).toFixed(1) + ' MB' : `${sizeKb} KB`;
+    const previewSrc = item.previewUrl || (item.base64 ? `data:${item.type || 'image/jpeg'};base64,${item.base64}` : '');
+    return `
+      <div class="evidence-preview-item">
+        <img src="${previewSrc}" alt="${escapeHtml(item.name)}" class="evidence-preview-thumb">
+        <div class="evidence-preview-info">
+          <span class="evidence-preview-name" title="${escapeHtml(item.name)}">${escapeHtml(item.name)}</span>
+          <span class="evidence-preview-size">${sizeStr}</span>
+        </div>
+        <button type="button" class="evidence-preview-remove" onclick="removeEvidenceFile(${index})" title="Hapus foto ini">&times;</button>
+      </div>
+    `;
+  }).join('');
+}
+
+function removeEvidenceFile(index) {
+  selectedEvidenceFiles.splice(index, 1);
+  renderEvidencePreview();
+}
+window.removeEvidenceFile = removeEvidenceFile;
+
+function clearAllEvidenceFiles() {
+  selectedEvidenceFiles = [];
+  renderEvidencePreview();
+}
+window.clearAllEvidenceFiles = clearAllEvidenceFiles;
+
+async function submitEvidence(e) {
+  e.preventDefault();
+  const trainingSelect = document.getElementById('evidenceTrainingSelect');
+  const namaInput = document.getElementById('evidenceNamaPeserta');
+  const divisiSelect = document.getElementById('evidenceDivisi');
+  const kategoriHidden = document.getElementById('evidenceKategori');
+  const statusBanner = document.getElementById('evidenceStatusBanner');
+  const btn = document.getElementById('btnSubmitEvidence');
+  const btnText = document.getElementById('btnSubmitEvidenceText');
+
+  if (!trainingSelect?.value) {
+    showToast('Silahkan pilih training terlebih dahulu.', 'warning');
+    trainingSelect?.focus();
+    return;
+  }
+  if (!namaInput?.value.trim()) {
+    showToast('Silahkan masukkan nama peserta / pengunggah.', 'warning');
+    namaInput?.focus();
+    return;
+  }
+  if (!divisiSelect?.value) {
+    showToast('Silahkan pilih divisi / departemen.', 'warning');
+    divisiSelect?.focus();
+    return;
+  }
+  if (selectedEvidenceFiles.length === 0) {
+    showToast('Silahkan pilih minimal 1 foto dokumentasi bukti pelatihan.', 'warning');
+    return;
+  }
+
+  // Set Loading State
+  if (btn) btn.disabled = true;
+  if (btnText) btnText.innerHTML = `Sedang Mengunggah ${selectedEvidenceFiles.length} Foto ke Drive...`;
+  if (statusBanner) {
+    statusBanner.className = 'trampoline-banner';
+    statusBanner.style.background = 'rgba(75, 150, 255, 0.08)';
+    statusBanner.style.color = 'var(--ink)';
+    statusBanner.style.border = '1px solid rgba(75, 150, 255, 0.3)';
+    statusBanner.style.display = 'flex';
+    statusBanner.innerHTML = `
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="spin-icon"><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line></svg>
+      <div>Silahkan tunggu, sistem sedang membuat folder Google Drive dan menyimpan ${selectedEvidenceFiles.length} file...</div>
+    `;
+  }
+
+  const payload = {
+    action: "submitPostTrainingEvidence",
+    namaTraining: trainingSelect.value,
+    namaPeserta: namaInput.value.trim(),
+    divisi: divisiSelect.value,
+    kategori: kategoriHidden?.value || 'Soft skill',
+    tanggal: new Date().toISOString().split('T')[0],
+    files: selectedEvidenceFiles.map(f => {
+      let b64 = f.base64 || '';
+      if (b64.indexOf('base64,') !== -1) {
+        b64 = b64.substring(b64.indexOf('base64,') + 7);
+      }
+      return {
+        name: f.name,
+        type: f.type,
+        base64: b64.replace(/[\r\n\s]/g, '')
+      };
+    })
+  };
+
+  try {
+    const res = await fetch(GOOGLE_SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+
+    if (data && data.success) {
+      showToast('Bukti pelatihan berhasil diunggah ke Google Drive & dicatat ke Sheets!', 'success');
+      if (statusBanner) {
+        statusBanner.className = 'trampoline-banner success';
+        statusBanner.style.display = 'flex';
+        statusBanner.innerHTML = `
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          <div>
+            <strong>Berhasil Diunggah!</strong> Sebanyak ${selectedEvidenceFiles.length} foto bukti telah tersimpan di Google Drive dan dicatat ke sheet "Post Training".
+            ${data.folderUrl ? `<br><a href="${data.folderUrl}" target="_blank" rel="noopener">Buka Folder Bukti di Google Drive &rarr;</a>` : ''}
+          </div>
+        `;
+      }
+
+      // Simpan riwayat evidence ke localStorage agar tersinkron instan dengan Portal Approval
+      try {
+        const storedEvidenceRaw = localStorage.getItem('tds_post_training_evidence_list');
+        let storedEvidence = storedEvidenceRaw ? JSON.parse(storedEvidenceRaw) : [];
+        if (!Array.isArray(storedEvidence)) storedEvidence = [];
+
+        // Siapkan thumbnail foto untuk galeri collection
+        const photoPreviews = selectedEvidenceFiles.slice(0, 5).map(f => ({
+          name: f.name,
+          type: f.type,
+          dataUrl: f.base64 ? `data:${f.type || 'image/jpeg'};base64,${f.base64}` : ''
+        }));
+
+        storedEvidence.unshift({
+          id: 'EVD-' + Date.now(),
+          waktuSubmit: new Date().toLocaleString('id-ID'),
+          tipeAktivitas: 'Unggah Bukti',
+          namaTraining: trainingSelect.value,
+          namaPeserta: namaInput.value.trim(),
+          divisi: divisiSelect.value,
+          kategori: kategoriHidden?.value || 'Soft skill',
+          jumlahFile: selectedEvidenceFiles.length,
+          folderUrl: data.folderUrl || '',
+          detailFile: (data.files || []).map((f, i) => `${i + 1}. ${f.name} (${f.url})`).join('\n') || '',
+          fileUrls: (data.files || []).map(f => f.url).filter(Boolean),
+          photos: photoPreviews,
+          skorPostTest: '-',
+          catatan: '-',
+          status: 'Selesai & Berdokumentasi'
+        });
+
+        if (storedEvidence.length > 50) storedEvidence = storedEvidence.slice(0, 50);
+        localStorage.setItem('tds_post_training_evidence_list', JSON.stringify(storedEvidence));
+      } catch (eStore) {
+        console.warn('Gagal menyimpan cache lokal evidence:', eStore);
+      }
+
+      clearAllEvidenceFiles();
+      namaInput.value = '';
+    } else {
+      throw new Error(data?.message || 'Gagal menyimpan bukti ke Google Drive.');
+    }
+  } catch (err) {
+    showToast(`Gagal: ${err.message}`, 'error');
+    if (statusBanner) {
+      statusBanner.className = 'trampoline-banner error';
+      statusBanner.style.display = 'flex';
+      statusBanner.innerHTML = `
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+        <div><strong>Gagal Mengunggah:</strong> ${escapeHtml(err.message)}. Silahkan periksa koneksi internet Anda atau coba beberapa saat lagi.</div>
+      `;
+    }
+  } finally {
+    if (btn) btn.disabled = false;
+    if (btnText) btnText.innerHTML = 'Unggah &amp; Simpan ke Drive';
+  }
+}
+window.submitEvidence = submitEvidence;
+
+async function submitPostTest(e) {
+  e.preventDefault();
+  const trainingSelect = document.getElementById('postTestTrainingSelect');
+  const namaInput = document.getElementById('postTestNamaPeserta');
+  const divisiSelect = document.getElementById('postTestDivisi');
+  const skorInput = document.getElementById('postTestSkor');
+  const catatanInput = document.getElementById('postTestCatatan');
+  const statusBanner = document.getElementById('postTestStatusBanner');
+  const btn = document.getElementById('btnSubmitPostTest');
+  const btnText = document.getElementById('btnSubmitPostTestText');
+
+  if (!trainingSelect?.value) {
+    showToast('Silahkan pilih training terlebih dahulu.', 'warning');
+    trainingSelect?.focus();
+    return;
+  }
+  if (!namaInput?.value.trim()) {
+    showToast('Silahkan masukkan nama peserta.', 'warning');
+    namaInput?.focus();
+    return;
+  }
+  if (!divisiSelect?.value) {
+    showToast('Silahkan pilih divisi / departemen.', 'warning');
+    divisiSelect?.focus();
+    return;
+  }
+  if (skorInput?.value === '' || isNaN(Number(skorInput?.value))) {
+    showToast('Silahkan masukkan nilai/skor post-test peserta.', 'warning');
+    skorInput?.focus();
+    return;
+  }
+
+  if (btn) btn.disabled = true;
+  if (btnText) btnText.innerHTML = 'Sedang Menyimpan ke Sheets...';
+  if (statusBanner) {
+    statusBanner.className = 'trampoline-banner';
+    statusBanner.style.background = 'rgba(75, 150, 255, 0.08)';
+    statusBanner.style.color = 'var(--ink)';
+    statusBanner.style.border = '1px solid rgba(75, 150, 255, 0.3)';
+    statusBanner.style.display = 'flex';
+    statusBanner.innerHTML = `
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="spin-icon"><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line></svg>
+      <div>Silahkan tunggu, data hasil post-test sedang dicatat ke spreadsheet...</div>
+    `;
+  }
+
+  const payload = {
+    action: "submitPostTest",
+    namaTraining: trainingSelect.value,
+    namaPeserta: namaInput.value.trim(),
+    divisi: divisiSelect.value,
+    skor: skorInput.value,
+    jawaban: catatanInput?.value.trim() || '-',
+    tanggal: new Date().toISOString().split('T')[0]
+  };
+
+  try {
+    const res = await fetch(GOOGLE_SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+
+    if (data && data.success) {
+      showToast('Hasil post-test berhasil dicatat ke Google Sheets!', 'success');
+      if (statusBanner) {
+        statusBanner.className = 'trampoline-banner success';
+        statusBanner.style.display = 'flex';
+        statusBanner.innerHTML = `
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          <div><strong>Tersimpan!</strong> Hasil evaluasi post-test atas nama <strong>${escapeHtml(namaInput.value.trim())}</strong> (Skor: ${skorInput.value}) telah dicatat ke sheet "Post Training".</div>
+        `;
+      }
+
+      // Perbarui skor post-test pada riwayat evidence lokal jika nama training cocok
+      try {
+        const storedEvidenceRaw = localStorage.getItem('tds_post_training_evidence_list');
+        let storedEvidence = storedEvidenceRaw ? JSON.parse(storedEvidenceRaw) : [];
+        if (Array.isArray(storedEvidence)) {
+          let matched = false;
+          storedEvidence.forEach(item => {
+            if (item.namaTraining === trainingSelect.value) {
+              item.skorPostTest = skorInput.value;
+              if (catatanInput?.value.trim()) item.catatan = catatanInput.value.trim();
+              matched = true;
+            }
+          });
+          if (!matched) {
+            storedEvidence.unshift({
+              id: 'EVD-' + Date.now(),
+              waktuSubmit: new Date().toLocaleString('id-ID'),
+              tipeAktivitas: 'Post Test',
+              namaTraining: trainingSelect.value,
+              namaPeserta: namaInput.value.trim(),
+              divisi: divisiSelect.value,
+              kategori: 'Soft skill',
+              jumlahFile: 0,
+              folderUrl: '',
+              detailFile: '-',
+              fileUrls: [],
+              photos: [],
+              skorPostTest: skorInput.value,
+              catatan: catatanInput?.value.trim() || '-',
+              status: 'Selesai & Berdokumentasi'
+            });
+          }
+          localStorage.setItem('tds_post_training_evidence_list', JSON.stringify(storedEvidence));
+        }
+      } catch (eStore) {
+        console.warn('Gagal update cache lokal post-test:', eStore);
+      }
+
+      namaInput.value = '';
+      skorInput.value = '';
+      if (catatanInput) catatanInput.value = '';
+    } else {
+      throw new Error(data?.message || 'Gagal mencatat hasil post-test ke Google Sheets.');
+    }
+  } catch (err) {
+    showToast(`Gagal: ${err.message}`, 'error');
+    if (statusBanner) {
+      statusBanner.className = 'trampoline-banner error';
+      statusBanner.style.display = 'flex';
+      statusBanner.innerHTML = `
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+        <div><strong>Gagal Menyimpan:</strong> ${escapeHtml(err.message)}. Silahkan periksa koneksi internet Anda atau coba beberapa saat lagi.</div>
+      `;
+    }
+  } finally {
+    if (btn) btn.disabled = false;
+    if (btnText) btnText.innerHTML = 'Simpan Hasil Post-Test';
+  }
+}
+window.submitPostTest = submitPostTest;
 
 function requestApprovalAccess() {
   const isApproved = sessionStorage.getItem('approval_auth_token') === 'true';
@@ -1455,10 +2777,10 @@ function verifyAndOpenApproval() {
   } else if (pinInput) {
     pinInput.classList.add('error');
     if (errEl) {
-      errEl.textContent = 'PIN Approval salah. Silakan coba lagi.';
+      errEl.textContent = 'PIN Approval salah. Silahkan coba lagi.';
       errEl.style.display = 'block';
     }
-    showToast('PIN Approval salah. Silakan coba lagi (Default: ubahpin123).', 'error');
+    showToast('PIN Approval salah. Silahkan coba lagi (Default: ubahpin123).', 'error');
     setTimeout(() => pinInput.classList.remove('error'), 1500);
   }
 }
@@ -1479,7 +2801,7 @@ function cancelApprovalPin() {
 function requestAdminAccess() {
   const isUnlocked = sessionStorage.getItem('admin_unlocked') === 'true';
   if (isUnlocked) {
-    switchView('master');
+    goToPage('portal-approval');
   } else {
     openModal('modalAdminPin');
     const pinInput = document.getElementById('adminPinInput');
@@ -1503,51 +2825,459 @@ function checkAdminPin() {
   ) {
     sessionStorage.setItem('admin_unlocked', 'true');
     closeModal('modalAdminPin');
-    showToast('Akses Master Data berhasil dibuka.', 'success');
-    switchView('master');
+    showToast('Akses Portal Approval berhasil dibuka.', 'success');
+    goToPage('portal-approval');
   } else if (pinInput) {
     pinInput.classList.add('error');
-    showToast('PIN Admin salah. Silakan coba lagi (Default: ubahpin123).', 'error');
+    showToast('PIN Admin salah. Silahkan coba lagi (Default: ubahpin123).', 'error');
     setTimeout(() => pinInput.classList.remove('error'), 1500);
   }
 }
 
 function cancelAdminPin() {
   closeModal('modalAdminPin');
-  if (window.location.hash === '#admin' || window.location.hash === '#master' || window.location.hash === '#data') {
-    history.replaceState(null, null, window.location.pathname + window.location.search);
+  if (currentPage === 'portal-approval') {
+    goToPage('dashboard');
+  } else {
+    goToPage(currentPage);
   }
-  switchView('form');
 }
 
 function lockAdminAccess() {
   sessionStorage.removeItem('admin_unlocked');
-  switchView('form');
-  showToast('Sesi Master Data telah dikunci.', 'info');
+  goToPage('dashboard');
+  showToast('Sesi Portal Approval telah dikunci.', 'info');
 }
 
 function switchView(view) {
-  const formView = document.getElementById('formView');
-  const masterView = document.getElementById('masterView');
-  const stickyBar = document.getElementById('stickyBottomBar');
-
   if (view === 'form') {
-    if (formView) formView.style.display = '';
-    if (masterView) masterView.style.display = 'none';
-    if (stickyBar) stickyBar.style.display = '';
-    if (window.location.hash === '#admin' || window.location.hash === '#master' || window.location.hash === '#data') {
-      history.replaceState(null, null, window.location.pathname + window.location.search);
-    }
+    goToPage('ajukan');
   } else {
-    if (formView) formView.style.display = 'none';
-    if (masterView) masterView.style.display = '';
-    if (stickyBar) stickyBar.style.display = 'none';
-    if (window.location.hash !== '#master') {
-      window.location.hash = '#master';
-    }
-    switchAdminTab(adminCurrentTab || 'dashboard');
-    loadMasterData();
+    goToPage('portal-approval');
   }
+}
+
+// ==========================================
+// Dashboard Landing Page Logic (#page-dashboard)
+// ==========================================
+function renderDashboardLandingPage() {
+  const entries = cachedEntries || [];
+  const currentYear = new Date().getFullYear();
+
+  // 1. KPI Total Training (Tahun Berjalan)
+  const thisYearEntries = entries.filter(e => {
+    if (e.submittedAt && new Date(e.submittedAt).getFullYear() === currentYear) return true;
+    if (e.meta && e.meta['Tanggal pengajuan'] && e.meta['Tanggal pengajuan'].startsWith(String(currentYear))) return true;
+    if (e.modules && e.modules.some(m => m.tanggal && m.tanggal.startsWith(String(currentYear)))) return true;
+    if (e.meta && e.meta['Tanggal & jam pelaksanaan'] && e.meta['Tanggal & jam pelaksanaan'].includes(String(currentYear))) return true;
+    return false;
+  });
+
+  const kpiTotalEl = document.getElementById('dashKpiTotal');
+  if (kpiTotalEl) kpiTotalEl.textContent = thisYearEntries.length;
+  const kpiTotalSubEl = document.getElementById('dashKpiTotalSub');
+  if (kpiTotalSubEl) kpiTotalSubEl.textContent = `Tahun ${currentYear} (${entries.length} total)`;
+
+  // 2. Status Breakdown
+  let pendingCount = 0, approvedCount = 0, rejectedCount = 0;
+  entries.forEach(e => {
+    const s = (e.status || '').toLowerCase();
+    const sc = (e.statusClass || '').toLowerCase();
+    if (sc === 'approved' || s.includes('disetujui') || s.includes('approved')) {
+      approvedCount++;
+    } else if (sc === 'rejected' || s.includes('ditolak') || s.includes('rejected')) {
+      rejectedCount++;
+    } else {
+      pendingCount++;
+    }
+  });
+
+  const kpiPendingEl = document.getElementById('dashKpiPending');
+  if (kpiPendingEl) {
+    kpiPendingEl.innerHTML = `${pendingCount} <small style="font-size:13px;font-weight:500;color:var(--ink-soft);">Pending</small>`;
+  }
+  const kpiStatusSubEl = document.getElementById('dashKpiStatusSub');
+  if (kpiStatusSubEl) {
+    kpiStatusSubEl.innerHTML = `
+      <span class="mini-pill approved" style="padding:2px 7px;font-size:11px;"><span class="dot"></span>${approvedCount} Approved</span>
+      <span class="mini-pill rejected" style="padding:2px 7px;font-size:11px;"><span class="dot"></span>${rejectedCount} Rejected</span>
+    `;
+  }
+
+  // 3. Total Budget Diajukan
+  let totalDiajukan = 0;
+  entries.forEach(e => {
+    const m = e.meta || {};
+    totalDiajukan += rupiahToNumber(m['Budget diajukan'] || m['Estimasi biaya'] || '0');
+  });
+
+  const kpiBudgetEl = document.getElementById('dashKpiBudget');
+  if (kpiBudgetEl) {
+    kpiBudgetEl.textContent = 'Rp ' + new Intl.NumberFormat('id-ID').format(totalDiajukan);
+  }
+
+  // 4. Jenis Program
+  let internalCount = 0, eksternalCount = 0, mandiriCount = 0;
+  entries.forEach(e => {
+    const j = ((e.meta && e.meta['Jenis training']) || '').toLowerCase();
+    if (j.includes('eksternal')) eksternalCount++;
+    else if (j.includes('mandiri')) mandiriCount++;
+    else internalCount++;
+  });
+
+  const kpiJenisEl = document.getElementById('dashKpiJenis');
+  if (kpiJenisEl) kpiJenisEl.textContent = `${entries.length} Program`;
+  const kpiJenisSubEl = document.getElementById('dashKpiJenisSub');
+  if (kpiJenisSubEl) {
+    kpiJenisSubEl.textContent = `${internalCount} Internal • ${eksternalCount} Eksternal • ${mandiriCount} Mandiri`;
+  }
+
+  // 5. Training Terdekat (3-4 sesi mendatang yang belum lewat)
+  const upcomingListEl = document.getElementById('dashUpcomingList');
+  if (upcomingListEl) {
+    const todayStr = new Date().toISOString().split('T')[0];
+    const allSessions = getAllTrainingSessions(entries);
+    const upcoming = allSessions
+      .filter(s => s.date >= todayStr)
+      .sort((a, b) => a.date.localeCompare(b.date))
+      .slice(0, 4);
+
+    if (upcoming.length === 0) {
+      upcomingListEl.innerHTML = `
+        <div class="dash-empty-box">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color:var(--ink-faint);margin-bottom:8px;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          <div style="font-weight:600;font-size:13.5px;color:var(--ink);margin-bottom:3px;">Belum Ada Agenda Mendatang</div>
+          <div style="font-size:12px;color:var(--ink-soft);">Seluruh sesi training aktif yang dijadwalkan akan muncul otomatis di sini.</div>
+        </div>
+      `;
+    } else {
+      upcomingListEl.innerHTML = '';
+      upcoming.forEach(s => {
+        const item = document.createElement('div');
+        item.className = 'dash-session-item';
+        item.innerHTML = `
+          <div class="dash-session-head">
+            <div style="display:flex;align-items:center;gap:6px;">
+              <span class="upcoming-date-badge">${formatDateIndo(s.date)}</span>
+              <span class="dash-session-id">${escapeHtml(s.id)}</span>
+            </div>
+            <span class="mini-pill ${s.statusClass}"><span class="dot"></span>${escapeHtml(s.status)}</span>
+          </div>
+          <div class="dash-session-modul">${escapeHtml(s.modulName)}</div>
+          <div class="dash-session-meta">
+            <span>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg>
+              ${escapeHtml(s.time || '-')}
+            </span>
+            <span>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+              ${escapeHtml(s.lokasi || '-')}
+            </span>
+          </div>
+          <div class="dash-session-foot">
+            <button type="button" class="btn-cal-detail">
+              <span>Lihat Detail</span>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+            </button>
+          </div>
+        `;
+        item.addEventListener('click', () => showDetail(s.entry, s.entryIndex));
+        const btn = item.querySelector('.btn-cal-detail');
+        if (btn) {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            showDetail(s.entry, s.entryIndex);
+          });
+        }
+        upcomingListEl.appendChild(item);
+      });
+    }
+  }
+
+  // 6. Pengajuan Training Terkini (5 Terbaru)
+  const recentTableBody = document.getElementById('dashRecentTableBody');
+  if (recentTableBody) {
+    if (!entries || entries.length === 0) {
+      recentTableBody.innerHTML = `
+        <tr>
+          <td colspan="6" style="text-align:center;padding:28px 16px;color:var(--ink-soft);font-size:12.5px;">
+            Belum ada data pengajuan training. Klik <strong>Ajukan Training Baru</strong> untuk memulai pengajuan.
+          </td>
+        </tr>
+      `;
+    } else {
+      const recentList = entries
+        .map((entry, originalIndex) => ({ entry, originalIndex }))
+        .slice(-5)
+        .reverse();
+
+      recentTableBody.innerHTML = '';
+      recentList.forEach(({ entry, originalIndex }) => {
+        const m = entry.meta || {};
+        const tr = document.createElement('tr');
+        tr.style.borderBottom = '1px solid var(--line-soft)';
+        tr.style.cursor = 'pointer';
+        tr.style.transition = 'background 0.12s ease';
+
+        const tglPengajuan = m['Tanggal pengajuan'] || (entry.submittedAt ? entry.submittedAt.split('T')[0] : '-');
+        const formattedDate = tglPengajuan !== '-' ? formatDateIndo(tglPengajuan) : '-';
+        const namaTraining = m['Nama training'] || 'Pelatihan Karyawan';
+        const leader = m['Leader pengaju'] || '-';
+        const dept = m['Departemen / divisi'] || '-';
+        const metode = m['Metode training'] || 'Onsite';
+        const modulCount = (entry.modules && entry.modules.length) ? entry.modules.length : 1;
+        const statusClass = entry.statusClass || 'pending';
+        const statusText = entry.status || 'Pending';
+
+        tr.innerHTML = `
+          <td style="padding:10px 14px;font-size:12px;vertical-align:middle;white-space:nowrap;">
+            <strong style="color:var(--ink);">${escapeHtml(m['ID training'] || 'TRN-...')}</strong>
+            <div style="font-size:11px;color:var(--ink-faint);">${escapeHtml(formattedDate)}</div>
+          </td>
+          <td style="padding:10px 14px;font-size:12.5px;font-weight:600;color:var(--ink);vertical-align:middle;">
+            ${escapeHtml(namaTraining)}
+          </td>
+          <td style="padding:10px 14px;font-size:12px;color:var(--ink-soft);vertical-align:middle;white-space:nowrap;">
+            <div style="font-weight:500;color:var(--ink);">${escapeHtml(leader)}</div>
+            <div style="font-size:11px;color:var(--ink-faint);">${escapeHtml(dept)}</div>
+          </td>
+          <td style="padding:10px 14px;font-size:12px;color:var(--ink-soft);vertical-align:middle;white-space:nowrap;">
+            <span>${escapeHtml(metode)}</span> &bull; <span>${modulCount} Sesi</span>
+          </td>
+          <td style="padding:10px 14px;vertical-align:middle;white-space:nowrap;">
+            <span class="mini-pill ${statusClass}" style="padding:3px 8px;font-size:11px;">
+              <span class="dot"></span>${escapeHtml(statusText)}
+            </span>
+          </td>
+          <td style="padding:10px 14px;text-align:center;vertical-align:middle;white-space:nowrap;">
+            <button type="button" class="btn-table-action" onclick="event.stopPropagation(); showDetail(cachedEntries[${originalIndex}], ${originalIndex});">
+              Detail
+            </button>
+          </td>
+        `;
+
+        tr.addEventListener('mouseenter', () => { tr.style.backgroundColor = 'rgba(75, 150, 255, 0.04)'; });
+        tr.addEventListener('mouseleave', () => { tr.style.backgroundColor = 'transparent'; });
+        tr.addEventListener('click', () => { showDetail(entry, originalIndex); });
+
+        recentTableBody.appendChild(tr);
+      });
+    }
+  }
+}
+
+// ==========================================
+// Training Saya & Kanban Board Logic (#page-training-saya)
+// ==========================================
+function resetMyTrainingSearch() {
+  const searchInput = document.getElementById('myTrainingSearchInput');
+  if (searchInput) searchInput.value = '';
+  const promptEl = document.getElementById('myTrainingsPrompt');
+  const kanbanEl = document.getElementById('myTrainingsKanban');
+  if (promptEl) promptEl.style.display = 'block';
+  if (kanbanEl) {
+    kanbanEl.style.display = 'none';
+    kanbanEl.innerHTML = '';
+  }
+}
+
+function searchMyTrainings() {
+  const searchInput = document.getElementById('myTrainingSearchInput');
+  const query = (searchInput?.value || '').trim().toLowerCase();
+  const promptEl = document.getElementById('myTrainingsPrompt');
+  const kanbanEl = document.getElementById('myTrainingsKanban');
+
+  if (!query) {
+    resetMyTrainingSearch();
+    return;
+  }
+
+  loadCalendarEntries();
+  const entries = cachedEntries || [];
+  const indexedEntries = entries.map((entry, originalIndex) => ({ entry, originalIndex }));
+
+  const filtered = indexedEntries.filter(item => {
+    const m = item.entry.meta || {};
+    const leader = (m['Leader pengaju'] || m['Nama pengaju'] || '').toLowerCase();
+    const email = (m['Email pengaju'] || '').toLowerCase();
+    return leader.includes(query) || email.includes(query);
+  });
+
+  if (promptEl) promptEl.style.display = 'none';
+  if (kanbanEl) {
+    kanbanEl.style.display = 'block';
+    if (filtered.length === 0) {
+      kanbanEl.innerHTML = `
+        <div class="helper-note" style="padding:36px 20px;text-align:center;background:var(--panel);border-radius:var(--radius);border:1px dashed var(--line);max-width:540px;margin:20px auto;">
+          <div style="font-weight:600;font-size:14px;color:var(--ink);margin-bottom:4px;">Tidak Ditemukan</div>
+          <div style="font-size:13px;color:var(--ink-soft);">Tidak ada pengajuan training dengan nama pengaju "<strong>${escapeHtml(searchInput.value.trim())}</strong>".</div>
+        </div>
+      `;
+    } else {
+      renderKanbanBoard(filtered, 'myTrainingsKanban');
+    }
+  }
+}
+
+function renderKanbanBoard(filteredItems, containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  const cols = {
+    pending: { title: 'Menunggu Approval', class: 'pending', items: [] },
+    approved: { title: 'Disetujui', class: 'approved', items: [] },
+    rejected: { title: 'Ditolak / Revisi', class: 'rejected', items: [] }
+  };
+
+  filteredItems.forEach(item => {
+    const e = item.entry;
+    const s = (e.status || '').toLowerCase();
+    const sc = (e.statusClass || '').toLowerCase();
+    if (sc === 'approved' || s.includes('disetujui') || s.includes('approved')) {
+      cols.approved.items.push(item);
+    } else if (sc === 'rejected' || s.includes('ditolak') || s.includes('rejected')) {
+      cols.rejected.items.push(item);
+    } else {
+      cols.pending.items.push(item);
+    }
+  });
+
+  let html = `<div class="kanban-board">`;
+
+  ['pending', 'approved', 'rejected'].forEach(key => {
+    const col = cols[key];
+    html += `
+      <div class="kanban-col ${col.class}">
+        <div class="kanban-col-head">
+          <span class="kanban-col-title">${col.title}</span>
+          <span class="kanban-col-badge">${col.items.length}</span>
+        </div>
+        <div class="kanban-cards">
+    `;
+
+    if (col.items.length === 0) {
+      html += `<div class="kanban-empty">Tidak ada pengajuan</div>`;
+    } else {
+      col.items.forEach(item => {
+        const m = item.entry.meta || {};
+        const pCount = (item.entry.participants || []).filter(p => p.nama).length;
+        const submitDate = item.entry.submittedAt
+          ? new Date(item.entry.submittedAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
+          : '-';
+        html += `
+          <div class="kanban-card" onclick="showDetail(cachedEntries[${item.originalIndex}], ${item.originalIndex})">
+            <div class="kanban-card-head">
+              <span class="kanban-card-id">${m['ID training'] || 'TRN'}</span>
+              <span style="font-size:11px;color:var(--ink-faint);">${submitDate}</span>
+            </div>
+            <div class="kanban-card-title">${escapeHtml(m['Nama training'] || '-')}</div>
+            <div class="kanban-card-meta">
+              <div>👤 <strong>Pengaju:</strong> ${escapeHtml(m['Nama pengaju'] || m['Leader pengaju'] || '-')} (${escapeHtml(m['Departemen / divisi'] || '-')})</div>
+              <div>📅 <strong>Jadwal:</strong> ${escapeHtml(m['Tanggal & jam pelaksanaan'] || '-')}</div>
+              <div>👥 <strong>Peserta:</strong> ${pCount} orang &bull; 💰 ${escapeHtml(m['Budget diajukan'] || m['Estimasi biaya'] || 'Rp 0')}</div>
+            </div>
+            <div class="kanban-card-footer">
+              <span class="mini-pill ${item.entry.statusClass || 'draft'}"><span class="dot"></span>${item.entry.status || 'Diajukan'}</span>
+              <button type="button" class="btn-cal-detail" onclick="event.stopPropagation(); showDetail(cachedEntries[${item.originalIndex}], ${item.originalIndex})">
+                <span>Detail</span>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+              </button>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    html += `
+        </div>
+      </div>
+    `;
+  });
+
+  html += `</div>`;
+  container.innerHTML = html;
+}
+
+// ==========================================
+// Vendor Directory Logic (#page-vendor)
+// ==========================================
+function renderVendorDirectoryPage() {
+  const container = document.getElementById('vendorDirectoryContainer');
+  if (!container) return;
+
+  loadCalendarEntries();
+  const entries = cachedEntries || [];
+
+  const vendorMap = new Map();
+  entries.forEach((entry, entryIndex) => {
+    const vendors = entry.vendors || [];
+    vendors.forEach(v => {
+      const name = (v.nama || '').trim();
+      if (!name) return;
+      const key = name.toLowerCase();
+      if (!vendorMap.has(key)) {
+        vendorMap.set(key, {
+          nama: name,
+          kontak: (v.kontak || '').trim() || '-',
+          catatan: (v.catatan || '').trim() || '-',
+          count: 0,
+          trainings: []
+        });
+      }
+      const item = vendorMap.get(key);
+      item.count++;
+      if ((v.kontak || '').trim()) item.kontak = v.kontak.trim();
+      if ((v.catatan || '').trim()) item.catatan = v.catatan.trim();
+      const trnTitle = (entry.meta && entry.meta['Nama training']) || entry.meta?.['ID training'] || 'Training';
+      item.trainings.push({
+        id: entry.meta?.['ID training'] || '',
+        title: trnTitle,
+        entryIndex
+      });
+    });
+  });
+
+  const vendorList = Array.from(vendorMap.values()).sort((a, b) => b.count - a.count);
+
+  if (vendorList.length === 0) {
+    container.innerHTML = `
+      <div class="helper-note" style="padding:48px 24px;text-align:center;background:var(--panel);border-radius:var(--radius);border:1px dashed var(--line);max-width:540px;margin:32px auto;">
+        <div class="card-icon-wrap" style="width:48px;height:48px;border-radius:14px;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;background:var(--accent-tint);color:var(--accent);">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"></path><path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"></path><path d="M9 8h1"></path><path d="M9 12h1"></path><path d="M9 16h1"></path><path d="M14 8h1"></path><path d="M14 12h1"></path><path d="M14 16h1"></path></svg>
+        </div>
+        <div style="font-weight:700;color:var(--ink);font-size:16px;margin-bottom:6px;">Belum ada data vendor</div>
+        <div style="font-size:13.5px;color:var(--ink-soft);line-height:1.6;">Vendor akan otomatis muncul di sini setelah training eksternal diajukan.</div>
+      </div>
+    `;
+    return;
+  }
+
+  let html = `<div class="vendor-grid">`;
+  vendorList.forEach(v => {
+    html += `
+      <div class="vendor-card">
+        <div>
+          <div class="vendor-card-head">
+            <h4 class="vendor-card-title">${escapeHtml(v.nama)}</h4>
+            <span class="vendor-card-badge">${v.count}x Dipakai</span>
+          </div>
+          <div class="vendor-meta-row">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+            <span><strong>Kontak / PIC:</strong> ${escapeHtml(v.kontak)}</span>
+          </div>
+          <div class="vendor-notes">
+            <strong>Catatan Terakhir:</strong> ${escapeHtml(v.catatan)}
+          </div>
+        </div>
+        <div style="font-size:11.5px;color:var(--ink-soft);border-top:1px dashed var(--line-soft);padding-top:8px;">
+          <strong>Pelatihan terkait:</strong> ${v.trainings.slice(0, 2).map(t => escapeHtml(t.id || t.title)).join(', ')}${v.trainings.length > 2 ? ` (+${v.trainings.length - 2} lainnya)` : ''}
+        </div>
+      </div>
+    `;
+  });
+  html += `</div>`;
+
+  container.innerHTML = html;
 }
 
 // ==========================================
@@ -1594,7 +3324,21 @@ function populateReviewSummary() {
   const countPeserta = (data.participants || []).filter(p => p.nama).length;
   const countEmail = (data.participants || []).filter(p => p.email).length;
   setRev('revDurationParticipants', `${m['Total durasi belajar'] || '-'} • ${countPeserta} Peserta (${countEmail} Email terdaftar)`);
+  const evaluasiDisplay = m['PIC evaluasi'] ? `${m['PIC evaluasi']} (${m['Waktu evaluasi'] || 'Setelah training'})` : (m['Waktu evaluasi'] || '-');
+  setRev('revEvaluasi', evaluasiDisplay);
   setRev('revBudget', m['Budget diajukan'] || m['Estimasi biaya'] || 'Rp 0');
+
+  const goalsText = m['Training goals'] || m['Training plan purpose'] || '';
+  const goalsWrap = document.getElementById('revGoalsWrapper');
+  const goalsEl = document.getElementById('revGoals');
+  if (goalsWrap && goalsEl) {
+    if (goalsText) {
+      goalsEl.textContent = goalsText;
+      goalsWrap.style.display = 'block';
+    } else {
+      goalsWrap.style.display = 'none';
+    }
+  }
 }
 
 // ==========================================
@@ -1612,6 +3356,11 @@ function collectFormData() {
   if (meta['Departemen / divisi'] === 'custom') {
     const custom = document.getElementById('customDeptInput');
     meta['Departemen / divisi'] = custom && custom.value.trim() ? custom.value.trim() : 'Lainnya';
+  }
+
+  // Fallback Training plan purpose from Training goals if only goals was filled
+  if (!meta['Training plan purpose'] && meta['Training goals']) {
+    meta['Training plan purpose'] = meta['Training goals'];
   }
 
   // Ensure schedule, duration, and participant counts are fresh
@@ -1738,6 +3487,7 @@ function submitPlan() {
   const leaderEmail = (data.meta['Email pengaju'] || '').trim();
   const dept = (data.meta['Departemen / divisi'] || '').trim();
 
+  // 1. Validasi Step 1
   if (!idValue || !nameValue || !leader || !leaderEmail || !dept) {
     showToast('Lengkapi field wajib (ID Training, Nama Training, Nama Pengaju, Email Pengaju, Departemen)', 'error');
     goToStep(1);
@@ -1749,30 +3499,53 @@ function submitPlan() {
     return;
   }
 
-  pendingSubmitData = data;
-
-  const countPeserta = (data.participants || []).filter(p => p.nama).length;
-  const countEmail = (data.participants || []).filter(p => p.email).length;
-  const summaryBox = document.getElementById('confirmSummaryBox');
-  if (summaryBox) {
-    let jenisSummary = data.meta['Jenis training'] || 'Training Internal';
-    if (jenisSummary === 'Training Eksternal') {
-      const vCount = (data.vendors || []).filter(v => v.nama).length;
-      jenisSummary += ` (${vCount} opsi vendor)`;
-    }
-    summaryBox.innerHTML = `
-      <div><strong>ID Training:</strong> ${data.meta['ID training']}</div>
-      <div><strong>Nama Training:</strong> ${data.meta['Nama training'] || '-'}</div>
-      <div><strong>Jenis Training:</strong> ${jenisSummary}</div>
-      <div><strong>Nama Pengaju:</strong> ${data.meta['Nama pengaju'] || data.meta['Leader pengaju']} (${data.meta['Departemen / divisi']})</div>
-      <div><strong>Kategori:</strong> ${data.meta['Kategori training']} / ${data.meta['Metode training']} [${data.meta['Target level kemahiran'] || 'General'}]</div>
-      ${data.meta['Kategori kebutuhan training'] ? `<div><strong>Urgensi Kebutuhan:</strong> ${data.meta['Kategori kebutuhan training']}</div>` : ''}
-      <div><strong>Jadwal:</strong> ${data.meta['Tanggal & jam pelaksanaan']}</div>
-      <div><strong>Jumlah Peserta:</strong> ${countPeserta} orang terdaftar (${countEmail} memiliki email)</div>
-      <div><strong>Budget Diajukan:</strong> ${data.meta['Budget diajukan'] || 'Rp 0'}</div>
-    `;
+  // 2. Validasi Step 2
+  const tglVal = (document.getElementById('tglPelaksanaan')?.value || '').trim();
+  if (!tglVal) {
+    showToast('Mohon tentukan Tanggal Pelaksanaan training terlebih dahulu.', 'error');
+    goToStep(2);
+    const trigger = document.getElementById('tglPelaksanaan')?.closest('.date-picker-wrap')?.querySelector('.date-picker-trigger');
+    if (trigger) trigger.focus();
+    return;
   }
 
+  const metode = document.getElementById('metode')?.value || 'Onsite';
+  if (metode === 'Onsite') {
+    const lokasi = (document.getElementById('lokasi')?.value || '').trim();
+    const customVal = (document.getElementById('customLokasiInput')?.value || '').trim();
+    if (!lokasi || (lokasi === 'custom' && !customVal)) {
+      showToast('Mohon pilih Ruangan Meeting atau ketik nama/alamat lokasi ruangan jika memilih Lainnya.', 'error');
+      goToStep(2);
+      (document.getElementById('roomDropdownTrigger') || document.getElementById('lokasiSelect'))?.focus();
+      return;
+    }
+  }
+
+  const participantRows = document.querySelectorAll('#participantBody tr');
+  let hasInvalidEmail = false;
+  participantRows.forEach(tr => {
+    if (tr.id === 'participantEmptyRow') return;
+    const name = (tr.querySelector('.participant-name') || tr.querySelectorAll('input')[0])?.value.trim();
+    const emailInput = tr.querySelector('.participant-email') || tr.querySelectorAll('input')[1];
+    const email = emailInput?.value.trim();
+    if (name && email) {
+      if (!email.includes('@') || !email.includes('.')) {
+        hasInvalidEmail = true;
+        if (emailInput) emailInput.classList.add('error');
+      } else {
+        if (emailInput) emailInput.classList.remove('error');
+      }
+    }
+  });
+
+  if (hasInvalidEmail) {
+    showToast('Format email peserta tidak valid (contoh: nama@perusahaan.com).', 'error');
+    goToStep(2);
+    return;
+  }
+
+  pendingSubmitData = data;
+  populateReviewSummary();
   openModal('modalConfirmSubmit');
 }
 
@@ -1857,12 +3630,34 @@ function resetForm() {
   // 4. Reset dates & times to default
   const today = new Date().toISOString().split('T')[0];
   const tglPengajuan = document.getElementById('tglPengajuan');
-  if (tglPengajuan) tglPengajuan.value = today;
+  if (tglPengajuan) setDatePickerValue('tglPengajuan', today);
   const tglPelaksanaan = document.getElementById('tglPelaksanaan');
-  if (tglPelaksanaan) tglPelaksanaan.value = '';
+  if (tglPelaksanaan) setDatePickerValue('tglPelaksanaan', '');
   const jamPelaksanaan = document.getElementById('jamPelaksanaan');
   if (jamPelaksanaan) jamPelaksanaan.value = '';
-  // Reset Lokasi Chips & Custom Lokasi Input
+  // Reset Custom Room Dropdown & Lokasi
+  const triggerIcon = document.getElementById('roomTriggerIcon');
+  if (triggerIcon && typeof ROOM_ICONS !== 'undefined') triggerIcon.innerHTML = ROOM_ICONS['default'];
+  const triggerLabel = document.getElementById('roomTriggerLabel');
+  if (triggerLabel) {
+    triggerLabel.textContent = 'Pilih Ruangan Meeting...';
+    triggerLabel.classList.add('placeholder');
+  }
+  const triggerBadge = document.getElementById('roomTriggerBadge');
+  if (triggerBadge) {
+    triggerBadge.style.display = 'none';
+    triggerBadge.textContent = '';
+  }
+  document.querySelectorAll('#roomDropdownMenu .room-dropdown-item').forEach(item => item.classList.remove('selected'));
+  if (typeof closeRoomDropdown === 'function') closeRoomDropdown();
+
+  const lokasiSelect = document.getElementById('lokasiSelect');
+  if (lokasiSelect) lokasiSelect.value = '';
+  const roomStatusNotice = document.getElementById('roomStatusNotice');
+  if (roomStatusNotice) {
+    roomStatusNotice.style.display = 'none';
+    roomStatusNotice.innerHTML = '';
+  }
   const lokasiChips = document.querySelectorAll('#lokasiChipGrid .chip-card');
   lokasiChips.forEach(c => c.classList.remove('selected'));
   const lokasi = document.getElementById('lokasi');
@@ -1982,6 +3777,7 @@ function saveToLocalStorage(entry) {
   }
   list.unshift(entry);
   localStorage.setItem(SUBMISSIONS_STORAGE_KEY, JSON.stringify(list));
+  cachedEntries = list;
 }
 
 function populateSuccessModal(data, sheetSaved, scriptUrl) {
@@ -2079,6 +3875,15 @@ let adminCurrentTab = 'dashboard';
 let calCurrentDate = new Date();
 let calSelectedDateStr = null;
 let cachedEntries = [];
+
+function loadCalendarEntries() {
+  try {
+    const raw = localStorage.getItem(SUBMISSIONS_STORAGE_KEY);
+    cachedEntries = raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    cachedEntries = [];
+  }
+}
 
 const INDO_MONTH_NAMES = [
   'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
@@ -2271,164 +4076,550 @@ function renderDashboardKPIs(entries) {
   }
 }
 
-function prevCalMonth() {
-  calCurrentDate.setMonth(calCurrentDate.getMonth() - 1);
-  renderCalendar();
+// ==========================================
+// FullCalendar Interactive Training Engine (js/app.js)
+// ==========================================
+let userCalendarInstance = null;
+let rawUserCalendarEvents = [];
+let userMiniCalDate = new Date();
+let activeUserCalView = 'dayGridMonth';
+
+const USER_ROOM_COLOR_MAP = {
+  'Neptunus': '#2563EB',
+  'Saturnus': '#7C3AED',
+  'Mars': '#EA580C',
+  'Merkurius': '#059669',
+  'Lainnya': '#64748B'
+};
+
+const USER_STATUS_COLOR_MAP = {
+  'Approved': '#16A34A',
+  'Pending': '#EAB308',
+  'Rejected': '#DC2626'
+};
+
+function getUserRoomNormKey(roomStr) {
+  const r = String(roomStr || '').toLowerCase();
+  if (r.includes('neptunus')) return 'Neptunus';
+  if (r.includes('saturnus')) return 'Saturnus';
+  if (r.includes('mars')) return 'Mars';
+  if (r.includes('merkurius')) return 'Merkurius';
+  return 'Lainnya';
 }
 
-function nextCalMonth() {
-  calCurrentDate.setMonth(calCurrentDate.getMonth() + 1);
-  renderCalendar();
-}
+function initUserFullCalendar() {
+  const mountEl = document.getElementById('fullCalendarMount');
+  if (!mountEl) return;
 
-function renderCalendar() {
-  const grid = document.getElementById('calGrid');
-  const titleEl = document.getElementById('calMonthTitle');
-  if (!grid || !titleEl) return;
-
-  const year = calCurrentDate.getFullYear();
-  const month = calCurrentDate.getMonth();
-  titleEl.textContent = `${INDO_MONTH_NAMES[month]} ${year}`;
-
-  const allSessions = getAllTrainingSessions(cachedEntries);
-  const sessionsByDate = {};
-  allSessions.forEach(s => {
-    if (!sessionsByDate[s.date]) sessionsByDate[s.date] = [];
-    sessionsByDate[s.date].push(s);
-  });
-
-  const todayStr = new Date().toISOString().split('T')[0];
-
-  const firstDay = new Date(year, month, 1);
-  const firstDayWeekday = (firstDay.getDay() + 6) % 7; // Monday = 0, Sunday = 6
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const daysInPrevMonth = new Date(year, month, 0).getDate();
-
-  grid.innerHTML = '';
-
-  // 1. Previous month padding cells
-  for (let i = firstDayWeekday - 1; i >= 0; i--) {
-    const dayNum = daysInPrevMonth - i;
-    const cell = document.createElement('div');
-    cell.className = 'cal-cell other-month';
-    cell.textContent = dayNum;
-    grid.appendChild(cell);
-  }
-
-  // 2. Current month cells
-  for (let d = 1; d <= daysInMonth; d++) {
-    const monthStr = String(month + 1).padStart(2, '0');
-    const dayStr = String(d).padStart(2, '0');
-    const dateStr = `${year}-${monthStr}-${dayStr}`;
-
-    const cell = document.createElement('div');
-    cell.className = 'cal-cell';
-    cell.dataset.date = dateStr;
-
-    if (dateStr === todayStr) {
-      cell.classList.add('today');
-    }
-
-    if (dateStr === calSelectedDateStr) {
-      cell.classList.add('selected');
-    }
-
-    const daySessions = sessionsByDate[dateStr] || [];
-    if (daySessions.length > 0) {
-      cell.classList.add('has-training');
-      const isPast = dateStr < todayStr;
-      const dotsWrap = document.createElement('div');
-      dotsWrap.className = 'cal-dots';
-
-      const dotCount = Math.min(daySessions.length, 3);
-      for (let i = 0; i < dotCount; i++) {
-        const dot = document.createElement('span');
-        dot.className = `cal-dot ${isPast ? 'past' : 'upcoming'}`;
-        dotsWrap.appendChild(dot);
-      }
-      cell.innerHTML = `<span>${d}</span>`;
-      cell.appendChild(dotsWrap);
-
-      cell.title = `${daySessions.length} sesi training (${isPast ? 'Selesai' : 'Akan datang'})`;
-    } else {
-      cell.textContent = d;
-    }
-
-    cell.addEventListener('click', () => {
-      selectCalDate(dateStr, daySessions);
-    });
-
-    grid.appendChild(cell);
-  }
-
-  // 3. Next month padding cells
-  const totalCells = firstDayWeekday + daysInMonth;
-  const rem = totalCells % 7;
-  const nextPadding = rem === 0 ? 0 : 7 - rem;
-  for (let n = 1; n <= nextPadding; n++) {
-    const cell = document.createElement('div');
-    cell.className = 'cal-cell other-month';
-    cell.textContent = n;
-    grid.appendChild(cell);
-  }
-
-  // If a date is currently selected in this month, update selected panel
-  if (calSelectedDateStr) {
-    selectCalDate(calSelectedDateStr, sessionsByDate[calSelectedDateStr] || [], false);
-  }
-}
-
-function selectCalDate(dateStr, sessions, updateCalVisual = true) {
-  calSelectedDateStr = dateStr;
-
-  if (updateCalVisual) {
-    document.querySelectorAll('#calGrid .cal-cell').forEach(c => {
-      if (c.dataset.date === dateStr) {
-        c.classList.add('selected');
-      } else {
-        c.classList.remove('selected');
-      }
-    });
-  }
-
-  const titleEl = document.getElementById('selectedDateTitle');
-  const badgeEl = document.getElementById('selectedDateBadge');
-  const listEl = document.getElementById('selectedDateList');
-  if (!titleEl || !badgeEl || !listEl) return;
-
-  const formattedDate = formatDateIndo(dateStr, true);
-  titleEl.textContent = `Sesi: ${formattedDate}`;
-
-  const count = (sessions || []).length;
-  badgeEl.textContent = `${count} Sesi`;
-
-  if (count === 0) {
-    listEl.innerHTML = `<div class="session-empty-state">Tidak ada jadwal training pada tanggal ini.</div>`;
+  if (typeof FullCalendar === 'undefined') {
+    console.warn('FullCalendar library belum termuat.');
     return;
   }
 
-  listEl.innerHTML = '';
-  sessions.forEach(s => {
-    const item = document.createElement('div');
-    item.className = 'session-item';
-    item.innerHTML = `
-      <div class="session-item-head">
-        <span class="session-item-id">${s.id}</span>
-        <span class="mini-pill ${s.statusClass}"><span class="dot"></span>${s.status}</span>
-      </div>
-      <div class="session-item-modul">${s.modulName}</div>
-      <div class="session-item-meta">
-        <span>⏰ ${s.time}</span>
-        <span>📍 ${s.lokasi}</span>
-      </div>
-    `;
-    item.title = 'Klik untuk melihat detail lengkap submission';
-    item.addEventListener('click', () => {
-      showDetail(s.entry, s.entryIndex);
-    });
-    listEl.appendChild(item);
+  if (userCalendarInstance) {
+    userCalendarInstance.updateSize();
+    renderUserMiniCalendar();
+    return;
+  }
+
+  userCalendarInstance = new FullCalendar.Calendar(mountEl, {
+    locale: 'id',
+    initialView: activeUserCalView,
+    headerToolbar: false,
+    height: 'auto',
+    expandRows: true,
+    slotMinTime: '07:00:00',
+    slotMaxTime: '21:00:00',
+    allDaySlot: true,
+    dayMaxEvents: false, // Tampilkan seluruh event sekaligus tanpa pembatasan +more
+    navLinks: true,
+    navLinkDayClick: function(date) {
+      userCalendarInstance.gotoDate(date);
+      switchCalView('timeGridDay');
+    },
+    eventTimeFormat: {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    },
+    datesSet: function(info) {
+      updateUserCalTitle(info);
+      renderUserMiniCalendar();
+    },
+    eventContent: function(arg) {
+      const ev = arg.event;
+      const props = ev.extendedProps || {};
+      const timeStr = arg.timeText || (props.jamMulai ? `${props.jamMulai} - ${props.jamSelesai || ''}` : '');
+      const room = props.ruangan || '';
+      const title = ev.title;
+
+      const container = document.createElement('div');
+      container.className = 'fc-custom-event-pill';
+
+      let html = '';
+      if (timeStr) {
+        html += `<div class="fc-custom-event-time">${escapeHtml(timeStr)}${room ? ` &bull; ${escapeHtml(room)}` : ''}</div>`;
+      }
+      html += `<div class="fc-custom-event-title">${escapeHtml(title)}</div>`;
+
+      container.innerHTML = html;
+      return { domNodes: [container] };
+    },
+    eventClick: function(info) {
+      info.jsEvent.preventDefault();
+      openTrainingEventDetailModal(info.event);
+    }
   });
+
+  userCalendarInstance.render();
+  fetchCalendarEvents();
 }
+window.initUserFullCalendar = initUserFullCalendar;
+window.renderCalendar = initUserFullCalendar;
+
+function updateUserCalTitle(info) {
+  const titleEl = document.getElementById('calActiveTitle');
+  if (!titleEl) return;
+
+  if (userCalendarInstance) {
+    const curDate = userCalendarInstance.getDate();
+    userMiniCalDate = new Date(curDate);
+
+    const view = userCalendarInstance.view;
+    if (view.type === 'dayGridMonth') {
+      titleEl.textContent = `${INDO_MONTH_NAMES[curDate.getMonth()]} ${curDate.getFullYear()}`;
+    } else if (view.type === 'timeGridWeek') {
+      const start = view.currentStart;
+      const end = new Date(view.currentEnd);
+      end.setDate(end.getDate() - 1);
+      titleEl.textContent = `${start.getDate()} ${INDO_MONTH_NAMES[start.getMonth()]} - ${end.getDate()} ${INDO_MONTH_NAMES[end.getMonth()]} ${end.getFullYear()}`;
+    } else if (view.type === 'timeGridDay') {
+      titleEl.textContent = `${curDate.getDate()} ${INDO_MONTH_NAMES[curDate.getMonth()]} ${curDate.getFullYear()}`;
+    } else {
+      titleEl.textContent = view.title || `${INDO_MONTH_NAMES[curDate.getMonth()]} ${curDate.getFullYear()}`;
+    }
+  }
+}
+
+function goToCalToday() {
+  if (userCalendarInstance) {
+    userCalendarInstance.today();
+    updateUserCalTitle();
+    renderUserMiniCalendar();
+  }
+}
+window.goToCalToday = goToCalToday;
+
+function goToCalPrev() {
+  if (userCalendarInstance) {
+    userCalendarInstance.prev();
+    updateUserCalTitle();
+    renderUserMiniCalendar();
+  }
+}
+window.goToCalPrev = goToCalPrev;
+
+function goToCalNext() {
+  if (userCalendarInstance) {
+    userCalendarInstance.next();
+    updateUserCalTitle();
+    renderUserMiniCalendar();
+  }
+}
+window.goToCalNext = goToCalNext;
+
+function switchCalView(viewName) {
+  activeUserCalView = viewName;
+  if (userCalendarInstance) {
+    userCalendarInstance.changeView(viewName);
+    updateUserCalTitle();
+  }
+
+  const btnDay = document.getElementById('btnViewDay');
+  const btnWeek = document.getElementById('btnViewWeek');
+  const btnMonth = document.getElementById('btnViewMonth');
+
+  if (btnDay) btnDay.classList.toggle('active', viewName === 'timeGridDay');
+  if (btnWeek) btnWeek.classList.toggle('active', viewName === 'timeGridWeek');
+  if (btnMonth) btnMonth.classList.toggle('active', viewName === 'dayGridMonth');
+}
+window.switchCalView = switchCalView;
+
+function toggleCalSidebarFilter() {
+  const sidebar = document.getElementById('calFilterSidebar');
+  if (sidebar) {
+    sidebar.classList.toggle('open');
+  }
+}
+window.toggleCalSidebarFilter = toggleCalSidebarFilter;
+
+async function fetchCalendarEvents(forceRefresh = false) {
+  const loadingEl = document.getElementById('calLoadingState');
+  const emptyEl = document.getElementById('calEmptyState');
+
+  if (loadingEl) loadingEl.style.display = 'flex';
+  if (emptyEl) emptyEl.style.display = 'none';
+
+  let fetched = null;
+
+  try {
+    const url = `${SCRIPT_URL}${SCRIPT_URL.includes('?') ? '&' : '?'}action=getCalendarEvents&_ts=${Date.now()}`;
+    const resp = await fetch(url);
+    if (resp.ok) {
+      const json = await resp.json();
+      if (Array.isArray(json)) {
+        fetched = json;
+      } else if (json && json.status === 'success' && Array.isArray(json.data)) {
+        fetched = json.data;
+      } else if (json && Array.isArray(json.events)) {
+        fetched = json.events;
+      }
+    }
+  } catch (err) {
+    console.warn('Gagal fetch event kalender via Apps Script, menggunakan fallback lokal:', err);
+  }
+
+  if (!fetched || fetched.length === 0) {
+    fetched = buildUserCalendarEventsFromCached(cachedEntries);
+  }
+
+  rawUserCalendarEvents = fetched;
+
+  populateUserDivisionFilters();
+  filterAndRenderUserCalendar();
+
+  if (loadingEl) loadingEl.style.display = 'none';
+}
+window.fetchCalendarEvents = fetchCalendarEvents;
+
+function buildUserCalendarEventsFromCached(entries) {
+  const events = [];
+  if (!Array.isArray(entries)) return events;
+
+  entries.forEach(entry => {
+    const m = entry.meta || {};
+    const modules = Array.isArray(entry.modules) ? entry.modules : [];
+
+    let status = 'Pending';
+    const rawStat = String(m['Status Dokumen'] || entry.status || '').toLowerCase();
+    if (rawStat.includes('approv') || rawStat.includes('setuju')) status = 'Approved';
+    else if (rawStat.includes('reject') || rawStat.includes('tolak')) status = 'Rejected';
+
+    const id = m['ID training'] || entry.id || 'TRN-2026';
+    const judul = m['Nama training'] || entry.namaTraining || 'Pelatihan';
+    const pemohon = m['Leader pengaju'] || m['Nama pengaju'] || entry.pengaju || '-';
+    const divisi = m['Departemen / divisi'] || entry.departemen || 'HR';
+    const venue = m['Lokasi / venue'] || m['Platform online'] || entry.venue || 'Neptunus';
+    const kategori = m['Kategori training'] || entry.kategori || 'Soft skill';
+
+    if (modules.length > 0) {
+      modules.forEach((mod, idx) => {
+        const d = (mod.tanggal || '').trim();
+        if (d) {
+          const jamMulai = (mod.jamMulai || '09:00').trim();
+          const jamSelesai = (mod.jamSelesai || '16:00').trim();
+          events.push({
+            id: `${id}-mod-${idx}`,
+            submissionId: id,
+            judul: mod.modul ? `${judul} - ${mod.modul}` : judul,
+            tanggal: d,
+            jamMulai: jamMulai,
+            jamSelesai: jamSelesai,
+            ruangan: mod.lokasi || venue,
+            pemohon: pemohon,
+            divisi: divisi,
+            kategori: kategori,
+            status: status,
+            notes: mod.deskripsi || ''
+          });
+        }
+      });
+    }
+
+    const match = String(m['Tanggal & jam pelaksanaan'] || m['Tanggal pelaksanaan'] || '').match(/\b(\d{4}-\d{2}-\d{2})\b/);
+    if (match) {
+      const d = match[1];
+      if (!events.some(e => e.submissionId === id)) {
+        events.push({
+          id: id,
+          submissionId: id,
+          judul: judul,
+          tanggal: d,
+          jamMulai: '09:00',
+          jamSelesai: '16:00',
+          ruangan: venue,
+          pemohon: pemohon,
+          divisi: divisi,
+          kategori: kategori,
+          status: status,
+          notes: m['Tujuan training'] || ''
+        });
+      }
+    }
+  });
+
+  return events;
+}
+
+function populateUserDivisionFilters() {
+  const container = document.getElementById('divisionFilterList');
+  if (!container) return;
+
+  const divs = new Set();
+  rawUserCalendarEvents.forEach(e => {
+    if (e.divisi && e.divisi.trim()) divs.add(e.divisi.trim());
+  });
+
+  ['HR', 'GA', 'FINANCE', 'MARKETING', 'WEB DEVELOPER', 'CUSTOMER EXPERIENCE', 'AI'].forEach(d => divs.add(d));
+
+  const sortedDivs = Array.from(divs).sort();
+  const colors = ['#2563EB', '#7C3AED', '#EA580C', '#059669', '#DB2777', '#4F46E5', '#0891B2', '#D97706'];
+
+  container.innerHTML = sortedDivs.map((d, idx) => {
+    const col = colors[idx % colors.length];
+    return `
+      <label class="cal-checkbox-item">
+        <input type="checkbox" name="divisionFilter" value="${escapeHtml(d)}" checked onchange="onCalendarFilterChange()">
+        <span class="cal-checkbox-indicator" style="background:${col};"></span>
+        <span class="cal-checkbox-label">${escapeHtml(d)}</span>
+      </label>
+    `;
+  }).join('');
+}
+
+function selectAllRooms(checkAll = true) {
+  document.querySelectorAll('input[name="roomFilter"]').forEach(cb => {
+    cb.checked = checkAll;
+  });
+  onCalendarFilterChange();
+}
+window.selectAllRooms = selectAllRooms;
+
+function selectAllDivisions(checkAll = true) {
+  document.querySelectorAll('input[name="divisionFilter"]').forEach(cb => {
+    cb.checked = checkAll;
+  });
+  onCalendarFilterChange();
+}
+window.selectAllDivisions = selectAllDivisions;
+
+function onCalendarFilterChange() {
+  filterAndRenderUserCalendar();
+}
+window.onCalendarFilterChange = onCalendarFilterChange;
+
+function filterAndRenderUserCalendar() {
+  if (!userCalendarInstance) return;
+
+  const selectedRooms = Array.from(document.querySelectorAll('input[name="roomFilter"]:checked')).map(cb => cb.value);
+  const selectedDivisions = Array.from(document.querySelectorAll('input[name="divisionFilter"]:checked')).map(cb => cb.value);
+  const selectedStatuses = Array.from(document.querySelectorAll('input[name="statusFilter"]:checked')).map(cb => cb.value);
+
+  const filtered = rawUserCalendarEvents.filter(ev => {
+    const roomKey = getUserRoomNormKey(ev.ruangan);
+    const roomMatches = selectedRooms.includes(roomKey);
+
+    const evDiv = (ev.divisi || '').trim();
+    const divMatches = selectedDivisions.length === 0 || selectedDivisions.includes(evDiv);
+
+    const evStatus = (ev.status || 'Pending').trim();
+    let normStatus = 'Pending';
+    if (evStatus.toLowerCase().includes('approv') || evStatus.toLowerCase().includes('setuju')) normStatus = 'Approved';
+    else if (evStatus.toLowerCase().includes('reject') || evStatus.toLowerCase().includes('tolak')) normStatus = 'Rejected';
+    const statusMatches = selectedStatuses.includes(normStatus);
+
+    return roomMatches && divMatches && statusMatches;
+  });
+
+  const emptyEl = document.getElementById('calEmptyState');
+  if (emptyEl) {
+    emptyEl.style.display = filtered.length === 0 ? 'flex' : 'none';
+  }
+
+  const fcEvents = filtered.map(ev => {
+    let normStatus = 'Pending';
+    if ((ev.status || '').toLowerCase().includes('approv') || (ev.status || '').toLowerCase().includes('setuju')) normStatus = 'Approved';
+    else if ((ev.status || '').toLowerCase().includes('reject') || (ev.status || '').toLowerCase().includes('tolak')) normStatus = 'Rejected';
+
+    const color = USER_STATUS_COLOR_MAP[normStatus] || '#EAB308';
+    const hasTime = ev.jamMulai && ev.jamMulai.trim();
+    const isAllDay = !hasTime;
+
+    let start = ev.tanggal;
+    let end = undefined;
+
+    if (hasTime) {
+      start = `${ev.tanggal}T${ev.jamMulai}:00`;
+      if (ev.jamSelesai && ev.jamSelesai.trim()) {
+        end = `${ev.tanggal}T${ev.jamSelesai}:00`;
+      }
+    }
+
+    return {
+      id: String(ev.id),
+      title: ev.judul || 'Pelatihan Karyawan',
+      start: start,
+      end: end,
+      allDay: isAllDay,
+      backgroundColor: color,
+      borderColor: color,
+      textColor: '#FFFFFF',
+      extendedProps: {
+        ...ev,
+        normStatus: normStatus
+      }
+    };
+  });
+
+  userCalendarInstance.removeAllEvents();
+  userCalendarInstance.addEventSource(fcEvents);
+  renderUserMiniCalendar();
+}
+
+function renderUserMiniCalendar() {
+  const titleEl = document.getElementById('miniCalTitle');
+  const gridEl = document.getElementById('miniCalGrid');
+  if (!titleEl || !gridEl) return;
+
+  const y = userMiniCalDate.getFullYear();
+  const m = userMiniCalDate.getMonth();
+  titleEl.textContent = `${INDO_MONTH_NAMES[m]} ${y}`;
+
+  const firstDay = new Date(y, m, 1).getDay();
+  const startDay = firstDay === 0 ? 7 : firstDay;
+  const daysInMonth = new Date(y, m + 1, 0).getDate();
+  const daysInPrevMonth = new Date(y, m, 0).getDate();
+
+  const today = new Date();
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+  const curActiveDate = userCalendarInstance ? userCalendarInstance.getDate() : today;
+  const activeDateStr = `${curActiveDate.getFullYear()}-${String(curActiveDate.getMonth() + 1).padStart(2, '0')}-${String(curActiveDate.getDate()).padStart(2, '0')}`;
+
+  const eventDates = new Set();
+  rawUserCalendarEvents.forEach(e => {
+    if (e.tanggal) eventDates.add(e.tanggal.trim());
+  });
+
+  let cells = [];
+
+  for (let i = startDay - 2; i >= 0; i--) {
+    const d = daysInPrevMonth - i;
+    cells.push(`<div class="mini-cell other-month">${d}</div>`);
+  }
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    const isToday = dateStr === todayStr;
+    const isSelected = dateStr === activeDateStr;
+    const hasEvent = eventDates.has(dateStr);
+
+    let cls = 'mini-cell';
+    if (isToday) cls += ' today';
+    if (isSelected) cls += ' selected';
+    if (hasEvent) cls += ' has-event';
+
+    cells.push(`
+      <div class="${cls}" onclick="onUserMiniCalDayClick('${dateStr}')" title="${dateStr}">
+        ${d}
+      </div>
+    `);
+  }
+
+  const total = cells.length;
+  const rem = (7 - (total % 7)) % 7;
+  for (let n = 1; n <= rem; n++) {
+    cells.push(`<div class="mini-cell other-month">${n}</div>`);
+  }
+
+  gridEl.innerHTML = cells.join('');
+}
+
+function prevMiniCalMonth() {
+  userMiniCalDate.setMonth(userMiniCalDate.getMonth() - 1);
+  renderUserMiniCalendar();
+}
+window.prevMiniCalMonth = prevMiniCalMonth;
+
+function nextMiniCalMonth() {
+  userMiniCalDate.setMonth(userMiniCalDate.getMonth() + 1);
+  renderUserMiniCalendar();
+}
+window.nextMiniCalMonth = nextMiniCalMonth;
+
+function onUserMiniCalDayClick(dateStr) {
+  if (userCalendarInstance) {
+    userCalendarInstance.gotoDate(dateStr);
+    updateUserCalTitle();
+    renderUserMiniCalendar();
+  }
+}
+window.onUserMiniCalDayClick = onUserMiniCalDayClick;
+
+function openTrainingEventDetailModal(fcEvent) {
+  const modal = document.getElementById('modalTrainingEventDetail');
+  if (!modal) return;
+
+  const props = fcEvent.extendedProps || {};
+  const status = props.normStatus || props.status || 'Pending';
+
+  let statusBadgeClass = 'submitted';
+  let statusLabel = 'Menunggu Approval (Pending)';
+  if (status === 'Approved') {
+    statusBadgeClass = 'approved';
+    statusLabel = 'Disetujui (Approved)';
+  } else if (status === 'Rejected') {
+    statusBadgeClass = 'rejected';
+    statusLabel = 'Ditolak (Rejected)';
+  }
+
+  const badgeEl = document.getElementById('calDetailStatusBadge');
+  if (badgeEl) {
+    badgeEl.className = `mini-pill ${statusBadgeClass}`;
+    badgeEl.textContent = statusLabel;
+  }
+
+  const idEl = document.getElementById('calDetailId');
+  if (idEl) idEl.textContent = props.submissionId || props.id || '-';
+
+  const judulEl = document.getElementById('calDetailJudul');
+  if (judulEl) judulEl.textContent = fcEvent.title || props.judul || '-';
+
+  const katEl = document.getElementById('calDetailKategori');
+  if (katEl) katEl.textContent = props.kategori || 'General Skill';
+
+  const waktuEl = document.getElementById('calDetailWaktu');
+  if (waktuEl) {
+    const tgl = formatDateIndo(props.tanggal || fcEvent.startStr);
+    const jam = props.jamMulai ? `${props.jamMulai} - ${props.jamSelesai || ''} WIB` : 'All Day';
+    waktuEl.textContent = `${tgl}, ${jam}`;
+  }
+
+  const roomNameEl = document.getElementById('calDetailRoomName');
+  const roomDotEl = document.getElementById('calDetailRoomDot');
+  if (roomNameEl) roomNameEl.textContent = props.ruangan || 'Ruangan Belum Ditentukan';
+  if (roomDotEl) {
+    const roomKey = getUserRoomNormKey(props.ruangan);
+    roomDotEl.style.background = USER_ROOM_COLOR_MAP[roomKey] || '#64748B';
+  }
+
+  const pemohonEl = document.getElementById('calDetailPemohon');
+  if (pemohonEl) pemohonEl.textContent = props.pemohon || '-';
+
+  const divisiEl = document.getElementById('calDetailDivisi');
+  if (divisiEl) divisiEl.textContent = props.divisi || '-';
+
+  const extraEl = document.getElementById('calDetailExtra');
+  const extraWrap = document.getElementById('calDetailExtraWrap');
+  if (extraEl) {
+    const extraInfo = props.notes || 'Silahkan periksa detail pengajuan pada daftar training jika membutuhkan informasi lebih mendalam.';
+    extraEl.textContent = extraInfo;
+    if (extraWrap) extraWrap.style.display = 'block';
+  }
+
+  modal.classList.add('active');
+}
+window.openTrainingEventDetailModal = openTrainingEventDetailModal;
 
 function renderUpcomingSessions(entries) {
   const listEl = document.getElementById('upcomingList');
@@ -2538,7 +4729,9 @@ function loadMasterData() {
 function showDetail(entry, index) {
   const m = entry.meta || {};
   const panel = document.getElementById('detailPanel');
-  if (!panel) return;
+  const modalContent = document.getElementById('modalDetailContent');
+  const modalTitle = document.getElementById('modalDetailTitle');
+  const modalSub = document.getElementById('modalDetailSub');
 
   const participantsList = (entry.participants || []).filter(p => p.nama)
     .map(p => `• <strong>${p.nama}</strong> ${p.email ? '(&lt;' + p.email + '&gt;)' : ''} &mdash; ${p.departemen || '-'}`)
@@ -2561,8 +4754,8 @@ function showDetail(entry, index) {
     .map(v => `• <strong>${v.nama}</strong> &mdash; Kontak: ${v.kontak || '-'} | Est. Biaya: ${v.biaya || '-'} ${v.catatan ? ' (' + v.catatan + ')' : ''}`)
     .join('<br>');
 
-  panel.innerHTML = `
-    <div class="detail-panel">
+  const detailHtml = `
+    <div class="detail-panel" style="margin-top:0;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
         <h3 class="voice" style="margin:0;">${m['ID training'] || 'Detail Submission'}</h3>
         <button type="button" class="btn-secondary" style="color:var(--danger);border-color:#F5C6BE;" onclick="deleteSubmission(${index})">Hapus Catatan</button>
@@ -2580,10 +4773,11 @@ function showDetail(entry, index) {
         <div class="review-item"><label>Trainer</label><div>${m['Trainer'] || '-'}</div></div>
         <div class="review-item"><label>Budget Diajukan</label><div>${m['Budget diajukan'] || '-'}</div></div>
       </div>
-      <div style="font-weight:600;margin:14px 0 6px;">Tujuan & Goals:</div>
+      <div style="font-weight:600;margin:14px 0 6px;">Tujuan &amp; Goals:</div>
       <div style="font-size:13px;line-height:1.6;margin-bottom:12px;">
-        <div><strong>Purpose:</strong> ${m['Training plan purpose'] || '-'}</div>
-        <div><strong>Goals:</strong> ${m['Training goals'] || '-'}</div>
+        ${m['Training goals'] ? `<div><strong>Training Goals:</strong> ${m['Training goals']}</div>` : ''}
+        ${m['Training plan purpose'] && m['Training plan purpose'] !== m['Training goals'] ? `<div><strong>Purpose:</strong> ${m['Training plan purpose']}</div>` : ''}
+        ${!m['Training goals'] && !m['Training plan purpose'] ? `<div><strong>Training Goals:</strong> -</div>` : ''}
         ${m['Link silabus materi'] ? `<div><strong>Link Silabus:</strong> <a href="${m['Link silabus materi']}" target="_blank">${m['Link silabus materi']}</a></div>` : ''}
       </div>
       <div style="font-weight:600;margin:14px 0 6px;">Evaluasi & Follow-up:</div>
@@ -2601,7 +4795,20 @@ function showDetail(entry, index) {
       ${approvalsList ? `<div style="font-weight:600;margin:14px 0 6px;">Alur Approval:</div><div style="font-size:13px;line-height:1.7;">${approvalsList}</div>` : ''}
     </div>
   `;
-  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+  // Always populate modal and open it
+  if (modalContent) {
+    modalContent.innerHTML = detailHtml;
+    if (modalTitle) modalTitle.textContent = `${m['ID training'] || 'Detail Training'}`;
+    if (modalSub) modalSub.textContent = m['Nama training'] || 'Informasi lengkap program pelatihan';
+    openModal('modalDetailSubmission');
+  }
+
+  // Also populate inline detail panel if visible in master view
+  if (panel && document.getElementById('masterView')?.style.display !== 'none') {
+    panel.innerHTML = detailHtml;
+    panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
 }
 
 function deleteSubmission(index) {
@@ -2612,7 +4819,10 @@ function deleteSubmission(index) {
       const list = JSON.parse(raw);
       list.splice(index, 1);
       localStorage.setItem(SUBMISSIONS_STORAGE_KEY, JSON.stringify(list));
+      closeModal('modalDetailSubmission');
       showToast('Data submission berhasil dihapus.', 'info');
+      loadCalendarEntries();
+      renderCalendar();
       loadMasterData();
     }
   } catch (e) {
@@ -2759,3 +4969,3206 @@ window.requestApprovalAccess = requestApprovalAccess;
 window.verifyAndOpenApproval = verifyAndOpenApproval;
 window.cancelApprovalPin = cancelApprovalPin;
 window.fetchRoomAvailability = fetchRoomAvailability;
+window.toggleRoomDropdown = toggleRoomDropdown;
+window.closeRoomDropdown = closeRoomDropdown;
+window.selectCustomRoom = selectCustomRoom;
+window.handleLokasiSelectChange = handleLokasiSelectChange;
+window.switchPublicView = switchPublicView;
+window.goToPage = goToPage;
+window.searchMyTrainings = searchMyTrainings;
+window.resetMyTrainingSearch = resetMyTrainingSearch;
+window.renderKanbanBoard = renderKanbanBoard;
+window.renderVendorDirectoryPage = renderVendorDirectoryPage;
+window.renderDashboardLandingPage = renderDashboardLandingPage;
+window.showDetail = showDetail;
+window.loadCalendarEntries = loadCalendarEntries;
+window.requestAdminAccess = requestAdminAccess;
+window.checkAdminPin = checkAdminPin;
+window.cancelAdminPin = cancelAdminPin;
+window.lockAdminAccess = lockAdminAccess;
+
+// ==========================================
+// AI Training Course Architect Logic
+// ==========================================
+let currentAiPlan = null;
+
+// Built-in Google Gemini API Key for Seamless Enterprise L&D AI
+const DEFAULT_GEMINI_KEY = '';
+
+function getActiveGeminiApiKey() {
+  const custom = (localStorage.getItem('tds_gemini_api_key') || '').trim();
+  return custom || DEFAULT_GEMINI_KEY;
+}
+
+function openAiAssistantModal() {
+  openAiModal();
+}
+
+function openAiModal() {
+  const currentTitle = (document.getElementById('trainingName')?.value || '').trim();
+  const topicInput = document.getElementById('aiTopicInput');
+  if (topicInput && currentTitle) {
+    topicInput.value = currentTitle;
+  }
+  openModal('modalAiAssistant');
+}
+
+function setAiTopic(topic) {
+  const input = document.getElementById('aiTopicInput');
+  if (input) {
+    input.value = topic;
+    input.focus();
+  }
+}
+
+function saveAiApiKey(val) {
+  const clean = (val || '').trim();
+  if (clean) {
+    localStorage.setItem('tds_gemini_api_key', clean);
+    showToast('Gemini API Key berhasil disimpan secara lokal.', 'success');
+  } else {
+    localStorage.removeItem('tds_gemini_api_key');
+  }
+}
+
+async function executeAiGeneration() {
+  const topicInput = document.getElementById('aiTopicInput');
+  const topic = (topicInput?.value || '').trim();
+  if (!topic) {
+    showToast('Ketik topik atau nama training terlebih dahulu.', 'error');
+    if (topicInput) topicInput.focus();
+    return;
+  }
+
+  const level = document.getElementById('aiLevelSelect')?.value || 'Intermediate';
+  const format = document.getElementById('aiFormatSelect')?.value || '1_day';
+  const apiKey = getActiveGeminiApiKey();
+
+  const loadingEl = document.getElementById('aiLoadingState');
+  const previewEl = document.getElementById('aiPreviewContainer');
+  const btnGenerate = document.getElementById('btnAiGenerate');
+  const btnApply = document.getElementById('btnAiApply');
+  const stepText = document.getElementById('aiLoadingStep');
+
+  if (loadingEl) loadingEl.style.display = 'block';
+  if (previewEl) previewEl.style.display = 'none';
+  if (btnGenerate) btnGenerate.disabled = true;
+  if (btnApply) btnApply.disabled = true;
+
+  try {
+    let plan = null;
+
+    if (apiKey) {
+      if (stepText) stepText.textContent = 'Menganalisis domain kompetensi & menyusun modul...';
+      try {
+        plan = await generateWithGeminiLive(topic, level, format, apiKey);
+      } catch (err) {
+        console.warn('Live AI call failed, falling back to built-in smart engine:', err);
+      }
+    }
+
+    if (!plan) {
+      if (stepText) stepText.textContent = 'Menganalisis domain kompetensi & menyusun silabus...';
+      await new Promise(r => setTimeout(r, 80));
+      plan = generateSmartPlanOffline(topic, level, format);
+    }
+
+    currentAiPlan = plan;
+    renderAiPlanPreview(plan);
+
+    if (btnApply) btnApply.disabled = false;
+    showToast('Rancangan kurikulum pelatihan berhasil dibuat!', 'success');
+  } catch (error) {
+    console.error('Error during AI generation:', error);
+    showToast('Terjadi kendala saat merancang materi. Silahkan coba lagi.', 'error');
+  } finally {
+    if (loadingEl) loadingEl.style.display = 'none';
+    if (btnGenerate) btnGenerate.disabled = false;
+  }
+}
+
+async function generateWithGeminiLive(topic, level, format, apiKey) {
+  const prompt = `Anda adalah konsultan L&D (Learning & Development) korporat terkemuka.
+Rancanglah rencana program pelatihan karyawan yang aplikatif dan profesional untuk:
+Topik: "${topic}"
+Target Level: ${level}
+Format: ${format}
+
+Output WAJIB berupa JSON murni tanpa markdown formatting, tanpa tanda kutip backtick, dengan struktur spesifik berikut:
+{
+  "namaTraining": "Nama Resmi Training",
+  "kategoriUrgensi": "Kesenjangan Keterampilan",
+  "goals": "Deskripsi tujuan SMART dan capaian yang jelas",
+  "modules": [
+    {
+      "modul": "Sesi 1: Judul Sesi",
+      "jamMulai": "09:00",
+      "jamSelesai": "12:00",
+      "durasi": "3 Jam",
+      "metode": "Praktik / Workshop / Teori",
+      "deskripsi": "Rincian materi yang dipelajari"
+    }
+  ],
+  "hasilDiharapkan": "Kemampuan konkret yang dimiliki peserta",
+  "penerapanPekerjaan": "Bagaimana kompetensi ini diterapkan di workflow tim sehari-hari",
+  "indikatorKeberhasilan": "Target metrik keberhasilan kuantitatif & kualitatif"
+}`;
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 12000);
+
+  const cleanKey = apiKey.trim();
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${encodeURIComponent(cleanKey)}`;
+
+  let response;
+  try {
+    response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': cleanKey
+      },
+      signal: controller.signal,
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { responseMimeType: 'application/json', temperature: 0.7 }
+      })
+    });
+
+    if (!response.ok) {
+      // Fallback to gemini-3.5-flash-lite
+      const fallbackEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${encodeURIComponent(cleanKey)}`;
+      response = await fetch(fallbackEndpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-goog-api-key': cleanKey
+        },
+        signal: controller.signal,
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { responseMimeType: 'application/json', temperature: 0.7 }
+        })
+      });
+    }
+  } finally {
+    clearTimeout(timeoutId);
+  }
+
+  if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+  const data = await response.json();
+  const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!rawText) throw new Error('Empty response from Gemini');
+  
+  const cleanJson = rawText.replace(/```json\s*|```/g, '').trim();
+  return JSON.parse(cleanJson);
+}
+
+function generateSmartPlanOffline(topic, level, format) {
+  const lower = topic.toLowerCase();
+  let urgency = 'Kesenjangan Keterampilan';
+  let goals = '';
+  let expected = '';
+  let application = '';
+  let kpi = '';
+  let sessions = [];
+
+  // Determine session schedule & count by format
+  let sessionSchedule = [
+    { start: '09:00', end: '12:00', dur: '3 Jam' },
+    { start: '13:00', end: '16:00', dur: '3 Jam' }
+  ];
+
+  if (format === 'half_day') {
+    sessionSchedule = [
+      { start: '09:00', end: '12:00', dur: '3 Jam' }
+    ];
+  } else if (format === '2_days') {
+    sessionSchedule = [
+      { start: '09:00', end: '12:00', dur: '3 Jam' },
+      { start: '13:00', end: '16:00', dur: '3 Jam' },
+      { start: '09:00', end: '12:00', dur: '3 Jam' },
+      { start: '13:00', end: '16:00', dur: '3 Jam' }
+    ];
+  }
+
+  // Domain Categorization logic
+  if (lower.includes('react') || lower.includes('vue') || lower.includes('angular') || lower.includes('frontend') || lower.includes('javascript') || lower.includes('typescript') || lower.includes('web') || lower.includes('golang') || lower.includes('backend') || lower.includes('python') || lower.includes('api') || lower.includes('code') || lower.includes('developer')) {
+    urgency = 'Kesenjangan Keterampilan';
+    goals = `Membekali peserta dengan keterampilan teknis mutakhir dalam arsitektur ${topic}, implementasi clean code, pola desain modular, dan integrasi API yang tangguh demi mempercepat siklus pengiriman perangkat lunak berkualitas tinggi.`;
+    expected = `Peserta mampu merancang, memprogram, menguji (unit testing), dan menerapkan fitur baru secara mandiri tanpa dependensi tinggi terhadap tim senior.`;
+    application = `Diterapkan langsung dalam penulisan modul sprint berjalan, refactoring kode legacy, dan standar code review tim engineering.`;
+    kpi = `Penurunan tingkat bug/defect pada code review sebesar 25%, peningkatan code coverage minimal 80%, dan zero-downtime saat deployment fitur baru.`;
+
+    const titles = [
+      `Fondasi Arsitektur, Core Concepts & Pola Desain Modern`,
+      `Hands-on Workshop: Implementasi Fitur & Best Practices`,
+      `State Management, Asynchronous Flow & Integrasi Layanan Eksternal`,
+      `Performance Profiling, Automated Testing & Standar Production Readiness`
+    ];
+    const methods = ['Teori & Analisis Kasus', 'Praktik & Live Coding', 'Praktik & Workshop', 'Simulasi Deployment'];
+    const descs = [
+      `Membedah paradigma utama, struktur direktori terstandar, dan prinsip maintainable software architecture.`,
+      `Membangun modul inti secara bertahap dengan bimbingan langsung, studi kasus bug umum, dan penyelesaian masalah real.`,
+      `Optimasi penanganan data kompleks, caching, optimasi rendering, dan secure API authentication.`,
+      `Pengukuran performa benchmarking, penulisan automated test suite, dan checklist pra-produksi.`
+    ];
+
+    sessionSchedule.forEach((sched, idx) => {
+      sessions.push({
+        modul: `Sesi ${idx + 1}: ${titles[idx] || `Sesi Lanjutan ${idx + 1}`}`,
+        jamMulai: sched.start,
+        jamSelesai: sched.end,
+        durasi: sched.dur,
+        metode: methods[idx] || 'Praktik & Workshop',
+        deskripsi: descs[idx] || `Pendalaman materi praktis terkait implementasi ${topic}.`
+      });
+    });
+
+  } else if (lower.includes('lead') || lower.includes('manager') || lower.includes('coach') || lower.includes('supervis') || lower.includes('manajemen') || lower.includes('people')) {
+    urgency = 'Pengembangan Kepemimpinan';
+    goals = `Meningkatkan kapasitas kepemimpinan peserta dalam mengarahkan tim, membangun budaya kerja akuntabel, memfasilitasi coaching berkala, dan menyelaraskan eksekusi harian dengan sasaran strategis perusahaan.`;
+    expected = `Pemimpin mampu mendelegasikan tanggung jawab secara efektif, memberikan constructive feedback tanpa friksi, dan memimpin rapat tim yang berorientasi hasil.`;
+    application = `Diterapkan dalam daily standup, sesi 1-on-1 bulanan bersama bawahan langsung, dan penyusunan OKR/KPI tim.`;
+    kpi = `Peningkatan skor employee engagement tim minimal 15%, penurunan turnover anggota tim, dan pencapaian target kerja kuartalan 100%.`;
+
+    const titles = [
+      `Mindset Pemimpin Adaptif: Komunikasi Berpengaruh & Trust Building`,
+      `GROW Coaching Framework & Seni Memberikan Feedback Konstruktif`,
+      `Delegasi Efektif, Manajemen Prioritas & Akuntabilitas Tim`,
+      `Resolusi Konflik Internal & Pengambilan Keputusan Berbasis Solusi`
+    ];
+    const methods = ['Studi Kasus & Diskusi', 'Roleplay & Simulasi Coaching', 'Workshop Manajemen Tim', 'Simulasi Kasus Riil'];
+    const descs = [
+      `Mengenali gaya kepemimpinan diri, memetakan dinamika anggota tim, dan membangun psychological safety.`,
+      `Praktek simulasi wawancara coaching 1-on-1 dengan framework terstruktur untuk membimbing tim berkinerja rendah.`,
+      `Teknik pendelegasian wewenang berbasis level kompetensi bawahan dan sistem pemantauan tanpa micromanagement.`,
+      `Strategi de-eskalasi friksi antar-anggota tim dan metode decision matrix saat situasi darurat.`
+    ];
+
+    sessionSchedule.forEach((sched, idx) => {
+      sessions.push({
+        modul: `Sesi ${idx + 1}: ${titles[idx] || `Sesi Kepemimpinan ${idx + 1}`}`,
+        jamMulai: sched.start,
+        jamSelesai: sched.end,
+        durasi: sched.dur,
+        metode: methods[idx] || 'Workshop & Roleplay',
+        deskripsi: descs[idx] || `Pendalaman kemampuan manajerial terapan.`
+      });
+    });
+
+  } else if (lower.includes('data') || lower.includes('excel') || lower.includes('power bi') || lower.includes('tableau') || lower.includes('analytics') || lower.includes('analis') || lower.includes('sql')) {
+    urgency = 'Kesenjangan Keterampilan';
+    goals = `Membekali peserta dengan keterampilan mengolah, membersihkan, menganalisis data mentah, serta memvisualisasikannya ke dalam dashboard interaktif untuk mendukung data-driven decision making yang akurat.`;
+    expected = `Peserta mampu mengotomasi laporan rutin, mendeteksi tren anomali bisnis dari dataset, dan menyajikan insight bisnis ke manajemen secara visual.`;
+    application = `Diterapkan dalam pembuatan laporan performa mingguan divisi dan monitoring real-time metrik operasional.`;
+    kpi = `Efisiensi waktu pembuatan report hingga 50%, eliminasi kesalahan formula manual (zero error rate), dan adopsi dashboard mandiri oleh divisi terkait.`;
+
+    const titles = [
+      `Data Wrangling: Pembersihan, Transformasi & Formula Analitik Lanjutan`,
+      `Data Modeling, Relasi Tabel & Otomasi Perhitungan Metrik Bisnis`,
+      `Perancangan Visualisasi: Dashboard Eksekutif Interaktif & Storytelling with Data`,
+      `Audit Validasi Data & Strategi Presentasi Insight ke Stakeholder`
+    ];
+    const methods = ['Teori & Latihan Praktis', 'Praktik Hands-on', 'Workshop Visualisasi', 'Presentasi & Review'];
+    const descs = [
+      `Menggunakan fungsi lookup modern, dynamic array, dan teknik membersihkan data yang tidak terstruktur.`,
+      `Membangun star-schema relasi data dan pembuatan ukuran performa bisnis (measures & calculated columns).`,
+      `Mendesain layout dashboard yang clean, intuitif, dan menerapkan filter lintas kategori secara interaktif.`,
+      `Memastikan konsistensi data sebelum dipublikasikan dan teknik menyampaikan temuan kritis secara ringkas.`
+    ];
+
+    sessionSchedule.forEach((sched, idx) => {
+      sessions.push({
+        modul: `Sesi ${idx + 1}: ${titles[idx] || `Sesi Analisis Data ${idx + 1}`}`,
+        jamMulai: sched.start,
+        jamSelesai: sched.end,
+        durasi: sched.dur,
+        metode: methods[idx] || 'Praktik Hands-on',
+        deskripsi: descs[idx] || `Praktek pengolahan dan visualisasi data.`
+      });
+    });
+
+  } else if (lower.includes('sales') || lower.includes('customer') || lower.includes('service') || lower.includes('komunikasi') || lower.includes('public speaking') || lower.includes('presentasi') || lower.includes('negosiasi') || lower.includes('marketing')) {
+    urgency = 'Kesenjangan Keterampilan';
+    goals = `Meningkatkan kemampuan komunikasi persuasif, pelayanan pelanggan yang empati, dan penguasaan teknik negosiasi profesional untuk memperkuat loyalitas klien serta konversi peluang bisnis.`;
+    expected = `Peserta mampu menangani keberatan klien secara tenang, mempresentasikan value proposition dengan meyakinkan, dan menyelesaikan komplain dengan solusi win-win.`;
+    application = `Diterapkan dalam interaksi harian bersama klien, presentasi proposal ke prospek, dan penanganan tiket eskalasi pelanggan.`;
+    kpi = `Skor kepuasan pelanggan (CSAT / NPS) meningkat minimal 20%, tingkat konversi penawaran naik 15%, dan waktu resolusi keluhan berkurang 30%.`;
+
+    const titles = [
+      `Psikologi Pelanggan, Active Listening & Prinsip Komunikasi Asertif`,
+      `Teknik Persuasi, Presentasi Berdaya Pikat & Penanganan Keberatan (Objection Handling)`,
+      `Strategi Negosiasi Win-Win & Closing Penawaran bernilai Tinggi`,
+      `Studi Kasus Eskalasi Layanan, Manajemen Ekspektasi & Service Recovery`
+    ];
+    const methods = ['Workshop & Studi Kasus', 'Roleplay Interaktif', 'Simulasi Negosiasi', 'Analisis Kasus Kritis'];
+    const descs = [
+      `Memahami tipe kepribadian lawan bicara, membaca bahasa tubuh, dan merumuskan respons yang solutif.`,
+      `Struktur presentasi problem-solution dan teknik merespons penolakan harga atau keraguan calon klien.`,
+      `Menjaga margin keuntungan saat negosiasi serta mengunci kesepakatan secara formal dan saling menguntungkan.`,
+      `Langkah sistematis membalikkan pelanggan yang kecewa menjadi advokat merek yang setia.`
+    ];
+
+    sessionSchedule.forEach((sched, idx) => {
+      sessions.push({
+        modul: `Sesi ${idx + 1}: ${titles[idx] || `Sesi Komunikasi ${idx + 1}`}`,
+        jamMulai: sched.start,
+        jamSelesai: sched.end,
+        durasi: sched.dur,
+        metode: methods[idx] || 'Roleplay & Praktik',
+        deskripsi: descs[idx] || `Simulasi interaksi dan komunikasi persuasif.`
+      });
+    });
+
+  } else {
+    // General Domain Fallback
+    urgency = 'Kesenjangan Keterampilan';
+    goals = `Meningkatkan pemahaman konseptual dan kapabilitas operasional peserta mengenai ${topic}, mengadopsi standar praktik terbaik (best practices), serta meminimalisir kesalahan kerja guna mendongkrak produktivitas tim.`;
+    expected = `Peserta menguasai metodologi terstandar dalam ${topic} dan mampu mengeksekusi tanggung jawab pekerjaan terkait secara konsisten dan efisien.`;
+    application = `Diterapkan pada proses kerja harian divisi dan standarisasi Standar Operasional Prosedur (SOP) tim.`;
+    kpi = `Peningkatan nilai evaluasi kompetensi pasca-pelatihan minimal 85% dan peningkatan efisiensi pengerjaan tugas tim sebesar 20%.`;
+
+    const titles = [
+      `Konsep Kunci, Fundamental Teori & Standar Mutu ${topic}`,
+      `Workshop Praktik: Studi Kasus, Penerapan Alur Kerja & Simulasi Nyata`,
+      `Optimasi Eksekusi, Mitigasi Risiko & Troubleshooting Masalah Umum`,
+      `Evaluasi Hasil Kerja, Standarisasi SOP & Rencana Tindak Lanjut Mandiri`
+    ];
+    const methods = ['Teori & Diskusi Kasus', 'Praktik & Workshop Terpandu', 'Simulasi & Diskusi Solusi', 'Review & Action Plan'];
+    const descs = [
+      `Membedah prinsip dasar, terminologi esensial, dan fondasi kepatuhan prosedur terkait ${topic}.`,
+      `Praktik terstruktur langkah-demi-langkah menyelesaikan skenario kerja aktual yang biasa dihadapi di lapangan.`,
+      `Menganalisis potensi bottleneck, mitigasi kesalahan fatal, dan teknik pemecahan masalah secara terorganisir.`,
+      `Menyusun lembar kerja tindak lanjut mandiri (action item) untuk memastikan kesinambungan pasca-pelatihan.`
+    ];
+
+    sessionSchedule.forEach((sched, idx) => {
+      sessions.push({
+        modul: `Sesi ${idx + 1}: ${titles[idx] || `Sesi Pembelajaran ${idx + 1}`}`,
+        jamMulai: sched.start,
+        jamSelesai: sched.end,
+        durasi: sched.dur,
+        metode: methods[idx] || 'Praktik & Workshop',
+        deskripsi: descs[idx] || `Praktek dan pendalaman materi ${topic}.`
+      });
+    });
+  }
+
+  return {
+    namaTraining: topic,
+    kategoriUrgensi: urgency,
+    level: level,
+    goals: goals,
+    modules: sessions,
+    hasilDiharapkan: expected,
+    penerapanPekerjaan: application,
+    indikatorKeberhasilan: kpi
+  };
+}
+
+function renderAiPlanPreview(plan) {
+  const previewEl = document.getElementById('aiPreviewContainer');
+  if (!previewEl) return;
+
+  const goalsEl = document.getElementById('previewAiGoals');
+  if (goalsEl) goalsEl.textContent = plan.goals || '-';
+
+  const countEl = document.getElementById('previewAiModuleCount');
+  if (countEl) countEl.textContent = (plan.modules || []).length;
+
+  const listEl = document.getElementById('previewAiModulesList');
+  if (listEl) {
+    listEl.innerHTML = (plan.modules || []).map(m => `
+      <div class="ai-module-pill">
+        <div class="ai-module-pill-head">
+          <span>${m.modul}</span>
+          <span style="font-size:11px;color:var(--moss);">${m.jamMulai} - ${m.jamSelesai} (${m.durasi}) • ${m.metode || 'Praktik'}</span>
+        </div>
+        <div class="ai-module-pill-desc">${m.deskripsi || '-'}</div>
+      </div>
+    `).join('');
+  }
+
+  const expEl = document.getElementById('previewAiExpected');
+  if (expEl) expEl.textContent = plan.hasilDiharapkan || '-';
+
+  const appEl = document.getElementById('previewAiApply');
+  if (appEl) appEl.textContent = plan.penerapanPekerjaan || '-';
+
+  const kpiEl = document.getElementById('previewAiKpi');
+  if (kpiEl) kpiEl.textContent = plan.indikatorKeberhasilan || '-';
+
+  previewEl.style.display = 'block';
+  previewEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function applyAiPlanToForm() {
+  if (!currentAiPlan) {
+    showToast('Belum ada rancangan training yang digenerate.', 'error');
+    return;
+  }
+
+  // 1. Step 1 Fields
+  const nameEl = document.getElementById('trainingName');
+  if (nameEl && currentAiPlan.namaTraining) {
+    nameEl.value = currentAiPlan.namaTraining;
+  }
+
+  const goalsEl = document.getElementById('goals');
+  if (goalsEl && currentAiPlan.goals) {
+    goalsEl.value = currentAiPlan.goals;
+  }
+
+  const urgencyEl = document.getElementById('urgencyCategory');
+  if (urgencyEl && currentAiPlan.kategoriUrgensi) {
+    urgencyEl.value = currentAiPlan.kategoriUrgensi;
+  }
+
+  // Level Kemahiran Chip
+  if (currentAiPlan.level) {
+    const levelChip = Array.from(document.querySelectorAll('#levelChipGrid .chip-card, .chip-card')).find(c => {
+      return (c.textContent || '').trim().toLowerCase().includes(currentAiPlan.level.toLowerCase());
+    });
+    if (levelChip && typeof selectChip === 'function') {
+      selectChip('level', currentAiPlan.level, levelChip);
+    } else {
+      const levelHidden = document.getElementById('levelKemahiran');
+      if (levelHidden) levelHidden.value = currentAiPlan.level;
+    }
+  }
+
+  // 2. Step 2 Modules Table
+  if (Array.isArray(currentAiPlan.modules) && currentAiPlan.modules.length > 0) {
+    const tbody = document.getElementById('moduleBody');
+    if (tbody) tbody.innerHTML = '';
+    moduleCounter = 0;
+
+    const today = document.getElementById('tglPelaksanaan')?.value || new Date().toISOString().split('T')[0];
+    const trainer = (document.getElementById('trainer')?.value || '').trim();
+    const lokasi = (document.getElementById('lokasi')?.value || '').trim();
+
+    currentAiPlan.modules.forEach(m => {
+      addModule(today, m.jamMulai, m.jamSelesai, m.modul, trainer, m.metode || 'Praktik', lokasi, m.deskripsi || '');
+    });
+
+    calculateScheduleAndDuration();
+  }
+
+  // 3. Step 2 Evaluation Fields
+  const expectedEl = document.getElementById('hasilDiharapkan');
+  if (expectedEl && currentAiPlan.hasilDiharapkan) {
+    expectedEl.value = currentAiPlan.hasilDiharapkan;
+  }
+
+  const applyEl = document.getElementById('penerapanPekerjaan');
+  if (applyEl && currentAiPlan.penerapanPekerjaan) {
+    applyEl.value = currentAiPlan.penerapanPekerjaan;
+  }
+
+  const kpiEl = document.getElementById('indikatorKeberhasilan');
+  if (kpiEl && currentAiPlan.indikatorKeberhasilan) {
+    kpiEl.value = currentAiPlan.indikatorKeberhasilan;
+  }
+
+  // Update training ID
+  if (typeof updateTrainingId === 'function') updateTrainingId();
+
+  closeModal('modalAiAssistant');
+  showToast('✨ Rancangan kurikulum pelatihan berhasil diterapkan ke formulir!', 'success');
+}
+
+/// ===================================================
+// ADVANCED AI LEARNING & DEVELOPMENT STUDIO ENGINE
+// ===================================================
+let currentStudioMode = 'curriculum';
+let currentStudioDocTab = 'overview';
+let studioGeneratedData = null;
+
+function initAiStudioPage() {
+  // Enterprise AI Studio ready with Google Gemini 3.5 Flash
+}
+
+function toggleStudioApiKey() {
+  const drawer = document.getElementById('studioApiKeyDrawer');
+  if (drawer) {
+    drawer.style.display = drawer.style.display === 'none' ? 'block' : 'none';
+  }
+}
+
+function switchStudioMode(mode) {
+  currentStudioMode = mode;
+
+  // 1. Update Mode Tabs
+  document.querySelectorAll('.ai-mode-tab').forEach(t => t.classList.remove('active'));
+  const activeTabBtn = document.getElementById(`modeTab${mode.charAt(0).toUpperCase() + mode.slice(1)}`);
+  if (activeTabBtn) activeTabBtn.classList.add('active');
+
+  // 2. Switch Input Panes
+  const panes = ['Curriculum', 'Tna', 'Roi', 'Assessment'];
+  panes.forEach(p => {
+    const el = document.getElementById(`paneMode${p}`);
+    if (el) el.style.display = (p.toLowerCase() === mode.toLowerCase()) ? 'block' : 'none';
+  });
+
+  // 3. Update Title & Badges & Button Text
+  const titleEl = document.getElementById('studioPanelTitle');
+  const badgeEl = document.getElementById('studioActiveModeBadge');
+  const btnText = document.getElementById('btnStudioRunText');
+
+  if (mode === 'curriculum') {
+    if (titleEl) titleEl.textContent = 'Parameter Kurikulum';
+    if (badgeEl) badgeEl.textContent = 'Mode 1: Curriculum Architect';
+    if (btnText) btnText.textContent = 'Analisis & Rancang Kurikulum';
+  } else if (mode === 'tna') {
+    if (titleEl) titleEl.textContent = 'Diagnosa Kebutuhan & Masalah';
+    if (badgeEl) badgeEl.textContent = 'Mode 2: TNA Diagnostic';
+    if (btnText) btnText.textContent = 'Diagnosa Masalah Tim & Kebutuhan';
+  } else if (mode === 'roi') {
+    if (titleEl) titleEl.textContent = 'Estimasi Dampak Bisnis';
+    if (badgeEl) badgeEl.textContent = 'Mode 3: Business ROI & Kirkpatrick';
+    if (btnText) btnText.textContent = 'Hitung Proyeksi Dampak & ROI';
+  } else if (mode === 'assessment') {
+    if (titleEl) titleEl.textContent = 'Konfigurasi Instrumen Ujian';
+    if (badgeEl) badgeEl.textContent = 'Mode 4: Assessment & Quiz Builder';
+    if (btnText) btnText.textContent = 'Buat Soal Pre/Post Test & Rubrik';
+  }
+}
+
+function setStudioTopicAndRun(topic) {
+  const input = document.getElementById('curriculumTopic');
+  if (input) {
+    input.value = topic;
+    input.focus();
+  }
+}
+
+function setTnaCase(caseText, deptHint) {
+  const textarea = document.getElementById('tnaIssue');
+  if (textarea) {
+    textarea.value = caseText;
+    textarea.focus();
+  }
+  if (deptHint) {
+    const deptSel = document.getElementById('tnaDept');
+    if (deptSel) deptSel.value = deptHint;
+  }
+}
+
+function switchStudioDocTab(tabName) {
+  currentStudioDocTab = tabName;
+
+  document.querySelectorAll('.ai-doc-subtab-btn').forEach(btn => btn.classList.remove('active'));
+  const activeBtn = document.getElementById(`subtabBtn${tabName.charAt(0).toUpperCase() + tabName.slice(1)}`);
+  if (activeBtn) activeBtn.classList.add('active');
+
+  const docPanes = ['Overview', 'Ksa', 'Evaluation', 'Quiz'];
+  docPanes.forEach(dp => {
+    const el = document.getElementById(`paneDoc${dp}`);
+    if (el) el.style.display = (dp.toLowerCase() === tabName.toLowerCase()) ? 'block' : 'none';
+  });
+}
+
+async function runStudioEngine() {
+  let mainTopic = '';
+  let targetLevel = 'Intermediate';
+  let format = '1_day';
+  let targetAudience = 'Karyawan & Team Lead';
+  let userIssue = '';
+
+  if (currentStudioMode === 'curriculum') {
+    mainTopic = (document.getElementById('curriculumTopic')?.value || '').trim();
+    targetLevel = document.getElementById('curriculumLevel')?.value || 'Intermediate';
+    format = document.getElementById('curriculumFormat')?.value || '1_day';
+    targetAudience = (document.getElementById('curriculumTarget')?.value || '').trim() || 'Tim Lintas Divisi';
+    if (!mainTopic) {
+      showToast('Mohon masukkan Topik / Keahlian Pelatihan terlebih dahulu.', 'error');
+      document.getElementById('curriculumTopic')?.focus();
+      return;
+    }
+  } else if (currentStudioMode === 'tna') {
+    userIssue = (document.getElementById('tnaIssue')?.value || '').trim();
+    const dept = (document.getElementById('tnaDept')?.value || '').trim() || 'Operasional';
+    if (!userIssue) {
+      showToast('Mohon deskripsikan Masalah / Kesenjangan Performa Tim terlebih dahulu.', 'error');
+      document.getElementById('tnaIssue')?.focus();
+      return;
+    }
+    mainTopic = `Peningkatan Performa & Penyelesaian Kesenjangan: ${dept}`;
+    targetAudience = `Tim ${dept}`;
+  } else if (currentStudioMode === 'roi') {
+    mainTopic = (document.getElementById('roiTopic')?.value || '').trim();
+    if (!mainTopic) {
+      showToast('Mohon masukkan Topik Program Pelatihan terlebih dahulu.', 'error');
+      document.getElementById('roiTopic')?.focus();
+      return;
+    }
+  } else if (currentStudioMode === 'assessment') {
+    mainTopic = (document.getElementById('quizTopic')?.value || '').trim();
+    if (!mainTopic) {
+      showToast('Mohon masukkan Topik / Silabus Materi Ujian terlebih dahulu.', 'error');
+      document.getElementById('quizTopic')?.focus();
+      return;
+    }
+  }
+
+  // UI State: Loading
+  const emptyEl = document.getElementById('studioCanvasEmpty');
+  const loadingEl = document.getElementById('studioCanvasLoading');
+  const resultEl = document.getElementById('studioCanvasResult');
+  const subtabsEl = document.getElementById('studioDocSubtabs');
+  const actionsEl = document.getElementById('studioDocActions');
+  const statusBadge = document.getElementById('studioDocStatusBadge');
+  const runBtn = document.getElementById('btnStudioRun');
+
+  if (emptyEl) emptyEl.style.display = 'none';
+  if (resultEl) resultEl.style.display = 'none';
+  if (subtabsEl) subtabsEl.style.display = 'none';
+  if (actionsEl) actionsEl.style.display = 'none';
+  if (loadingEl) loadingEl.style.display = 'block';
+  if (runBtn) runBtn.disabled = true;
+
+  if (statusBadge) {
+    statusBadge.innerHTML = `<span class="mini-pill" style="background:#EEF2FF;color:#4F46E5;border:1px solid #C7D2FE;"><span class="dot" style="background:#4F46E5;"></span>Menganalisis L&amp;D...</span>`;
+  }
+
+  try {
+    const apiKey = getActiveGeminiApiKey();
+    let data = null;
+
+    if (apiKey) {
+      try {
+        data = await generateStudioWithGeminiLive(mainTopic, targetLevel, format, targetAudience, userIssue, currentStudioMode, apiKey);
+      } catch (err) {
+        console.warn('Gemini live call in Studio failed, falling back to comprehensive offline blueprint:', err);
+        data = buildComprehensiveLdBlueprint(mainTopic, targetLevel, format, targetAudience, userIssue, currentStudioMode);
+      }
+    } else {
+      await new Promise(r => setTimeout(r, 120));
+      data = buildComprehensiveLdBlueprint(mainTopic, targetLevel, format, targetAudience, userIssue, currentStudioMode);
+    }
+
+    studioGeneratedData = data;
+    currentAiPlan = data.formPlan || data; // Sync so direct apply to form works
+
+    renderStudioExecutiveBlueprint(data);
+
+    if (loadingEl) loadingEl.style.display = 'none';
+    if (resultEl) resultEl.style.display = 'block';
+    if (subtabsEl) subtabsEl.style.display = 'flex';
+    if (actionsEl) actionsEl.style.display = 'flex';
+
+    if (statusBadge) {
+      statusBadge.innerHTML = `<span class="mini-pill approved" style="font-size:11.5px;padding:3px 10px;"><span class="dot"></span>Analisis Selesai</span>`;
+    }
+
+    switchStudioDocTab('overview');
+    showToast('✨ Cetak biru L&D berhasil dianalisis dan disusun!', 'success');
+  } catch (err) {
+    console.error('Error running AI Studio engine:', err);
+    showToast('Gagal memproses analisis. Silahkan coba kembali.', 'error');
+    if (emptyEl) emptyEl.style.display = 'flex';
+  } finally {
+    if (loadingEl) loadingEl.style.display = 'none';
+    if (runBtn) runBtn.disabled = false;
+  }
+}
+
+async function generateStudioWithGeminiLive(topic, level, format, audience, issue, mode, apiKey) {
+  const prompt = `Anda adalah seorang Chief Learning Officer & Pakar Senior L&D Korporat.
+Rancanglah cetak biru program L&D dan kurikulum pelatihan mendalam untuk konteks berikut:
+Topik: "${topic}"
+Target Level: ${level}
+Format: ${format}
+Target Audiens: "${audience}"
+Masalah / Gejala Performa: "${issue || 'Kesenjangan keterampilan dan kebutuhan peningkatan efisiensi'}"
+Fokus Mode Saat Ini: ${mode}
+
+Keluarkan HANYA JSON murni (tanpa tanda kutip backtick markdown) dengan skema berikut:
+{
+  "title": "${topic}",
+  "level": "${level}",
+  "format": "${format}",
+  "audience": "${audience}",
+  "summary": "Sasaran strategis & SMART goals yang tajam dan terukur",
+  "tna": {
+    "rootCause": "Analisis akar masalah 5-Whys mengapa kendala ini terjadi",
+    "intervention": "Kombinasi intervensi (Pelatihan teknis, perbaikan SOP, atau tooling)",
+    "roadmap": [
+      { "tahap": "Tahap 1: Penguasaan Dasar", "durasi": "Minggu 1-2", "deskripsi": "Uraian tahap 1" },
+      { "tahap": "Tahap 2: Simulasi Praktik", "durasi": "Minggu 3-4", "deskripsi": "Uraian tahap 2" },
+      { "tahap": "Tahap 3: Pendampingan Kerja", "durasi": "Bulan ke-2", "deskripsi": "Uraian tahap 3" }
+    ]
+  },
+  "modules": [
+    {
+      "modul": "Sesi 1: Judul Modul",
+      "jamMulai": "09:00",
+      "jamSelesai": "12:00",
+      "durasi": "3 Jam",
+      "metode": "Praktik / Workshop / Studi Kasus",
+      "deskripsi": "Uraian materi mendalam dan aktivitas hands-on"
+    }
+  ],
+  "ksa": {
+    "knowledge": ["Point pengetahuan 1", "Point pengetahuan 2", "Point pengetahuan 3"],
+    "skills": ["Point keterampilan 1", "Point keterampilan 2", "Point keterampilan 3"],
+    "attitude": ["Point sikap kerja 1", "Point sikap kerja 2", "Point sikap kerja 3"]
+  },
+  "evaluation": {
+    "level1": { "title": "Level 1: Reaksi & Kepuasan", "metric": "Survei CSAT", "target": "Target skor minimal 4.6/5.0" },
+    "level2": { "title": "Level 2: Pembelajaran", "metric": "Pre-Test vs Post-Test", "target": "Peningkatan nilai rata-rata >= 35%" },
+    "level3": { "title": "Level 3: Perilaku Kerja 30-Hari", "metric": "Observasi Supervisor Langsung", "target": "Penerapan SOP >= 85%" },
+    "level4": { "title": "Level 4: Hasil Bisnis 90-Hari", "metric": "Metrik Performa Operasional", "target": "Efisiensi jam kerja & reduksi defect" },
+    "roiProjection": {
+      "participants": 10,
+      "hoursSavedPerWeek": "4 Jam / Tim",
+      "annualHoursSaved": "200 Jam / Tahun",
+      "estimatedPayback": "2 Bulan"
+    }
+  },
+  "quiz": [
+    {
+      "q": "1. Pertanyaan skenario kasus riil...",
+      "options": ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"],
+      "answer": "B",
+      "explanation": "Alasan mengapa B benar..."
+    }
+  ]
+}`;
+
+  const cleanKey = apiKey.trim();
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 16000);
+
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${encodeURIComponent(cleanKey)}`;
+
+  let response;
+  try {
+    response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': cleanKey
+      },
+      signal: controller.signal,
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { responseMimeType: 'application/json', temperature: 0.7 }
+      })
+    });
+
+    if (!response.ok) {
+      const fallbackEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${encodeURIComponent(cleanKey)}`;
+      response = await fetch(fallbackEndpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-goog-api-key': cleanKey
+        },
+        signal: controller.signal,
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { responseMimeType: 'application/json', temperature: 0.7 }
+        })
+      });
+    }
+  } finally {
+    clearTimeout(timeoutId);
+  }
+
+  if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+  const resData = await response.json();
+  const rawText = resData?.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!rawText) throw new Error('Empty response from Gemini');
+
+  const cleanJson = rawText.replace(/```json\s*|```/g, '').trim();
+  const parsed = JSON.parse(cleanJson);
+
+  parsed.formPlan = {
+    namaTraining: parsed.title || topic,
+    kategoriUrgensi: 'Kesenjangan Keterampilan',
+    level: parsed.level || level,
+    goals: parsed.summary || '',
+    modules: parsed.modules || [],
+    hasilDiharapkan: parsed.evaluation?.level4?.target || parsed.summary,
+    penerapanPekerjaan: parsed.evaluation?.level3?.target || 'Penerapan langsung di workflow tim.',
+    indikatorKeberhasilan: parsed.evaluation?.level2?.target || 'Peningkatan skor evaluasi >= 85%.'
+  };
+
+  return parsed;
+}
+
+// Deep Intelligence Blueprint Builder (Multi-Dimensional L&D Engine)
+function buildComprehensiveLdBlueprint(topic, level, format, audience, issue, mode) {
+  const basePlan = generateSmartPlanOffline(topic, level, format);
+  const lower = topic.toLowerCase();
+  const issueLower = (issue || '').toLowerCase();
+
+  // 1. TNA Diagnostic Logic
+  let rootCauseAnalysis = '';
+  let interventionCategory = 'Pelatihan Keterampilan + Standardisasi SOP';
+  let tnaRoadmap = [];
+
+  if (mode === 'tna' || issue) {
+    rootCauseAnalysis = `Berdasarkan analisis 5-Whys terhadap kendala (${issue || topic}), kesenjangan performa berakar pada kurangnya standardisasi alur kerja, belum adanya framework komunikasi asertif/teknis, serta minimnya latihan skenario krisis bertekanan tinggi di lingkungan kerja aktual.`;
+    interventionCategory = 'Kombinasi Pelatihan Teknis (70%) + Pendampingan SOP & Tooling (30%)';
+    tnaRoadmap = [
+      { tahap: 'Tahap 1: Penguasaan Fondasi & Mindset', durasi: 'Minggu 1-2', deskripsi: 'Penyelarasan standar kompetensi dasar, eliminasi bad habits, dan bedah SOP terintegrasi.' },
+      { tahap: 'Tahap 2: Simulasi Kasus Kritis (Pressure Lab)', durasi: 'Minggu 3-4', deskripsi: 'Workshop studi kasus nyata berulang dengan bimbingan langsung fasilitator senior.' },
+      { tahap: 'Tahap 3: Pendampingan & Monitoring 30-Hari', durasi: 'Bulan ke-2', deskripsi: 'Evaluasi mingguan oleh Team Lead menggunakan lembar audit observasi perilaku.' }
+    ];
+  }
+
+  // 2. KSA Matrix (Knowledge, Skills, Attitude)
+  let ksa = {
+    knowledge: [
+      `Prinsip arsitektur, standar industri terbaik (best practices), dan terminologi kunci terkait ${topic}.`,
+      `Metodologi pencegahan kesalahan umum (common pitfalls) dan mitigasi risiko operasional.`,
+      `Alur eskalasi masalah dan batas wewenang pengambilan keputusan mandiri.`
+    ],
+    skills: [
+      `Kemampuan mengeksekusi modul kerja ${topic} secara cepat dan akurat sesuai SOP perusahaan.`,
+      `Teknik analisis akar masalah (root cause debugging/troubleshooting) saat terjadi insiden.`,
+      `Keterampilan menyusun dokumentasi kerja terstandar yang mudah didelegasikan ke rekan tim.`
+    ],
+    attitude: [
+      `Akuntabilitas tinggi terhadap zero-defect dan rasa kepemilikan (ownership) terhadap hasil kerja.`,
+      `Keterbukaan menerima feedback konstruktif saat evaluasi sprint atau audit berkala.`,
+      `Proaktif berkomunikasi lintas fungsi tanpa menunggu terjadinya hambatan operasional.`
+    ]
+  };
+
+  // 3. Domain Specific KSA Tuning
+  if (lower.includes('react') || lower.includes('code') || lower.includes('golang') || lower.includes('devops') || lower.includes('tech') || lower.includes('data')) {
+    ksa.knowledge = [
+      `Paradigma arsitektur perangkat lunak modular, clean architecture, dan pola desain maintainable.`,
+      `Standar security, sanitasi input API, automated CI/CD pipeline, dan observability.`,
+      `Teknik profiling bottleneck memori, query database, dan prinsip scalable system design.`
+    ];
+    ksa.skills = [
+      `Menulis kode modular dengan unit testing coverage minimal 80% dan zero critical lint warnings.`,
+      `Melakukan peer code review asertif dan refactoring legacy code tanpa menyebabkan regresi.`,
+      `Mengoperasikan tools debugging modern dan otomatisasi deployment zero-downtime.`
+    ];
+    ksa.attitude = [
+      `Disiplin tinggi terhadap craftmanship kode bersih (clean code) dan standar git flow tim.`,
+      `Ego-free code mindset: memisahkan identitas diri dari kritik terhadap baris kode.`,
+      `Kepedulian terhadap maintainability kode yang akan dirawat oleh rekan kerja di masa depan.`
+    ];
+  } else if (lower.includes('lead') || lower.includes('coach') || lower.includes('manager')) {
+    ksa.knowledge = [
+      `Prinsip Situational Leadership, GROW Coaching Model, dan pemetaan tingkat kematangan bawahan.`,
+      `Prinsip psychological safety di tempat kerja dan teknik de-eskalasi friksi internal.`,
+      `Strategi perumusan cascading OKR/KPI yang realistis namun menantang.`
+    ];
+    ksa.skills = [
+      `Memfasilitasi sesi 1-on-1 mingguan yang menghasilkan komitmen action plan konkret dari bawahan.`,
+      `Mendelegasikan tanggung jawab kritis dengan matriks wewenang tanpa micromanagement.`,
+      `Memberikan SBI (Situation-Behavior-Impact) constructive feedback secara tenang dan solutif.`
+    ];
+    ksa.attitude = [
+      `Empati aktif dan kesediaan mendengarkan sebelum menarik kesimpulan atas masalah tim.`,
+      `Keteladanan dalam akuntabilitas (lead by example) dan integritas waktu komitmen.`,
+      `Fokus pada pertumbuhan potensi anggota tim, bukan sekadar memburu hasil jangka pendek.`
+    ];
+  }
+
+  // 4. Kirkpatrick 4-Level Evaluation & Financial ROI
+  const pCount = parseInt(document.getElementById('roiParticipants')?.value || '10', 10) || 10;
+  const hoursSavedPerWeek = Math.max(3, Math.round(pCount * 0.4));
+  const annualHours = hoursSavedPerWeek * 50;
+
+  const evaluation = {
+    level1: {
+      title: 'Level 1: Reaksi & Kepuasan Peserta',
+      metric: 'Survei CSAT Evaluasi Pelatihan',
+      target: 'Skor kepuasan minimal 4.6 dari 5.0 terhadap relevansi materi, studi kasus, dan fasilitator.'
+    },
+    level2: {
+      title: 'Level 2: Pembelajaran & Retensi Materi',
+      metric: 'Perbandingan Pre-Test vs Post-Test',
+      target: 'Kenaikan nilai rata-rata peserta minimal +35% dengan tingkat kelulusan komprehensif 100%.'
+    },
+    level3: {
+      title: 'Level 3: Perilaku Kerja Aktual (30-60 Hari)',
+      metric: 'Audit Observasi Perilaku oleh Direct Supervisor',
+      target: 'Checklist kepatuhan SOP dan aplikasi framework kerja baru tercapai minimal 85% pada evaluasi 30 hari.'
+    },
+    level4: {
+      title: 'Level 4: Dampak Bisnis Nyata (90 Hari)',
+      metric: 'Efisiensi Operasional & Penurunan Defect Rate',
+      target: `Efisiensi waktu kerja ~${hoursSavedPerWeek} jam/minggu, penurunan tingkat kesalahan kerja 25%, dan eliminasi rework.`
+    },
+    roiProjection: {
+      participants: pCount,
+      hoursSavedPerWeek: `${hoursSavedPerWeek} Jam / Tim`,
+      annualHoursSaved: `${annualHours} Jam / Tahun`,
+      estimatedPayback: '1.5 &ndash; 2.5 Bulan'
+    }
+  };
+
+  // 5. Scenario-Based Pre/Post Assessment Quiz (5 Questions)
+  const quiz = [
+    {
+      q: `1. Saat menghadapi situasi di mana ${topic} mengalami hambatan atau anomali di tengah operasional, langkah pertama yang paling sesuai dengan best practice adalah:`,
+      options: [
+        'A. Langsung mencari jalan pintas sementara tanpa mencatat penyebab akar masalah.',
+        'B. Melakukan isolasi dampak masalah, meninjau log/data faktual, dan mendokumentasikan anomali sebelum intervensi.',
+        'C. Mengabaikan selama belum ada keluhan dari atasan atau pihak eksternal.',
+        'D. Menyerahkan seluruh perbaikan kepada divisi lain tanpa investigasi awal.'
+      ],
+      answer: 'B',
+      explanation: 'Isolasi dampak dan verifikasi data faktual merupakan prinsip dasar pemecahan masalah agar perbaikan bersifat permanen dan tidak memicu efek samping lain.'
+    },
+    {
+      q: `2. Dalam menerapkan metodologi ${topic}, apa indikator paling objektif bahwa suatu modul kerja telah memenuhi standar kualitas (Definition of Done)?`,
+      options: [
+        'A. Pekerjaan selesai tepat sebelum jam pulang kantor.',
+        'B. Telah melalui checklist verifikasi mandiri, bebas error kritis, dan terverifikasi oleh rekan kerja/atasan.',
+        'C. Selesai lebih cepat dari rekan kerja lain tanpa perlu dokumentasi pendukung.',
+        'D. Diterima oleh pengguna tanpa adanya pertanyaan sama sekali.'
+      ],
+      answer: 'B',
+      explanation: 'Definition of Done mensyaratkan verifikasi objektif, nihil error kritis, dan adanya validasi silang (cross-check).'
+    },
+    {
+      q: `3. Mengapa pemahaman atas konsep kunci dalam ${topic} harus diimbangi dengan studi kasus langsung (hands-on)?`,
+      options: [
+        'A. Karena teori saja tidak memperlihatkan kompleksitas batasan kondisi di lapangan nyata.',
+        'B. Hanya untuk menghabiskan durasi pelatihan yang telah dijadwalkan.',
+        'C. Agar fasilitator tidak perlu berbicara terlalu banyak selama pelatihan.',
+        'D. Teori sebenarnya sudah cukup tanpa perlu simulasi praktik.'
+      ],
+      answer: 'A',
+      explanation: 'Simulasi kasus nyata mengasah intuisi pengambilan keputusan dan refleks operasional peserta saat menghadapi tekanan aktual.'
+    },
+    {
+      q: `4. Pada evaluasi Level 3 Kirkpatrick untuk program ${topic}, pihak yang paling bertanggung jawab memantau penerapan perilaku kerja baru adalah:`,
+      options: [
+        'A. Tim HR Generalist pusat.',
+        'B. Direct Supervisor / Atasan Langsung dari peserta pelatihan.',
+        'C. Vendor penyedia training eksternal.',
+        'D. Sesama peserta training yang duduk berdampingan.'
+      ],
+      answer: 'B',
+      explanation: 'Direct Supervisor berinteraksi setiap hari dengan peserta dan memegang wewenang penilaian kinerja langsung (on-the-job application).'
+    },
+    {
+      q: `5. Jika pasca pelatihan ditemukan peserta belum menerapkan materi ${topic} secara konsisten, langkah perbaikan yang direkomendasikan adalah:`,
+      options: [
+        'A. Langsung memberikan surat peringatan formal tanpa diskusi.',
+        'B. Mengadakan sesi coaching 1-on-1 untuk mengidentifikasi apakah hambatan berupa pemahaman materi, beban kerja, atau ketiadaan tools pendukung.',
+        'C. Meminta peserta mengulang seluruh modul dari awal secara mandiri di luar jam kerja.',
+        'D. Membiarkan saja karena performa karyawan akan membaik dengan sendirinya.'
+      ],
+      answer: 'B',
+      explanation: 'Coaching 1-on-1 mengurai akar kendala penerapan (apakah masalah kompetensi, kejelasan ekspektasi, atau kendala sistem lingkungan kerja).'
+    }
+  ];
+
+  return {
+    title: topic,
+    level: level,
+    format: format,
+    audience: audience,
+    issue: issue,
+    mode: mode,
+    summary: basePlan.goals,
+    modules: basePlan.modules,
+    tna: {
+      rootCause: rootCauseAnalysis,
+      intervention: interventionCategory,
+      roadmap: tnaRoadmap
+    },
+    ksa: ksa,
+    evaluation: evaluation,
+    quiz: quiz,
+    formPlan: basePlan
+  };
+}
+
+function renderStudioExecutiveBlueprint(data) {
+  const paneOverview = document.getElementById('paneDocOverview');
+  const paneKsa = document.getElementById('paneDocKsa');
+  const paneEval = document.getElementById('paneDocEvaluation');
+  const paneQuiz = document.getElementById('paneDocQuiz');
+
+  if (!paneOverview) return;
+
+  // 1. PANE 1: OVERVIEW & SESSIONS
+  let tnaBlockHtml = '';
+  if (data.tna && data.tna.rootCause) {
+    const roadmapItemsHtml = (data.tna.roadmap || []).map(r => `
+      <div style="background:#FFFFFF;border:1px solid var(--line-soft);border-radius:6px;padding:10px 12px;margin-top:6px;">
+        <div style="display:flex;justify-content:space-between;font-weight:600;font-size:12.5px;color:var(--ink);">
+          <span>${r.tahap}</span>
+          <span class="mini-pill in_review" style="font-size:11px;padding:2px 7px;">${r.durasi}</span>
+        </div>
+        <div style="font-size:12px;color:var(--ink-soft);margin-top:3px;">${r.deskripsi}</div>
+      </div>
+    `).join('');
+
+    tnaBlockHtml = `
+      <div class="ai-doc-card" style="border-left:4px solid var(--accent);background:rgba(79,70,229,0.03);">
+        <div class="ai-doc-card-title">
+          <span style="display:flex;align-items:center;gap:6px;color:var(--accent);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            Hasil Diagnosa TNA &amp; Analisis Akar Masalah (Root Cause)
+          </span>
+          <span class="mini-pill in_review" style="font-size:11px;">Rekomendasi Intervensi</span>
+        </div>
+        <p style="font-size:13px;color:var(--ink);line-height:1.6;margin:0 0 10px 0;">${escapeHtml(data.tna.rootCause)}</p>
+        <div style="font-size:12.5px;margin-bottom:10px;"><strong>Tipe Intervensi Direkomendasikan:</strong> <span style="color:var(--moss);font-weight:600;">${escapeHtml(data.tna.intervention)}</span></div>
+        <div style="font-weight:600;font-size:12.5px;color:var(--ink);margin-bottom:6px;">Roadmap Intervensi 3-Tahap:</div>
+        <div>${roadmapItemsHtml}</div>
+      </div>
+    `;
+  }
+
+  const sessionsHtml = (data.modules || []).map((m, idx) => `
+    <div class="ai-doc-card" style="margin-bottom:12px;">
+      <div class="ai-doc-card-title">
+        <span>${escapeHtml(m.modul)}</span>
+        <span class="mini-pill approved" style="font-size:11px;padding:3px 9px;">${m.jamMulai} &ndash; ${m.jamSelesai} (${m.durasi}) &bull; ${escapeHtml(m.metode || 'Workshop Hands-on')}</span>
+      </div>
+      <div style="font-size:12.5px;color:var(--ink-soft);line-height:1.55;margin-bottom:6px;">
+        ${escapeHtml(m.deskripsi)}
+      </div>
+      <div style="display:flex;gap:12px;font-size:11.5px;color:var(--ink-faint);flex-wrap:wrap;border-top:1px dashed var(--line-soft);padding-top:6px;margin-top:6px;">
+        <span>🎯 <strong>Output:</strong> Aplikasi Praktik &amp; Pemahaman Mandiri</span>
+        <span>👨‍🏫 <strong>Fasilitator:</strong> Subject Matter Expert (SME) Terakreditasi</span>
+      </div>
+    </div>
+  `).join('');
+
+  paneOverview.innerHTML = `
+    <div class="ai-doc-hero">
+      <h2>${escapeHtml(data.title)}</h2>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        <span class="mini-pill submitted" style="font-size:11.5px;padding:3px 10px;">Level: ${escapeHtml(data.level)}</span>
+        <span class="mini-pill in_review" style="font-size:11.5px;padding:3px 10px;">${(data.modules || []).length} Sesi Terstruktur</span>
+        <span class="mini-pill approved" style="font-size:11.5px;padding:3px 10px;">Target: ${escapeHtml(data.audience)}</span>
+      </div>
+    </div>
+
+    ${tnaBlockHtml}
+
+    <div class="ai-doc-card">
+      <div class="ai-doc-card-title">
+        <span>🎯 Sasaran Pembelajaran &amp; Hasil Strategis (SMART Goals)</span>
+      </div>
+      <p style="font-size:13px;color:var(--ink);line-height:1.65;margin:0;">${escapeHtml(data.summary)}</p>
+    </div>
+
+    <div style="margin-top:20px;">
+      <h4 style="margin:0 0 12px 0;font-size:14px;color:var(--ink);font-weight:700;">📋 Rundown &amp; Silabus Pembelajaran Per Sesi</h4>
+      <div>${sessionsHtml}</div>
+    </div>
+  `;
+
+  // 2. PANE 2: KSA MATRIKS
+  const knowledgeList = (data.ksa.knowledge || []).map(k => `<li>${escapeHtml(k)}</li>`).join('');
+  const skillsList = (data.ksa.skills || []).map(s => `<li>${escapeHtml(s)}</li>`).join('');
+  const attitudeList = (data.ksa.attitude || []).map(a => `<li>${escapeHtml(a)}</li>`).join('');
+
+  paneKsa.innerHTML = `
+    <div class="ai-doc-hero">
+      <h2>Matriks Kompetensi: KSA Framework</h2>
+      <p style="margin:0;font-size:13px;color:var(--ink-soft);">Pemetaan terintegrasi atas Pengetahuan (Knowledge), Keterampilan (Skills), dan Sikap Kerja (Attitude) yang wajib dikuasai peserta pasca-pelatihan.</p>
+    </div>
+
+    <div class="ai-ksa-grid">
+      <div class="ai-ksa-card">
+        <div class="ai-ksa-title" style="color:var(--accent);">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+          1. Knowledge (Pengetahuan)
+        </div>
+        <ul style="margin:0;padding-left:18px;font-size:12.5px;color:var(--ink-soft);line-height:1.6;">${knowledgeList}</ul>
+      </div>
+
+      <div class="ai-ksa-card">
+        <div class="ai-ksa-title" style="color:var(--moss);">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+          2. Skills (Keterampilan)
+        </div>
+        <ul style="margin:0;padding-left:18px;font-size:12.5px;color:var(--ink-soft);line-height:1.6;">${skillsList}</ul>
+      </div>
+
+      <div class="ai-ksa-card">
+        <div class="ai-ksa-title" style="color:var(--clay);">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+          3. Attitude (Sikap Kerja)
+        </div>
+        <ul style="margin:0;padding-left:18px;font-size:12.5px;color:var(--ink-soft);line-height:1.6;">${attitudeList}</ul>
+      </div>
+    </div>
+
+    <div class="ai-doc-card" style="margin-top:20px;">
+      <div class="ai-doc-card-title">
+        <span>Tingkat Penguasaan Berdasarkan Bloom's Taxonomy</span>
+      </div>
+      <div style="font-size:13px;color:var(--ink-soft);line-height:1.6;">
+        Program ini dirancang untuk membawa peserta dari level pemahaman <strong>Understand</strong> menuju <strong>Apply</strong> (mampu mempraktikkan langsung secara mandiri) dan <strong>Analyze</strong> (mampu mengurai anomali dan mengambil keputusan perbaikan di lapangan kerja).
+      </div>
+    </div>
+  `;
+
+  // 3. PANE 3: KIRKPATRICK & BUSINESS ROI
+  const ev = data.evaluation;
+  paneEval.innerHTML = `
+    <div class="ai-doc-hero">
+      <h2>Model Evaluasi 4-Level Kirkpatrick &amp; Proyeksi ROI</h2>
+      <p style="margin:0;font-size:13px;color:var(--ink-soft);">Kerangka pengukuran dampak pelatihan dari respon di kelas hingga dampak finansial pada performa kuartalan.</p>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));gap:14px;margin-bottom:20px;">
+      <div class="ai-doc-card" style="margin:0;">
+        <div class="ai-doc-card-title"><span style="color:var(--accent);">${ev.level1.title}</span></div>
+        <div style="font-size:12px;color:var(--ink-faint);margin-bottom:4px;"><strong>Instrumen:</strong> ${ev.level1.metric}</div>
+        <div style="font-size:12.5px;color:var(--ink);">${ev.level1.target}</div>
+      </div>
+
+      <div class="ai-doc-card" style="margin:0;">
+        <div class="ai-doc-card-title"><span style="color:var(--moss);">${ev.level2.title}</span></div>
+        <div style="font-size:12px;color:var(--ink-faint);margin-bottom:4px;"><strong>Instrumen:</strong> ${ev.level2.metric}</div>
+        <div style="font-size:12.5px;color:var(--ink);">${ev.level2.target}</div>
+      </div>
+
+      <div class="ai-doc-card" style="margin:0;">
+        <div class="ai-doc-card-title"><span style="color:var(--clay);">${ev.level3.title}</span></div>
+        <div style="font-size:12px;color:var(--ink-faint);margin-bottom:4px;"><strong>Instrumen:</strong> ${ev.level3.metric}</div>
+        <div style="font-size:12.5px;color:var(--ink);">${ev.level3.target}</div>
+      </div>
+
+      <div class="ai-doc-card" style="margin:0;">
+        <div class="ai-doc-card-title"><span style="color:#B45309;">${ev.level4.title}</span></div>
+        <div style="font-size:12px;color:var(--ink-faint);margin-bottom:4px;"><strong>Instrumen:</strong> ${ev.level4.metric}</div>
+        <div style="font-size:12.5px;color:var(--ink);">${ev.level4.target}</div>
+      </div>
+    </div>
+
+    <div class="ai-doc-card" style="background:var(--panel);">
+      <div class="ai-doc-card-title"><span>📊 Simulasi Dampak &amp; Pengembalian Investasi (ROI)</span></div>
+      <div class="dashboard-kpi-grid" style="margin-top:10px;">
+        <div class="kpi-card" style="background:#FFFFFF;">
+          <div class="kpi-card-title">Jam Kerja Dihemat</div>
+          <div class="kpi-card-val" style="font-size:20px;color:var(--moss);">${ev.roiProjection.hoursSavedPerWeek}</div>
+          <div class="kpi-card-sub">Per minggu untuk ${ev.roiProjection.participants} peserta</div>
+        </div>
+        <div class="kpi-card" style="background:#FFFFFF;">
+          <div class="kpi-card-title">Akumulasi Tahunan</div>
+          <div class="kpi-card-val" style="font-size:20px;color:var(--accent);">${ev.roiProjection.annualHoursSaved}</div>
+          <div class="kpi-card-sub">Produktivitas tambahan</div>
+        </div>
+        <div class="kpi-card" style="background:#FFFFFF;">
+          <div class="kpi-card-title">Estimasi Payback</div>
+          <div class="kpi-card-val" style="font-size:20px;color:#B45309;">${ev.roiProjection.estimatedPayback}</div>
+          <div class="kpi-card-sub">Balik modal biaya training</div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // 4. PANE 4: ASSESSMENT & QUIZ BUILDER
+  const quizItemsHtml = (data.quiz || []).map((q, idx) => `
+    <div class="ai-quiz-item">
+      <div class="ai-quiz-q">${escapeHtml(q.q)}</div>
+      <div style="margin-bottom:8px;">
+        ${q.options.map(opt => `<div class="ai-quiz-opt ${opt.startsWith(q.answer) ? 'correct' : ''}">${escapeHtml(opt)}</div>`).join('')}
+      </div>
+      <div style="background:#FFFFFF;border:1px solid var(--line-soft);border-radius:6px;padding:8px 10px;font-size:12px;">
+        <strong>Kunci Jawaban (${q.answer}):</strong> ${escapeHtml(q.explanation)}
+      </div>
+    </div>
+  `).join('');
+
+  paneQuiz.innerHTML = `
+    <div class="ai-doc-hero">
+      <h2>Instrumen Ujian &amp; Evaluasi Pemahaman (5 Soal)</h2>
+      <p style="margin:0;font-size:13px;color:var(--ink-soft);">Dapat digunakan sebagai soal Pre-Test (sebelum kelas) dan Post-Test (setelah kelas) untuk mengukur tingkat serapan materi secara akurat.</p>
+    </div>
+
+    <div>${quizItemsHtml}</div>
+
+    <div class="ai-doc-card" style="margin-top:16px;">
+      <div class="ai-doc-card-title"><span>Rubrik Kelulusan Standar</span></div>
+      <div style="font-size:12.5px;color:var(--ink-soft);line-height:1.6;">
+        Peserta dinyatakan <strong>Lulus Kompetensi (Certified)</strong> apabila memperoleh skor minimal <strong>80% (minimal 4 dari 5 soal benar)</strong> pada sesi evaluasi akhir pasca pelatihan.
+      </div>
+    </div>
+  `;
+}
+
+function copyActiveDocContent() {
+  if (!studioGeneratedData) {
+    showToast('Belum ada dokumen yang dihasilkan.', 'error');
+    return;
+  }
+
+  const d = studioGeneratedData;
+  let text = `========================================================\n`;
+  text += `CETAK BIRU L&D EKSEKUTIF: ${d.title.toUpperCase()}\n`;
+  text += `Target: ${d.audience} | Level: ${d.level} | Format: ${d.format}\n`;
+  text += `========================================================\n\n`;
+
+  text += `[SASARAN STRATEGIS & SMART GOALS]\n${d.summary}\n\n`;
+
+  if (d.tna && d.tna.rootCause) {
+    text += `[DIAGNOSA AKAR MASALAH (TNA)]\n${d.tna.rootCause}\n`;
+    text += `Tipe Intervensi: ${d.tna.intervention}\n\n`;
+  }
+
+  text += `[RUNDOWN SILABUS MODUL]\n`;
+  (d.modules || []).forEach((m, idx) => {
+    text += `${idx + 1}. ${m.modul} (${m.jamMulai} - ${m.jamSelesai}, ${m.durasi}) [${m.metode}]\n`;
+    text += `   Deskripsi: ${m.deskripsi}\n`;
+  });
+
+  text += `\n[MATRIKS KOMPETENSI KSA]\n`;
+  text += `- KNOWLEDGE:\n  • ` + (d.ksa.knowledge || []).join('\n  • ') + `\n`;
+  text += `- SKILLS:\n  • ` + (d.ksa.skills || []).join('\n  • ') + `\n`;
+  text += `- ATTITUDE:\n  • ` + (d.ksa.attitude || []).join('\n  • ') + `\n\n`;
+
+  text += `[EVALUASI 4 LEVEL KIRKPATRICK]\n`;
+  text += `L1 (Reaksi): ${d.evaluation.level1.target}\n`;
+  text += `L2 (Belajar): ${d.evaluation.level2.target}\n`;
+  text += `L3 (Perilaku): ${d.evaluation.level3.target}\n`;
+  text += `L4 (Hasil Bisnis): ${d.evaluation.level4.target}\n`;
+  text += `Estimasi Hemat Jam Kerja: ${d.evaluation.roiProjection.hoursSavedPerWeek}\n\n`;
+
+  text += `[SOAL EVALUASI PEMAHAMAN PRE/POST TEST]\n`;
+  (d.quiz || []).forEach(q => {
+    text += `${q.q}\n${q.options.join('\n')}\nKunci: ${q.answer} - ${q.explanation}\n\n`;
+  });
+
+  text += `(Dihasilkan oleh Training & Development System - AI Studio)\n`;
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => {
+      showToast('📋 Seluruh dokumen blueprint berhasil disalin!', 'success');
+    }).catch(() => fallbackCopyText(text));
+  } else {
+    fallbackCopyText(text);
+  }
+}
+
+function fallbackCopyText(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.left = '-9999px';
+  document.body.appendChild(ta);
+  ta.select();
+  try {
+    document.execCommand('copy');
+    showToast('📋 Dokumen berhasil disalin ke clipboard!', 'success');
+  } catch (e) {
+    showToast('Gagal menyalin teks secara otomatis.', 'error');
+  }
+  document.body.removeChild(ta);
+}
+
+function applyStudioPlanAndGoToForm() {
+  if (!studioGeneratedData) {
+    showToast('Belum ada kurikulum yang dirancang.', 'error');
+    return;
+  }
+  currentAiPlan = studioGeneratedData.formPlan;
+  goToPage('ajukan');
+  applyAiPlanToForm();
+  showToast('🚀 Cetak biru kurikulum berhasil ditransfer ke formulir pengajuan!', 'success');
+}
+
+// Window Exposures for AI Assistant & Studio
+window.openAiAssistantModal = openAiAssistantModal;
+window.setAiTopic = setAiTopic;
+window.saveAiApiKey = saveAiApiKey;
+window.executeAiGeneration = executeAiGeneration;
+window.applyAiPlanToForm = applyAiPlanToForm;
+window.initAiStudioPage = initAiStudioPage;
+window.toggleStudioApiKey = toggleStudioApiKey;
+window.switchStudioMode = switchStudioMode;
+window.setStudioTopicAndRun = setStudioTopicAndRun;
+window.setTnaCase = setTnaCase;
+window.switchStudioDocTab = switchStudioDocTab;
+window.runStudioEngine = runStudioEngine;
+window.copyActiveDocContent = copyActiveDocContent;
+window.applyStudioPlanAndGoToForm = applyStudioPlanAndGoToForm;
+
+// Outside click listener untuk custom room dropdown
+document.addEventListener('click', function(e) {
+  const container = document.getElementById('roomDropdownContainer');
+  if (container && !container.contains(e.target)) {
+    if (typeof closeRoomDropdown === 'function') closeRoomDropdown();
+  }
+});
+
+// ===================================================
+// SKILL MATRIX & GAP ANALYSIS ENGINE (3-TIER HIERARCHY)
+// Tier 1: Dropdown Divisi -> Tier 2: List Karyawan -> Tier 3: Individual Skill Matrix (e.g. Fernanda Rusli)
+// ===================================================
+const STORAGE_KEY_SKILL_EMPLOYEES = 'tds_skill_employees';
+const STORAGE_KEY_SKILL_COMPETENCIES = 'tds_skill_competencies';
+const STORAGE_KEY_SKILL_SCORES = 'tds_skill_scores';
+
+let activeSkillDept = ''; // Currently selected division
+let activeSkillEmpId = ''; // Currently selected employee for individual matrix
+let skillEmpSearchQuery = '';
+let activeSkillScoreEmpId = null;
+let activeSkillScoreCompId = null;
+
+// Scale definitions (Skala Penilaian: 1 - 4)
+const SKILL_SCALE_DESC = {
+  1: 'Pemahaman Dasar',
+  2: 'Cukup Kompeten',
+  3: 'Kompeten',
+  4: 'Ahli'
+};
+
+const SKILL_SCORE_COLORS = {
+  1: { bg: '#FEE2E2', color: '#B91C1C' },
+  2: { bg: '#FEF3C7', color: '#B45309' },
+  3: { bg: '#D1FAE5', color: '#047857' },
+  4: { bg: '#DBEAFE', color: '#1D4ED8' }
+};
+
+function getGapDetails(gap) {
+  if (gap === null || gap === undefined || isNaN(gap)) return null;
+
+  if (gap <= -3) {
+    return {
+      gapLabel: `GAP ${gap}`,
+      keterangan: 'Memerlukan pengembangan menyeluruh / intensif',
+      color: '#FF708C',
+      bgColor: '#FF708C',
+      textColor: '#FFFFFF',
+      badgeClass: 'gap-m3',
+      dotColor: '#FF708C'
+    };
+  }
+  if (gap === -2) {
+    return {
+      gapLabel: 'GAP -2',
+      keterangan: 'Memerlukan pengembangan',
+      color: '#FFB37A',
+      bgColor: '#FFB37A',
+      textColor: '#4A1D00',
+      badgeClass: 'gap-m2',
+      dotColor: '#FFB37A'
+    };
+  }
+  if (gap === -1) {
+    return {
+      gapLabel: 'GAP -1',
+      keterangan: 'Memerlukan peningkatan kompetensi',
+      color: '#E5A500', // High contrast yellow/gold for text status
+      bgColor: '#FFD76A',
+      textColor: '#5C3D00',
+      badgeClass: 'gap-m1',
+      dotColor: '#FFD76A'
+    };
+  }
+  if (gap === 0) {
+    return {
+      gapLabel: 'GAP 0',
+      keterangan: 'Sesuai kompetensi ideal (Standar)',
+      color: '#4CC9A0',
+      bgColor: '#4CC9A0',
+      textColor: '#FFFFFF',
+      badgeClass: 'gap-0',
+      dotColor: '#4CC9A0'
+    };
+  }
+  // gap > 0
+  return {
+    gapLabel: `GAP +${gap}`,
+    keterangan: 'Melampaui kompetensi ideal',
+    color: '#4B96FF',
+    bgColor: '#4B96FF',
+    textColor: '#FFFFFF',
+    badgeClass: 'gap-p',
+    dotColor: '#4B96FF'
+  };
+}
+
+function getInitials(name) {
+  if (!name) return 'EMP';
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+  return (parts[0][0] + parts[1][0]).toUpperCase();
+}
+
+const DEFAULT_HR_TEAM_MEMBERS = [
+  { id: 'emp_hr_danti', nama: 'DANTI MAGHFIRAH MAULANI', divisi: 'HR', jabatan: 'RECRUITMENT SENIOR' },
+  { id: 'emp_hr_fauzan', nama: 'MUHAMMAD FAUZAN', divisi: 'HR', jabatan: 'HR OPERATION SENIOR' },
+  { id: 'emp_hr_maria', nama: 'MARIA REGINA ANDARINI TYASWATI', divisi: 'HR', jabatan: 'RECRUITMENT OFFICER' },
+  { id: 'emp_hr_shalsa', nama: 'SHALSA BILLA RIZKYA FARHANSI', divisi: 'HR', jabatan: 'RECRUITMENT OFFICER' },
+  { id: 'emp_hr_talent', nama: 'TALENT CHRISTABEL RAISSA LIANDA', divisi: 'HR', jabatan: 'TRAINING & PEOPLE DEVELOPMENT SENIOR*' },
+  { id: 'emp_hr_aida', nama: 'AIDA FITRIA', divisi: 'HR', jabatan: 'HR OPERATION OFFICER' },
+  { id: 'emp_hr_davin', nama: 'DAVIN JENDRI MONARI PURBA', divisi: 'HR', jabatan: 'HR OPERATION ADMIN' },
+  { id: 'emp_hr_lathifatul', nama: 'LATHIFATUL AFIFAH', divisi: 'HR', jabatan: 'RECRUITMENT OFFICER' },
+  { id: 'emp_hr_rizky', nama: 'RIZKY SIHALOHO', divisi: 'HR', jabatan: 'RECRUITMENT OFFICER' },
+  { id: 'emp_hr_gading', nama: 'GADING AZARINE PARAMESTHI', divisi: 'HR', jabatan: 'HR OPERATION ADMIN' }
+];
+
+function getInitialSkillData() {
+  const employees = [
+    // HR - Fernanda Rusli front and center
+    { id: 'emp_fernanda', nama: 'FERNANDA RUSLI', divisi: 'HR', jabatan: 'TRAINING & PEOPLE DEVELOPMENT JUNIOR' },
+    ...DEFAULT_HR_TEAM_MEMBERS,
+
+    // WEB DEVELOPER
+    { id: 'emp_web_1', nama: 'Rizky Pratama', divisi: 'WEB DEVELOPER', jabatan: 'Senior Frontend Developer' },
+    { id: 'emp_web_2', nama: 'Kevin Sanjaya', divisi: 'WEB DEVELOPER', jabatan: 'Backend REST API Engineer' },
+    { id: 'emp_web_3', nama: 'Nadia Putri', divisi: 'WEB DEVELOPER', jabatan: 'Fullstack Software Engineer' },
+
+    // QA
+    { id: 'emp_qa_1', nama: 'Dimas Anggara', divisi: 'QA', jabatan: 'QA Automation Engineer' },
+    { id: 'emp_qa_2', nama: 'Rina Melati', divisi: 'QA', jabatan: 'QA Performance & Manual Specialist' },
+
+    // FINANCE
+    { id: 'emp_fin_1', nama: 'Hendra Wijaya', divisi: 'FINANCE', jabatan: 'Financial Planning & Analysis' },
+    { id: 'emp_fin_2', nama: 'Maya Indah', divisi: 'FINANCE', jabatan: 'Tax & Compliance Officer' },
+
+    // MARKETING
+    { id: 'emp_mkt_1', nama: 'Denny Setiawan', divisi: 'MARKETING', jabatan: 'Digital Performance Marketing' },
+    { id: 'emp_mkt_2', nama: 'Clarissa Aurelia', divisi: 'MARKETING', jabatan: 'Brand Strategy & Content' },
+
+    // SALES OPS
+    { id: 'emp_sales_1', nama: 'Fajar Ramadhan', divisi: 'SALES OPS', jabatan: 'Sales Operations Lead' },
+    { id: 'emp_sales_2', nama: 'Tiara Lestari', divisi: 'SALES OPS', jabatan: 'CRM Pipeline Specialist' },
+
+    // IT INFRASTRUCTURE
+    { id: 'emp_it_1', nama: 'Bayu Nugroho', divisi: 'IT INFRASTRUCTURE', jabatan: 'Cloud & DevOps Engineer' },
+    { id: 'emp_it_2', nama: 'Eko Prasetyo', divisi: 'IT INFRASTRUCTURE', jabatan: 'Network & System Administrator' },
+
+    // AI
+    { id: 'emp_ai_1', nama: 'Andre Kurniawan', divisi: 'AI', jabatan: 'AI & Machine Learning Engineer' },
+    { id: 'emp_ai_2', nama: 'Felicia Anggraini', divisi: 'AI', jabatan: 'Prompt & LLM Developer' }
+  ];
+
+  const competencies = [
+    // Spesifik FERNANDA RUSLI (5 Kompetensi T&D - Seluruh Kompetensi Ideal digenapkan ke angka 3)
+    { id: 'comp_fr_1', empId: 'emp_fernanda', nama: 'Training & Development Planning', standar: 3, divisi: 'HR' },
+    { id: 'comp_fr_2', empId: 'emp_fernanda', nama: 'Training Need Analysis (TNA)', standar: 3, divisi: 'HR' },
+    { id: 'comp_fr_3', empId: 'emp_fernanda', nama: 'Program Coordination & Execution', standar: 3, divisi: 'HR' },
+    { id: 'comp_fr_4', empId: 'emp_fernanda', nama: 'Monitoring & Evaluation Development Program', standar: 3, divisi: 'HR' },
+    { id: 'comp_fr_5', empId: 'emp_fernanda', nama: 'Stakeholder Coordination & Communication', standar: 3, divisi: 'HR' },
+
+    // Kompetensi Default Divisi HR (untuk rekan HR lainnya)
+    { id: 'comp_hr_1', divisi: 'HR', nama: 'Recruitment & Talent Sourcing', standar: 3 },
+    { id: 'comp_hr_2', divisi: 'HR', nama: 'Industrial Relations & Labor Law', standar: 3 },
+    { id: 'comp_hr_3', divisi: 'HR', nama: 'Performance Management System', standar: 3 },
+    { id: 'comp_hr_4', divisi: 'HR', nama: 'HR Analytics & People Dashboard', standar: 3 },
+
+    // WEB DEVELOPER
+    { id: 'comp_web_1', divisi: 'WEB DEVELOPER', nama: 'Frontend (HTML/CSS/Modern JS)', standar: 3 },
+    { id: 'comp_web_2', divisi: 'WEB DEVELOPER', nama: 'Backend REST API & Database', standar: 3 },
+    { id: 'comp_web_3', divisi: 'WEB DEVELOPER', nama: 'Git Version Control & CI/CD', standar: 4 },
+    { id: 'comp_web_4', divisi: 'WEB DEVELOPER', nama: 'Software Architecture & Clean Code', standar: 3 },
+    { id: 'comp_web_5', divisi: 'WEB DEVELOPER', nama: 'System Security & Optimization', standar: 3 },
+
+    // QA
+    { id: 'comp_qa_1', divisi: 'QA', nama: 'Test Case Design & Scenarios', standar: 4 },
+    { id: 'comp_qa_2', divisi: 'QA', nama: 'Automated Testing (Playwright/Cypress)', standar: 3 },
+    { id: 'comp_qa_3', divisi: 'QA', nama: 'API & Performance Testing', standar: 3 },
+    { id: 'comp_qa_4', divisi: 'QA', nama: 'Bug Tracking & Root Cause Analysis', standar: 4 },
+
+    // FINANCE
+    { id: 'comp_fin_1', divisi: 'FINANCE', nama: 'Financial Statement Analysis', standar: 4 },
+    { id: 'comp_fin_2', divisi: 'FINANCE', nama: 'Budgeting & Cashflow Forecasting', standar: 3 },
+    { id: 'comp_fin_3', divisi: 'FINANCE', nama: 'Tax Compliance & Reporting', standar: 3 },
+
+    // MARKETING
+    { id: 'comp_mkt_1', divisi: 'MARKETING', nama: 'Digital Campaign & Meta Ads', standar: 3 },
+    { id: 'comp_mkt_2', divisi: 'MARKETING', nama: 'SEO & Content Marketing', standar: 3 },
+    { id: 'comp_mkt_3', divisi: 'MARKETING', nama: 'Brand Strategy & Positioning', standar: 4 },
+
+    // SALES OPS
+    { id: 'comp_sales_1', divisi: 'SALES OPS', nama: 'CRM Pipeline Management', standar: 3 },
+    { id: 'comp_sales_2', divisi: 'SALES OPS', nama: 'Sales Forecasting & Quota Planning', standar: 4 },
+    { id: 'comp_sales_3', divisi: 'SALES OPS', nama: 'Deal Negotiation & Closing', standar: 3 },
+
+    // IT INFRASTRUCTURE
+    { id: 'comp_it_1', divisi: 'IT INFRASTRUCTURE', nama: 'Cloud Computing (AWS/GCP/Azure)', standar: 3 },
+    { id: 'comp_it_2', divisi: 'IT INFRASTRUCTURE', nama: 'Network Security & Firewall', standar: 4 },
+    { id: 'comp_it_3', divisi: 'IT INFRASTRUCTURE', nama: 'Linux Server Administration', standar: 3 },
+
+    // AI
+    { id: 'comp_ai_1', divisi: 'AI', nama: 'Machine Learning & Deep Learning', standar: 4 },
+    { id: 'comp_ai_2', divisi: 'AI', nama: 'Prompt Engineering & LLM APIs', standar: 3 },
+    { id: 'comp_ai_3', divisi: 'AI', nama: 'Python & Data Pipelines', standar: 3 }
+  ];
+
+  const scores = {
+    // Skor FERNANDA RUSLI (5 Kompetensi: Kompetensi Ideal = 3 untuk seluruh parameter)
+    'emp_fernanda_comp_fr_1': 4, // Ideal 3 -> GAP +1 (Melampaui kompetensi ideal) [Biru]
+    'emp_fernanda_comp_fr_2': 2, // Ideal 3 -> GAP -1 (Memerlukan peningkatan) [Kuning]
+    'emp_fernanda_comp_fr_3': 3, // Ideal 3 -> GAP 0 (Sesuai kompetensi ideal) [Hijau]
+    'emp_fernanda_comp_fr_4': 2, // Ideal 3 -> GAP -1 (Memerlukan peningkatan) [Kuning]
+    'emp_fernanda_comp_fr_5': 3, // Ideal 3 -> GAP 0 (Sesuai kompetensi ideal) [Hijau]
+
+    // Rekan HR Team
+    'emp_hr_danti_comp_hr_1': 4,
+    'emp_hr_danti_comp_hr_2': 3,
+    'emp_hr_danti_comp_hr_3': 3,
+    'emp_hr_danti_comp_hr_4': 3,
+
+    'emp_hr_fauzan_comp_hr_1': 3,
+    'emp_hr_fauzan_comp_hr_2': 4,
+    'emp_hr_fauzan_comp_hr_3': 3,
+    'emp_hr_fauzan_comp_hr_4': 4,
+
+    'emp_hr_maria_comp_hr_1': 3,
+    'emp_hr_maria_comp_hr_2': 3,
+    'emp_hr_maria_comp_hr_3': 3,
+    'emp_hr_maria_comp_hr_4': 2,
+
+    'emp_hr_shalsa_comp_hr_1': 3,
+    'emp_hr_shalsa_comp_hr_2': 2,
+    'emp_hr_shalsa_comp_hr_3': 3,
+    'emp_hr_shalsa_comp_hr_4': 3,
+
+    'emp_hr_talent_comp_hr_1': 3,
+    'emp_hr_talent_comp_hr_2': 3,
+    'emp_hr_talent_comp_hr_3': 4,
+    'emp_hr_talent_comp_hr_4': 4,
+
+    'emp_hr_aida_comp_hr_1': 3,
+    'emp_hr_aida_comp_hr_2': 3,
+    'emp_hr_aida_comp_hr_3': 3,
+    'emp_hr_aida_comp_hr_4': 3,
+
+    'emp_hr_davin_comp_hr_1': 3,
+    'emp_hr_davin_comp_hr_2': 3,
+    'emp_hr_davin_comp_hr_3': 2,
+    'emp_hr_davin_comp_hr_4': 2,
+
+    'emp_hr_lathifatul_comp_hr_1': 3,
+    'emp_hr_lathifatul_comp_hr_2': 2,
+    'emp_hr_lathifatul_comp_hr_3': 3,
+    'emp_hr_lathifatul_comp_hr_4': 2,
+
+    'emp_hr_rizky_comp_hr_1': 4,
+    'emp_hr_rizky_comp_hr_2': 3,
+    'emp_hr_rizky_comp_hr_3': 3,
+    'emp_hr_rizky_comp_hr_4': 3,
+
+    'emp_hr_gading_comp_hr_1': 3,
+    'emp_hr_gading_comp_hr_2': 3,
+    'emp_hr_gading_comp_hr_3': 3,
+    'emp_hr_gading_comp_hr_4': 2,
+
+    // Web Developer
+    'emp_web_1_comp_web_1': 4,
+    'emp_web_1_comp_web_2': 3,
+    'emp_web_1_comp_web_3': 4,
+    'emp_web_1_comp_web_4': 3,
+    'emp_web_1_comp_web_5': 3,
+    'emp_web_2_comp_web_1': 3,
+    'emp_web_2_comp_web_2': 4,
+    'emp_web_2_comp_web_3': 3,
+    'emp_web_2_comp_web_4': 2,
+    'emp_web_2_comp_web_5': 3,
+    'emp_web_3_comp_web_1': 4,
+    'emp_web_3_comp_web_2': 4,
+    'emp_web_3_comp_web_3': 4,
+    'emp_web_3_comp_web_4': 3,
+    'emp_web_3_comp_web_5': 4,
+
+    // QA
+    'emp_qa_1_comp_qa_1': 4,
+    'emp_qa_1_comp_qa_2': 3,
+    'emp_qa_1_comp_qa_3': 3,
+    'emp_qa_1_comp_qa_4': 4,
+    'emp_qa_2_comp_qa_1': 3,
+    'emp_qa_2_comp_qa_2': 2,
+    'emp_qa_2_comp_qa_3': 3,
+    'emp_qa_2_comp_qa_4': 3
+  };
+
+  return { employees, competencies, scores };
+}
+
+function getSkillEmployees() {
+  const raw = localStorage.getItem(STORAGE_KEY_SKILL_EMPLOYEES);
+  if (raw) {
+    try {
+      let parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        // Clean up old sample dummy employees
+        const initialCount = parsed.length;
+        parsed = parsed.filter(e => !['emp_budi', 'emp_siti', 'emp_ahmad'].includes(e.id));
+        let modified = (parsed.length !== initialCount);
+
+        // Ensure Fernanda Rusli exists and has updated title
+        const frIdx = parsed.findIndex(e => e.id === 'emp_fernanda' || e.nama.toUpperCase().includes('FERNANDA RUSLI'));
+        if (frIdx === -1) {
+          parsed.unshift({ id: 'emp_fernanda', nama: 'FERNANDA RUSLI', divisi: 'HR', jabatan: 'TRAINING & PEOPLE DEVELOPMENT JUNIOR' });
+          modified = true;
+        } else {
+          if (parsed[frIdx].jabatan !== 'TRAINING & PEOPLE DEVELOPMENT JUNIOR') {
+            parsed[frIdx].jabatan = 'TRAINING & PEOPLE DEVELOPMENT JUNIOR';
+            parsed[frIdx].divisi = 'HR';
+            modified = true;
+          }
+        }
+
+        // Ensure all 10 HR team members exist in the exact order requested
+        DEFAULT_HR_TEAM_MEMBERS.forEach(member => {
+          const idx = parsed.findIndex(e => e.id === member.id || e.nama.toUpperCase() === member.nama.toUpperCase());
+          if (idx === -1) {
+            // Insert right after last HR member
+            const lastHrIdx = parsed.map(e => e.divisi).lastIndexOf('HR');
+            if (lastHrIdx !== -1) {
+              parsed.splice(lastHrIdx + 1, 0, member);
+            } else {
+              parsed.push(member);
+            }
+            modified = true;
+          } else {
+            if (parsed[idx].jabatan !== member.jabatan || parsed[idx].nama !== member.nama) {
+              parsed[idx].jabatan = member.jabatan;
+              parsed[idx].nama = member.nama;
+              parsed[idx].divisi = 'HR';
+              modified = true;
+            }
+          }
+        });
+
+        if (modified) {
+          saveSkillEmployees(parsed);
+        }
+        return parsed;
+      }
+    } catch (e) {
+      console.error('Error parsing skill employees:', e);
+    }
+  }
+
+  const { employees } = getInitialSkillData();
+  saveSkillEmployees(employees);
+  return employees;
+}
+
+function saveSkillEmployees(arr) {
+  localStorage.setItem(STORAGE_KEY_SKILL_EMPLOYEES, JSON.stringify(arr || []));
+}
+
+function getSkillCompetencies() {
+  const raw = localStorage.getItem(STORAGE_KEY_SKILL_COMPETENCIES);
+  if (raw) {
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        // Ensure Fernanda's competencies exist
+        const hasFrComps = parsed.some(c => c.empId === 'emp_fernanda');
+        if (!hasFrComps) {
+          const { competencies: defaultComps } = getInitialSkillData();
+          const frComps = defaultComps.filter(c => c.empId === 'emp_fernanda');
+          const merged = [...frComps, ...parsed];
+          saveSkillCompetencies(merged);
+          return merged;
+        }
+        // One-time sync: ensure all standards for Fernanda's competencies are rounded to 3
+        let compModified = false;
+        parsed.forEach(c => {
+          if (c.empId === 'emp_fernanda' && c.standar !== 3) {
+            c.standar = 3;
+            compModified = true;
+          }
+        });
+        if (compModified) {
+          saveSkillCompetencies(parsed);
+        }
+        return parsed;
+      }
+    } catch (e) {
+      console.error('Error parsing skill competencies:', e);
+    }
+  }
+
+  const { competencies } = getInitialSkillData();
+  saveSkillCompetencies(competencies);
+  return competencies;
+}
+
+function saveSkillCompetencies(arr) {
+  localStorage.setItem(STORAGE_KEY_SKILL_COMPETENCIES, JSON.stringify(arr || []));
+}
+
+function getSkillScores() {
+  const raw = localStorage.getItem(STORAGE_KEY_SKILL_SCORES);
+  if (raw) {
+    try {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object') {
+        const { scores: defaultScores } = getInitialSkillData();
+        let modified = false;
+        Object.keys(defaultScores).forEach(k => {
+          if (parsed[k] === undefined) {
+            parsed[k] = defaultScores[k];
+            modified = true;
+          }
+        });
+        // Sync Fernanda scores to match standard 3
+        if (parsed['emp_fernanda_comp_fr_2'] === 4) {
+          parsed['emp_fernanda_comp_fr_2'] = 2;
+          parsed['emp_fernanda_comp_fr_3'] = 3;
+          parsed['emp_fernanda_comp_fr_5'] = 3;
+          modified = true;
+        }
+        if (modified) {
+          saveSkillScores(parsed);
+        }
+        return parsed;
+      }
+    } catch (e) {
+      console.error('Error parsing skill scores:', e);
+    }
+  }
+
+  const { scores } = getInitialSkillData();
+  saveSkillScores(scores);
+  return scores;
+}
+
+function saveSkillScores(obj) {
+  localStorage.setItem(STORAGE_KEY_SKILL_SCORES, JSON.stringify(obj || {}));
+}
+
+function getCompetenciesForEmployee(empId, dept) {
+  const allComps = getSkillCompetencies();
+  // 1. Employee-specific competencies
+  const empComps = allComps.filter(c => c.empId === empId);
+  if (empComps.length > 0) return empComps;
+
+  // 2. Division fallback template competencies
+  return allComps.filter(c => (c.divisi || 'HR') === dept && !c.empId);
+}
+
+function calcEmployeeStats(empId, dept) {
+  const comps = getCompetenciesForEmployee(empId, dept);
+  const scores = getSkillScores();
+  let scoredCount = 0;
+  let scoreSum = 0;
+  let gapSum = 0;
+  const negativeGaps = [];
+
+  comps.forEach(comp => {
+    const key = `${empId}_${comp.id}`;
+    const score = scores[key];
+    if (score !== null && score !== undefined && !isNaN(score)) {
+      const numScore = parseInt(score, 10);
+      const std = parseInt(comp.standar, 10) || 3;
+      const gap = numScore - std;
+      scoreSum += numScore;
+      gapSum += gap;
+      scoredCount++;
+      if (gap < 0) {
+        negativeGaps.push({ comp, gap, score: numScore, standar: std });
+      }
+    }
+  });
+
+  const totalComps = comps.length;
+  const avgScore = scoredCount > 0 ? (scoreSum / scoredCount).toFixed(1) : '-';
+  const avgGapNum = scoredCount > 0 ? (gapSum / scoredCount) : null;
+  const avgGap = avgGapNum !== null ? ((avgGapNum > 0 ? '+' : '') + avgGapNum.toFixed(1)) : '-';
+
+  return { totalComps, scoredCount, avgScore, avgGap, avgGapNum, negativeGaps, comps };
+}
+
+function handleSkillDeptChange(dept) {
+  activeSkillDept = (dept || '').trim();
+  activeSkillEmpId = ''; // Reset active employee when switching departments
+  skillEmpSearchQuery = '';
+
+  const topSelect = document.getElementById('skillMatrixDeptSelect');
+  if (topSelect) topSelect.value = activeSkillDept;
+  const emptySelect = document.getElementById('skillMatrixEmptyDeptSelect');
+  if (emptySelect) emptySelect.value = activeSkillDept;
+  const searchInput = document.getElementById('skillEmpSearchInput');
+  if (searchInput) searchInput.value = '';
+
+  renderSkillMatrix();
+  if (activeSkillDept) {
+    showToast(`Menampilkan daftar karyawan Divisi: ${activeSkillDept}`, 'info');
+  }
+}
+
+function selectSkillDeptDirectly(dept) {
+  handleSkillDeptChange(dept);
+}
+
+function openEmployeeSkillMatrix(empId) {
+  activeSkillEmpId = empId;
+  renderSkillMatrix();
+
+  const allEmployees = getSkillEmployees();
+  const emp = allEmployees.find(e => e.id === empId);
+  if (emp) {
+    showToast(`Membuka Skill Matrix: ${emp.nama}`, 'info');
+  }
+}
+
+function backToSkillEmployeeList() {
+  activeSkillEmpId = '';
+  renderSkillMatrix();
+  const searchInput = document.getElementById('skillEmpSearchInput');
+  if (searchInput) searchInput.value = skillEmpSearchQuery || '';
+}
+
+function changeSkillDept() {
+  activeSkillDept = '';
+  activeSkillEmpId = '';
+  skillEmpSearchQuery = '';
+  const emptySelect = document.getElementById('skillMatrixEmptyDeptSelect');
+  if (emptySelect) emptySelect.value = '';
+  const searchInput = document.getElementById('skillEmpSearchInput');
+  if (searchInput) searchInput.value = '';
+  renderSkillMatrix();
+}
+
+function filterSkillEmployeesList(val) {
+  skillEmpSearchQuery = val;
+  renderSkillEmployeeList();
+}
+
+function addNewSkillEmployeeFromList() {
+  if (!activeSkillDept) {
+    showToast('Pilih divisi terlebih dahulu.', 'error');
+    return;
+  }
+
+  const nameInput = document.getElementById('newSkillEmpNameInput');
+  const roleInput = document.getElementById('newSkillEmpRoleInput');
+  const name = (nameInput?.value || '').trim();
+  const role = (roleInput?.value || '').trim();
+
+  if (!name) {
+    showToast(`Ketik nama karyawan ${activeSkillDept} terlebih dahulu.`, 'error');
+    if (nameInput) nameInput.focus();
+    return;
+  }
+
+  const employees = getSkillEmployees();
+  const newId = 'emp_' + Date.now();
+  employees.push({
+    id: newId,
+    nama: name,
+    divisi: activeSkillDept,
+    jabatan: role || `Staff ${activeSkillDept}`
+  });
+
+  saveSkillEmployees(employees);
+  if (nameInput) nameInput.value = '';
+  if (roleInput) roleInput.value = '';
+  showToast(`Karyawan "${name}" berhasil ditambahkan ke Divisi ${activeSkillDept}.`, 'success');
+  renderSkillMatrix();
+}
+
+function deleteSkillEmployee(empId) {
+  const employees = getSkillEmployees();
+  const emp = employees.find(e => e.id === empId);
+  const empName = emp ? emp.nama : 'karyawan ini';
+
+  if (!confirm(`Hapus ${empName} dari data Skill Matrix? Nilai penilaian karyawan ini juga akan dihapus.`)) {
+    return;
+  }
+
+  const updatedEmployees = employees.filter(e => e.id !== empId);
+  saveSkillEmployees(updatedEmployees);
+
+  // Clean up associated scores
+  const scores = getSkillScores();
+  Object.keys(scores).forEach(k => {
+    if (k.startsWith(`${empId}_`)) {
+      delete scores[k];
+    }
+  });
+  saveSkillScores(scores);
+
+  if (activeSkillEmpId === empId) {
+    activeSkillEmpId = '';
+  }
+
+  renderSkillMatrix();
+  showToast(`Karyawan "${empName}" berhasil dihapus.`, 'info');
+}
+
+function setIndividualSkillScore(empId, compId, score) {
+  const key = `${empId}_${compId}`;
+  const scores = getSkillScores();
+  const current = scores[key];
+
+  if (current === score) {
+    delete scores[key];
+    showToast('Skor dihapus (Belum Dinilai).', 'info');
+  } else {
+    scores[key] = parseInt(score, 10);
+    showToast(`Nilai tersimpan: Level ${score} (${SKILL_SCALE_DESC[score] || ''})`, 'success');
+  }
+
+  saveSkillScores(scores);
+  renderIndividualEmployeeMatrix();
+}
+
+function updateIndividualCompStandar(compId, val) {
+  let std = parseInt(val, 10);
+  if (isNaN(std)) std = 3;
+  if (std < 1) std = 1;
+  if (std > 4) std = 4;
+
+  const competencies = getSkillCompetencies();
+  const comp = competencies.find(c => c.id === compId);
+  if (comp) {
+    comp.standar = std;
+    saveSkillCompetencies(competencies);
+    renderIndividualEmployeeMatrix();
+  }
+}
+
+function deleteIndividualCompetency(compId) {
+  const competencies = getSkillCompetencies();
+  const comp = competencies.find(c => c.id === compId);
+  const name = comp ? comp.nama : 'parameter ini';
+
+  if (!confirm(`Hapus parameter kompetensi "${name}"? Seluruh nilai pada parameter ini akan dihapus.`)) {
+    return;
+  }
+
+  const updated = competencies.filter(c => c.id !== compId);
+  saveSkillCompetencies(updated);
+
+  const scores = getSkillScores();
+  Object.keys(scores).forEach(k => {
+    if (k.endsWith(`_${compId}`)) delete scores[k];
+  });
+  saveSkillScores(scores);
+
+  showToast(`Parameter "${name}" berhasil dihapus.`, 'info');
+  renderIndividualEmployeeMatrix();
+}
+
+function openAddSkillCompetencyModal() {
+  if (!activeSkillDept) {
+    showToast('Pilih divisi terlebih dahulu.', 'error');
+    return;
+  }
+
+  const allEmployees = getSkillEmployees();
+  const emp = allEmployees.find(e => e.id === activeSkillEmpId);
+
+  const subEl = document.getElementById('modalAddSkillCompSubtitle');
+  if (subEl) {
+    if (emp) {
+      subEl.innerHTML = `Menambahkan kompetensi untuk: <strong>${escapeHtml(emp.nama)}</strong> (${escapeHtml(activeSkillDept)})`;
+    } else {
+      subEl.textContent = `Divisi: ${activeSkillDept}`;
+    }
+  }
+
+  const nameInput = document.getElementById('modalNewCompName');
+  const stdSelect = document.getElementById('modalNewCompStandard');
+  if (nameInput) nameInput.value = '';
+  if (stdSelect) stdSelect.value = '3';
+
+  openModal('modalAddSkillCompetency');
+  if (nameInput) setTimeout(() => nameInput.focus(), 150);
+}
+
+function submitModalNewCompetency() {
+  if (!activeSkillDept) {
+    showToast('Pilih divisi terlebih dahulu.', 'error');
+    return;
+  }
+
+  const nameInput = document.getElementById('modalNewCompName');
+  const stdSelect = document.getElementById('modalNewCompStandard');
+  const name = (nameInput?.value || '').trim();
+  if (!name) {
+    showToast('Ketik nama kompetensi terlebih dahulu.', 'error');
+    if (nameInput) nameInput.focus();
+    return;
+  }
+
+  const std = parseInt(stdSelect?.value, 10) || 3;
+  const competencies = getSkillCompetencies();
+
+  competencies.push({
+    id: 'comp_' + Date.now(),
+    empId: activeSkillEmpId || undefined,
+    nama: name,
+    standar: std,
+    divisi: activeSkillDept
+  });
+
+  saveSkillCompetencies(competencies);
+  closeModal('modalAddSkillCompetency');
+  renderSkillMatrix();
+  showToast(`Kompetensi "${name}" (Standar ${std}) berhasil ditambahkan.`, 'success');
+}
+
+function proposeTrainingForActiveEmp() {
+  const allEmployees = getSkillEmployees();
+  const emp = allEmployees.find(e => e.id === activeSkillEmpId);
+  const stats = emp ? calcEmployeeStats(emp.id, activeSkillDept) : null;
+
+  goToPage('ajukan');
+
+  // Pre-fill department
+  const deptEl = document.getElementById('deptName');
+  if (deptEl && activeSkillDept) {
+    deptEl.value = activeSkillDept;
+    if (typeof handleDeptChange === 'function') handleDeptChange(deptEl);
+    if (typeof updateTrainingId === 'function') updateTrainingId();
+  }
+
+  // Pre-fill proposed training name if there is a negative GAP competency
+  if (stats && stats.negativeGaps.length > 0) {
+    const primaryNeed = stats.negativeGaps[0].comp.nama;
+    const trainingNameEl = document.getElementById('trainingName');
+    if (trainingNameEl) {
+      trainingNameEl.value = `Pelatihan ${primaryNeed}`;
+      if (typeof updateTrainingId === 'function') updateTrainingId();
+    }
+  }
+
+  // Pre-fill participant
+  if (emp && typeof addParticipant === 'function') {
+    const tbody = document.getElementById('participantTableBody');
+    if (tbody) {
+      const inputs = tbody.querySelectorAll('input.participant-name');
+      let found = false;
+      inputs.forEach(inp => {
+        if (inp.value.trim().toLowerCase() === emp.nama.toLowerCase()) found = true;
+      });
+      if (!found) {
+        addParticipant(emp.nama, '', emp.divisi || activeSkillDept);
+      }
+    }
+  }
+
+  showToast(`Membuka form pengajuan training untuk ${emp ? emp.nama : 'karyawan'}.`, 'success');
+}
+
+function resetSkillMatrixSampleData() {
+  const dept = activeSkillDept || 'Semua Divisi';
+  if (!confirm(`Muat ulang seluruh contoh data matriks kompetensi (${dept})? Penilaian kustom saat ini akan dikembalikan ke data default.`)) {
+    return;
+  }
+  const { employees, competencies, scores } = getInitialSkillData();
+  saveSkillEmployees(employees);
+  saveSkillCompetencies(competencies);
+  saveSkillScores(scores);
+  activeSkillEmpId = '';
+  renderSkillMatrix();
+  showToast(`Contoh data Matriks Kompetensi (${dept}) berhasil dimuat ulang.`, 'success');
+}
+
+function renderSkillMatrix() {
+  const promptEl = document.getElementById('skillMatrixEmptyPrompt');
+  const listViewEl = document.getElementById('skillMatrixEmployeeListView');
+  const indivViewEl = document.getElementById('skillMatrixIndividualView');
+  const badgeEl = document.getElementById('skillMatrixActiveDeptBadge');
+  const badgeTextEl = document.getElementById('skillMatrixActiveDeptText');
+  const actionsEl = document.getElementById('skillMatrixActiveActions');
+  const topSelect = document.getElementById('skillMatrixDeptSelect');
+  const emptySelect = document.getElementById('skillMatrixEmptyDeptSelect');
+
+  // Synchronize select inputs
+  if (topSelect && topSelect.value !== activeSkillDept) {
+    topSelect.value = activeSkillDept;
+  }
+  if (emptySelect && emptySelect.value !== activeSkillDept) {
+    emptySelect.value = activeSkillDept;
+  }
+
+  // Update all .active-dept-label in DOM
+  document.querySelectorAll('.active-dept-label').forEach(el => {
+    el.textContent = activeSkillDept || 'Departemen';
+  });
+
+  // ============================================
+  // STAGE 1: No department chosen yet
+  // ============================================
+  if (!activeSkillDept) {
+    if (promptEl) promptEl.style.display = 'block';
+    if (listViewEl) listViewEl.style.display = 'none';
+    if (indivViewEl) indivViewEl.style.display = 'none';
+    if (badgeEl) badgeEl.style.display = 'none';
+    if (actionsEl) actionsEl.style.display = 'none';
+    return;
+  }
+
+  // Header active state
+  if (promptEl) promptEl.style.display = 'none';
+  if (badgeEl) badgeEl.style.display = 'inline-flex';
+  if (badgeTextEl) badgeTextEl.textContent = activeSkillDept;
+  if (actionsEl) actionsEl.style.display = 'inline-flex';
+
+  // ============================================
+  // STAGE 2: Department selected, but no employee clicked yet -> SHOW EMPLOYEE LIST
+  // ============================================
+  if (!activeSkillEmpId) {
+    if (listViewEl) listViewEl.style.display = 'block';
+    if (indivViewEl) indivViewEl.style.display = 'none';
+    renderSkillEmployeeList();
+    return;
+  }
+
+  // ============================================
+  // STAGE 3: Individual Employee clicked -> SHOW INDIVIDUAL SKILL MATRIX
+  // ============================================
+  if (listViewEl) listViewEl.style.display = 'none';
+  if (indivViewEl) indivViewEl.style.display = 'block';
+  renderIndividualEmployeeMatrix();
+}
+
+function renderSkillEmployeeList() {
+  const allEmployees = getSkillEmployees();
+  const deptEmployees = allEmployees.filter(e => (e.divisi || 'HR') === activeSkillDept);
+
+  // 1. Division KPI Cards
+  const totalEmp = deptEmployees.length;
+  let scoredEmployeesCount = 0;
+  let divGapSum = 0;
+  let divScoredCompsTotal = 0;
+
+  deptEmployees.forEach(emp => {
+    const stats = calcEmployeeStats(emp.id, activeSkillDept);
+    if (stats.scoredCount > 0) {
+      scoredEmployeesCount++;
+      if (stats.avgGapNum !== null) {
+        divGapSum += stats.avgGapNum;
+        divScoredCompsTotal++;
+      }
+    }
+  });
+
+  const kpiTotalEl = document.getElementById('kpiDivTotalEmployees');
+  if (kpiTotalEl) kpiTotalEl.textContent = totalEmp;
+
+  const kpiScoredEl = document.getElementById('kpiDivScoredEmployees');
+  if (kpiScoredEl) kpiScoredEl.textContent = `${scoredEmployeesCount} dari ${totalEmp}`;
+
+  const kpiDivGapEl = document.getElementById('kpiDivAvgGap');
+  const kpiDivGapSubEl = document.getElementById('kpiDivAvgGapSub');
+  if (kpiDivGapEl) {
+    if (divScoredCompsTotal > 0) {
+      const avg = divGapSum / divScoredCompsTotal;
+      const formatted = (avg > 0 ? '+' : '') + avg.toFixed(1);
+      kpiDivGapEl.textContent = formatted;
+      const gapDetails = getGapDetails(Math.round(avg));
+      kpiDivGapEl.style.color = gapDetails?.color || 'var(--ink)';
+      if (kpiDivGapSubEl) kpiDivGapSubEl.textContent = `${gapDetails?.keterangan || 'Rata-rata kumulatif'}`;
+    } else {
+      kpiDivGapEl.textContent = '-';
+      kpiDivGapEl.style.color = 'var(--ink)';
+      if (kpiDivGapSubEl) kpiDivGapSubEl.textContent = 'Belum ada penilaian skor';
+    }
+  }
+
+  // 2. Render Cards Grid
+  const gridContainer = document.getElementById('skillEmployeesGridContainer');
+  if (!gridContainer) return;
+
+  const q = (skillEmpSearchQuery || '').toLowerCase().trim();
+  const filtered = deptEmployees.filter(emp => {
+    if (!q) return true;
+    return emp.nama.toLowerCase().includes(q) || (emp.jabatan || '').toLowerCase().includes(q);
+  });
+
+  if (filtered.length === 0) {
+    gridContainer.innerHTML = `
+      <div style="grid-column: 1 / -1; text-align: center; padding: 40px 20px; color: var(--ink-soft); background: #fff; border: 1px dashed var(--line); border-radius: 12px;">
+        <div style="font-weight: 700; font-size: 15px; color: var(--ink); margin-bottom: 6px;">Tidak ada karyawan ditemukan di Divisi ${escapeHtml(activeSkillDept)}</div>
+        <div style="font-size: 13px;">${q ? 'Coba ubah kata kunci pencarian.' : 'Gunakan form "+ Tambah Karyawan" di atas untuk menambahkan personel divisi ini.'}</div>
+      </div>
+    `;
+    return;
+  }
+
+  let html = '';
+  filtered.forEach(emp => {
+    const stats = calcEmployeeStats(emp.id, activeSkillDept);
+    const initials = getInitials(emp.nama);
+    const gapDetails = stats.avgGapNum !== null ? getGapDetails(Math.round(stats.avgGapNum)) : null;
+
+    html += `
+      <div class="skill-emp-card" onclick="openEmployeeSkillMatrix('${emp.id}')">
+        <div class="skill-emp-card-top">
+          <div style="display:flex;align-items:center;gap:12px;min-width:0;">
+            <div class="skill-emp-avatar">${initials}</div>
+            <div class="skill-emp-details">
+              <div class="skill-emp-card-name" title="${escapeHtml(emp.nama)}">${escapeHtml(emp.nama)}</div>
+              <div class="skill-emp-card-role" title="${escapeHtml(emp.jabatan || activeSkillDept)}">${escapeHtml(emp.jabatan || activeSkillDept)}</div>
+            </div>
+          </div>
+          <button type="button" class="row-remove" onclick="event.stopPropagation(); deleteSkillEmployee('${emp.id}')" title="Hapus Karyawan">&times;</button>
+        </div>
+        <div class="skill-emp-card-meta">
+          <span class="mini-pill" style="font-size:11px;">${stats.totalComps} Parameter</span>
+          ${stats.scoredCount > 0 ? `
+            <span class="gap-badge ${gapDetails ? gapDetails.badgeClass : ''}" style="background:${gapDetails ? gapDetails.bgColor : '#4CC9A0'};color:${gapDetails ? gapDetails.textColor : '#fff'};border:none;margin-top:0;font-size:11px;">
+              GAP ${stats.avgGap}
+            </span>
+          ` : `
+            <span class="mini-pill" style="font-size:11px;">Belum Dinilai</span>
+          `}
+          <span style="margin-left:auto;font-size:12px;color:var(--moss);font-weight:700;display:flex;align-items:center;gap:3px;">
+            Buka Skill Matrix &rarr;
+          </span>
+        </div>
+      </div>
+    `;
+  });
+
+  gridContainer.innerHTML = html;
+}
+
+function renderIndividualEmployeeMatrix() {
+  const allEmployees = getSkillEmployees();
+  const emp = allEmployees.find(e => e.id === activeSkillEmpId);
+  if (!emp) {
+    activeSkillEmpId = '';
+    renderSkillMatrix();
+    return;
+  }
+
+  // Synchronize Employee Switcher Dropdown
+  const switcher = document.getElementById('indivEmployeeSwitcher');
+  if (switcher) {
+    const deptEmployees = allEmployees.filter(e => (e.divisi || 'HR') === activeSkillDept);
+    let optHtml = '';
+    deptEmployees.forEach(e => {
+      optHtml += `<option value="${e.id}" ${e.id === activeSkillEmpId ? 'selected' : ''}>${escapeHtml(e.nama)}</option>`;
+    });
+    switcher.innerHTML = optHtml;
+  }
+
+  // Update Header Profile
+  const nameEl = document.getElementById('indivEmpName');
+  if (nameEl) nameEl.textContent = emp.nama;
+
+  const roleEl = document.getElementById('indivEmpRoleText');
+  if (roleEl) roleEl.textContent = emp.jabatan || `Staff ${activeSkillDept}`;
+
+  const deptBadge = document.getElementById('indivEmpDeptBadge');
+  if (deptBadge) deptBadge.textContent = `Divisi ${activeSkillDept}`;
+
+  const avatarEl = document.getElementById('indivEmpAvatar');
+  if (avatarEl) avatarEl.textContent = getInitials(emp.nama);
+
+  // Calculate Employee Metrics
+  const stats = calcEmployeeStats(emp.id, activeSkillDept);
+
+  const mComps = document.getElementById('indivMetricComps');
+  if (mComps) mComps.textContent = stats.totalComps;
+
+  const mScore = document.getElementById('indivMetricAvgScore');
+  if (mScore) mScore.textContent = stats.avgScore;
+
+  const mGap = document.getElementById('indivMetricAvgGap');
+  if (mGap) {
+    mGap.textContent = stats.avgGap;
+    const gapDetails = stats.avgGapNum !== null ? getGapDetails(Math.round(stats.avgGapNum)) : null;
+    mGap.style.color = gapDetails?.color || 'var(--ink)';
+  }
+
+  const mStatus = document.getElementById('indivMetricStatus');
+  if (mStatus) {
+    if (stats.scoredCount === 0) {
+      mStatus.textContent = 'Belum Dinilai';
+      mStatus.style.color = 'var(--ink-soft)';
+    } else {
+      const gapDetails = getGapDetails(Math.round(stats.avgGapNum));
+      mStatus.textContent = gapDetails?.keterangan || 'Sesuai Standar';
+      mStatus.style.color = gapDetails?.color || 'var(--moss)';
+    }
+  }
+
+  // Smart GAP Recommendation Box
+  const recBox = document.getElementById('indivGapRecommendationBox');
+  const recText = document.getElementById('indivGapRecommendationText');
+  if (recBox && recText) {
+    if (stats.negativeGaps.length > 0) {
+      recBox.style.display = 'block';
+      const compNames = stats.negativeGaps.map(item => `<strong>${escapeHtml(item.comp.nama)} (GAP ${item.gap})</strong>`).join(', ');
+      recText.innerHTML = `Berdasarkan analisis GAP, <strong>${escapeHtml(emp.nama)}</strong> direkomendasikan mengikuti program pelatihan untuk: ${compNames}.`;
+    } else {
+      recBox.style.display = 'none';
+    }
+  }
+
+  // Render Table Rows
+  const tableBody = document.getElementById('indivSkillTableBody');
+  if (tableBody) {
+    if (stats.comps.length === 0) {
+      tableBody.innerHTML = `
+        <tr>
+          <td colspan="7" style="text-align:center;padding:36px 20px;color:var(--ink-soft);">
+            <div style="font-weight:700;font-size:15px;color:var(--ink);margin-bottom:6px;">Belum Ada Parameter Kompetensi untuk ${escapeHtml(emp.nama)}</div>
+            <div style="font-size:13px;margin-bottom:14px;">Tambahkan parameter kompetensi pertama untuk memulai penilaian.</div>
+            <button type="button" class="btn-primary" onclick="openAddSkillCompetencyModal()" style="font-size:12.5px;padding:7px 14px;margin:0 auto;display:inline-flex;align-items:center;gap:6px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+              <span>+ Tambah Kompetensi Pertama</span>
+            </button>
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    const scores = getSkillScores();
+    let bodyHtml = '';
+
+    stats.comps.forEach((comp, idx) => {
+      const key = `${emp.id}_${comp.id}`;
+      const score = scores[key];
+      const hasScore = (score !== null && score !== undefined && !isNaN(score));
+      const numScore = hasScore ? parseInt(score, 10) : null;
+      const std = parseInt(comp.standar, 10) || 3;
+      const gap = hasScore ? (numScore - std) : null;
+      const gapDetails = hasScore ? getGapDetails(gap) : null;
+
+      bodyHtml += `
+        <tr>
+          <td style="text-align:center;font-weight:600;color:var(--ink-soft);">${idx + 1}</td>
+          <td style="text-align:left;">
+            <div style="font-weight:700;font-size:13.5px;color:var(--ink);">${escapeHtml(comp.nama)}</div>
+          </td>
+          <td style="text-align:center;">
+            <div class="skill-comp-standar-box" style="margin:0 auto;background:transparent;border:none;padding:0;">
+              <input type="number" min="1" max="4" value="${std}" class="skill-comp-standar-input" onchange="updateIndividualCompStandar('${comp.id}', this.value)" oninput="updateIndividualCompStandar('${comp.id}', this.value)" title="Kompetensi Ideal (1 - 4)" style="width:38px;height:28px;text-align:center;font-weight:800;font-size:13.5px;border:1.5px solid #CBD5E1;border-radius:6px;background:#F8FAFC;color:var(--ink);">
+            </div>
+          </td>
+          <td style="text-align:center;">
+            <div class="skill-score-pills">
+              <button type="button" class="skill-score-pill-btn ${numScore === 1 ? 'active-1' : ''}" onclick="setIndividualSkillScore('${emp.id}', '${comp.id}', 1)" title="Level 1: Pemahaman Dasar">1</button>
+              <button type="button" class="skill-score-pill-btn ${numScore === 2 ? 'active-2' : ''}" onclick="setIndividualSkillScore('${emp.id}', '${comp.id}', 2)" title="Level 2: Cukup Kompeten">2</button>
+              <button type="button" class="skill-score-pill-btn ${numScore === 3 ? 'active-3' : ''}" onclick="setIndividualSkillScore('${emp.id}', '${comp.id}', 3)" title="Level 3: Kompeten">3</button>
+              <button type="button" class="skill-score-pill-btn ${numScore === 4 ? 'active-4' : ''}" onclick="setIndividualSkillScore('${emp.id}', '${comp.id}', 4)" title="Level 4: Ahli">4</button>
+            </div>
+          </td>
+          <td style="text-align:center;">
+            ${hasScore ? `
+              <span class="gap-badge ${gapDetails.badgeClass}" style="background:${gapDetails.bgColor};color:${gapDetails.textColor};border:none;">
+                ${gapDetails.gapLabel}
+              </span>
+            ` : `
+              <span style="font-size:12px;color:var(--ink-faint);">-</span>
+            `}
+          </td>
+          <td style="text-align:left;">
+            ${hasScore ? `
+              <div style="font-size:12px;font-weight:600;color:${gapDetails?.color};display:flex;align-items:center;gap:6px;">
+                <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${gapDetails?.color};"></span>
+                <span>${gapDetails?.keterangan}</span>
+              </div>
+            ` : `
+              <span style="font-size:11.5px;color:var(--ink-faint);font-style:italic;">Belum dinilai (klik angka 1-4 di samping)</span>
+            `}
+          </td>
+          <td style="text-align:center;">
+            <button type="button" class="row-remove" onclick="deleteIndividualCompetency('${comp.id}')" title="Hapus Parameter">&times;</button>
+          </td>
+        </tr>
+      `;
+    });
+
+    tableBody.innerHTML = bodyHtml;
+  }
+}
+
+// ==========================================
+// AI Training Needs Analysis (TNA) from Skill Matrix
+// ==========================================
+let currentAiSkillSummaryPlan = null;
+let currentAiSkillSummaryMarkdown = '';
+
+function getCompetencyTrainingBlueprint(compName, roleName, gap, currentScore, targetStd) {
+  const cName = (compName || '').trim();
+  const cLower = cName.toLowerCase();
+  const isUrgent = gap <= -2;
+  const urgency = isUrgent ? 'Kritis / Mendesak' : 'Kesenjangan Keterampilan';
+
+  if (cLower.includes('training need analysis') || cLower.includes('tna')) {
+    return {
+      title: 'Mastering Training Needs Analysis (TNA) & Competency Mapping',
+      level: 'Intermediate',
+      urgency: urgency,
+      durationText: '1 Hari Workshop Intensif (6 Jam)',
+      goals: `Mampu mengidentifikasi kesenjangan kompetensi karyawan secara sistematis, menganalisis data performa kerja, dan merumuskan prioritas intervensi pelatihan yang tepat sasaran bagi unit kerja.`,
+      modules: [
+        { jamMulai: '09:00', jamSelesai: '10:30', durasi: '1.5 Jam', modul: 'Sesi 1: Metodologi & Framework TNA Modern', metode: 'Teori & Diskusi Kasus', deskripsi: 'Pembedahan 3 level analisis TNA (Organisasi, Tugas/Pekerjaan, Individu) dan audit kompetensi berbasis data.' },
+        { jamMulai: '10:45', jamSelesai: '12:15', durasi: '1.5 Jam', modul: 'Sesi 2: Instrumen Pengumpulan Data Kebutuhan Pelatihan', metode: 'Praktik & Workshop', deskripsi: 'Desain kuesioner survei, panduan wawancara user leader, dan triangulasi data penilaian performa kerja.' },
+        { jamMulai: '13:15', jamSelesai: '14:45', durasi: '1.5 Jam', modul: 'Sesi 3: Matriks Prioritas Pelatihan & Desain SMART Goals', metode: 'Simulasi Terbimbing', deskripsi: 'Mengubah temuan GAP kompetensi menjadi peta prioritas intervensi dan formulasi sasaran belajar terukur.' },
+        { jamMulai: '15:00', jamSelesai: '16:30', durasi: '1.5 Jam', modul: 'Sesi 4: Penyusunan Dokumen TNA & Presentasi ke Stakeholder', metode: 'Presentasi & Review', deskripsi: 'Penyusunan executive report TNA, justifikasi program pelatihan, dan konsultasi kebutuhan dengan pimpinan divisi.' }
+      ],
+      hasilDiharapkan: `Peserta mampu mandiri melakukan audit kebutuhan training divisi, menyusun instrumen survei TNA, dan menaikkan skor kompetensi dari ${currentScore} menuju level standar ${targetStd} (Kompeten).`,
+      penerapanPekerjaan: `Diterapkan langsung dalam penyusunan annual training plan dan asesmen performa tim divisi ${activeSkillDept || 'HR'}.`,
+      indikatorKeberhasilan: `- Kenaikan skor kompetensi TNA mencapai minimal level ${targetStd} pada review 3 bulan\n- Laporan TNA divisi tersusun 100% tepat waktu\n- Skor post-test pemahaman TNA ≥ 85%`
+    };
+  }
+
+  if (cLower.includes('monitoring') || cLower.includes('evaluation') || cLower.includes('m&e') || cLower.includes('evaluasi')) {
+    return {
+      title: 'Kirkpatrick Model: Monitoring, Evaluation & Impact Measurement for Corporate Training',
+      level: 'Intermediate',
+      urgency: urgency,
+      durationText: '1 Hari Workshop Intensif (6 Jam)',
+      goals: `Menguasai teknik evaluasi pelatihan komprehensif 4-Level Kirkpatrick (Reaction, Learning, Behavior, Result) guna menjamin akuntabilitas dan efektivitas investasi program training.`,
+      modules: [
+        { jamMulai: '09:00', jamSelesai: '10:30', durasi: '1.5 Jam', modul: 'Sesi 1: Arsitektur Evaluasi Kirkpatrick & Metrik Kunci', metode: 'Teori & Analisis Kasus', deskripsi: 'Memahami prinsip pengukuran efektivitas pelatihan dari level kepuasan hingga dampak operasional & bisnis.' },
+        { jamMulai: '10:45', jamSelesai: '12:15', durasi: '1.5 Jam', modul: 'Sesi 2: Desain Instrumen Evaluasi Level 1 & Level 2', metode: 'Praktik Desain', deskripsi: 'Merancang form feedback reaksi (Level 1) dan pre-test/post-test terstandarisasi (Level 2).' },
+        { jamMulai: '13:15', jamSelesai: '14:45', durasi: '1.5 Jam', modul: 'Sesi 3: Monitoring Implementasi di Tempat Kerja (Level 3)', metode: 'Workshop', deskripsi: 'Membangun action plan 30-60-90 hari, lembar observasi supervisor, dan tindak lanjut pasca-pelatihan.' },
+        { jamMulai: '15:00', jamSelesai: '16:30', durasi: '1.5 Jam', modul: 'Sesi 4: Analisis Dampak Bisnis (Level 4) & Reporting Dashboard', metode: 'Simulasi Terbimbing', deskripsi: 'Penyusunan dashboard evaluasi, kalkulasi peningkatan performa kerja, dan pelaporan eksekutif.' }
+      ],
+      hasilDiharapkan: `Mampu merancang instrumen evaluasi otomatis, memantau transfer materi ke workflow nyata, dan menutup kesenjangan evaluasi ke level ${targetStd}.`,
+      penerapanPekerjaan: `Diterapkan pada seluruh program pelatihan yang diselenggarakan divisi.`,
+      indikatorKeberhasilan: `- Seluruh training terdokumentasi evaluasinya hingga Level 3 dalam 60 hari\n- Skor evaluasi kepuasan training terukur konsisten ≥ 4.5/5.0\n- GAP kompetensi evaluasi tertutup menjadi 0`
+    };
+  }
+
+  if (cLower.includes('planning') || cLower.includes('rencana') || cLower.includes('perencanaan')) {
+    return {
+      title: 'Strategic L&D Planning & Corporate Curriculum Architecture',
+      level: 'Intermediate',
+      urgency: urgency,
+      durationText: '1 Hari Workshop Intensif (6 Jam)',
+      goals: `Mampu merancang rencana strategis pelatihan tahunan, arsitektur kurikulum modular, serta alokasi anggaran training yang efektif dan efisien.`,
+      modules: [
+        { jamMulai: '09:00', jamSelesai: '10:30', durasi: '1.5 Jam', modul: 'Sesi 1: Alignment Sasaran Bisnis & Rencana L&D', metode: 'Teori Strategis', deskripsi: 'Menghubungkan target bisnis perusahaan dengan roadmap pengembangan talenta divisi.' },
+        { jamMulai: '10:45', jamSelesai: '12:15', durasi: '1.5 Jam', modul: 'Sesi 2: Perancangan Silabus Modular & Blended Learning', metode: 'Workshop Desain', deskripsi: 'Merancang alur belajar terstruktur memadukan sesi kelas, praktik langsung, dan e-learning.' },
+        { jamMulai: '13:15', jamSelesai: '14:45', durasi: '1.5 Jam', modul: 'Sesi 3: Budgeting & Manajemen Efisiensi Biaya Training', metode: 'Praktik Spreadsheet', deskripsi: 'Kalkulasi komponen biaya trainer, konsumsi, venue, materi, dan return-on-investment.' },
+        { jamMulai: '15:00', jamSelesai: '16:30', durasi: '1.5 Jam', modul: 'Sesi 4: Kalender Kerja Pelatihan & Risk Mitigation', metode: 'Simulasi & Review', deskripsi: 'Penyusunan jadwal tahunan komprehensif, mitigasi jadwal bentrok, dan approval workflow.' }
+      ],
+      hasilDiharapkan: `Peserta memiliki kemampuan menyusun proposal program training terstruktur lengkap dengan modul dan time-schedule yang presisi.`,
+      penerapanPekerjaan: `Diterapkan dalam perumusan annual training calendar dan kurikulum internal.`,
+      indikatorKeberhasilan: `- Tersusunnya kalender pelatihan tahunan tepat waktu\n- Efisiensi realisasi anggaran training mencapai 95-100%\n- Skor kompetensi perencanaan meningkat ke level standar (${targetStd})`
+    };
+  }
+
+  if (cLower.includes('coordination') || cLower.includes('execution') || cLower.includes('eksekusi') || cLower.includes('koordinasi')) {
+    return {
+      title: 'End-to-End Corporate Training Execution & Logistics Mastery',
+      level: 'Basic',
+      urgency: urgency,
+      durationText: '1 Hari Workshop Intensif (6 Jam)',
+      goals: `Meningkatkan kecakapan teknis dan operasional dalam mengelola koordinasi acara pelatihan (onsite, virtual, maupun hybrid) dengan zero defect.`,
+      modules: [
+        { jamMulai: '09:00', jamSelesai: '10:30', durasi: '1.5 Jam', modul: 'Sesi 1: Checklist Pra-Training: Administrasi, Perlengkapan & Venue', metode: 'Praktik Terbimbing', deskripsi: 'Standard operating procedure sebelum hari-H: surat undangan, daftar hadir, booking room, dan tes koneksi.' },
+        { jamMulai: '10:45', jamSelesai: '12:15', durasi: '1.5 Jam', modul: 'Sesi 2: Moderasi, Facilitation Support & Ice Breaking Interaktif', metode: 'Simulasi Roleplay', deskripsi: 'Teknik memandu pembukaan acara, memperkenalkan instruktur, dan mencairkan suasana audiens.' },
+        { jamMulai: '13:15', jamSelesai: '14:45', durasi: '1.5 Jam', modul: 'Sesi 3: Real-time Attendance, Time-keeping & Troubleshooting Teknis', metode: 'Praktik Operasional', deskripsi: 'Manajemen kendala audio-visual mendadak, pergantian sesi tepat waktu, dan hospitality peserta.' },
+        { jamMulai: '15:00', jamSelesai: '16:30', durasi: '1.5 Jam', modul: 'Sesi 4: Pasca-Training: Distribusi Materi, Sertifikasi & Dokumentasi', metode: 'Review Administrasi', deskripsi: 'Penerbitan e-certificate, pengumpulan formulir evaluasi, dan penyusunan berita acara kegiatan.' }
+      ],
+      hasilDiharapkan: `Peserta mandiri mengeksekusi pelatihan dari persiapan hingga penutupan tanpa kendala operasional.`,
+      penerapanPekerjaan: `Diterapkan dalam operasional harian seluruh sesi training divisi.`,
+      indikatorKeberhasilan: `- Skor kepuasan logistik & fasilitas peserta ≥ 4.6/5.0\n- Zero keterlambatan jadwal sesi pelatihan\n- Administrasi sertifikat dan presensi selesai H+1`
+    };
+  }
+
+  if (cLower.includes('stakeholder') || cLower.includes('communication') || cLower.includes('komunikasi')) {
+    return {
+      title: 'Executive Stakeholder Communication & Strategic Business Partnering',
+      level: 'Intermediate',
+      urgency: urgency,
+      durationText: '1 Hari Workshop Intensif (6 Jam)',
+      goals: `Mengembangkan keterampilan komunikasi persuasif, konsultasi dengan user leader departemen, dan presentasi program People Development yang berbobot.`,
+      modules: [
+        { jamMulai: '09:00', jamSelesai: '10:30', durasi: '1.5 Jam', modul: 'Sesi 1: Memahami Ekspektasi Leader & Komunikasi Asertif', metode: 'Teori & Diskusi Kasus', deskripsi: 'Menganalisis persona pimpinan, bahasa komunikasi korporat, dan membangun kredibilitas HR.' },
+        { jamMulai: '10:45', jamSelesai: '12:15', durasi: '1.5 Jam', modul: 'Sesi 2: Teknik Konsultasi & Menyampaikan Hasil Asesmen', metode: 'Simulasi Wawancara', deskripsi: 'Menyampaikan kesenjangan kompetensi tim secara solutif tanpa menyinggung, dan active listening.' },
+        { jamMulai: '13:15', jamSelesai: '14:45', durasi: '1.5 Jam', modul: 'Sesi 3: Storytelling Data & Presentasi Proposal ke Top Management', metode: 'Workshop Presentasi', deskripsi: 'Menyusun slide deck ringkas, visualisasi grafik data kebutuhan, dan estimasi dampak bisnis.' },
+        { jamMulai: '15:00', jamSelesai: '16:30', durasi: '1.5 Jam', modul: 'Sesi 4: Resolusi Hambatan Koordinasi & Sinergi Lintas Divisi', metode: 'Roleplay Negosiasi', deskripsi: 'Mengatasi penolakan jadwal dari departemen operasional dan menyelaraskan komitmen bersama.' }
+      ],
+      hasilDiharapkan: `Mampu berkoordinasi secara percaya diri dengan pimpinan divisi lain dalam mengadvokasi program pengembangan karyawan.`,
+      penerapanPekerjaan: `Diterapkan saat presentasi program training ke kepala unit kerja dan koordinasi lintas divisi.`,
+      indikatorKeberhasilan: `- Rasio approval proposal training oleh user meningkat ≥ 85%\n- Indeks kepuasan stakeholder terhadap HR ≥ 4.5/5.0\n- Skor kompetensi komunikasi naik ke level standar (${targetStd})`
+    };
+  }
+
+  // Fallback Dynamic Generator
+  return {
+    title: `Akselerasi Kompetensi: ${cName} untuk ${roleName || 'Karyawan'}`,
+    level: 'Intermediate',
+    urgency: urgency,
+    durationText: '1 Hari Workshop Intensif (6 Jam)',
+    goals: `Meningkatkan penguasaan kompetensi '${cName}' dari skor saat ini (${currentScore}) menjadi level standar (${targetStd}) melalui kurikulum terstruktur dan studi kasus operasional nyata.`,
+    modules: [
+      { jamMulai: '09:00', jamSelesai: '10:30', durasi: '1.5 Jam', modul: `Sesi 1: Konsep Fundamental & Prinsip Kunci ${cName}`, metode: 'Teori Aplikatif', deskripsi: `Memahami fondasi teori, regulasi, dan standar kualitas kerja terkait ${cName}.` },
+      { jamMulai: '10:45', jamSelesai: '12:15', durasi: '1.5 Jam', modul: `Sesi 2: Best Practice, Framework Kerja & Standar Operasional`, metode: 'Studi Kasus', deskripsi: `Bedah kasus operasional, alur kerja standar industri, dan identifikasi potensi kegagalan.` },
+      { jamMulai: '13:15', jamSelesai: '14:45', durasi: '1.5 Jam', modul: `Sesi 3: Simulasi Hands-on & Penyelesaian Masalah Operasional`, metode: 'Praktik Terbimbing', deskripsi: `Latihan mandiri memecahkan skenario kerja nyata dan implementasi tools pendukung.` },
+      { jamMulai: '15:00', jamSelesai: '16:30', durasi: '1.5 Jam', modul: `Sesi 4: Action Plan Mandiri, Review Kinerja & Evaluasi Hasil`, metode: 'Review & Ujian', deskripsi: `Penyusunan target kerja 30 hari pasca-pelatihan dan post-test penguasaan kompetensi.` }
+    ],
+    hasilDiharapkan: `Peserta mampu menjalankan tugas operasional terkait ${cName} secara mandiri sesuai SOP perusahaan.`,
+    penerapanPekerjaan: `Diterapkan langsung dalam workflow pekerjaan harian di divisi ${activeSkillDept || 'terkait'}.`,
+    indikatorKeberhasilan: `- Nilai post-test kelulusan ≥ 80/100\n- Kenaikan skor kompetensi dari ${currentScore} menjadi ${targetStd} dalam review 90 hari\n- Minim kesalahan kerja operasional pada tugas terkait`
+  };
+}
+
+function renderAiBlueprintCard(blueprint) {
+  let modulesHtml = '';
+  if (Array.isArray(blueprint.modules)) {
+    blueprint.modules.forEach(m => {
+      modulesHtml += `
+        <div style="background:#fff;border:1px solid var(--line-soft);border-radius:8px;padding:10px 12px;margin-bottom:8px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px;flex-wrap:wrap;">
+            <strong style="font-size:12.5px;color:var(--ink);">${escapeHtml(m.modul)}</strong>
+            <span style="font-size:11px;font-weight:600;padding:2px 7px;border-radius:10px;background:var(--sand-soft);color:var(--moss);">
+              ${escapeHtml(m.jamMulai)} - ${escapeHtml(m.jamSelesai)} &bull; ${escapeHtml(m.metode || 'Praktik')}
+            </span>
+          </div>
+          <div style="font-size:12px;color:var(--ink-soft);line-height:1.4;">${escapeHtml(m.deskripsi || '')}</div>
+        </div>
+      `;
+    });
+  }
+
+  return `
+    <div style="border:1px solid #4B96FF;border-radius:12px;overflow:hidden;background:#fff;box-shadow:0 4px 14px rgba(75,150,255,0.08);">
+      <div style="background:linear-gradient(135deg, #1E3A8A 0%, #2563EB 100%);color:#fff;padding:14px 16px;">
+        <div style="display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:#BFDBFE;margin-bottom:4px;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+          <span>Rekomendasi Program Pelatihan Solutif</span>
+        </div>
+        <h4 style="margin:0;font-size:16px;font-weight:700;color:#fff;line-height:1.35;">${escapeHtml(blueprint.title)}</h4>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px;">
+          <span style="font-size:11px;padding:2px 8px;border-radius:12px;background:rgba(255,255,255,0.2);color:#fff;">Level: ${escapeHtml(blueprint.level)}</span>
+          <span style="font-size:11px;padding:2px 8px;border-radius:12px;background:rgba(255,255,255,0.2);color:#fff;">Format: ${escapeHtml(blueprint.durationText)}</span>
+          <span style="font-size:11px;padding:2px 8px;border-radius:12px;background:#FDE047;color:#713F12;font-weight:700;">Urgensi: ${escapeHtml(blueprint.urgency)}</span>
+        </div>
+      </div>
+
+      <div style="padding:14px 16px;background:#FAF9F5;">
+        <div style="margin-bottom:12px;">
+          <div style="font-size:11px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Tujuan Pelatihan (SMART Goals):</div>
+          <div style="font-size:12.5px;color:var(--ink);line-height:1.5;">${escapeHtml(blueprint.goals)}</div>
+        </div>
+
+        <div style="margin-bottom:12px;">
+          <div style="font-size:11px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Rancangan Silabus Modul:</div>
+          ${modulesHtml}
+        </div>
+
+        <div style="background:#fff;border:1px solid var(--line-soft);border-radius:8px;padding:10px 12px;">
+          <div style="font-size:11px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Target Capaian & Indikator Keberhasilan (KPI):</div>
+          <div style="font-size:12px;color:var(--ink-soft);white-space:pre-line;line-height:1.45;">${escapeHtml(blueprint.indikatorKeberhasilan)}</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function generateAiSkillSummaryForActiveEmp() {
+  const allEmployees = getSkillEmployees();
+  const emp = allEmployees.find(e => e.id === activeSkillEmpId);
+  if (!emp) {
+    showToast('Silahkan pilih salah satu karyawan terlebih dahulu.', 'error');
+    return;
+  }
+
+  const dept = activeSkillDept || emp.divisi || 'Divisi HR';
+  const stats = calcEmployeeStats(emp.id, dept);
+
+  const modalEl = document.getElementById('modalAiSkillSummary');
+  const subEl = document.getElementById('modalAiSkillSummarySubtitle');
+  const bodyEl = document.getElementById('modalAiSkillSummaryBody');
+  if (!modalEl || !bodyEl) return;
+
+  if (subEl) {
+    subEl.innerHTML = `Executive TNA Diagnostic &bull; <strong>${escapeHtml(emp.nama)}</strong> (${escapeHtml(emp.jabatan || dept)})`;
+  }
+
+  // Case 1: No scored competencies
+  if (stats.scoredCount === 0) {
+    bodyEl.innerHTML = `
+      <div style="text-align:center;padding:32px 16px;">
+        <div style="width:54px;height:54px;border-radius:50%;background:#FEF3C7;color:#D97706;display:inline-flex;align-items:center;justify-content:center;margin-bottom:14px;">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+        </div>
+        <h4 style="font-size:16px;color:var(--ink);margin:0 0 8px 0;">Belum Ada Skor Penilaian</h4>
+        <p style="font-size:13px;color:var(--ink-soft);max-width:440px;margin:0 auto 16px auto;line-height:1.5;">
+          Parameter kompetensi untuk <strong>${escapeHtml(emp.nama)}</strong> belum dinilai. Silahkan klik angka skor (1-4) pada tabel matriks terlebih dahulu agar AI dapat menghitung nilai GAP dan merumuskan rekomendasi training yang akurat.
+        </p>
+        <button type="button" class="btn-secondary" onclick="closeModal('modalAiSkillSummary')" style="font-size:12.5px;padding:7px 16px;">
+          Kembali ke Tabel Matriks
+        </button>
+      </div>
+    `;
+    currentAiSkillSummaryPlan = null;
+    currentAiSkillSummaryMarkdown = '';
+    openModal('modalAiSkillSummary');
+    return;
+  }
+
+  // Sort negative gaps: largest deficit first (e.g. -3, then -2, then -1)
+  const sortedGaps = [...stats.negativeGaps].sort((a, b) => a.gap - b.gap);
+  const initials = getInitials(emp.nama);
+
+  // Case 2: No negative gaps (All competent)
+  if (sortedGaps.length === 0) {
+    const blueprint = {
+      title: `Strategic Leadership & Cross-Functional Mentorship Program`,
+      level: 'Advanced',
+      urgency: 'Pengembangan Karir / Rutin',
+      durationText: '1 Hari Workshop Intensif (6 Jam)',
+      goals: `Memperdalam kapasitas kepemimpinan strategis, kemampuan coaching antar-anggota tim, serta mempersiapkan karyawan untuk memegang peran sentral dalam inisiatif People Development skala korporat.`,
+      modules: [
+        { jamMulai: '09:00', jamSelesai: '10:30', durasi: '1.5 Jam', modul: 'Sesi 1: Strategic Thinking & Executive Leadership in HR', metode: 'Studi Kasus Eksekutif', deskripsi: 'Memperluas sudut pandang dari level operasional menuju kontribusi strategis pada arah bisnis organisasi.' },
+        { jamMulai: '10:45', jamSelesai: '12:15', durasi: '1.5 Jam', modul: 'Sesi 2: Corporate Coaching & Knowledge Transfer Skills', metode: 'Simulasi Coaching', deskripsi: 'Metodologi transfer keahlian kepada junior/rekan kerja dan membangun budaya belajar berkelanjutan.' },
+        { jamMulai: '13:15', jamSelesai: '14:45', durasi: '1.5 Jam', modul: 'Sesi 3: Agile Project Management & Cross-Functional Innovation', metode: 'Workshop Kolaborasi', deskripsi: 'Memimpin proyek inovasi lintas divisi dengan prinsip agile dan eksekusi terukur.' },
+        { jamMulai: '15:00', jamSelesai: '16:30', durasi: '1.5 Jam', modul: 'Sesi 4: Executive Presentation & High-Stakes Stakeholder Alignment', metode: 'Presentasi Proyek', deskripsi: 'Keterampilan meyakinkan jajaran direksi dalam menginisiasi program transformasi SDM.' }
+      ],
+      hasilDiharapkan: `Karyawan siap menjadi mentor internal, memimpin proyek divisional, dan menjadi talent benchmark bagi anggota tim lainnya.`,
+      penerapanPekerjaan: `Diterapkan dalam memimpin proyek L&D strategis dan mentoring talenta muda di divisi ${dept}.`,
+      indikatorKeberhasilan: `- Nilai post-training evaluation ≥ 90%\n- Berhasil menginisiasi minimal 1 proyek perbaikan proses kerja divisi dalam 6 bulan`
+    };
+
+    currentAiSkillSummaryPlan = {
+      namaTraining: blueprint.title,
+      level: blueprint.level,
+      goals: blueprint.goals,
+      kategoriUrgensi: blueprint.urgency,
+      hasilDiharapkan: blueprint.hasilDiharapkan,
+      penerapanPekerjaan: blueprint.penerapanPekerjaan,
+      indikatorKeberhasilan: blueprint.indikatorKeberhasilan,
+      modules: blueprint.modules,
+      targetEmployee: {
+        nama: emp.nama,
+        email: emp.email || '',
+        divisi: emp.divisi || dept
+      }
+    };
+
+    currentAiSkillSummaryMarkdown = `# 📋 AI TRAINING NEEDS ANALYSIS (TNA) SUMMARY\n` +
+      `**Karyawan**: ${emp.nama}\n` +
+      `**Jabatan**: ${emp.jabatan || 'Team Member'}\n` +
+      `**Divisi**: ${dept}\n` +
+      `**Status**: Seluruh kompetensi memenuhi/melampaui standar (Rata-rata GAP: ${stats.avgGap})\n\n` +
+      `### 🌟 Rekomendasi Program Pengayaan Tingkat Mahir (Advanced Enrichment):\n` +
+      `**Program**: ${blueprint.title}\n` +
+      `**Target Level**: ${blueprint.level} | **Format**: ${blueprint.durationText}\n` +
+      `**Tujuan**: ${blueprint.goals}\n\n` +
+      `### 📚 Rencana Modul:\n` +
+      blueprint.modules.map(m => `- ${m.modul} (${m.jamMulai} - ${m.jamSelesai}): ${m.deskripsi}`).join('\n') + `\n\n` +
+      `### 🎯 Indikator Keberhasilan:\n${blueprint.indikatorKeberhasilan}`;
+
+    bodyEl.innerHTML = `
+      <!-- Employee Profile Bar -->
+      <div style="display:flex;align-items:center;gap:14px;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:12px;padding:14px 16px;margin-bottom:16px;">
+        <div style="width:44px;height:44px;border-radius:50%;background:#16A34A;color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">
+          ${initials}
+        </div>
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <h4 style="margin:0;font-size:15px;color:#14532D;font-weight:700;">${escapeHtml(emp.nama)}</h4>
+            <span style="font-size:11px;padding:2px 8px;border-radius:20px;background:#DCFCE7;color:#15803D;font-weight:700;">${escapeHtml(emp.jabatan || dept)}</span>
+          </div>
+          <div style="font-size:12px;color:#166534;margin-top:3px;">
+            ${stats.scoredCount}/${stats.totalComps} Parameter Dinilai &bull; Rata-rata Skor: <strong>${stats.avgScore}</strong> / 4.0 &bull; Rata-rata GAP: <strong style="color:#15803D;">${stats.avgGap} (Kompeten Penuh)</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- Optimal Callout -->
+      <div style="background:#FAF9F5;border:1px solid var(--line-soft);border-radius:10px;padding:12px 14px;margin-bottom:16px;font-size:12.5px;color:var(--ink-soft);line-height:1.5;">
+        <strong style="color:var(--ink);">🌟 AI Performance Diagnostic:</strong> Luar biasa! Seluruh parameter kompetensi kerja ${escapeHtml(emp.nama)} telah memenuhi standar operasional. Tidak ditemukan kesenjangan kompetensi defisit. AI merekomendasikan program akselerasi kapabilitas tingkat mahir (Advanced Leadership & Mentoring).
+      </div>
+
+      <!-- Recommendation Card -->
+      ${renderAiBlueprintCard(blueprint)}
+    `;
+
+    openModal('modalAiSkillSummary');
+    return;
+  }
+
+  // Case 3: Negative gaps exist (Needs targeted training)
+  const primaryGap = sortedGaps[0];
+  const blueprint = getCompetencyTrainingBlueprint(primaryGap.comp.nama, emp.jabatan, primaryGap.gap, primaryGap.score, primaryGap.standar);
+
+  currentAiSkillSummaryPlan = {
+    namaTraining: blueprint.title,
+    level: blueprint.level,
+    goals: blueprint.goals,
+    kategoriUrgensi: blueprint.urgency,
+    hasilDiharapkan: blueprint.hasilDiharapkan,
+    penerapanPekerjaan: blueprint.penerapanPekerjaan,
+    indikatorKeberhasilan: blueprint.indikatorKeberhasilan,
+    modules: blueprint.modules,
+    targetEmployee: {
+      nama: emp.nama,
+      email: emp.email || '',
+      divisi: emp.divisi || dept
+    }
+  };
+
+  currentAiSkillSummaryMarkdown = `# 📋 AI TRAINING NEEDS ANALYSIS (TNA) SUMMARY\n` +
+    `**Karyawan**: ${emp.nama}\n` +
+    `**Jabatan**: ${emp.jabatan || 'Team Member'}\n` +
+    `**Divisi**: ${dept}\n` +
+    `**Rata-rata GAP**: ${stats.avgGap}\n\n` +
+    `### 🔍 Temuan Kesenjangan Kompetensi (Skill GAP):\n` +
+    sortedGaps.map(g => `- ${g.comp.nama}: Aktual ${g.score} / Ideal ${g.standar} (GAP ${g.gap > 0 ? '+' : ''}${g.gap}) ${g.gap <= -2 ? '[KRITIS]' : '[PERLU PENINGKATAN]'}`).join('\n') + `\n\n` +
+    `### 🎯 Rekomendasi Program Pelatihan Utama AI:\n` +
+    `**Program**: ${blueprint.title}\n` +
+    `**Tingkat Urgensi**: ${blueprint.urgency} | **Target Level**: ${blueprint.level}\n` +
+    `**Format Rekomendasi**: ${blueprint.durationText}\n` +
+    `**Tujuan Pelatihan (SMART)**: ${blueprint.goals}\n\n` +
+    `### 📚 Rencana Modul Pelatihan Terstruktur:\n` +
+    blueprint.modules.map(m => `- ${m.modul} (${m.jamMulai} - ${m.jamSelesai} WIB, ${m.metode}):\n  ${m.deskripsi}`).join('\n') + `\n\n` +
+    `### 💼 Hasil & Penerapan di Pekerjaan:\n${blueprint.hasilDiharapkan}\n${blueprint.penerapanPekerjaan}\n\n` +
+    `### 📊 Indikator Keberhasilan (KPI):\n${blueprint.indikatorKeberhasilan}`;
+
+  // Build HTML table for GAP details
+  let gapRowsHtml = '';
+  sortedGaps.forEach((g, idx) => {
+    const isTop = idx === 0;
+    const isCrit = g.gap <= -2;
+    const badgeBg = isCrit ? '#FEE2E2' : '#FEF3C7';
+    const badgeColor = isCrit ? '#B91C1C' : '#B45309';
+    const priorityText = isTop ? (isCrit ? '🚨 Prioritas 1 (Kritis)' : '⚡ Prioritas Utama') : '⚠️ Perlu Penguatan';
+
+    gapRowsHtml += `
+      <tr style="border-bottom:1px solid var(--line-soft);font-size:12px;">
+        <td style="padding:8px 10px;font-weight:600;color:var(--ink);">
+          ${escapeHtml(g.comp.nama)}
+        </td>
+        <td style="padding:8px 10px;text-align:center;color:var(--ink-soft);">
+          <strong>${g.score}</strong> / ${g.standar}
+        </td>
+        <td style="padding:8px 10px;text-align:center;">
+          <span style="font-size:11px;font-weight:700;padding:2px 7px;border-radius:12px;background:${badgeBg};color:${badgeColor};">
+            GAP ${g.gap}
+          </span>
+        </td>
+        <td style="padding:8px 10px;text-align:left;">
+          <span style="font-size:11px;font-weight:600;color:${isCrit ? '#B91C1C' : '#92400E'};">${priorityText}</span>
+        </td>
+      </tr>
+    `;
+  });
+
+  bodyEl.innerHTML = `
+    <!-- Employee Profile Bar -->
+    <div style="display:flex;align-items:center;gap:14px;background:#FFFBEB;border:1px solid #FDE68A;border-radius:12px;padding:14px 16px;margin-bottom:16px;">
+      <div style="width:44px;height:44px;border-radius:50%;background:#D97706;color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">
+        ${initials}
+      </div>
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <h4 style="margin:0;font-size:15px;color:#78350F;font-weight:700;">${escapeHtml(emp.nama)}</h4>
+          <span style="font-size:11px;padding:2px 8px;border-radius:20px;background:#FEF3C7;color:#92400E;font-weight:700;">${escapeHtml(emp.jabatan || dept)}</span>
+        </div>
+        <div style="font-size:12px;color:#92400E;margin-top:3px;">
+          ${stats.scoredCount}/${stats.totalComps} Parameter Dinilai &bull; Rata-rata Skor: <strong>${stats.avgScore}</strong> / 4.0 &bull; Rata-rata GAP: <strong style="color:#B91C1C;">${stats.avgGap}</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- Diagnostic Summary Box -->
+    <div style="background:#FAF9F5;border:1px solid var(--line-soft);border-radius:10px;padding:12px 14px;margin-bottom:16px;">
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <span style="font-size:12.5px;font-weight:700;color:var(--ink);">Diagnosis Kesenjangan Kompetensi (Skill GAP):</span>
+      </div>
+      <p style="margin:0 0 10px 0;font-size:12px;color:var(--ink-soft);line-height:1.45;">
+        Ditemukan <strong>${sortedGaps.length} parameter kompetensi</strong> yang berada di bawah standar kerja perusahaan. Kesenjangan paling signifikan ada pada <strong>"${escapeHtml(primaryGap.comp.nama)}"</strong> (Defisit GAP ${primaryGap.gap}).
+      </p>
+      <div class="tbl-wrap" style="border:1px solid var(--line-soft);border-radius:8px;background:#fff;">
+        <table style="width:100%;border-collapse:collapse;margin:0;">
+          <thead>
+            <tr style="background:var(--sand-soft);font-size:11px;color:var(--ink-soft);text-transform:uppercase;border-bottom:1px solid var(--line-soft);">
+              <th style="padding:7px 10px;text-align:left;">Kompetensi</th>
+              <th style="padding:7px 10px;text-align:center;">Aktual / Ideal</th>
+              <th style="padding:7px 10px;text-align:center;">GAP</th>
+              <th style="padding:7px 10px;text-align:left;">Prioritas Intervensi</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${gapRowsHtml}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Recommendation Card -->
+    ${renderAiBlueprintCard(blueprint)}
+  `;
+
+  openModal('modalAiSkillSummary');
+}
+
+function generateAiSkillSummaryForDivision() {
+  const dept = activeSkillDept || 'Divisi HR';
+  const allEmployees = getSkillEmployees();
+  const deptEmployees = allEmployees.filter(e => !dept || (e.divisi && e.divisi.toLowerCase() === dept.toLowerCase()));
+
+  if (deptEmployees.length === 0) {
+    showToast(`Tidak ada karyawan terdaftar pada divisi ${dept}.`, 'error');
+    return;
+  }
+
+  const modalEl = document.getElementById('modalAiSkillSummary');
+  const subEl = document.getElementById('modalAiSkillSummarySubtitle');
+  const bodyEl = document.getElementById('modalAiSkillSummaryBody');
+  if (!modalEl || !bodyEl) return;
+
+  if (subEl) {
+    subEl.innerHTML = `Divisional TNA Diagnostic &bull; <strong>${escapeHtml(dept)}</strong> (${deptEmployees.length} Karyawan)`;
+  }
+
+  let totalScoredEmp = 0;
+  let compGaps = {}; // { compName: { count: 0, sumDeficit: 0, employees: [], standar: 3 } }
+
+  deptEmployees.forEach(emp => {
+    const stats = calcEmployeeStats(emp.id, dept);
+    if (stats.scoredCount > 0) totalScoredEmp++;
+
+    stats.negativeGaps.forEach(g => {
+      const cName = g.comp.nama;
+      if (!compGaps[cName]) {
+        compGaps[cName] = { count: 0, sumDeficit: 0, employees: [], standar: g.standar };
+      }
+      compGaps[cName].count++;
+      compGaps[cName].sumDeficit += Math.abs(g.gap);
+      compGaps[cName].employees.push({
+        id: emp.id,
+        nama: emp.nama,
+        email: emp.email || '',
+        jabatan: emp.jabatan || '',
+        score: g.score,
+        gap: g.gap
+      });
+    });
+  });
+
+  // Rank competencies by frequency of gap and total deficit
+  const rankedComps = Object.keys(compGaps).map(cName => ({
+    name: cName,
+    ...compGaps[cName]
+  })).sort((a, b) => (b.count * 10 + b.sumDeficit) - (a.count * 10 + a.sumDeficit));
+
+  // If no employees evaluated yet
+  if (totalScoredEmp === 0) {
+    bodyEl.innerHTML = `
+      <div style="text-align:center;padding:32px 16px;">
+        <div style="width:54px;height:54px;border-radius:50%;background:#FEF3C7;color:#D97706;display:inline-flex;align-items:center;justify-content:center;margin-bottom:14px;">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+        </div>
+        <h4 style="font-size:16px;color:var(--ink);margin:0 0 8px 0;">Belum Ada Skor Penilaian pada ${escapeHtml(dept)}</h4>
+        <p style="font-size:13px;color:var(--ink-soft);max-width:440px;margin:0 auto 16px auto;line-height:1.5;">
+          Belum ada karyawan yang dinilai pada divisi ini. Silahkan buka masing-masing profil karyawan dan tentukan skor kompetensinya terlebih dahulu.
+        </p>
+        <button type="button" class="btn-secondary" onclick="closeModal('modalAiSkillSummary')" style="font-size:12.5px;padding:7px 16px;">
+          Kembali ke Daftar Karyawan
+        </button>
+      </div>
+    `;
+    currentAiSkillSummaryPlan = null;
+    currentAiSkillSummaryMarkdown = '';
+    openModal('modalAiSkillSummary');
+    return;
+  }
+
+  // If no negative gaps in entire division
+  if (rankedComps.length === 0) {
+    bodyEl.innerHTML = `
+      <div style="text-align:center;padding:32px 16px;">
+        <div style="width:54px;height:54px;border-radius:50%;background:#DCFCE7;color:#16A34A;display:inline-flex;align-items:center;justify-content:center;margin-bottom:14px;">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+        </div>
+        <h4 style="font-size:16px;color:#14532D;margin:0 0 8px 0;">Seluruh Anggota Tim ${escapeHtml(dept)} Memenuhi Standar</h4>
+        <p style="font-size:13px;color:#166534;max-width:460px;margin:0 auto 16px auto;line-height:1.5;">
+          Dari total <strong>${totalScoredEmp} karyawan</strong> yang telah dinilai, tidak ditemukan adanya GAP negatif. Seluruh kompetensi berada pada atau melampaui level standar perusahaan.
+        </p>
+        <button type="button" class="btn-secondary" onclick="closeModal('modalAiSkillSummary')" style="font-size:12.5px;padding:7px 16px;">
+          Tutup
+        </button>
+      </div>
+    `;
+    currentAiSkillSummaryPlan = null;
+    currentAiSkillSummaryMarkdown = '';
+    openModal('modalAiSkillSummary');
+    return;
+  }
+
+  // We have bottleneck competencies!
+  const topBottleneck = rankedComps[0];
+  const blueprint = getCompetencyTrainingBlueprint(topBottleneck.name, 'Tim ' + dept, -2, 2, topBottleneck.standar || 3);
+
+  // Customize title for division cohort
+  blueprint.title = `Corporate Workshop: ${topBottleneck.name} Mastery for ${dept}`;
+  blueprint.goals = `Program upskilling kolektif yang dirancang untuk mengatasi kesenjangan kompetensi '${topBottleneck.name}' pada ${topBottleneck.count} anggota tim ${dept}, menyelaraskan pemahaman metodologi, dan meningkatkan kapabilitas tim sesuai standar divisi.`;
+
+  currentAiSkillSummaryPlan = {
+    namaTraining: blueprint.title,
+    level: blueprint.level,
+    goals: blueprint.goals,
+    kategoriUrgensi: blueprint.urgency,
+    hasilDiharapkan: blueprint.hasilDiharapkan,
+    penerapanPekerjaan: `Diterapkan secara terkoordinasi antar seluruh anggota tim pada divisi ${dept}.`,
+    indikatorKeberhasilan: `- Penutupan gap kompetensi ${topBottleneck.name} 100% pada seluruh peserta\n- Nilai post-test tim rata-rata ≥ 85%\n- Peningkatan kecepatan dan akurasi eksekusi tugas divisi`,
+    modules: blueprint.modules,
+    targetEmployees: topBottleneck.employees.map(e => ({
+      nama: e.nama,
+      email: e.email || '',
+      divisi: dept
+    }))
+  };
+
+  currentAiSkillSummaryMarkdown = `# 📋 EXECUTIVE TNA SUMMARY — ${dept.toUpperCase()}\n` +
+    `**Divisi**: ${dept}\n` +
+    `**Total Karyawan Terdaftar**: ${deptEmployees.length}\n` +
+    `**Karyawan Sudah Dinilai**: ${totalScoredEmp}\n` +
+    `**Area Bottleneck Utama**: ${topBottleneck.name} (${topBottleneck.count} Karyawan Mengalami GAP Defisit)\n\n` +
+    `### 🔍 Peta Kesenjangan Kompetensi Divisi:\n` +
+    rankedComps.map((c, i) => `${i + 1}. ${c.name}: ${c.count} Karyawan (Total Defisit GAP: -${c.sumDeficit})`).join('\n') + `\n\n` +
+    `### 👥 Karyawan yang Membutuhkan Pelatihan '${topBottleneck.name}':\n` +
+    topBottleneck.employees.map(e => `- ${e.nama} (${e.jabatan || 'Team Member'}) - Skor ${e.score} (GAP ${e.gap})`).join('\n') + `\n\n` +
+    `### 🎯 Rekomendasi Program Pelatihan Kolektif:\n` +
+    `**Program**: ${blueprint.title}\n` +
+    `**Format**: 1 Hari Workshop Kolektif (6 Jam)\n` +
+    `**Tujuan**: ${blueprint.goals}\n\n` +
+    `### 📚 Rencana Modul:\n` +
+    blueprint.modules.map(m => `- ${m.modul}: ${m.deskripsi}`).join('\n') + `\n\n` +
+    `### 📊 Indikator Keberhasilan:\n${currentAiSkillSummaryPlan.indikatorKeberhasilan}`;
+
+  // Build ranking rows
+  let bottleneckRowsHtml = '';
+  rankedComps.forEach((c, idx) => {
+    const isTop = idx === 0;
+    bottleneckRowsHtml += `
+      <tr style="border-bottom:1px solid var(--line-soft);font-size:12px;background:${isTop ? '#FEF2F2' : '#fff'};">
+        <td style="padding:8px 10px;font-weight:600;color:var(--ink);">
+          ${isTop ? '🏆 ' : ''}${escapeHtml(c.name)}
+        </td>
+        <td style="padding:8px 10px;text-align:center;">
+          <span style="font-weight:700;color:${isTop ? '#B91C1C' : '#B45309'};">${c.count} Karyawan</span>
+        </td>
+        <td style="padding:8px 10px;text-align:center;">
+          <span style="font-size:11px;font-weight:700;padding:2px 7px;border-radius:12px;background:#FEE2E2;color:#B91C1C;">
+            -${c.sumDeficit}
+          </span>
+        </td>
+        <td style="padding:8px 10px;text-align:left;">
+          <span style="font-size:11px;font-weight:600;color:${isTop ? '#B91C1C' : '#64748B'};">
+            ${isTop ? '🚨 Prioritas Pelatihan Divisi #1' : 'Peningkatan Bertahap'}
+          </span>
+        </td>
+      </tr>
+    `;
+  });
+
+  // Build participant chips
+  let participantChipsHtml = topBottleneck.employees.map(e => `
+    <span style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;padding:3px 10px;border-radius:14px;background:#EFF6FF;border:1px solid #BFDBFE;color:#1E40AF;font-weight:600;">
+      <span>${escapeHtml(e.nama)}</span>
+      <span style="font-size:10px;padding:1px 5px;border-radius:8px;background:#DBEAFE;color:#1D4ED8;">GAP ${e.gap}</span>
+    </span>
+  `).join(' ');
+
+  bodyEl.innerHTML = `
+    <!-- Division KPI Stats Ribbon -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(130px, 1fr));gap:10px;margin-bottom:16px;">
+      <div style="background:#FAF9F5;border:1px solid var(--line-soft);border-radius:10px;padding:10px 12px;text-align:center;">
+        <div style="font-size:11px;color:var(--ink-soft);text-transform:uppercase;">Karyawan Dinilai</div>
+        <div style="font-size:18px;font-weight:800;color:var(--ink);">${totalScoredEmp} / ${deptEmployees.length}</div>
+      </div>
+      <div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:10px;padding:10px 12px;text-align:center;">
+        <div style="font-size:11px;color:#991B1B;text-transform:uppercase;">Bottleneck Utama</div>
+        <div style="font-size:14px;font-weight:800;color:#B91C1C;margin-top:2px;">${escapeHtml(topBottleneck.name)}</div>
+      </div>
+      <div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:10px;padding:10px 12px;text-align:center;">
+        <div style="font-size:11px;color:#1E40AF;text-transform:uppercase;">Target Peserta</div>
+        <div style="font-size:18px;font-weight:800;color:#1D4ED8;">${topBottleneck.count} Orang</div>
+      </div>
+    </div>
+
+    <!-- Bottleneck Heatmap Table -->
+    <div style="background:#FAF9F5;border:1px solid var(--line-soft);border-radius:10px;padding:12px 14px;margin-bottom:16px;">
+      <div style="font-size:12.5px;font-weight:700;color:var(--ink);margin-bottom:6px;">
+        Peta Prioritas Kebutuhan Pelatihan ${escapeHtml(dept)}:
+      </div>
+      <div class="tbl-wrap" style="border:1px solid var(--line-soft);border-radius:8px;background:#fff;margin-bottom:10px;">
+        <table style="width:100%;border-collapse:collapse;margin:0;">
+          <thead>
+            <tr style="background:var(--sand-soft);font-size:11px;color:var(--ink-soft);text-transform:uppercase;border-bottom:1px solid var(--line-soft);">
+              <th style="padding:7px 10px;text-align:left;">Kompetensi</th>
+              <th style="padding:7px 10px;text-align:center;">Jumlah Karyawan GAP</th>
+              <th style="padding:7px 10px;text-align:center;">Total Defisit</th>
+              <th style="padding:7px 10px;text-align:left;">Status Prioritas</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${bottleneckRowsHtml}
+          </tbody>
+        </table>
+      </div>
+
+      <div style="font-size:12px;color:var(--ink-soft);margin-bottom:6px;">
+        <strong>Karyawan yang Direkomendasikan Mengikuti Cohort Ini (${topBottleneck.count} Orang):</strong>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;">
+        ${participantChipsHtml}
+      </div>
+    </div>
+
+    <!-- Recommendation Card -->
+    ${renderAiBlueprintCard(blueprint)}
+  `;
+
+  openModal('modalAiSkillSummary');
+}
+
+function applyAiSkillSummaryToForm() {
+  if (!currentAiSkillSummaryPlan) {
+    showToast('Belum ada rekomendasi pelatihan AI yang dibuat.', 'error');
+    return;
+  }
+
+  // 1. Close modal
+  closeModal('modalAiSkillSummary');
+
+  // 2. Switch to form wizard
+  goToPage('ajukan');
+
+  // 3. Set department
+  const deptEl = document.getElementById('deptName');
+  const targetDept = activeSkillDept || (currentAiSkillSummaryPlan.targetEmployee?.divisi) || 'Divisi HR';
+  if (deptEl && targetDept) {
+    deptEl.value = targetDept;
+    if (typeof handleDeptChange === 'function') handleDeptChange(deptEl);
+  }
+
+  // 4. Set currentAiPlan and apply standard AI plan fields
+  currentAiPlan = currentAiSkillSummaryPlan;
+  if (typeof applyAiPlanToForm === 'function') {
+    applyAiPlanToForm();
+  }
+
+  // 5. Populate Participant(s) in Step 2 table
+  const tbody = document.getElementById('participantTableBody');
+  if (tbody && typeof addParticipant === 'function') {
+    if (Array.isArray(currentAiSkillSummaryPlan.targetEmployees) && currentAiSkillSummaryPlan.targetEmployees.length > 0) {
+      currentAiSkillSummaryPlan.targetEmployees.forEach(emp => {
+        const inputs = tbody.querySelectorAll('input.participant-name');
+        let exists = false;
+        inputs.forEach(inp => {
+          if (inp.value.trim().toLowerCase() === emp.nama.toLowerCase()) exists = true;
+        });
+        if (!exists) {
+          addParticipant(emp.nama, emp.email || '', emp.divisi || targetDept);
+        }
+      });
+    } else if (currentAiSkillSummaryPlan.targetEmployee) {
+      const emp = currentAiSkillSummaryPlan.targetEmployee;
+      const inputs = tbody.querySelectorAll('input.participant-name');
+      let exists = false;
+      inputs.forEach(inp => {
+        if (inp.value.trim().toLowerCase() === emp.nama.toLowerCase()) exists = true;
+      });
+      if (!exists) {
+        addParticipant(emp.nama, emp.email || '', emp.divisi || targetDept);
+      }
+    }
+  }
+
+  showToast('✨ Rekomendasi training AI & peserta berhasil diterapkan ke formulir!', 'success');
+}
+
+function openActiveAiSkillInStudio() {
+  if (!currentAiSkillSummaryPlan) {
+    showToast('Belum ada rancangan AI yang dipilih.', 'error');
+    return;
+  }
+
+  closeModal('modalAiSkillSummary');
+  goToPage('ai-studio');
+
+  // Switch to TNA mode
+  if (typeof switchStudioMode === 'function') {
+    switchStudioMode('tna');
+  }
+
+  // Pre-fill TNA Department & Issue
+  const deptInput = document.getElementById('tnaDept');
+  if (deptInput) {
+    deptInput.value = activeSkillDept || 'Divisi HR';
+  }
+
+  const issueInput = document.getElementById('tnaIssue');
+  if (issueInput) {
+    const empInfo = currentAiSkillSummaryPlan.targetEmployee 
+      ? `Karyawan: ${currentAiSkillSummaryPlan.targetEmployee.nama} (${currentAiSkillSummaryPlan.targetEmployee.divisi})`
+      : `Divisi: ${activeSkillDept || 'Divisi HR'}`;
+    issueInput.value = `${empInfo}. Ditemukan kesenjangan performa pada kompetensi utama. Program yang diusulkan: "${currentAiSkillSummaryPlan.namaTraining}". Tujuan: ${currentAiSkillSummaryPlan.goals}`;
+    issueInput.focus();
+  }
+
+  showToast('Beralih ke AI Studio untuk eksplorasi kurikulum mendalam.', 'info');
+}
+
+function copyAiSkillSummary() {
+  if (!currentAiSkillSummaryMarkdown) {
+    showToast('Tidak ada konten summary untuk disalin.', 'error');
+    return;
+  }
+
+  const textToCopy = currentAiSkillSummaryMarkdown;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(textToCopy).then(() => {
+      showToast('Summary rekomendasi training AI berhasil disalin ke clipboard!', 'success');
+    }).catch(() => {
+      fallbackCopySummaryText(textToCopy);
+    });
+  } else {
+    fallbackCopySummaryText(textToCopy);
+  }
+}
+
+function fallbackCopySummaryText(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.left = '-9999px';
+  document.body.appendChild(ta);
+  ta.select();
+  try {
+    document.execCommand('copy');
+    showToast('Summary berhasil disalin ke clipboard!', 'success');
+  } catch (err) {
+    showToast('Gagal menyalin summary otomatis.', 'error');
+  }
+  document.body.removeChild(ta);
+}
+
+// Window Exposures for Skill Matrix
+window.handleSkillDeptChange = handleSkillDeptChange;
+window.selectSkillDeptDirectly = selectSkillDeptDirectly;
+window.openEmployeeSkillMatrix = openEmployeeSkillMatrix;
+window.backToSkillEmployeeList = backToSkillEmployeeList;
+window.changeSkillDept = changeSkillDept;
+window.filterSkillEmployeesList = filterSkillEmployeesList;
+window.addNewSkillEmployeeFromList = addNewSkillEmployeeFromList;
+window.deleteSkillEmployee = deleteSkillEmployee;
+window.setIndividualSkillScore = setIndividualSkillScore;
+window.updateIndividualCompStandar = updateIndividualCompStandar;
+window.deleteIndividualCompetency = deleteIndividualCompetency;
+window.openAddSkillCompetencyModal = openAddSkillCompetencyModal;
+window.submitModalNewCompetency = submitModalNewCompetency;
+window.proposeTrainingForActiveEmp = proposeTrainingForActiveEmp;
+window.renderSkillMatrix = renderSkillMatrix;
+window.resetSkillMatrixSampleData = resetSkillMatrixSampleData;
+
+// Window Exposures for AI Skill Matrix TNA
+window.generateAiSkillSummaryForActiveEmp = generateAiSkillSummaryForActiveEmp;
+window.generateAiSkillSummaryForDivision = generateAiSkillSummaryForDivision;
+window.applyAiSkillSummaryToForm = applyAiSkillSummaryToForm;
+window.openActiveAiSkillInStudio = openActiveAiSkillInStudio;
+window.copyAiSkillSummary = copyAiSkillSummary;
+
+

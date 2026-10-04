@@ -1,0 +1,365 @@
+      <section class="tds-page" id="page-skill-matrix" style="display:none;">
+        <!-- Header Halaman Skill Matrix -->
+        <div class="doc-header" style="margin-bottom:8px;">
+          <div style="display:flex;align-items:center;gap:14px;">
+            <div class="icon-box" style="width:52px;height:52px;border-radius:16px;background:linear-gradient(135deg,#4B96FF,#7CB8F0);display:flex;align-items:center;justify-content:center;box-shadow:0 6px 14px -4px rgba(75,150,255,0.45);flex-shrink:0;">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><!-- icon grid/matrix 4 kotak --><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect><rect x="14" y="14" width="7" height="7" rx="1"></rect></svg>
+            </div>
+            <div>
+              <p class="kicker">Employee Development Program</p>
+              <h1 class="voice">Skill Matrix</h1>
+            </div>
+          </div>
+        </div>
+
+        <!-- Penjelasan singkat di atas halaman -->
+        <div style="margin:10px 0 20px;padding:12px 18px;background:rgba(255,255,255,0.7);border:1px solid var(--line-soft);border-radius:10px;">
+          <p style="font-size:13px;color:var(--ink-soft);line-height:1.6;margin:0;">
+            Skill Matrix memetakan level kompetensi tiap karyawan dibandingkan standar jabatannya, sehingga gap kompetensi dan kebutuhan training dapat ditentukan secara objektif dan terukur.
+          </p>
+        </div>
+
+        <!-- STATE 1: Empty Selection Prompt (No department chosen yet) -->
+        <div id="skillMatrixEmptyPrompt" class="form-card" style="text-align:center;padding:50px 24px;margin-bottom:24px;background:linear-gradient(180deg, #FFFFFF 0%, #FAF9F5 100%);border:1.5px dashed var(--line-soft);border-radius:14px;">
+          <div style="width:60px;height:60px;border-radius:50%;background:rgba(63, 90, 68, 0.1);color:var(--moss);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+          </div>
+          <h3 class="voice" style="font-size:20px;margin:0 0 8px;color:var(--ink);">Silahkan Pilih Divisi &amp; Departemen Terlebih Dahulu</h3>
+          <p style="font-size:13.5px;color:var(--ink-soft);max-width:540px;margin:0 auto 22px;line-height:1.6;">
+            Pilih departemen untuk melihat daftar nama karyawan di divisi tersebut, kemudian klik nama karyawan untuk membuka matriks kompetensi individualnya:
+          </p>
+
+          <div style="max-width:380px;margin:0 auto 22px;">
+            <select id="skillMatrixEmptyDeptSelect" onchange="handleSkillDeptChange(this.value)" class="form-control" style="width:100%;padding:11px 16px;font-size:14px;border:1.5px solid var(--accent);border-radius:10px;font-weight:700;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,0.05);cursor:pointer;">
+              <option value="">-- Pilih Divisi / Departemen --</option>
+              <option value="HR">HR</option>
+              <option value="GA">GA</option>
+              <option value="LEGAL">LEGAL</option>
+              <option value="FINANCE">FINANCE</option>
+              <option value="ACCOUNTING">ACCOUNTING</option>
+              <option value="TAX">TAX</option>
+              <option value="MARKETING">MARKETING</option>
+              <option value="SALES OPS">SALES OPS</option>
+              <option value="SALES ENABLEMENT">SALES ENABLEMENT</option>
+              <option value="TELEMARKETING">TELEMARKETING</option>
+              <option value="PEC">PEC</option>
+              <option value="CUSTOMER EXPERIENCE">CUSTOMER EXPERIENCE</option>
+              <option value="QA">QA</option>
+              <option value="WEB DEVELOPER">WEB DEVELOPER</option>
+              <option value="INTEGRATION">INTEGRATION</option>
+              <option value="MOBILE DEVELOPER">MOBILE DEVELOPER</option>
+              <option value="UI/UX DESIGNER">UI/UX DESIGNER</option>
+              <option value="AI">AI</option>
+              <option value="BUSINESS ANALYST">BUSINESS ANALYST</option>
+              <option value="IT INFRASTRUCTURE">IT INFRASTRUCTURE</option>
+            </select>
+          </div>
+
+          <!-- Quick Chips -->
+          <div style="display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:8px;">
+            <span style="font-size:12px;color:var(--ink-soft);font-weight:600;margin-right:2px;">Atau pilih cepat divisi:</span>
+            <button type="button" class="skill-dept-chip" onclick="selectSkillDeptDirectly('HR')">HR</button>
+            <button type="button" class="skill-dept-chip" onclick="selectSkillDeptDirectly('WEB DEVELOPER')">WEB DEVELOPER</button>
+            <button type="button" class="skill-dept-chip" onclick="selectSkillDeptDirectly('QA')">QA</button>
+            <button type="button" class="skill-dept-chip" onclick="selectSkillDeptDirectly('FINANCE')">FINANCE</button>
+            <button type="button" class="skill-dept-chip" onclick="selectSkillDeptDirectly('MARKETING')">MARKETING</button>
+            <button type="button" class="skill-dept-chip" onclick="selectSkillDeptDirectly('SALES OPS')">SALES OPS</button>
+            <button type="button" class="skill-dept-chip" onclick="selectSkillDeptDirectly('AI')">AI</button>
+            <button type="button" class="skill-dept-chip" onclick="selectSkillDeptDirectly('IT INFRASTRUCTURE')">IT INFRASTRUCTURE</button>
+          </div>
+        </div>
+
+        <!-- STATE 2: Employee List View for Selected Division -->
+        <div id="skillMatrixEmployeeListView" style="display:none;">
+          <!-- Division Navigation & Action Toolbar (Top Toolbar with Search Bar) -->
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:12px;">
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;flex:1;min-width:280px;">
+              <button type="button" class="btn-secondary" onclick="changeSkillDept()" style="font-size:12.5px;padding:8px 14px;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                <span>← Pilih Divisi Lain</span>
+              </button>
+
+              <!-- Kolom Pencarian Karyawan Tetap di Atas -->
+              <div style="position:relative;flex:1;max-width:320px;min-width:180px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink-soft)" stroke-width="2" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);pointer-events:none;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <input type="text" id="skillEmpSearchInput" placeholder="Cari nama karyawan..." oninput="filterSkillEmployeesList(this.value)" style="padding:7.5px 12px 7.5px 32px;border:1px solid var(--line);border-radius:8px;font-size:12.5px;width:100%;background:#fff;box-sizing:border-box;">
+              </div>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <button type="button" class="btn-secondary" onclick="generateAiSkillSummaryForDivision()" style="font-size:12px;padding:8px 12px;display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg, rgba(75, 150, 255, 0.08), rgba(124, 184, 240, 0.15));border-color:#4B96FF;color:#1D4ED8;font-weight:700;" title="AI Summary Kebutuhan Training Divisi">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                <span>✨ AI Summary Divisi <span class="active-dept-label">HR</span></span>
+              </button>
+
+              <button type="button" class="btn-secondary" onclick="resetSkillMatrixSampleData()" style="font-size:12px;padding:8px 12px;display:inline-flex;align-items:center;gap:6px;" title="Muat Ulang Contoh Data">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+                <span>Reset Contoh Data</span>
+              </button>
+            </div>
+          </div>
+          <!-- Ringkasan Divisi (3 KPI Cards) -->
+          <div class="dashboard-kpi-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 20px;">
+            <div class="kpi-card">
+              <div class="kpi-card-header">
+                <span class="kpi-card-title">Karyawan <span class="active-dept-label">HR</span></span>
+                <div class="kpi-card-icon" style="background:rgba(63, 90, 68, 0.1);color:var(--moss);">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                </div>
+              </div>
+              <div class="kpi-card-val" id="kpiDivTotalEmployees">0</div>
+              <div class="kpi-card-sub">Personel terdaftar di divisi</div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-card-header">
+                <span class="kpi-card-title">Karyawan Sudah Dinilai</span>
+                <div class="kpi-card-icon" style="background:rgba(75, 150, 255, 0.1);color:#4B96FF;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+                </div>
+              </div>
+              <div class="kpi-card-val" id="kpiDivScoredEmployees">0</div>
+              <div class="kpi-card-sub">Memiliki catatan matriks kompetensi</div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-card-header">
+                <span class="kpi-card-title">Rata-rata GAP Divisi</span>
+                <div class="kpi-card-icon" style="background:rgba(76, 201, 160, 0.15);color:#4CC9A0;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                </div>
+              </div>
+              <div class="kpi-card-val" id="kpiDivAvgGap">-</div>
+              <div class="kpi-card-sub" id="kpiDivAvgGapSub">Kesenjangan kumulatif divisi</div>
+            </div>
+          </div>
+
+          <!-- Section: Card Roster Karyawan -->
+          <div class="form-card" style="margin-bottom:24px;">
+            <div style="margin-bottom:16px;">
+              <h3 class="card-head-title" style="font-size:16px;margin:0 0 4px;color:var(--ink);display:flex;align-items:center;gap:8px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
+                <span>Daftar Karyawan Divisi <span class="active-dept-label">HR</span></span>
+              </h3>
+              <span class="helper-note" style="margin:0;font-size:12.5px;">Klik kartu salah satu karyawan di bawah ini untuk melihat &amp; mengelola Skill Matrix individualnya.</span>
+            </div>
+
+            <!-- Toolbar + Tambah Karyawan Baru -->
+            <div style="display:flex;align-items:center;gap:8px;padding:12px 14px;background:var(--sand-soft);border:1px solid var(--line-soft);border-radius:10px;margin-bottom:18px;flex-wrap:wrap;">
+              <span style="font-size:12px;font-weight:700;color:var(--ink);white-space:nowrap;">+ Tambah Karyawan:</span>
+              <input type="text" id="newSkillEmpNameInput" placeholder="Nama karyawan baru..." style="padding:7px 12px;border:1px solid var(--line);border-radius:6px;font-size:12.5px;flex:1;min-width:180px;" onkeydown="if(event.key==='Enter') addNewSkillEmployeeFromList()">
+              <input type="text" id="newSkillEmpRoleInput" placeholder="Jabatan / Sub-divisi (opsional)..." style="padding:7px 12px;border:1px solid var(--line);border-radius:6px;font-size:12.5px;flex:1;min-width:180px;" onkeydown="if(event.key==='Enter') addNewSkillEmployeeFromList()">
+              <button type="button" class="btn-primary" onclick="addNewSkillEmployeeFromList()" style="font-size:12.5px;padding:7px 14px;white-space:nowrap;">
+                <span>+ Simpan Karyawan</span>
+              </button>
+            </div>
+
+            <!-- Grid Kartu Karyawan -->
+            <div class="skill-emp-grid" id="skillEmployeesGridContainer">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+        </div>
+
+        <!-- STATE 3: Individual Employee Skill Matrix View -->
+        <div id="skillMatrixIndividualView" style="display:none;">
+          <!-- Top Navigation & Action Bar -->
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px;">
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+              <button type="button" class="btn-secondary" onclick="backToSkillEmployeeList()" style="font-size:12.5px;padding:7px 14px;display:inline-flex;align-items:center;gap:6px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                <span>Kembali ke Daftar Karyawan <span class="active-dept-label">HR</span></span>
+              </button>
+
+              <!-- Employee Switcher Quick Dropdown -->
+              <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-soft);">
+                <span>Ganti Karyawan:</span>
+                <select id="indivEmployeeSwitcher" onchange="openEmployeeSkillMatrix(this.value)" style="padding:6px 10px;border:1px solid var(--line);border-radius:6px;font-size:12px;background:#fff;font-weight:600;color:var(--ink);cursor:pointer;">
+                  <!-- Populated dynamically -->
+                </select>
+              </div>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <button type="button" class="btn-secondary" onclick="generateAiSkillSummaryForActiveEmp()" style="font-size:12.5px;padding:7px 14px;display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg, rgba(75, 150, 255, 0.08), rgba(124, 184, 240, 0.15));border-color:#4B96FF;color:#1D4ED8;font-weight:700;" title="Analisis AI & Summary Kebutuhan Pelatihan">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                <span>✨ AI Summary Kebutuhan Training</span>
+              </button>
+
+              <button type="button" class="btn-primary" onclick="proposeTrainingForActiveEmp()" style="font-size:12.5px;padding:7px 14px;display:inline-flex;align-items:center;gap:6px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                <span>Ajukan Training Manual</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Employee Executive Header Profile Card -->
+          <div class="form-card" style="margin-bottom:18px;padding:18px 20px;background:linear-gradient(135deg, #FAF9F5 0%, #FFFFFF 100%);border:1px solid var(--line);">
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:18px;">
+              <div style="display:flex;align-items:center;gap:16px;">
+                <div id="indivEmpAvatar" style="width:56px;height:56px;border-radius:50%;background:rgba(63, 90, 68, 0.15);color:var(--moss);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;border:1.5px solid rgba(63, 90, 68, 0.3);">
+                  FR
+                </div>
+                <div>
+                  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                    <h3 id="indivEmpName" style="font-size:19px;margin:0;font-weight:800;color:var(--ink);">FERNANDA RUSLI</h3>
+                    <span class="badge" id="indivEmpDeptBadge" style="background:rgba(63, 90, 68, 0.1);color:var(--moss);font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:6px;">Divisi HR</span>
+                  </div>
+                  <div id="indivEmpRoleText" style="font-size:13px;color:var(--ink-soft);margin-top:2px;">TRAINING &amp; PEOPLE DEVELOPMENT JUNIOR</div>
+                </div>
+              </div>
+
+              <!-- 4 Mini Metric Pills -->
+              <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+                <div style="padding:8px 14px;background:#fff;border:1px solid var(--line);border-radius:8px;text-align:center;">
+                  <div style="font-size:10.5px;color:var(--ink-soft);font-weight:700;text-transform:uppercase;">Kompetensi</div>
+                  <div id="indivMetricComps" style="font-size:16px;font-weight:800;color:var(--ink);">5</div>
+                </div>
+                <div style="padding:8px 14px;background:#fff;border:1px solid var(--line);border-radius:8px;text-align:center;">
+                  <div style="font-size:10.5px;color:var(--ink-soft);font-weight:700;text-transform:uppercase;">Rata-rata Skor</div>
+                  <div id="indivMetricAvgScore" style="font-size:16px;font-weight:800;color:var(--ink);">3.4</div>
+                </div>
+                <div style="padding:8px 14px;background:#fff;border:1px solid var(--line);border-radius:8px;text-align:center;">
+                  <div style="font-size:10.5px;color:var(--ink-soft);font-weight:700;text-transform:uppercase;">Rata-rata GAP</div>
+                  <div id="indivMetricAvgGap" style="font-size:16px;font-weight:800;color:#4CC9A0;">0.0</div>
+                </div>
+                <div style="padding:8px 14px;background:#fff;border:1px solid var(--line);border-radius:8px;text-align:center;">
+                  <div style="font-size:10.5px;color:var(--ink-soft);font-weight:700;text-transform:uppercase;">Status Evaluasi</div>
+                  <div id="indivMetricStatus" style="font-size:12px;font-weight:700;color:var(--moss);margin-top:2px;">Sesuai Standar</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Smart GAP Training Recommendation Alert (Visible if GAP < 0) -->
+            <div id="indivGapRecommendationBox" style="display:none;margin-top:16px;padding:12px 16px;background:rgba(255, 179, 122, 0.12);border:1px solid rgba(255, 179, 122, 0.4);border-radius:8px;">
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+                <div style="display:flex;align-items:flex-start;gap:10px;">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2" style="flex-shrink:0;margin-top:2px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                  <div>
+                    <div style="font-weight:700;font-size:13px;color:#92400E;">Rekomendasi Peningkatan Kompetensi:</div>
+                    <div id="indivGapRecommendationText" style="font-size:12.5px;color:var(--ink);margin-top:2px;">
+                      Ditemukan kesenjangan kompetensi yang memerlukan pelatihan.
+                    </div>
+                  </div>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                  <button type="button" class="btn-primary" onclick="generateAiSkillSummaryForActiveEmp()" style="font-size:11.5px;padding:6px 12px;background:#D97706;border-color:#D97706;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                    <span>✨ Analisis Solusi AI</span>
+                  </button>
+                  <button type="button" class="btn-secondary" onclick="proposeTrainingForActiveEmp()" style="font-size:11.5px;padding:6px 10px;background:#fff;border-color:#D97706;color:#92400E;white-space:nowrap;">
+                    Ajukan Manual
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Panduan Skala Penilaian & Keterangan GAP (Hanya Muncul di Section Karyawan) -->
+          <details class="skill-guide-details" open style="margin-bottom:18px;background:var(--sand-soft);border:1px solid var(--line-soft);border-radius:12px;overflow:hidden;">
+            <summary style="padding:11px 16px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;user-select:none;font-size:13px;font-weight:700;color:var(--ink);">
+              <span style="display:flex;align-items:center;gap:8px;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                <span>Panduan Skala Penilaian (1 - 4) &amp; Keterangan GAP</span>
+              </span>
+              <span style="font-size:11.5px;color:var(--ink-soft);font-weight:600;">Klik untuk melipat / membuka</span>
+            </summary>
+            
+            <div style="padding:6px 16px 16px;border-top:1px solid var(--line-soft);display:grid;grid-template-columns:repeat(auto-fit, minmax(300px, 1fr));gap:16px;">
+              <!-- Kolom 1: Skala 1 - 4 -->
+              <div style="background:#fff;border:1px solid var(--line-soft);border-radius:8px;padding:12px 14px;">
+                <div style="font-size:11.5px;font-weight:700;color:var(--ink);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+                  <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--moss);"></span>
+                  <span>1. Skala Penilaian Kompetensi (1 - 4)</span>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:6px;">
+                  <div style="display:flex;align-items:center;gap:8px;font-size:12px;">
+                    <span style="width:22px;height:22px;border-radius:5px;background:#FEE2E2;color:#B91C1C;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;flex-shrink:0;">1</span>
+                    <strong style="color:var(--ink);">Pemahaman Dasar</strong>
+                    <span style="color:var(--ink-soft);font-size:11.5px;">— Konsep dasar di bawah supervisi</span>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:8px;font-size:12px;">
+                    <span style="width:22px;height:22px;border-radius:5px;background:#FEF3C7;color:#B45309;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;flex-shrink:0;">2</span>
+                    <strong style="color:var(--ink);">Cukup Kompeten</strong>
+                    <span style="color:var(--ink-soft);font-size:11.5px;">— Tugas rutin dengan arahan minimal</span>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:8px;font-size:12px;">
+                    <span style="width:22px;height:22px;border-radius:5px;background:#D1FAE5;color:#047857;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;flex-shrink:0;">3</span>
+                    <strong style="color:var(--ink);">Kompeten</strong>
+                    <span style="color:var(--ink-soft);font-size:11.5px;">— Mandiri &amp; memenuhi standar kerja</span>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:8px;font-size:12px;">
+                    <span style="width:22px;height:22px;border-radius:5px;background:#DBEAFE;color:#1D4ED8;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;flex-shrink:0;">4</span>
+                    <strong style="color:var(--ink);">Ahli</strong>
+                    <span style="color:var(--ink-soft);font-size:11.5px;">— Membimbing &amp; menangani kasus kompleks</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Kolom 2: Keterangan GAP -->
+              <div style="background:#fff;border:1px solid var(--line-soft);border-radius:8px;padding:12px 14px;">
+                <div style="font-size:11.5px;font-weight:700;color:var(--ink);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+                  <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent);"></span>
+                  <span>2. Keterangan GAP (Kompetensi Aktual - Kompetensi Ideal)</span>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:5px;">
+                  <div style="display:flex;align-items:center;gap:10px;font-size:12px;">
+                    <span class="gap-badge gap-m3" style="margin-top:0;min-width:68px;text-align:center;">GAP ≤ -3</span>
+                    <span style="color:var(--ink);font-weight:600;">Memerlukan pengembangan menyeluruh / intensif</span>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:10px;font-size:12px;">
+                    <span class="gap-badge gap-m2" style="margin-top:0;min-width:68px;text-align:center;">GAP -2</span>
+                    <span style="color:var(--ink);font-weight:600;">Memerlukan pengembangan</span>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:10px;font-size:12px;">
+                    <span class="gap-badge gap-m1" style="margin-top:0;min-width:68px;text-align:center;">GAP -1</span>
+                    <span style="color:var(--ink);font-weight:600;">Memerlukan peningkatan kompetensi</span>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:10px;font-size:12px;">
+                    <span class="gap-badge gap-0" style="margin-top:0;min-width:68px;text-align:center;">GAP 0</span>
+                    <span style="color:var(--ink);font-weight:600;">Sesuai kompetensi ideal (Standar)</span>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:10px;font-size:12px;">
+                    <span class="gap-badge gap-p" style="margin-top:0;min-width:68px;text-align:center;">GAP &gt; 0</span>
+                    <span style="color:var(--ink);font-weight:600;">Melampaui kompetensi ideal</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </details>
+
+          <!-- Individual Matrix Table Card -->
+          <div class="form-card" style="margin-bottom:20px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;flex-wrap:wrap;">
+              <div>
+                <h4 style="font-size:15px;margin:0 0 2px;color:var(--ink);font-weight:700;">Matriks Kompetensi Jabatan &amp; Analisis GAP</h4>
+                <span class="helper-note" style="margin:0;font-size:12px;">Pilih skor penguasaan aktual (1 - 4) langsung pada tombol di bawah untuk memperbarui GAP.</span>
+              </div>
+              <button type="button" class="btn-primary" onclick="openAddSkillCompetencyModal()" style="font-size:12px;padding:7px 12px;display:inline-flex;align-items:center;gap:6px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                <span>+ Tambah Parameter Kompetensi</span>
+              </button>
+            </div>
+
+            <!-- Table -->
+            <div class="tbl-wrap" style="border:1px solid var(--line);border-radius:10px;overflow-x:auto;">
+              <table class="dyn skill-matrix-table" style="margin:0;width:100%;">
+                <thead>
+                  <tr style="background:#f4f6fa;color:var(--ink);font-size:12px;">
+                    <th style="width:40px;text-align:center;">No</th>
+                    <th style="text-align:left;min-width:220px;">Parameter Kompetensi</th>
+                    <th style="width:140px;text-align:center;">Kompetensi Ideal</th>
+                    <th style="width:180px;text-align:center;">Kompetensi Aktual</th>
+                    <th style="width:100px;text-align:center;">Nilai GAP</th>
+                    <th style="min-width:200px;text-align:left;">Keterangan Status</th>
+                    <th style="width:50px;text-align:center;">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="indivSkillTableBody">
+                  <!-- Populated dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>

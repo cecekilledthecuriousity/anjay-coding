@@ -1,0 +1,100 @@
+<div class="modal-overlay" id="modalAiAssistant">
+  <div class="modal-card" style="max-width:680px;width:100%;max-height:92vh;display:flex;flex-direction:column;padding:0;overflow:hidden;">
+    <div class="modal-header" style="padding:16px 20px;border-bottom:1px solid var(--line);background:linear-gradient(135deg, rgba(79, 70, 229, 0.05), rgba(55, 47, 176, 0.08));">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div class="card-icon-wrap" style="width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg, #4F46E5, #372FB0);color:#fff;box-shadow:0 3px 10px rgba(79, 70, 229, 0.3);">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path></svg>
+        </div>
+        <div>
+          <h3 class="voice" style="margin:0;font-size:16px;">AI Training Course Architect</h3>
+          <span style="font-size:12px;color:var(--ink-soft);">Rancang silabus modul, sasaran SMART, dan indikator KPI otomatis</span>
+        </div>
+      </div>
+      <button type="button" class="modal-close" onclick="closeModal('modalAiAssistant')">&times;</button>
+    </div>
+
+    <div class="modal-body" style="padding:20px;overflow-y:auto;">
+      <!-- Input Section -->
+      <div class="field" style="margin-bottom:12px;">
+        <label>Topik / Nama Program Training</label>
+        <input type="text" id="aiTopicInput" class="field" placeholder="Contoh: Mastering Golang Microservices, Problem Solving Leadership, Power BI..." style="padding:10px 12px;border:1px solid var(--line);border-radius:8px;width:100%;font-size:13.5px;">
+      </div>
+
+      <!-- Quick Suggested Topics -->
+      <div style="margin-bottom:14px;">
+        <span style="font-size:11.5px;color:var(--ink-faint);display:block;margin-bottom:6px;">Contoh topik cepat (klik untuk coba):</span>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <span class="ai-chip" onclick="setAiTopic('Modern React &amp; TypeScript Architecture')">React &amp; TypeScript</span>
+          <span class="ai-chip" onclick="setAiTopic('Effective Leadership &amp; Team Coaching')">Leadership &amp; Coaching</span>
+          <span class="ai-chip" onclick="setAiTopic('Data Analysis with Excel &amp; Power BI')">Excel &amp; Power BI</span>
+          <span class="ai-chip" onclick="setAiTopic('Customer Service Excellence &amp; Handling Complaints')">Customer Service</span>
+          <span class="ai-chip" onclick="setAiTopic('Git, CI/CD Pipeline &amp; DevOps Automation')">DevOps &amp; CI/CD</span>
+        </div>
+      </div>
+
+      <div class="field-row cols-2" style="margin-bottom:12px;">
+        <div class="field">
+          <label>Target Level Kemahiran</label>
+          <select id="aiLevelSelect" class="field" style="padding:8px 10px;border:1px solid var(--line);border-radius:8px;width:100%;font-size:13px;">
+            <option value="Basic">Basic (Pemula)</option>
+            <option value="Intermediate" selected>Intermediate (Menengah)</option>
+            <option value="Advanced">Advanced (Mahir / Lanjutan)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Estimasi Format &amp; Sesi</label>
+          <select id="aiFormatSelect" class="field" style="padding:8px 10px;border:1px solid var(--line);border-radius:8px;width:100%;font-size:13px;">
+            <option value="1_day" selected>1 Hari Penuh (2 Sesi - 6 Jam)</option>
+            <option value="half_day">Setengah Hari (1 Sesi - 3 Jam)</option>
+            <option value="2_days">2 Hari Workshop (4 Sesi - 12 Jam)</option>
+          </select>
+        </div>
+      </div>
+
+      <button type="button" class="btn-primary" id="btnAiGenerate" onclick="executeAiGeneration()" style="width:100%;justify-content:center;background:linear-gradient(135deg, #4F46E5, #372FB0);box-shadow:0 3px 10px rgba(79, 70, 229, 0.3);">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path></svg>
+        <span>Rancang Program dengan AI</span>
+      </button>
+
+      <!-- Loading State -->
+      <div id="aiLoadingState" style="display:none;text-align:center;padding:24px 12px;">
+        <div class="spinner" style="width:32px;height:32px;border:3px solid rgba(79,70,229,0.2);border-top-color:#4F46E5;border-radius:50%;margin:0 auto 12px;animation:spin 0.8s linear infinite;"></div>
+        <div style="font-weight:600;font-size:13.5px;color:var(--ink);" id="aiLoadingStep">Merumuskan tujuan &amp; silabus pembelajaran...</div>
+        <div style="font-size:12px;color:var(--ink-soft);margin-top:4px;">Memproses silabus modul, pembagian durasi, dan tolok ukur evaluasi</div>
+      </div>
+
+      <!-- Preview Container -->
+      <div id="aiPreviewContainer" style="display:none;margin-top:16px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <span style="font-size:12px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:0.04em;">Hasil Rancangan AI</span>
+          <span class="mini-pill approved" style="font-size:11px;padding:2px 8px;">Siap Diterapkan</span>
+        </div>
+
+        <div class="ai-preview-section">
+          <h4>🎯 Training Goals &amp; Urgensi</h4>
+          <p id="previewAiGoals">-</p>
+        </div>
+
+        <div class="ai-preview-section">
+          <h4>📋 Silabus Sesi Pelatihan (<span id="previewAiModuleCount">0</span> Sesi)</h4>
+          <div id="previewAiModulesList"></div>
+        </div>
+
+        <div class="ai-preview-section">
+          <h4>📊 Tolok Ukur &amp; Evaluasi Dampak</h4>
+          <p style="margin-bottom:6px;"><strong>Hasil Diharapkan:</strong> <span id="previewAiExpected">-</span></p>
+          <p style="margin-bottom:6px;"><strong>Penerapan di Pekerjaan:</strong> <span id="previewAiApply">-</span></p>
+          <p><strong>Indikator Keberhasilan:</strong> <span id="previewAiKpi">-</span></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer" style="padding:12px 20px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;">
+      <button type="button" class="btn-secondary" onclick="closeModal('modalAiAssistant')">Tutup</button>
+      <button type="button" class="btn-primary" id="btnAiApply" onclick="applyAiPlanToForm()" disabled style="background:var(--accent);">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        Terapkan ke Formulir
+      </button>
+    </div>
+  </div>
+</div>

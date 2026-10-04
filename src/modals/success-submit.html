@@ -1,0 +1,28 @@
+<div class="modal-overlay" id="modalSuccessSubmit">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3 class="voice">Pengajuan Berhasil Dikirim!</h3>
+      <button type="button" class="modal-close" onclick="closeModal('modalSuccessSubmit')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-icon-badge success">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+      </div>
+      <p>Data training telah tersimpan dan siap diproses.</p>
+      <div class="summary-box" id="successSummaryBox"></div>
+
+      <div style="background:#EBF0EC;border:1px solid #C4D7C7;border-radius:8px;padding:14px 16px;margin-top:14px;font-size:13px;color:#2D3E31;line-height:1.6;">
+        <strong style="display:flex;align-items:center;gap:6px;margin-bottom:4px;color:var(--moss);">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          Email Konfirmasi Otomatis Dikirim dari training@cpssoft.com
+        </strong>
+        Sistem backend otomatis mengirimkan undangan dan jadwal training langsung ke seluruh email peserta terdaftar. Pengaju tidak perlu mengirim email manual.
+      </div>
+    </div>
+    <div class="modal-footer" style="display:flex;justify-content:flex-end;">
+      <button type="button" class="btn-primary" onclick="closeModal('modalSuccessSubmit'); window.scrollTo({ top: 0, behavior: 'smooth' });">
+        Selesai &amp; Tutup
+      </button>
+    </div>
+  </div>
+</div>

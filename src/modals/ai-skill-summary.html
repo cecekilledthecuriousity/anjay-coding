@@ -1,0 +1,37 @@
+<div class="modal-overlay" id="modalAiSkillSummary">
+  <div class="modal-card" style="max-width:720px;max-height:90vh;display:flex;flex-direction:column;border-radius:14px;box-shadow:0 20px 45px rgba(0,0,0,0.18);">
+    <div class="modal-header" style="border-bottom:1px solid var(--line-soft);padding:16px 22px;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(135deg, #FAF9F5 0%, #FFFFFF 100%);">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div style="width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,#4B96FF,#7CB8F0);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(75,150,255,0.35);flex-shrink:0;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+        </div>
+        <div>
+          <h3 class="voice" style="margin:0;font-size:17px;color:var(--ink);">AI Training Needs Summary &amp; Rekomendasi</h3>
+          <div id="modalAiSkillSummarySubtitle" style="font-size:12.5px;color:var(--ink-soft);margin-top:2px;">Analisis kesenjangan kompetensi (GAP) berbasis AI</div>
+        </div>
+      </div>
+      <button type="button" class="modal-close" onclick="closeModal('modalAiSkillSummary')">&times;</button>
+    </div>
+    
+    <div class="modal-body" id="modalAiSkillSummaryBody" style="padding:20px 22px;overflow-y:auto;flex:1;">
+      <!-- Dynamic content rendered by JS -->
+    </div>
+
+    <div class="modal-footer" id="modalAiSkillSummaryFooter" style="padding:14px 22px;border-top:1px solid var(--line-soft);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;background:var(--sand-soft);">
+      <button type="button" class="btn-secondary" onclick="closeModal('modalAiSkillSummary')" style="font-size:12.5px;padding:7px 14px;">Tutup</button>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <button type="button" class="btn-secondary" id="btnCopyAiSummary" onclick="copyAiSkillSummary()" style="font-size:12px;padding:7px 12px;display:inline-flex;align-items:center;gap:6px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+          <span>Salin Summary</span>
+        </button>
+        <button type="button" class="btn-secondary" id="btnOpenInAiStudio" onclick="openActiveAiSkillInStudio()" style="font-size:12px;padding:7px 12px;display:inline-flex;align-items:center;gap:6px;border-color:#4B96FF;color:#1D4ED8;background:#fff;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+          <span>Buka di AI Studio</span>
+        </button>
+        <button type="button" class="btn-primary" id="btnApplyAiSummaryToForm" onclick="applyAiSkillSummaryToForm()" style="font-size:12.5px;padding:7px 14px;display:inline-flex;align-items:center;gap:6px;background:var(--moss);">
+          <span>Ajukan Form Training</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,10 @@
+{
+  "name": "form-training-tds",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Training & Development System with Modular Static HTML Assembler",
+  "scripts": {
+    "build": "node scripts/build.js",
+    "watch": "node scripts/build.js --watch"
+  }
+}

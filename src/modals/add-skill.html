@@ -1,0 +1,31 @@
+<div class="modal-overlay" id="modalAddSkillCompetency">
+  <div class="modal-card" style="max-width:420px;">
+    <div class="modal-header">
+      <div>
+        <h3 class="voice" style="margin:0;font-size:16px;">+ Tambah Kompetensi Baru</h3>
+        <div id="modalAddSkillCompSubtitle" style="font-size:12px;color:var(--ink-soft);margin-top:2px;">Divisi: -</div>
+      </div>
+      <button type="button" class="modal-close" onclick="closeModal('modalAddSkillCompetency')">&times;</button>
+    </div>
+    <div class="modal-body" style="padding:16px 20px;">
+      <div class="field" style="margin-bottom:14px;">
+        <label>Nama Kompetensi <span style="color:var(--danger)">*</span></label>
+        <input type="text" id="modalNewCompName" placeholder="Contoh: HR Analytics &amp; Dashboarding..." style="width:100%;padding:8px 12px;border:1px solid var(--line);border-radius:8px;font-size:13px;" onkeydown="if(event.key==='Enter') submitModalNewCompetency()">
+      </div>
+      <div class="field">
+        <label>Kompetensi Ideal / Standar Jabatan (Skala 1 - 4)</label>
+        <select id="modalNewCompStandard" style="width:100%;padding:8px 12px;border:1px solid var(--line);border-radius:8px;font-size:13px;">
+          <option value="1">1 - Pemahaman Dasar</option>
+          <option value="2">2 - Cukup Kompeten</option>
+          <option value="3" selected>3 - Kompeten (Default Ideal)</option>
+          <option value="4">4 - Ahli</option>
+        </select>
+        <span class="helper-note" style="margin-top:4px;">Kompetensi ideal dapat diedit kembali kapan saja langsung pada tabel matriks.</span>
+      </div>
+    </div>
+    <div class="modal-footer" style="display:flex;justify-content:flex-end;gap:8px;">
+      <button type="button" class="btn-secondary" onclick="closeModal('modalAddSkillCompetency')">Batal</button>
+      <button type="button" class="btn-primary" onclick="submitModalNewCompetency()">Simpan Kompetensi</button>
+    </div>
+  </div>
+</div>

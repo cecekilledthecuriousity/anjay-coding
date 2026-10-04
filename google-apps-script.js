@@ -22,11 +22,21 @@
  */
 
 const SHEET_NAME = "Training Submissions";
+const POST_TRAINING_SHEET_NAME = "Post Training";
+
+// ID Folder Utama Google Drive untuk menyimpan bukti foto (evidence).
+// Kosongkan "" untuk menyimpan di My Drive utama akun pelaksana (training@cpssoft.com),
+// atau isi dengan Folder ID Google Drive jika ingin dimasukkan ke folder spesifik/Shared Drive.
+const EVIDENCE_ROOT_FOLDER_ID = "";
+
 const TIME_ZONE = "Asia/Jakarta";
 const LOGO_IMAGE_URL = "https://raw.githubusercontent.com/cecekilledthecuriousity/anjay-coding/main/favicon/apple-touch-icon.png";
 
 // URL Portal Approval (Tautan langsung pada tombol notifikasi email approver)
 const APPROVAL_PORTAL_URL = "https://form-training-cece-main.vercel.app/approval/index.html";
+
+// URL Google Form Evaluasi Trainer & Post-Test
+const DEFAULT_EVALUATION_URL = "https://docs.google.com/forms/d/e/1FAIpQLSdLNo9kzy22HEKq3xSCBHmZO2ksfCE2K7U_Y3EA2hCzQtRYmw/viewform";
 
 // Konfigurasi 2-3 Approver Utama (Tersimpan aman di script backend, tersembunyi dari form & master data publik)
 const APPROVER_EMAILS = [
@@ -70,6 +80,7 @@ const HEADERS = [
   "Goals (Target)",
   "Prasyarat & Output",
   "Link Silabus / Materi",
+  "Link Form Evaluasi / Post-Test",
   "Evaluasi & KPI",
   "Follow-up & PIC",
   "Daftar Peserta (Ringkasan)",
@@ -118,6 +129,16 @@ function doPost(e) {
     // Aksi pembaruan status persetujuan dari portal approval (/approval)
     if (data.action === "update_approval") {
       return handleUpdateApproval(sheet, data);
+    }
+
+    // Aksi Unggah Evidence Post Training Trampoline (Google Drive & Sheets)
+    if (data.action === "submitPostTrainingEvidence" || data.action === "post_training_evidence") {
+      return handlePostTrainingEvidence(ss, data);
+    }
+
+    // Aksi Simpan Hasil Post-Test Post Training Trampoline
+    if (data.action === "submitPostTest" || data.action === "post_training_test") {
+      return handlePostTestSubmission(ss, data);
     }
 
     const meta = data.meta || {};
@@ -245,6 +266,7 @@ function doPost(e) {
       "Goals (Target)": meta["Training goals"] || "-",
       "Prasyarat & Output": prasyaratOutput,
       "Link Silabus / Materi": meta["Link silabus materi"] || "-",
+      "Link Form Evaluasi / Post-Test": meta["Link form evaluasi"] || DEFAULT_EVALUATION_URL,
       "Evaluasi & KPI": evaluasiKpi,
       "Follow-up & PIC": followupInfo,
       "Daftar Peserta (Ringkasan)": participantsSummary || "-",
@@ -401,7 +423,7 @@ function setupSheetHeaders(sheet) {
     sheet.appendRow(HEADERS);
     const headerRange = sheet.getRange(1, 1, 1, HEADERS.length);
     headerRange.setFontWeight("bold");
-    headerRange.setBackground("#3F5A44");
+    headerRange.setBackground("#00178F");
     headerRange.setFontColor("#FFFFFF");
     sheet.setFrozenRows(1);
   } else {
@@ -414,7 +436,7 @@ function setupSheetHeaders(sheet) {
       sheet.getRange(1, startCol, 1, missingHeaders.length).setValues([missingHeaders]);
       const headerRange = sheet.getRange(1, startCol, 1, missingHeaders.length);
       headerRange.setFontWeight("bold");
-      headerRange.setBackground("#3F5A44");
+      headerRange.setBackground("#00178F");
       headerRange.setFontColor("#FFFFFF");
     }
   }
@@ -457,10 +479,18 @@ function setupInitialSpreadsheet() {
     cfgSheet.appendRow(["DEFAULT", DEFAULT_APPROVER_DIRECTORY.DEFAULT.name, DEFAULT_APPROVER_DIRECTORY.DEFAULT.email, DEFAULT_APPROVER_DIRECTORY.DEFAULT.title]);
   }
 
+  // 3. Inisialisasi Sheet "Post Training" (Unggah Evidence & Hasil Post-Test)
+  let postSheet = ss.getSheetByName(POST_TRAINING_SHEET_NAME);
+  if (!postSheet) {
+    postSheet = ss.insertSheet(POST_TRAINING_SHEET_NAME, 2);
+  }
+  setupPostTrainingSheet(postSheet);
+
   Logger.log("=================================================");
   Logger.log("✅ INISIALISASI SPREADSHEET BERHASIL!");
   Logger.log(`- Tab 1: '${SHEET_NAME}' (37 Kolom Header Aktif)`);
   Logger.log(`- Tab 2: '${CONFIG_APPROVERS_SHEET}' (Daftar Approver per Divisi)`);
+  Logger.log(`- Tab 3: '${POST_TRAINING_SHEET_NAME}' (Bukti Evidence Drive & Post-Test)`);
   Logger.log("=================================================");
 }
 
@@ -606,7 +636,7 @@ function sendRegistrationEmails(meta, participants, modules) {
   }
 
   const silabusLink = meta["Link silabus materi"]
-    ? `<a href="${meta["Link silabus materi"]}" target="_blank" style="color:#3F5A44;font-weight:600;text-decoration:underline;">Buka Silabus / Materi Pelatihan &rarr;</a>`
+    ? `<a href="${meta["Link silabus materi"]}" target="_blank" style="color:#00178F;font-weight:600;text-decoration:underline;">Buka Silabus / Materi Pelatihan &rarr;</a>`
     : "-";
 
   let sentCount = 0;
@@ -617,75 +647,97 @@ function sendRegistrationEmails(meta, participants, modules) {
     const recipientName = p.nama || "Rekan Karyawan";
     const subject = `[Konfirmasi Pendaftaran] Pelatihan: ${trainingName} (${trainingId})`;
 
-    const htmlBody = `
-      <div style="font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;max-width:600px;margin:0 auto;background:#FAF9F5;border:1px solid #E6E4DD;border-radius:12px;overflow:hidden;color:#1F2421;">
-        <div style="background:#3F5A44;color:#FFFFFF;padding:22px 28px;">
-          <table style="width:100%;border-collapse:collapse;" role="presentation">
+    let actionBtnHtml = "";
+    if (meta["Link meeting online"] && (metode === "Online" || metode === "Hybrid")) {
+      actionBtnHtml = `
+          <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto 24px;">
             <tr>
-              <td style="vertical-align:middle;width:48px;">
-                <img src="${LOGO_IMAGE_URL}" alt="Logo" width="44" height="44" style="border-radius:10px;display:block;border:0;" />
-              </td>
-              <td style="vertical-align:middle;padding-left:14px;">
-                <p style="margin:0;font-size:11px;text-transform:uppercase;letter-spacing:0.08em;opacity:0.85;color:#FFFFFF;">Employee Development Program</p>
-                <h2 style="margin:4px 0 0;font-size:20px;font-weight:600;color:#FFFFFF;">Konfirmasi Pendaftaran Pelatihan</h2>
+              <td style="border-radius:100px;background:linear-gradient(180deg,#EAF1FF 0%,#BFDBFF 50%,#FFD3DE 100%);background-color:#FFD3DE;">
+                <a href="${meta["Link meeting online"]}" target="_blank" style="display:inline-block;padding:14px 30px;font-size:14.5px;font-weight:700;color:#00178F;text-decoration:none;border-radius:100px;">Masuk ke Link Meeting &nbsp;&#8594;</a>
               </td>
             </tr>
-          </table>
-        </div>
-        
-        <div style="padding:28px;">
-          <p style="margin:0 0 16px;font-size:15px;line-height:1.5;">Halo <strong>${recipientName}</strong>,</p>
-          <p style="margin:0 0 20px;font-size:14px;line-height:1.6;color:#4A4D4A;">
+          </table>`;
+    } else if (meta["Link silabus materi"] && String(meta["Link silabus materi"]).trim() !== "-" && String(meta["Link silabus materi"]).trim() !== "") {
+      actionBtnHtml = `
+          <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto 24px;">
+            <tr>
+              <td style="border-radius:100px;background:linear-gradient(180deg,#EAF1FF 0%,#BFDBFF 50%,#FFD3DE 100%);background-color:#FFD3DE;">
+                <a href="${meta["Link silabus materi"]}" target="_blank" style="display:inline-block;padding:14px 30px;font-size:14.5px;font-weight:700;color:#00178F;text-decoration:none;border-radius:100px;">Buka Silabus / Materi &nbsp;&#8594;</a>
+              </td>
+            </tr>
+          </table>`;
+    }
+
+    const htmlBody = `
+  <div style="margin:0;padding:32px 16px;background:#F0F1F7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;margin:0 auto;background:#FFFFFF;border-radius:16px;overflow:hidden;box-shadow:0 12px 32px -12px rgba(0,23,143,0.25);">
+      <tr>
+        <td style="background:linear-gradient(135deg,#EAF1FF 0%,#BFDBFF 50%,#FFD3DE 100%);background-color:#BFDBFF;padding:36px 32px 30px;" align="center">
+          <div style="width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,0.6);display:inline-block;line-height:52px;text-align:center;margin-bottom:14px;">
+            <span style="font-size:26px;">&#128197;</span>
+          </div>
+          <p style="margin:0 0 6px;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#00178F;">Training Request System</p>
+          <h1 style="margin:0;font-size:23px;font-weight:700;color:#00178F;line-height:1.3;">Konfirmasi Pendaftaran &#127881;</h1>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:32px 32px 12px;">
+          <p style="margin:0 0 16px;font-size:15px;color:#00178F;font-weight:600;">Halo ${recipientName},</p>
+          <p style="margin:0 0 20px;font-size:14.5px;line-height:1.65;color:#4A4F8F;">
             Anda telah resmi didaftarkan untuk mengikuti program pelatihan internal berikut. Silahkan mencatat jadwal dan detail pelaksanaannya di bawah ini:
           </p>
 
-          <table style="width:100%;border-collapse:collapse;background:#FFFFFF;border-radius:8px;border:1px solid #E6E4DD;margin-bottom:22px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F9FBFE;border-radius:12px;border:1px solid #E1E8F8;overflow:hidden;margin-bottom:22px;">
             <tr>
-              <td style="padding:10px 14px;border-bottom:1px solid #EFEFEA;font-size:12px;color:#7A7D7A;width:140px;">ID Training</td>
-              <td style="padding:10px 14px;border-bottom:1px solid #EFEFEA;font-size:13.5px;font-weight:600;color:#3F5A44;">${trainingId}</td>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:12px;font-weight:600;color:#8D93C2;width:130px;">ID Training</td>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;font-weight:700;color:#00178F;">${trainingId}</td>
             </tr>
             <tr>
-              <td style="padding:10px 14px;border-bottom:1px solid #EFEFEA;font-size:12px;color:#7A7D7A;">Topik Pelatihan</td>
-              <td style="padding:10px 14px;border-bottom:1px solid #EFEFEA;font-size:13.5px;font-weight:600;">${trainingName}</td>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:12px;font-weight:600;color:#8D93C2;">Topik Pelatihan</td>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;font-weight:600;color:#00178F;">${trainingName}</td>
             </tr>
             <tr>
-              <td style="padding:10px 14px;border-bottom:1px solid #EFEFEA;font-size:12px;color:#7A7D7A;">Jadwal Pelaksanaan</td>
-              <td style="padding:10px 14px;border-bottom:1px solid #EFEFEA;font-size:13.5px;font-weight:600;color:#1F2421;">${jadwal}</td>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:12px;font-weight:600;color:#8D93C2;">Jadwal</td>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;font-weight:600;color:#00178F;">${jadwal}</td>
             </tr>
             <tr>
-              <td style="padding:10px 14px;border-bottom:1px solid #EFEFEA;font-size:12px;color:#7A7D7A;">Metode Pelatihan</td>
-              <td style="padding:10px 14px;border-bottom:1px solid #EFEFEA;font-size:13px;">${metode}</td>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:12px;font-weight:600;color:#8D93C2;">Metode</td>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;color:#4A4F8F;">${metode}</td>
             </tr>
             <tr>
-              <td style="padding:10px 14px;border-bottom:1px solid #EFEFEA;font-size:12px;color:#7A7D7A;">Lokasi / Link Meeting</td>
-              <td style="padding:10px 14px;border-bottom:1px solid #EFEFEA;font-size:13px;">${lokasiOrLink}</td>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:12px;font-weight:600;color:#8D93C2;">Lokasi / Link</td>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;color:#4A4F8F;">${lokasiOrLink}</td>
             </tr>
             <tr>
-              <td style="padding:10px 14px;font-size:12px;color:#7A7D7A;">Trainer / Fasilitator</td>
-              <td style="padding:10px 14px;font-size:13px;">${trainer}</td>
+              <td style="padding:11px 16px;font-size:12px;font-weight:600;color:#8D93C2;">Trainer</td>
+              <td style="padding:11px 16px;font-size:13.5px;color:#4A4F8F;">${trainer}</td>
             </tr>
             ${meta["Link silabus materi"] && String(meta["Link silabus materi"]).trim() !== "-" && String(meta["Link silabus materi"]).trim() !== "" ? `
             <tr>
-              <td style="padding:10px 14px;border-top:1px solid #EFEFEA;font-size:12px;color:#7A7D7A;">Materi / Silabus</td>
-              <td style="padding:10px 14px;border-top:1px solid #EFEFEA;font-size:13px;">${silabusLink}</td>
+              <td style="padding:11px 16px;border-top:1px solid #EDF1FE;font-size:12px;font-weight:600;color:#8D93C2;">Materi / Silabus</td>
+              <td style="padding:11px 16px;border-top:1px solid #EDF1FE;font-size:13.5px;">${silabusLink}</td>
             </tr>` : ''}
           </table>
 
-          <div style="background:#EBF0EC;border-left:4px solid #3F5A44;padding:12px 16px;border-radius:4px;margin-bottom:22px;font-size:13px;line-height:1.5;color:#2D3E31;">
-            <strong>Catatan Persiapan:</strong> Mohon hadir 5-10 menit sebelum sesi dimulai. Pastikan perangkat dan kebutuhan prasyarat telah disiapkan dengan baik.
+          <div style="background:rgba(75, 150, 255, 0.08);border-left:4px solid #4B96FF;border-radius:8px;padding:12px 16px;margin-bottom:24px;font-size:13px;line-height:1.6;color:#00178F;">
+            <strong>Catatan Persiapan:</strong> Mohon hadir 5&ndash;10 menit sebelum sesi dimulai. Pastikan perangkat dan kebutuhan prasyarat telah disiapkan dengan baik.
           </div>
 
-          <p style="margin:0;font-size:13px;color:#7A7D7A;line-height:1.5;">
-            Salam hangat,<br>
-            <strong>Tim Training & People Development</strong>
-          </p>
-        </div>
+          ${actionBtnHtml}
 
-        <div style="background:#F2F0E9;padding:12px 28px;text-align:center;font-size:11px;color:#9A9D9A;border-top:1px solid #E6E4DD;">
-          Pemberitahuan otomatis dari Portal Training Karyawan. Tidak perlu membalas email ini secara langsung.
-        </div>
-      </div>
-    `;
+          <p style="margin:0;font-size:13.5px;color:#4A4F8F;line-height:1.6;">
+            Salam hangat,<br>
+            <strong style="color:#00178F;">Tim Training &amp; People Development</strong>
+          </p>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:18px 32px;background:#FAFAFD;border-top:1px solid #EDF1FE;" align="center">
+          <p style="margin:0;font-size:11px;color:#9AA3D6;">Email otomatis dari Training Request System &middot; Jangan reply email ini</p>
+        </td>
+      </tr>
+    </table>
+  </div>`;
 
     const plainText = `Halo ${recipientName},\n\nAnda telah terdaftar dalam pelatihan internal:\nTopik: ${trainingName}\nID: ${trainingId}\nJadwal: ${jadwal}\nLokasi/Link: ${meta["Lokasi / venue"] || meta["Link meeting online"] || "-"}\nTrainer: ${trainer}\n\nSalam,\nTim TnD`;
 
@@ -782,104 +834,102 @@ function sendApprovalDecisionEmail(rowObj, status, approverName, notes) {
   const statusBoxBorder = isApproved ? "#2E7D32" : "#D9534F";
   const statusTextColor = isApproved ? "#1B5E20" : "#B71C1C";
   const nextStepMsg = isApproved
-    ? "Pengajuan training ini telah disetujui. Silakan lanjutkan koordinasi persiapan teknis, logistik, materi, dan konfirmasi kehadiran peserta sesuai jadwal."
-    : "Pengajuan training ini tidak disetujui / ditolak oleh approver. Silakan tinjau catatan approver di atas untuk melakukan penyesuaian atau koordinasi lebih lanjut.";
+    ? "Pengajuan training ini telah disetujui. Silahkan lanjutkan koordinasi persiapan teknis, logistik, materi, dan konfirmasi kehadiran peserta sesuai jadwal."
+    : "Pengajuan training ini tidak disetujui / ditolak oleh approver. Silahkan tinjau catatan approver di atas untuk melakukan penyesuaian atau koordinasi lebih lanjut.";
 
   const subject = `[${status.toUpperCase()}] Pengajuan Training: ${trainingName} (${trainingId})`;
 
   const htmlBody = `
-    <div style="font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;max-width:620px;margin:0 auto;background:#FAF9F5;border:1px solid #E6E4DD;border-radius:12px;overflow:hidden;color:#1F2421;">
-      <!-- Header -->
-      <div style="background:#3F5A44;color:#FFFFFF;padding:22px 28px;">
-        <table style="width:100%;border-collapse:collapse;" role="presentation">
-          <tr>
-            <td style="vertical-align:middle;width:48px;">
-              <img src="${LOGO_IMAGE_URL}" alt="Logo" width="44" height="44" style="border-radius:10px;display:block;border:0;" />
-            </td>
-            <td style="vertical-align:middle;padding-left:14px;">
-              <p style="margin:0;font-size:11px;text-transform:uppercase;letter-spacing:0.08em;opacity:0.85;color:#FFFFFF;">Employee Development &amp; Training Portal</p>
-              <h2 style="margin:4px 0 0;font-size:20px;font-weight:600;color:#FFFFFF;">Status Pengajuan: Training ${trainingId}</h2>
-            </td>
-          </tr>
-        </table>
-      </div>
-
-      <!-- Main Content -->
-      <div style="padding:28px;">
-        <p style="margin:0 0 16px;font-size:15px;line-height:1.5;">Halo <strong>${recipientName}</strong>,</p>
-        <p style="margin:0 0 20px;font-size:14px;line-height:1.6;color:#4A4D4A;">
-          Pengajuan program pelatihan karyawan berikut telah ditinjau dan diperbarui status persetujuannya oleh pimpinan / pihak berwenang:
-        </p>
-
-        <!-- Status Decision Card -->
-        <div style="background:${statusBoxBg};border:1px solid ${statusBoxBorder};border-radius:8px;padding:16px 20px;margin-bottom:24px;text-align:center;">
-          <span style="display:inline-block;padding:6px 16px;background:${statusBadgeBg};color:#FFFFFF;font-size:13px;font-weight:700;letter-spacing:0.05em;border-radius:20px;text-transform:uppercase;margin-bottom:8px;">
-            ${statusLabel}
-          </span>
-          <div style="font-size:13.5px;color:${statusTextColor};line-height:1.5;margin-top:6px;">
-            Ditinjau oleh: <strong>${approver}</strong> &bull; <span>${tanggalApproval}</span>
+  <div style="margin:0;padding:32px 16px;background:#F0F1F7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;margin:0 auto;background:#FFFFFF;border-radius:16px;overflow:hidden;box-shadow:0 12px 32px -12px rgba(0,23,143,0.25);">
+      <tr>
+        <td style="background:linear-gradient(135deg,#EAF1FF 0%,#BFDBFF 50%,#FFD3DE 100%);background-color:#BFDBFF;padding:36px 32px 30px;" align="center">
+          <div style="width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,0.6);display:inline-block;line-height:52px;text-align:center;margin-bottom:14px;">
+            <span style="font-size:26px;">${isApproved ? '&#9989;' : '&#10060;'}</span>
           </div>
-        </div>
+          <p style="margin:0 0 6px;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#00178F;">Training Request System</p>
+          <h1 style="margin:0;font-size:22px;font-weight:700;color:#00178F;line-height:1.3;">Status Pengajuan: Training ${trainingId}</h1>
+        </td>
+      </tr>
 
-        <!-- Training Details Table -->
-        <table style="width:100%;border-collapse:collapse;background:#FFFFFF;border-radius:8px;border:1px solid #E6E4DD;margin-bottom:22px;">
-          <tr>
-            <td style="padding:10px 14px;border-bottom:1px solid #EFEFEA;font-size:12px;color:#7A7D7A;width:140px;">ID Training</td>
-            <td style="padding:10px 14px;border-bottom:1px solid #EFEFEA;font-size:13.5px;font-weight:600;color:#3F5A44;">${trainingId}</td>
-          </tr>
-          <tr>
-            <td style="padding:10px 14px;border-bottom:1px solid #EFEFEA;font-size:12px;color:#7A7D7A;">Nama Training</td>
-            <td style="padding:10px 14px;border-bottom:1px solid #EFEFEA;font-size:13.5px;font-weight:600;">${trainingName}</td>
-          </tr>
-          <tr>
-            <td style="padding:10px 14px;border-bottom:1px solid #EFEFEA;font-size:12px;color:#7A7D7A;">Pengaju & Divisi</td>
-            <td style="padding:10px 14px;border-bottom:1px solid #EFEFEA;font-size:13px;">${pengaju} (${departemen})</td>
-          </tr>
-          <tr>
-            <td style="padding:10px 14px;border-bottom:1px solid #EFEFEA;font-size:12px;color:#7A7D7A;">Jadwal Pelaksanaan</td>
-            <td style="padding:10px 14px;border-bottom:1px solid #EFEFEA;font-size:13px;font-weight:600;color:#1F2421;">${jadwal}</td>
-          </tr>
-          <tr>
-            <td style="padding:10px 14px;border-bottom:1px solid #EFEFEA;font-size:12px;color:#7A7D7A;">Metode / Lokasi</td>
-            <td style="padding:10px 14px;border-bottom:1px solid #EFEFEA;font-size:13px;">${metode} &bull; ${venue}</td>
-          </tr>
-          <tr>
-            <td style="padding:10px 14px;border-bottom:1px solid #EFEFEA;font-size:12px;color:#7A7D7A;">Trainer / Fasilitator</td>
-            <td style="padding:10px 14px;border-bottom:1px solid #EFEFEA;font-size:13px;">${trainer}</td>
-          </tr>
-          <tr>
-            <td style="padding:10px 14px;font-size:12px;color:#7A7D7A;">Budget / Estimasi</td>
-            <td style="padding:10px 14px;font-size:13px;font-weight:600;color:#3F5A44;">${budgetDiajukan !== "-" ? budgetDiajukan : estimasiBiaya}</td>
-          </tr>
-        </table>
+      <tr>
+        <td style="padding:32px 32px 12px;">
+          <p style="margin:0 0 16px;font-size:15px;color:#00178F;font-weight:600;">Halo ${recipientName},</p>
+          <p style="margin:0 0 20px;font-size:14.5px;line-height:1.65;color:#4A4F8F;">
+            Pengajuan program pelatihan karyawan berikut telah ditinjau dan diperbarui status persetujuannya:
+          </p>
 
-        <!-- Approver Notes Box -->
-        <div style="background:#FFFFFF;border:1px solid #E6E4DD;border-left-width:4px;border-left-color:${statusBadgeBg};padding:14px 18px;border-radius:6px;margin-bottom:22px;">
-          <div style="font-size:12px;text-transform:uppercase;font-weight:700;color:${statusBadgeBg};margin-bottom:6px;letter-spacing:0.04em;">
-            Catatan dari Approver (${approver}):
+          <!-- Status Decision Card -->
+          <div style="background:${statusBoxBg};border:1px solid ${statusBoxBorder};border-radius:10px;padding:16px 20px;margin-bottom:22px;text-align:center;">
+            <span style="display:inline-block;padding:6px 16px;background:${statusBadgeBg};color:#FFFFFF;font-size:12.5px;font-weight:700;letter-spacing:0.05em;border-radius:20px;text-transform:uppercase;margin-bottom:6px;">
+              ${statusLabel}
+            </span>
+            <div style="font-size:13px;color:${statusTextColor};line-height:1.5;margin-top:6px;">
+              Ditinjau oleh: <strong>${approver}</strong> &bull; <span>${tanggalApproval}</span>
+            </div>
           </div>
-          <div style="font-size:13.5px;line-height:1.5;color:#1F2421;font-style:${catatan !== '-' ? 'normal' : 'italic'};">
-            ${catatan !== '-' ? catatan : 'Tidak ada catatan khusus.'}
+
+          <!-- Training Details Table -->
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F9FBFE;border-radius:12px;border:1px solid #E1E8F8;overflow:hidden;margin-bottom:22px;">
+            <tr>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:12px;font-weight:600;color:#8D93C2;width:130px;">ID Training</td>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;font-weight:700;color:#00178F;">${trainingId}</td>
+            </tr>
+            <tr>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:12px;font-weight:600;color:#8D93C2;">Nama Training</td>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;font-weight:600;color:#00178F;">${trainingName}</td>
+            </tr>
+            <tr>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:12px;font-weight:600;color:#8D93C2;">Pengaju &amp; Divisi</td>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;color:#4A4F8F;">${pengaju} (${departemen})</td>
+            </tr>
+            <tr>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:12px;font-weight:600;color:#8D93C2;">Jadwal Pelaksanaan</td>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;font-weight:600;color:#00178F;">${jadwal}</td>
+            </tr>
+            <tr>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:12px;font-weight:600;color:#8D93C2;">Metode &amp; Lokasi</td>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;color:#4A4F8F;">${metode} &bull; ${venue}</td>
+            </tr>
+            <tr>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:12px;font-weight:600;color:#8D93C2;">Trainer</td>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;color:#4A4F8F;">${trainer}</td>
+            </tr>
+            <tr>
+              <td style="padding:11px 16px;font-size:12px;font-weight:600;color:#8D93C2;">Budget / Estimasi</td>
+              <td style="padding:11px 16px;font-size:13.5px;font-weight:700;color:#00178F;">${budgetDiajukan !== "-" ? budgetDiajukan : estimasiBiaya}</td>
+            </tr>
+          </table>
+
+          <!-- Approver Notes Box -->
+          <div style="background:#FFFFFF;border:1px solid #E1E8F8;border-left:4px solid ${statusBadgeBg};padding:14px 18px;border-radius:8px;margin-bottom:22px;">
+            <div style="font-size:12px;text-transform:uppercase;font-weight:700;color:${statusBadgeBg};margin-bottom:6px;letter-spacing:0.04em;">
+              Catatan dari Approver (${approver}):
+            </div>
+            <div style="font-size:13.5px;line-height:1.5;color:#00178F;font-style:${catatan !== '-' ? 'normal' : 'italic'};">
+              ${catatan !== '-' ? catatan : 'Tidak ada catatan khusus.'}
+            </div>
           </div>
-        </div>
 
-        <!-- Next Steps Note -->
-        <div style="background:#F2F0E9;padding:12px 16px;border-radius:6px;margin-bottom:22px;font-size:13px;line-height:1.5;color:#4A4D4A;">
-          <strong>Tindak Lanjut:</strong> ${nextStepMsg}
-        </div>
+          <!-- Next Steps Note -->
+          <div style="background:rgba(75, 150, 255, 0.08);border-left:4px solid #4B96FF;border-radius:8px;padding:12px 16px;margin-bottom:24px;font-size:13px;line-height:1.6;color:#00178F;">
+            <strong>Tindak Lanjut:</strong> ${nextStepMsg}
+          </div>
 
-        <p style="margin:0;font-size:13px;color:#7A7D7A;line-height:1.5;">
-          Salam hangat,<br>
-          <strong>Portal Training & Development / HR Team</strong>
-        </p>
-      </div>
+          <p style="margin:0;font-size:13.5px;color:#4A4F8F;line-height:1.6;">
+            Salam hangat,<br>
+            <strong style="color:#00178F;">Portal Training &amp; Development / HR Team</strong>
+          </p>
+        </td>
+      </tr>
 
-      <!-- Footer -->
-      <div style="background:#F2F0E9;padding:12px 28px;text-align:center;font-size:11px;color:#9A9D9A;border-top:1px solid #E6E4DD;">
-        Pemberitahuan otomatis dari Portal Training Karyawan. Tidak perlu membalas email ini secara langsung.
-      </div>
-    </div>
-  `;
+      <tr>
+        <td style="padding:18px 32px;background:#FAFAFD;border-top:1px solid #EDF1FE;" align="center">
+          <p style="margin:0;font-size:11px;color:#9AA3D6;">Email otomatis dari Training Request System &middot; Jangan reply email ini</p>
+        </td>
+      </tr>
+    </table>
+  </div>`;
 
   const plainText = `Halo ${recipientName},\n\nStatus pengajuan pelatihan:\nTopik: ${trainingName} (${trainingId})\nStatus: [${status.toUpperCase()}]\nDitinjau oleh: ${approver}\nTanggal Approval: ${tanggalApproval}\nCatatan Approver: ${catatan}\n\nSalam,\nTim Training & Development`;
 
@@ -924,98 +974,88 @@ function sendApproverNotification(meta, participants, modules, trainingId) {
   const subject = `[MEMERLUKAN PERSETUJUAN] Pengajuan Training: ${trainingName} (${idTrn})`;
 
   const htmlBody = `
-    <div style="font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;max-width:620px;margin:0 auto;background:#FAF9F5;border:1px solid #E6E4DD;border-radius:12px;overflow:hidden;color:#1F2421;">
-      <!-- Header -->
-      <div style="background:#3F5A44;color:#FFFFFF;padding:22px 28px;">
-        <table style="width:100%;border-collapse:collapse;" role="presentation">
-          <tr>
-            <td style="vertical-align:middle;width:48px;">
-              <img src="${LOGO_IMAGE_URL}" alt="Logo" width="44" height="44" style="border-radius:10px;display:block;border:0;" />
-            </td>
-            <td style="vertical-align:middle;padding-left:14px;">
-              <p style="margin:0;font-size:11px;text-transform:uppercase;letter-spacing:0.08em;opacity:0.85;color:#FFFFFF;">Employee Development &amp; Approval System</p>
-              <h2 style="margin:4px 0 0;font-size:20px;font-weight:600;color:#FFFFFF;">Pengajuan Training Memerlukan Persetujuan</h2>
-            </td>
-          </tr>
-        </table>
-      </div>
-
-      <!-- Main Body -->
-      <div style="padding:28px;">
-        <p style="margin:0 0 16px;font-size:15px;line-height:1.5;">Yth. <strong>Bapak/Ibu Approver</strong>,</p>
-        <p style="margin:0 0 20px;font-size:14px;line-height:1.6;color:#4A4D4A;">
-          Terdapat pengajuan program pelatihan karyawan baru yang memerlukan evaluasi dan persetujuan Anda. Berikut adalah ringkasan dokumen pengajuan:
-        </p>
-
-        <!-- SLA Alert Tag -->
-        <div style="background:#FFF9E6;border-left:4px solid #B78628;padding:12px 16px;border-radius:4px;margin-bottom:22px;font-size:13px;line-height:1.5;color:#664B11;">
-          ⏰ <strong>Tenggat Waktu Tinjauan (SLA):</strong> Mohon meninjau pengajuan ini dalam <strong>3 hari kerja</strong> ke depan. Sistem akan mengirim notifikasi pengingat otomatis jika belum ada keputusan tindakan setelah 3 hari.
-        </div>
-
-        <!-- Detail Table -->
-        <table style="width:100%;border-collapse:collapse;background:#FFFFFF;border-radius:8px;border:1px solid #E6E4DD;margin-bottom:22px;">
-          <tr>
-            <td style="padding:10px 14px;border-bottom:1px solid #EFEFEA;font-size:12px;color:#7A7D7A;width:140px;">ID Training</td>
-            <td style="padding:10px 14px;border-bottom:1px solid #EFEFEA;font-size:13.5px;font-weight:700;color:#3F5A44;">${idTrn}</td>
-          </tr>
-          <tr>
-            <td style="padding:10px 14px;border-bottom:1px solid #EFEFEA;font-size:12px;color:#7A7D7A;">Nama Training</td>
-            <td style="padding:10px 14px;border-bottom:1px solid #EFEFEA;font-size:13.5px;font-weight:600;">${trainingName}</td>
-          </tr>
-          <tr>
-            <td style="padding:10px 14px;border-bottom:1px solid #EFEFEA;font-size:12px;color:#7A7D7A;">Pengaju / Leader</td>
-            <td style="padding:10px 14px;border-bottom:1px solid #EFEFEA;font-size:13px;">${pengaju} &bull; ${pengajuEmail} (${deptName || "-"})</td>
-          </tr>
-          <tr>
-            <td style="padding:10px 14px;border-bottom:1px solid #EFEFEA;font-size:12px;color:#7A7D7A;">Jadwal Pelaksanaan</td>
-            <td style="padding:10px 14px;border-bottom:1px solid #EFEFEA;font-size:13px;font-weight:600;color:#1F2421;">${jadwal}</td>
-          </tr>
-          <tr>
-            <td style="padding:10px 14px;border-bottom:1px solid #EFEFEA;font-size:12px;color:#7A7D7A;">Metode &amp; Lokasi</td>
-            <td style="padding:10px 14px;border-bottom:1px solid #EFEFEA;font-size:13px;">${metode} (${venue})</td>
-          </tr>
-          <tr>
-            <td style="padding:10px 14px;border-bottom:1px solid #EFEFEA;font-size:12px;color:#7A7D7A;">Trainer / Fasilitator</td>
-            <td style="padding:10px 14px;border-bottom:1px solid #EFEFEA;font-size:13px;">${trainer}</td>
-          </tr>
-          <tr>
-            <td style="padding:10px 14px;border-bottom:1px solid #EFEFEA;font-size:12px;color:#7A7D7A;">Jumlah Peserta</td>
-            <td style="padding:10px 14px;border-bottom:1px solid #EFEFEA;font-size:13px;">${jmlPeserta} orang</td>
-          </tr>
-          <tr>
-            <td style="padding:10px 14px;border-bottom:1px solid #EFEFEA;font-size:12px;color:#7A7D7A;">Anggaran / Budget</td>
-            <td style="padding:10px 14px;border-bottom:1px solid #EFEFEA;font-size:13.5px;font-weight:700;color:#3F5A44;">${totalBiaya}</td>
-          </tr>
-          <tr>
-            <td style="padding:10px 14px;font-size:12px;color:#7A7D7A;">Latar Belakang &amp; Tujuan</td>
-            <td style="padding:10px 14px;font-size:13px;line-height:1.4;">${tujuan}</td>
-          </tr>
-        </table>
-
-        <!-- Direct CTA Button ke Portal Approval -->
-        <div style="text-align:center;margin:28px 0 24px;">
-          <a href="${directApprovalLink}" target="_blank" style="background:#3F5A44;color:#FFFFFF;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;display:inline-block;box-shadow:0 4px 12px rgba(63,90,68,0.25);">
-            Tinjau &amp; Berikan Keputusan di Portal Approval &rarr;
-          </a>
-          <div style="margin-top:8px;font-size:11.5px;color:#7A7D7A;">
-            Klik tombol di atas untuk membuka formulir persetujuan dokumen ${idTrn}
+  <div style="margin:0;padding:32px 16px;background:#F0F1F7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;margin:0 auto;background:#FFFFFF;border-radius:16px;overflow:hidden;box-shadow:0 12px 32px -12px rgba(0,23,143,0.25);">
+      <tr>
+        <td style="background:linear-gradient(135deg,#EAF1FF 0%,#BFDBFF 50%,#FFD3DE 100%);background-color:#BFDBFF;padding:36px 32px 30px;" align="center">
+          <div style="width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,0.6);display:inline-block;line-height:52px;text-align:center;margin-bottom:14px;">
+            <span style="font-size:26px;">&#128221;</span>
           </div>
-        </div>
+          <p style="margin:0 0 6px;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#00178F;">Training Request System</p>
+          <h1 style="margin:0;font-size:22px;font-weight:700;color:#00178F;line-height:1.3;">Pengajuan Memerlukan Persetujuan</h1>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:32px 32px 12px;">
+          <p style="margin:0 0 16px;font-size:15px;color:#00178F;font-weight:600;">Yth. Bapak/Ibu Approver,</p>
+          <p style="margin:0 0 20px;font-size:14.5px;line-height:1.65;color:#4A4F8F;">
+            Terdapat pengajuan program pelatihan karyawan baru yang memerlukan evaluasi dan persetujuan Anda:
+          </p>
 
-        <p style="margin:0;font-size:13px;color:#7A7D7A;line-height:1.5;">
-          Salam hangat,<br>
-          <strong>Sistem Pengajuan Training Karyawan</strong>
-        </p>
-      </div>
+          <div style="background:rgba(75, 150, 255, 0.08);border-left:4px solid #4B96FF;border-radius:8px;padding:12px 16px;margin-bottom:22px;font-size:13px;line-height:1.6;color:#00178F;">
+            &#9200; <strong>Tenggat Waktu Tinjauan (SLA):</strong> Mohon meninjau pengajuan ini dalam <strong>3 hari kerja</strong> ke depan.
+          </div>
 
-      <!-- Footer -->
-      <div style="background:#F2F0E9;padding:12px 28px;text-align:center;font-size:11px;color:#9A9D9A;border-top:1px solid #E6E4DD;">
-        Pemberitahuan otomatis dari Portal Training Karyawan. Dokumen ID: ${idTrn}
-      </div>
-    </div>
-  `;
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F9FBFE;border-radius:12px;border:1px solid #E1E8F8;overflow:hidden;margin-bottom:22px;">
+            <tr>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:12px;font-weight:600;color:#8D93C2;width:130px;">ID Training</td>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;font-weight:700;color:#00178F;">${idTrn}</td>
+            </tr>
+            <tr>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:12px;font-weight:600;color:#8D93C2;">Nama Training</td>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;font-weight:600;color:#00178F;">${trainingName}</td>
+            </tr>
+            <tr>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:12px;font-weight:600;color:#8D93C2;">Pengaju / Leader</td>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;color:#4A4F8F;">${pengaju} &bull; ${pengajuEmail} (${deptName || "-"})</td>
+            </tr>
+            <tr>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:12px;font-weight:600;color:#8D93C2;">Jadwal Pelaksanaan</td>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;font-weight:600;color:#00178F;">${jadwal}</td>
+            </tr>
+            <tr>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:12px;font-weight:600;color:#8D93C2;">Metode &amp; Lokasi</td>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;color:#4A4F8F;">${metode} (${venue})</td>
+            </tr>
+            <tr>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:12px;font-weight:600;color:#8D93C2;">Trainer</td>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;color:#4A4F8F;">${trainer}</td>
+            </tr>
+            <tr>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:12px;font-weight:600;color:#8D93C2;">Jumlah Peserta</td>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;color:#4A4F8F;">${jmlPeserta} orang</td>
+            </tr>
+            <tr>
+              <td style="padding:11px 16px;font-size:12px;font-weight:600;color:#8D93C2;">Budget Diajukan</td>
+              <td style="padding:11px 16px;font-size:13.5px;font-weight:700;color:#00178F;">${totalBiaya}</td>
+            </tr>
+          </table>
 
-  const plainText = `Yth. Approver,\n\nPengajuan training baru memerlukan persetujuan Anda:\nID: ${idTrn}\nTopik: ${trainingName}\nPengaju: ${pengaju} (${deptName})\nJadwal: ${jadwal}\nBudget: ${totalBiaya}\n\nSilakan tinjau pada portal approval:\n${directApprovalLink}\n\nSalam,\nSistem Portal Training`;
+          <div style="text-align:center;margin:24px 0 16px;">
+            <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto;">
+              <tr>
+                <td style="border-radius:100px;background:linear-gradient(180deg,#EAF1FF 0%,#BFDBFF 50%,#FFD3DE 100%);background-color:#FFD3DE;">
+                  <a href="${directApprovalLink}" target="_blank" style="display:inline-block;padding:14px 30px;font-size:14.5px;font-weight:700;color:#00178F;text-decoration:none;border-radius:100px;">Tinjau &amp; Berikan Keputusan &nbsp;&#8594;</a>
+                </td>
+              </tr>
+            </table>
+          </div>
+
+          <p style="margin:0;font-size:13.5px;color:#4A4F8F;line-height:1.6;">
+            Salam hangat,<br>
+            <strong style="color:#00178F;">Sistem Pengajuan Training Karyawan</strong>
+          </p>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:18px 32px;background:#FAFAFD;border-top:1px solid #EDF1FE;" align="center">
+          <p style="margin:0;font-size:11px;color:#9AA3D6;">Email otomatis dari Training Request System &middot; Dokumen ID: ${idTrn}</p>
+        </td>
+      </tr>
+    </table>
+  </div>`;
+
+  const plainText = `Yth. Approver,\n\nPengajuan training baru memerlukan persetujuan Anda:\nID: ${idTrn}\nTopik: ${trainingName}\nPengaju: ${pengaju} (${deptName})\nJadwal: ${jadwal}\nBudget: ${totalBiaya}\n\nSilahkan tinjau pada portal approval:\n${directApprovalLink}\n\nSalam,\nSistem Portal Training`;
 
   let sent = 0;
   approverEmails.forEach(email => {
@@ -1129,60 +1169,73 @@ function checkAndSendApprovalReminders() {
       const subject = `[ESKALASI SLA 3 HARI] Pengingat Approval Training: ${trainingName} (${trainingId})`;
 
       const htmlBody = `
-        <div style="font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;max-width:620px;margin:0 auto;background:#FAF9F5;border:1px solid #E6E4DD;border-radius:12px;overflow:hidden;color:#1F2421;">
-          <div style="background:#B78628;color:#FFFFFF;padding:22px 28px;">
-            <table style="width:100%;border-collapse:collapse;" role="presentation">
-              <tr>
-                <td style="vertical-align:middle;width:48px;">
-                  <img src="${LOGO_IMAGE_URL}" alt="Logo" width="44" height="44" style="border-radius:10px;display:block;border:0;" />
-                </td>
-                <td style="vertical-align:middle;padding-left:14px;">
-                  <p style="margin:0;font-size:11px;text-transform:uppercase;letter-spacing:0.08em;opacity:0.9;color:#FFFFFF;">Peringatan SLA Persetujuan Pelatihan</p>
-                  <h2 style="margin:4px 0 0;font-size:20px;font-weight:600;color:#FFFFFF;">Pengingat: Training Menunggu Approval (${diffDays} Hari)</h2>
-                </td>
-              </tr>
-            </table>
+  <div style="margin:0;padding:32px 16px;background:#F0F1F7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;margin:0 auto;background:#FFFFFF;border-radius:16px;overflow:hidden;box-shadow:0 12px 32px -12px rgba(0,23,143,0.25);">
+      <tr>
+        <td style="background:linear-gradient(135deg,#EAF1FF 0%,#BFDBFF 50%,#FFD3DE 100%);background-color:#BFDBFF;padding:36px 32px 30px;" align="center">
+          <div style="width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,0.6);display:inline-block;line-height:52px;text-align:center;margin-bottom:14px;">
+            <span style="font-size:26px;">&#9200;</span>
           </div>
+          <p style="margin:0 0 6px;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#00178F;">Training Request System</p>
+          <h1 style="margin:0;font-size:21px;font-weight:700;color:#00178F;line-height:1.3;">Pengingat: Training Menunggu Approval (${diffDays} Hari)</h1>
+        </td>
+      </tr>
 
-          <div style="padding:28px;">
-            <p style="margin:0 0 16px;font-size:15px;line-height:1.5;">Yth. <strong>Bapak/Ibu Approver</strong>,</p>
-            <p style="margin:0 0 20px;font-size:14px;line-height:1.6;color:#4A4D4A;">
-              Pengajuan pelatihan berikut diajukan pada <strong>${Utilities.formatDate(submitDate, TIME_ZONE, "yyyy-MM-dd")}</strong> (sudah <strong>${diffDays} hari kalender</strong>) dan hingga saat ini belum menerima keputusan tindakan (Setujui / Tolak):
-            </p>
+      <div style="padding:32px 32px 12px;">
+        <p style="margin:0 0 16px;font-size:15px;color:#00178F;font-weight:600;">Yth. Bapak/Ibu Approver,</p>
+        <p style="margin:0 0 20px;font-size:14.5px;line-height:1.65;color:#4A4F8F;">
+          Pengajuan pelatihan berikut diajukan pada <strong>${Utilities.formatDate(submitDate, TIME_ZONE, "yyyy-MM-dd")}</strong> (sudah <strong>${diffDays} hari kalender</strong>) dan hingga saat ini belum menerima keputusan tindakan (Setujui / Tolak):
+        </p>
 
-            <div style="background:#FFF9E6;border-left:4px solid #B78628;padding:14px 18px;border-radius:6px;margin-bottom:22px;">
-              <div style="font-size:15px;font-weight:700;color:#664B11;margin-bottom:6px;">${trainingName}</div>
-              <div style="font-size:13px;color:#856404;line-height:1.6;">
-                <div><strong>ID Training:</strong> ${trainingId}</div>
-                <div><strong>Pengaju:</strong> ${pengaju} (${deptName})</div>
-                <div><strong>Jadwal:</strong> ${jadwal}</div>
-                <div><strong>Budget Diajukan:</strong> ${budget}</div>
-              </div>
-            </div>
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F9FBFE;border-radius:12px;border:1px solid #E1E8F8;overflow:hidden;margin-bottom:22px;">
+          <tr>
+            <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:12px;font-weight:600;color:#8D93C2;width:130px;">ID Training</td>
+            <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;font-weight:700;color:#00178F;">${trainingId}</td>
+          </tr>
+          <tr>
+            <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:12px;font-weight:600;color:#8D93C2;">Topik Pelatihan</td>
+            <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;font-weight:600;color:#00178F;">${trainingName}</td>
+          </tr>
+          <tr>
+            <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:12px;font-weight:600;color:#8D93C2;">Pengaju</td>
+            <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;color:#4A4F8F;">${pengaju} (${deptName})</td>
+          </tr>
+          <tr>
+            <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:12px;font-weight:600;color:#8D93C2;">Jadwal</td>
+            <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;font-weight:600;color:#00178F;">${jadwal}</td>
+          </tr>
+          <tr>
+            <td style="padding:11px 16px;font-size:12px;font-weight:600;color:#8D93C2;">Budget Diajukan</td>
+            <td style="padding:11px 16px;font-size:13.5px;font-weight:700;color:#00178F;">${budget}</td>
+          </tr>
+        </table>
 
-            <div style="text-align:center;margin:28px 0 24px;">
-              <a href="${directApprovalLink}" target="_blank" style="background:#B78628;color:#FFFFFF;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;display:inline-block;box-shadow:0 4px 12px rgba(183,134,40,0.3);">
-                Buka &amp; Selesaikan Approval Sekarang &rarr;
-              </a>
-              <div style="margin-top:8px;font-size:11.5px;color:#7A7D7A;">
-                Klik tombol di atas untuk membuka formulir keputusan pengajuan ${trainingId}
-              </div>
-            </div>
-
-            <p style="margin:0;font-size:13px;color:#7A7D7A;line-height:1.5;">
-              Mohon kerja samanya agar proses administrasi dan persiapan training dapat berjalan sesuai timeline.<br><br>
-              Salam hangat,<br>
-              <strong>Sistem Otomatis Portal Training</strong>
-            </p>
-          </div>
-
-          <div style="background:#F2F0E9;padding:12px 28px;text-align:center;font-size:11px;color:#9A9D9A;border-top:1px solid #E6E4DD;">
-            Notifikasi eskalasi SLA otomatis untuk ID: ${trainingId}.
-          </div>
+        <div style="text-align:center;margin:24px 0 16px;">
+          <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto;">
+            <tr>
+              <td style="border-radius:100px;background:linear-gradient(180deg,#EAF1FF 0%,#BFDBFF 50%,#FFD3DE 100%);background-color:#FFD3DE;">
+                <a href="${directApprovalLink}" target="_blank" style="display:inline-block;padding:14px 30px;font-size:14.5px;font-weight:700;color:#00178F;text-decoration:none;border-radius:100px;">Buka &amp; Selesaikan Approval &nbsp;&#8594;</a>
+              </td>
+            </tr>
+          </table>
         </div>
-      `;
 
-      const plainText = `Yth. Approver,\n\nPengingat SLA 3 Hari untuk pengajuan training:\nID: ${trainingId}\nTopik: ${trainingName}\nPengaju: ${pengaju} (${deptName})\nStatus: Menunggu Approval sejak ${diffDays} hari lalu.\n\nSilakan buka tautan berikut untuk memproses:\n${directApprovalLink}\n\nSalam,\nSistem Portal Training`;
+        <p style="margin:0;font-size:13.5px;color:#4A4F8F;line-height:1.6;">
+          Mohon kerja samanya agar proses administrasi dan persiapan training dapat berjalan sesuai timeline.<br><br>
+          Salam hangat,<br>
+          <strong style="color:#00178F;">Sistem Otomatis Portal Training</strong>
+        </p>
+      </div>
+
+      <tr>
+        <td style="padding:18px 32px;background:#FAFAFD;border-top:1px solid #EDF1FE;" align="center">
+          <p style="margin:0;font-size:11px;color:#9AA3D6;">Notifikasi eskalasi SLA otomatis untuk ID: ${trainingId} &middot; Jangan reply email ini</p>
+        </td>
+      </tr>
+    </table>
+  </div>`;
+
+      const plainText = `Yth. Approver,\n\nPengingat SLA 3 Hari untuk pengajuan training:\nID: ${trainingId}\nTopik: ${trainingName}\nPengaju: ${pengaju} (${deptName})\nStatus: Menunggu Approval sejak ${diffDays} hari lalu.\n\nSilahkan buka tautan berikut untuk memproses:\n${directApprovalLink}\n\nSalam,\nSistem Portal Training`;
 
       approverEmails.forEach(email => {
         try {
@@ -1883,7 +1936,7 @@ function sendReminderEmails(meta, participants, modules, executionDate) {
   }
 
   const silabusLink = meta["Link silabus materi"]
-    ? `<a href="${meta["Link silabus materi"]}" target="_blank" style="color:#3F5A44;font-weight:600;text-decoration:underline;">Tautan Materi / Silabus &rarr;</a>`
+    ? `<a href="${meta["Link silabus materi"]}" target="_blank" style="color:#00178F;font-weight:600;text-decoration:underline;">Tautan Materi / Silabus &rarr;</a>`
     : "-";
 
   let count = 0;
@@ -1895,57 +1948,71 @@ function sendReminderEmails(meta, participants, modules, executionDate) {
     const subject = `[REMINDER H-1] Pelatihan Besok: ${trainingName} (${trainingId})`;
 
     const htmlBody = `
-      <div style="font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;max-width:600px;margin:0 auto;background:#FAF9F5;border:1px solid #E6E4DD;border-radius:12px;overflow:hidden;color:#1F2421;">
-        <div style="background:#B78628;color:#FFFFFF;padding:22px 28px;">
-          <table style="width:100%;border-collapse:collapse;" role="presentation">
-            <tr>
-              <td style="vertical-align:middle;width:48px;">
-                <img src="${LOGO_IMAGE_URL}" alt="Logo" width="44" height="44" style="border-radius:10px;display:block;border:0;" />
-              </td>
-              <td style="vertical-align:middle;padding-left:14px;">
-                <p style="margin:0;font-size:11px;text-transform:uppercase;letter-spacing:0.08em;opacity:0.9;color:#FFFFFF;">Pengingat Jadwal Pelatihan</p>
-                <h2 style="margin:4px 0 0;font-size:20px;font-weight:600;color:#FFFFFF;">Reminder: Pelatihan Anda Berlangsung Besok!</h2>
-              </td>
-            </tr>
-          </table>
-        </div>
-
-        <div style="padding:28px;">
-          <p style="margin:0 0 16px;font-size:15px;line-height:1.5;">Halo <strong>${recipientName}</strong>,</p>
-          <p style="margin:0 0 20px;font-size:14px;line-height:1.6;color:#4A4D4A;">
+  <div style="margin:0;padding:32px 16px;background:#F0F1F7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;margin:0 auto;background:#FFFFFF;border-radius:16px;overflow:hidden;box-shadow:0 12px 32px -12px rgba(0,23,143,0.25);">
+      <tr>
+        <td style="background:linear-gradient(135deg,#EAF1FF 0%,#BFDBFF 50%,#FFD3DE 100%);background-color:#BFDBFF;padding:36px 32px 30px;" align="center">
+          <div style="width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,0.6);display:inline-block;line-height:52px;text-align:center;margin-bottom:14px;">
+            <span style="font-size:26px;">&#9200;</span>
+          </div>
+          <p style="margin:0 0 6px;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#00178F;">Training Request System</p>
+          <h1 style="margin:0;font-size:23px;font-weight:700;color:#00178F;line-height:1.3;">Reminder: Pelatihan Besok! &#9200;</h1>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:32px 32px 12px;">
+          <p style="margin:0 0 16px;font-size:15px;color:#00178F;font-weight:600;">Halo ${recipientName},</p>
+          <p style="margin:0 0 20px;font-size:14.5px;line-height:1.65;color:#4A4F8F;">
             Ini adalah pengingat bahwa Anda dijadwalkan untuk mengikuti pelatihan internal berikut yang akan diselenggarakan <strong>besok</strong>:
           </p>
 
-          <div style="background:#FFFFFF;border:1px solid #E6E4DD;border-radius:8px;padding:16px 20px;margin-bottom:20px;">
-            <div style="font-size:16px;font-weight:600;color:#3F5A44;margin-bottom:8px;">${trainingName}</div>
-            <div style="font-size:13px;color:#6A6D6A;margin-bottom:12px;">ID: ${trainingId} &bull; Metode: ${metode}</div>
-            <div style="font-size:13.5px;margin-bottom:6px;">⏰ <strong>Waktu:</strong> ${jadwal}</div>
-            <div style="font-size:13.5px;">📍 <strong>Tempat / Tautan:</strong> ${lokasiOrLink}</div>
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F9FBFE;border-radius:12px;border:1px solid #E1E8F8;overflow:hidden;margin-bottom:22px;">
+            <tr>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:12px;font-weight:600;color:#8D93C2;width:130px;">Topik Pelatihan</td>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;font-weight:700;color:#00178F;">${trainingName}</td>
+            </tr>
+            <tr>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:12px;font-weight:600;color:#8D93C2;">ID Training</td>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;color:#4A4F8F;">${trainingId} &bull; Metode: ${metode}</td>
+            </tr>
+            <tr>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:12px;font-weight:600;color:#8D93C2;">Jadwal Waktu</td>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;font-weight:600;color:#00178F;">${jadwal}</td>
+            </tr>
+            <tr>
+              <td style="padding:11px 16px;font-size:12px;font-weight:600;color:#8D93C2;">Tempat / Tautan</td>
+              <td style="padding:11px 16px;font-size:13.5px;color:#4A4F8F;">${lokasiOrLink}</td>
+            </tr>
             ${meta["Link silabus materi"] && String(meta["Link silabus materi"]).trim() !== "-" && String(meta["Link silabus materi"]).trim() !== "" ? `
-            <div style="font-size:13.5px;margin-top:6px;">📂 <strong>Silabus:</strong> ${silabusLink}</div>` : ''}
-          </div>
+            <tr>
+              <td style="padding:11px 16px;border-top:1px solid #EDF1FE;font-size:12px;font-weight:600;color:#8D93C2;">Materi / Silabus</td>
+              <td style="padding:11px 16px;border-top:1px solid #EDF1FE;font-size:13.5px;">${silabusLink}</td>
+            </tr>` : ''}
+          </table>
 
-          <div style="background:#FFF9E6;border-left:4px solid #B78628;padding:12px 16px;border-radius:4px;margin-bottom:22px;font-size:13px;line-height:1.5;color:#664B11;">
+          <div style="background:rgba(75, 150, 255, 0.08);border-left:4px solid #4B96FF;border-radius:8px;padding:14px 18px;margin-bottom:24px;font-size:13px;line-height:1.6;color:#00178F;">
             <strong>Checklist Persiapan:</strong>
-            <ul style="margin:6px 0 0;padding-left:18px;">
+            <ul style="margin:6px 0 0;padding-left:18px;color:#4A4F8F;">
               <li>Hadir tepat waktu (minimal 5-10 menit sebelum sesi dimulai).</li>
               <li>Pastikan laptop/koneksi internet dalam kondisi stabil jika daring.</li>
               <li>Siapkan materi atau prasyarat yang telah diinformasikan.</li>
             </ul>
           </div>
 
-          <p style="margin:0;font-size:13px;color:#7A7D7A;line-height:1.5;">
+          <p style="margin:0;font-size:13.5px;color:#4A4F8F;line-height:1.6;">
             Semoga pelatihannya berjalan lancar dan bermanfaat bagi pengembangan kompetensi Anda.<br><br>
             Salam hangat,<br>
-            <strong>Tim Training & People Development</strong>
+            <strong style="color:#00178F;">Tim Training &amp; People Development</strong>
           </p>
-        </div>
-
-        <div style="background:#F2F0E9;padding:12px 28px;text-align:center;font-size:11px;color:#9A9D9A;border-top:1px solid #E6E4DD;">
-          Pemberitahuan otomatis dari Portal Training Karyawan.
-        </div>
-      </div>
-    `;
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:18px 32px;background:#FAFAFD;border-top:1px solid #EDF1FE;" align="center">
+          <p style="margin:0;font-size:11px;color:#9AA3D6;">Email otomatis dari Training Request System &middot; Jangan reply email ini</p>
+        </td>
+      </tr>
+    </table>
+  </div>`;
 
     const plainText = `Halo ${recipientName},\n\nReminder pelatihan Anda besok:\nTopik: ${trainingName} (${trainingId})\nWaktu: ${jadwal}\nTempat/Link: ${meta["Lokasi / venue"] || meta["Link meeting online"] || "-"}\n\nSalam,\nTim TnD`;
 
@@ -2219,6 +2286,18 @@ function doGet(e) {
       return handleCheckRoomAvailability(params);
     }
 
+    // Aksi 2: Pengambilan event terstruktur khusus Kalender Training (FullCalendar)
+    if (action === 'getCalendarEvents' || action === 'calendar_events') {
+      const ss = SpreadsheetApp.getActiveSpreadsheet();
+      return handleGetCalendarEvents(ss);
+    }
+
+    // Aksi 3: Pengambilan seluruh evidence & dokumentasi Post Training (Approver Collection)
+    if (action === 'getPostTrainingEvidence' || action === 'getEvidence' || action === 'post_training_evidence') {
+      const ss = SpreadsheetApp.getActiveSpreadsheet();
+      return handleGetPostTrainingEvidence(ss);
+    }
+
     // Aksi Default: Pengambilan seluruh submission spreadsheet untuk dashboard/approval
     const ss = SpreadsheetApp.getActiveSpreadsheet();
     const sheet = ss.getSheetByName(SHEET_NAME);
@@ -2240,6 +2319,118 @@ function doGet(e) {
       submissions.push(obj);
     }
     return ContentService.createTextOutput(JSON.stringify(submissions)).setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({ error: err.toString() })).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+/**
+ * HANDLER PENGAMBILAN EVENT KALENDER TRAINING (FullCalendar JSON Feed)
+ * Mengembalikan array JSON event: id, judul, tanggal, jamMulai, jamSelesai, ruangan, pemohon, divisi, kategori, status.
+ */
+function handleGetCalendarEvents(ss) {
+  try {
+    const sheet = ss.getSheetByName(SHEET_NAME);
+    if (!sheet) {
+      return ContentService.createTextOutput(JSON.stringify([])).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    const values = sheet.getDataRange().getValues();
+    if (values.length < 2) {
+      return ContentService.createTextOutput(JSON.stringify([])).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    const headers = values[0].map(h => String(h).trim());
+    const events = [];
+
+    for (let i = 1; i < values.length; i++) {
+      const row = values[i];
+      const rowObj = {};
+      headers.forEach((h, colIdx) => {
+        rowObj[h] = row[colIdx];
+      });
+
+      let rawJson = null;
+      if (rowObj["Raw Data JSON"]) {
+        try {
+          rawJson = JSON.parse(rowObj["Raw Data JSON"]);
+        } catch (e) {}
+      }
+
+      const meta = (rawJson && rawJson.meta) || {};
+      const modules = (rawJson && Array.isArray(rawJson.modules)) ? rawJson.modules : [];
+
+      const id = String(rowObj["ID Training"] || meta["ID training"] || `TRN-${i}`).trim();
+      const judul = String(rowObj["Nama Training"] || meta["Nama training"] || "Untitled Training").trim();
+      const pemohon = String(rowObj["Nama Pengaju"] || meta["Nama pengaju"] || meta["Leader pengaju"] || "-").trim();
+      const divisi = String(rowObj["Departemen / Divisi"] || meta["Departemen / divisi"] || "-").trim();
+      const kategori = String(rowObj["Kategori Training"] || meta["Kategori training"] || "Soft skill").trim();
+
+      const rawStatus = String(rowObj["Status Dokumen"] || meta["Status Dokumen"] || "Pending").toLowerCase();
+      let status = "Pending";
+      if (rawStatus.includes("setuju") || rawStatus.includes("approved")) {
+        status = "Approved";
+      } else if (rawStatus.includes("tolak") || rawStatus.includes("rejected")) {
+        status = "Rejected";
+      }
+
+      const defaultRuangan = String(rowObj["Lokasi / Venue"] || meta["Lokasi / venue"] || meta["Platform online"] || "-").trim();
+
+      if (modules.length > 0) {
+        modules.forEach((mod, modIdx) => {
+          const modTanggal = (mod.tanggal || "").trim();
+          if (modTanggal) {
+            events.push({
+              id: `${id}_m${modIdx + 1}`,
+              trainingId: id,
+              judul: modules.length > 1 ? `${judul} (${mod.modul || 'Sesi ' + (modIdx + 1)})` : judul,
+              tanggal: modTanggal,
+              jamMulai: (mod.jamMulai || "").trim(),
+              jamSelesai: (mod.jamSelesai || "").trim(),
+              ruangan: (mod.lokasi || defaultRuangan).trim() || defaultRuangan,
+              pemohon: pemohon,
+              divisi: divisi,
+              kategori: kategori,
+              status: status
+            });
+          }
+        });
+      } else {
+        let tgl = "";
+        let jamM = "";
+        let jamS = "";
+
+        const jadwalStr = String(rowObj["Jadwal Pelaksanaan"] || meta["Tanggal & jam pelaksanaan"] || rowObj["Tanggal Pengajuan"] || "").trim();
+        const dateMatch = jadwalStr.match(/\b(\d{4}-\d{2}-\d{2})\b/);
+        if (dateMatch) {
+          tgl = dateMatch[1];
+        }
+
+        const timeMatches = jadwalStr.match(/\b(\d{1,2}:\d{2})\b/g);
+        if (timeMatches && timeMatches.length >= 1) {
+          jamM = timeMatches[0];
+          if (timeMatches.length >= 2) jamS = timeMatches[1];
+        }
+
+        if (tgl) {
+          events.push({
+            id: id,
+            trainingId: id,
+            judul: judul,
+            tanggal: tgl,
+            jamMulai: jamM,
+            jamSelesai: jamS,
+            ruangan: defaultRuangan,
+            pemohon: pemohon,
+            divisi: divisi,
+            kategori: kategori,
+            status: status
+          });
+        }
+      }
+    }
+
+    return ContentService.createTextOutput(JSON.stringify(events)).setMimeType(ContentService.MimeType.JSON);
   } catch (err) {
     return ContentService.createTextOutput(JSON.stringify({ error: err.toString() })).setMimeType(ContentService.MimeType.JSON);
   }
@@ -2572,4 +2763,452 @@ function getLinkSpreadsheet() {
   Logger.log(url);
   return url;
 }
+
+// ==============================================================================
+// 11. COMPLETION EMAIL DISPATCHER (EVALUASI TRAINER & POST-TEST)
+// ==============================================================================
+
+/**
+ * Kirim email "Training Selesai" ke peserta individual dengan tautan evaluasi & post-test.
+ */
+function sendTrainingCompletionEmail(participantName, participantEmail, evaluationFormUrl) {
+  if (!participantEmail) return;
+  const targetUrl = evaluationFormUrl || DEFAULT_EVALUATION_URL;
+  const subject = "Training Selesai!";
+  const htmlBody = `
+  <div style="margin:0;padding:32px 16px;background:#F0F1F7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;margin:0 auto;background:#FFFFFF;border-radius:16px;overflow:hidden;box-shadow:0 12px 32px -12px rgba(0,23,143,0.25);">
+      <tr>
+        <td style="background:linear-gradient(135deg,#EAF1FF 0%,#BFDBFF 50%,#FFD3DE 100%);background-color:#BFDBFF;padding:36px 32px 30px;" align="center">
+          <div style="width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,0.6);display:inline-block;line-height:52px;text-align:center;margin-bottom:14px;">
+            <span style="font-size:26px;">&#127891;</span>
+          </div>
+          <p style="margin:0 0 6px;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#00178F;">Training Request System</p>
+          <h1 style="margin:0;font-size:23px;font-weight:700;color:#00178F;line-height:1.3;">Training Selesai! &#127881;</h1>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:32px 32px 8px;">
+          <p style="margin:0 0 16px;font-size:15px;color:#00178F;font-weight:600;">Halo ${participantName},</p>
+          <p style="margin:0 0 14px;font-size:14.5px;line-height:1.65;color:#4A4F8F;">Terima kasih sudah mengikuti dan berpartisipasi aktif dalam sesi pelatihan.</p>
+          <p style="margin:0 0 22px;font-size:14.5px;line-height:1.65;color:#4A4F8F;">Semoga ilmu dan keterampilan yang didapatkan dapat memberikan manfaat dan mendukung pekerjaan sehari-hari.</p>
+          <p style="margin:0;font-size:14.5px;line-height:1.65;color:#4A4F8F;">Sebagai penutup, silahkan isi evaluasi trainer sekaligus post-test melalui tautan berikut:</p>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:22px 32px 34px;" align="center">
+          <table role="presentation" cellpadding="0" cellspacing="0">
+            <tr>
+              <td style="border-radius:100px;background:linear-gradient(180deg,#EAF1FF 0%,#BFDBFF 50%,#FFD3DE 100%);background-color:#FFD3DE;">
+                <a href="${targetUrl}" style="display:inline-block;padding:14px 30px;font-size:14.5px;font-weight:700;color:#00178F;text-decoration:none;border-radius:100px;">Evaluasi Trainer &amp; Post-Test &nbsp;&#8594;</a>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:18px 32px;background:#FAFAFD;border-top:1px solid #EDF1FE;" align="center">
+          <p style="margin:0;font-size:11px;color:#9AA3D6;">Email otomatis dari Training Request System &middot; Jangan reply email ini</p>
+        </td>
+      </tr>
+    </table>
+  </div>`;
+
+  MailApp.sendEmail({ to: participantEmail, subject: subject, htmlBody: htmlBody });
+}
+
+/**
+ * Kirim email "Training Selesai" ke SEMUA peserta yang hadir dalam satu submission.
+ */
+function sendCompletionEmailsToParticipants(meta, participants, evaluationFormUrl) {
+  const targetUrl = evaluationFormUrl || (meta && (meta["Link form evaluasi"] || meta["Link evaluasi post test"] || meta["Link Form Evaluasi / Post-Test"])) || DEFAULT_EVALUATION_URL;
+  (participants || []).forEach(function (p) {
+    if (p.kehadiran === 'Hadir' && p.email) {
+      sendTrainingCompletionEmail(p.nama, p.email, targetUrl);
+    }
+  });
+}
+
+/**
+ * TEST RUNNER: TEST KIRIM EMAIL TRAINING SELESAI & EVALUASI KE EMAIL ANDA SENDIRI
+ */
+function testSendCompletionEmail() {
+  const myEmail = Session.getActiveUser().getEmail();
+  if (!myEmail) {
+    Logger.log("ERROR: Tidak dapat mendeteksi email aktif. Jalankan otorisasi izin script.");
+    return;
+  }
+  Logger.log(`Mengirim test email Training Selesai ke: ${myEmail}`);
+  sendTrainingCompletionEmail("Rekan Karyawan (Test)", myEmail, DEFAULT_EVALUATION_URL);
+  Logger.log("Test email berhasil dikirim!");
+}
+
+// ==============================================================================
+// 12. POST TRAINING TRAMPOLINE (EVIDENCE UPLOAD & POST-TEST DISPATCHER)
+// ==============================================================================
+
+const POST_TRAINING_HEADERS = [
+  "Waktu Submit",
+  "Tipe Aktivitas",
+  "Nama Peserta",
+  "Divisi / Departemen",
+  "Nama Training",
+  "Kategori",
+  "Jumlah File",
+  "Link Folder Google Drive",
+  "Detail File Upload",
+  "Skor Post-Test",
+  "Jawaban / Catatan",
+  "Status"
+];
+
+/**
+ * Setup header untuk sheet "Post Training".
+ */
+function setupPostTrainingSheet(sheet) {
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow(POST_TRAINING_HEADERS);
+    const headerRange = sheet.getRange(1, 1, 1, POST_TRAINING_HEADERS.length);
+    headerRange.setFontWeight("bold");
+    headerRange.setBackground("#00178F");
+    headerRange.setFontColor("#FFFFFF");
+    sheet.setFrozenRows(1);
+  } else {
+    const currentHeaders = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0].map(h => String(h).trim());
+    const currentHeadersLower = currentHeaders.map(h => h.toLowerCase());
+    const missingHeaders = POST_TRAINING_HEADERS.filter(h => !currentHeadersLower.includes(h.toLowerCase()));
+    if (missingHeaders.length > 0) {
+      const startCol = currentHeaders.length + 1;
+      sheet.getRange(1, startCol, 1, missingHeaders.length).setValues([missingHeaders]);
+      const headerRange = sheet.getRange(1, startCol, 1, missingHeaders.length);
+      headerRange.setFontWeight("bold");
+      headerRange.setBackground("#00178F");
+      headerRange.setFontColor("#FFFFFF");
+    }
+  }
+}
+
+/**
+ * Mendapatkan atau membuat subfolder di dalam folder induk.
+ */
+function getOrCreateSubFolder(parentFolder, folderName) {
+  const safeName = (folderName || "Untitled").toString().trim();
+  const folders = parentFolder.getFoldersByName(safeName);
+  if (folders.hasNext()) {
+    return folders.next();
+  }
+  return parentFolder.createFolder(safeName);
+}
+
+/**
+ * Mengambil root folder Google Drive untuk penyimpanan evidence.
+ * Jika EVIDENCE_ROOT_FOLDER_ID diisi, gunakan folder tersebut; jika kosong, gunakan My Drive utama akun pelaksana.
+ */
+function getEvidenceRootFolder() {
+  if (typeof EVIDENCE_ROOT_FOLDER_ID === "string" && EVIDENCE_ROOT_FOLDER_ID.trim().length > 0) {
+    try {
+      return DriveApp.getFolderById(EVIDENCE_ROOT_FOLDER_ID.trim());
+    } catch (err) {
+      Logger.log("Peringatan: Folder ID EVIDENCE_ROOT_FOLDER_ID tidak valid, beralih ke My Drive utama: " + err.message);
+    }
+  }
+  return DriveApp.getRootFolder();
+}
+
+/**
+ * Menangani pengunggahan file bukti training (Evidence) ke Google Drive
+ * Struktur Folder: Evidence Training / [Divisi] / [Nama Training - Tanggal]
+ * Dan mencatat transaksi ke tab "Post Training".
+ */
+function handlePostTrainingEvidence(ss, data) {
+  try {
+    let postSheet = ss.getSheetByName(POST_TRAINING_SHEET_NAME);
+    if (!postSheet) {
+      postSheet = ss.insertSheet(POST_TRAINING_SHEET_NAME);
+    }
+    setupPostTrainingSheet(postSheet);
+
+    const rootFolder = getEvidenceRootFolder();
+    const evidenceMainFolder = getOrCreateSubFolder(rootFolder, "Evidence Training");
+
+    // Pastikan folder utama berizin Domain / Link sharing
+    try {
+      evidenceMainFolder.setSharing(DriveApp.Access.DOMAIN_WITH_LINK, DriveApp.Permission.VIEW);
+    } catch (eMainShare) {
+      try {
+        evidenceMainFolder.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+      } catch (eMainLink) {}
+    }
+
+    const divisiClean = (data.divisi || "Umum").toString().trim().replace(/[\/\\:*?"<>|]/g, "_");
+    const deptFolder = getOrCreateSubFolder(evidenceMainFolder, divisiClean);
+
+    const trainingNameClean = (data.namaTraining || "Training").toString().trim().replace(/[\/\\:*?"<>|]/g, "_");
+    const dateStr = data.tanggal || Utilities.formatDate(new Date(), TIME_ZONE, "yyyy-MM-dd");
+    const sessionFolderName = `${trainingNameClean} - ${dateStr}`;
+    const targetFolder = getOrCreateSubFolder(deptFolder, sessionFolderName);
+
+    // Atur hak akses folder ke Domain Workspace (karyawan cpssoft.com / cppsoft.com) atau siapa pun yang memiliki link
+    try {
+      targetFolder.setSharing(DriveApp.Access.DOMAIN_WITH_LINK, DriveApp.Permission.VIEW);
+    } catch (eDomainFolder) {
+      try {
+        targetFolder.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+      } catch (eLinkFolder) {
+        Logger.log("Peringatan sharing folder: " + eLinkFolder.toString());
+      }
+    }
+
+    const savedFiles = [];
+    if (Array.isArray(data.files) && data.files.length > 0) {
+      data.files.forEach((f, idx) => {
+        if (!f || !f.base64) return;
+        try {
+          // Bersihkan prefix data URL (cth: "data:image/jpeg;base64,") & karakter whitespace
+          let cleanBase64 = String(f.base64).trim();
+          if (cleanBase64.indexOf("base64,") !== -1) {
+            cleanBase64 = cleanBase64.substring(cleanBase64.indexOf("base64,") + 7);
+          }
+          cleanBase64 = cleanBase64.replace(/[\r\n\s]/g, "");
+
+          const decodedBytes = Utilities.base64Decode(cleanBase64);
+          const fileName = (f.name || `evidence_${idx + 1}.jpg`).toString().trim();
+          const mimeType = f.type || (fileName.toLowerCase().endsWith(".png") ? "image/png" : "image/jpeg");
+          const blob = Utilities.newBlob(decodedBytes, mimeType, fileName);
+          const driveFile = targetFolder.createFile(blob);
+
+          // Berikan akses view untuk karyawan domain/link
+          try {
+            driveFile.setSharing(DriveApp.Access.DOMAIN_WITH_LINK, DriveApp.Permission.VIEW);
+          } catch (eFileShare) {
+            try {
+              driveFile.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+            } catch (eLinkShare) {}
+          }
+
+          savedFiles.push({
+            name: fileName,
+            id: driveFile.getId(),
+            url: driveFile.getUrl()
+          });
+        } catch (fileErr) {
+          Logger.log("Gagal mengunggah file bukti (" + (f.name || idx) + "): " + fileErr.toString());
+        }
+      });
+    }
+
+    const timestamp = Utilities.formatDate(new Date(), TIME_ZONE, "yyyy-MM-dd HH:mm:ss");
+    const fileDetails = savedFiles.map((f, i) => `${i + 1}. ${f.name} (${f.url})`).join("\n");
+    const folderUrl = targetFolder.getUrl();
+
+    const currentHeaders = postSheet.getRange(1, 1, 1, postSheet.getLastColumn()).getValues()[0].map(h => String(h).trim());
+    const rowMap = {
+      "Waktu Submit": timestamp,
+      "Tipe Aktivitas": "Unggah Bukti",
+      "Nama Peserta": data.namaPeserta || "-",
+      "Divisi / Departemen": data.divisi || "-",
+      "Nama Training": data.namaTraining || "-",
+      "Kategori": data.kategori || "-",
+      "Jumlah File": savedFiles.length,
+      "Link Folder Google Drive": folderUrl,
+      "Detail File Upload": fileDetails || "-",
+      "Skor Post-Test": "-",
+      "Jawaban / Catatan": "-",
+      "Status": "Sukses"
+    };
+
+    const newRow = currentHeaders.map(header => {
+      return rowMap[header] !== undefined ? rowMap[header] : "-";
+    });
+    postSheet.appendRow(newRow);
+
+    return ContentService.createTextOutput(JSON.stringify({
+      success: true,
+      message: "Evidence berhasil diunggah ke Google Drive dan dicatat ke spreadsheet",
+      folderUrl: folderUrl,
+      count: savedFiles.length,
+      files: savedFiles
+    })).setMimeType(ContentService.MimeType.JSON);
+
+  } catch (err) {
+    Logger.log("Error handlePostTrainingEvidence: " + err.toString());
+    return ContentService.createTextOutput(JSON.stringify({
+      success: false,
+      message: "Gagal memproses evidence: " + err.message
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+/**
+ * Menangani pencatatan hasil Post-Test ke tab "Post Training".
+ */
+function handlePostTestSubmission(ss, data) {
+  try {
+    let postSheet = ss.getSheetByName(POST_TRAINING_SHEET_NAME);
+    if (!postSheet) {
+      postSheet = ss.insertSheet(POST_TRAINING_SHEET_NAME);
+    }
+    setupPostTrainingSheet(postSheet);
+
+    const timestamp = Utilities.formatDate(new Date(), TIME_ZONE, "yyyy-MM-dd HH:mm:ss");
+    const currentHeaders = postSheet.getRange(1, 1, 1, postSheet.getLastColumn()).getValues()[0].map(h => String(h).trim());
+    const rowMap = {
+      "Waktu Submit": timestamp,
+      "Tipe Aktivitas": "Post Test",
+      "Nama Peserta": data.namaPeserta || "-",
+      "Divisi / Departemen": data.divisi || "-",
+      "Nama Training": data.namaTraining || "-",
+      "Kategori": data.kategori || "-",
+      "Jumlah File": 0,
+      "Link Folder Google Drive": "-",
+      "Detail File Upload": "-",
+      "Skor Post-Test": data.skor !== undefined ? data.skor : "-",
+      "Jawaban / Catatan": data.jawaban || "-",
+      "Status": "Selesai"
+    };
+
+    const newRow = currentHeaders.map(header => {
+      return rowMap[header] !== undefined ? rowMap[header] : "-";
+    });
+    postSheet.appendRow(newRow);
+
+    return ContentService.createTextOutput(JSON.stringify({
+      success: true,
+      message: "Hasil post-test berhasil dicatat ke Google Sheets"
+    })).setMimeType(ContentService.MimeType.JSON);
+
+  } catch (err) {
+    Logger.log("Error handlePostTestSubmission: " + err.toString());
+    return ContentService.createTextOutput(JSON.stringify({
+      success: false,
+      message: "Gagal mencatat post-test: " + err.message
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+/**
+ * Mengambil seluruh data evidence & dokumentasi dari tab "Post Training" untuk Portal Approver
+ */
+function handleGetPostTrainingEvidence(ss) {
+  try {
+    let postSheet = ss.getSheetByName(POST_TRAINING_SHEET_NAME);
+    if (!postSheet) {
+      return ContentService.createTextOutput(JSON.stringify([])).setMimeType(ContentService.MimeType.JSON);
+    }
+    const values = postSheet.getDataRange().getValues();
+    if (values.length < 2) {
+      return ContentService.createTextOutput(JSON.stringify([])).setMimeType(ContentService.MimeType.JSON);
+    }
+    const headers = values[0].map(h => String(h).trim());
+    const evidenceList = [];
+    for (let i = 1; i < values.length; i++) {
+      const row = values[i];
+      const rowObj = {};
+      headers.forEach((h, colIdx) => {
+        rowObj[h] = row[colIdx];
+      });
+
+      // Ekstrak tautan file jika ada di dalam detail file
+      const detailStr = String(rowObj["Detail File Upload"] || "");
+      const fileUrls = [];
+      const linkRegex = /https:\/\/drive\.google\.com\/[^\s\)]+/g;
+      let match;
+      while ((match = linkRegex.exec(detailStr)) !== null) {
+        fileUrls.push(match[0]);
+      }
+
+      evidenceList.push({
+        id: `EVD-${i}`,
+        waktuSubmit: rowObj["Waktu Submit"] || "",
+        tipeAktivitas: rowObj["Tipe Aktivitas"] || "Unggah Bukti",
+        namaPeserta: rowObj["Nama Peserta"] || "-",
+        divisi: rowObj["Divisi / Departemen"] || "-",
+        namaTraining: rowObj["Nama Training"] || "-",
+        kategori: rowObj["Kategori"] || "Soft skill",
+        jumlahFile: Number(rowObj["Jumlah File"]) || (fileUrls.length || 0),
+        folderUrl: rowObj["Link Folder Google Drive"] || "",
+        detailFile: detailStr,
+        fileUrls: fileUrls,
+        skorPostTest: rowObj["Skor Post-Test"] || "-",
+        catatan: rowObj["Jawaban / Catatan"] || "-",
+        status: rowObj["Status"] || "Sukses"
+      });
+    }
+    return ContentService.createTextOutput(JSON.stringify(evidenceList)).setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    Logger.log("Error handleGetPostTrainingEvidence: " + err.toString());
+    return ContentService.createTextOutput(JSON.stringify({ error: err.toString() })).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+/**
+ * TEST RUNNER: TEST UPLOAD EVIDENCE KE GOOGLE DRIVE & POST TRAINING SHEET
+ */
+function testUploadEvidenceDummy() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const dummyBase64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
+  const mockPayload = {
+    action: "submitPostTrainingEvidence",
+    namaTraining: "Workshop Golang Backend",
+    namaPeserta: "Tester TDS",
+    divisi: "WEB DEVELOPER",
+    kategori: "Hard skill",
+    tanggal: Utilities.formatDate(new Date(), TIME_ZONE, "yyyy-MM-dd"),
+    files: [
+      { name: "test_evidence.png", type: "image/png", base64: dummyBase64 }
+    ]
+  };
+  const res = handlePostTrainingEvidence(ss, mockPayload);
+  Logger.log("Hasil test upload: " + res.getContent());
+}
+
+/**
+ * UTILITY: ATUR AKSES SELURUH FOLDER BUKTI DI GOOGLE DRIVE KE KARYAWAN DOMAIN / LINK
+ * Jalankan fungsi ini 1x dari Editor Apps Script jika ingin memperbarui perizinan folder-folder bukti yang sudah dibuat sebelumnya.
+ */
+function grantDomainAccessToAllEvidenceFolders() {
+  const root = getEvidenceRootFolder();
+  const folders = root.getFoldersByName("Evidence Training");
+  if (!folders.hasNext()) {
+    Logger.log("Folder 'Evidence Training' belum ditemukan di Google Drive.");
+    return;
+  }
+  const mainFolder = folders.next();
+
+  function applySharingRecursive(folder) {
+    try {
+      folder.setSharing(DriveApp.Access.DOMAIN_WITH_LINK, DriveApp.Permission.VIEW);
+      Logger.log("Berhasil set Domain sharing pada folder: " + folder.getName());
+    } catch (err) {
+      try {
+        folder.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+        Logger.log("Berhasil set Link sharing pada folder: " + folder.getName());
+      } catch (err2) {
+        Logger.log("Gagal set sharing pada folder " + folder.getName() + ": " + err2.toString());
+      }
+    }
+
+    const subFolders = folder.getFolders();
+    while (subFolders.hasNext()) {
+      applySharingRecursive(subFolders.next());
+    }
+
+    const files = folder.getFiles();
+    while (files.hasNext()) {
+      const file = files.next();
+      try {
+        file.setSharing(DriveApp.Access.DOMAIN_WITH_LINK, DriveApp.Permission.VIEW);
+      } catch (err) {
+        try {
+          file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+        } catch (err2) {}
+      }
+    }
+  }
+
+  applySharingRecursive(mainFolder);
+  Logger.log("✅ Selesai memperbarui izin akses Domain / Link untuk seluruh folder & file bukti pelatihan!");
+}
+
+
 

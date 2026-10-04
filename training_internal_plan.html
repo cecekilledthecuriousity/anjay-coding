@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Request Training & Development</title>
+  <title>Training &amp; Development System</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -12,40 +12,286 @@
   <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16.png">
   <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png">
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.15/locales/id.global.min.js"></script>
   <script src="js/app.js?v=20260921_final" defer></script>
 </head>
 <body>
 
-<div class="page">
+<div class="tds-layout">
 
-  <!-- ================= FORM VIEW ================= -->
-  <main id="formView">
-
-    <div class="doc-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;">
-      <div style="display:flex;align-items:center;gap:14px;">
-        <img src="favicon/logo.svg" alt="Logo" class="header-logo" style="width:48px;height:48px;border-radius:12px;object-fit:contain;" onerror="this.src='favicon/apple-touch-icon.png'">
-        <div>
-          <p class="kicker">Employee Development Program</p>
-          <h1 class="voice">Request Training & Development</h1>
-        </div>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center;">
-        <button type="button" class="btn-secondary" onclick="requestApprovalAccess()" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;font-size:13px;font-weight:600;border-radius:var(--radius-sm);" title="Akses Khusus Approver (Terkunci PIN)">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-          Portal Approval
-        </button>
+  <!-- ================= TDS SIDEBAR ================= -->
+    <aside class="tds-sidebar" id="tdsSidebar">
+    <div class="tds-sidebar-brand" ondblclick="requestAdminAccess()" style="cursor:pointer;" title="Training &amp; Development System (Double click untuk akses admin)">
+      <img src="favicon/logo.svg" alt="TDS" class="tds-brand-logo" onerror="this.src='favicon/apple-touch-icon.png'">
+      <div class="tds-brand-info">
+        <span class="tds-brand-name voice">Training &amp; Development System</span>
+        <span class="tds-brand-sub">Employee Development</span>
       </div>
     </div>
+
+    <nav class="tds-nav" aria-label="Navigasi Training &amp; Development System">
+      <button type="button" class="tds-nav-item active" data-page="dashboard" onclick="goToPage('dashboard')">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+        <span>Dashboard</span>
+      </button>
+      <button type="button" class="tds-nav-item" data-page="ajukan" onclick="goToPage('ajukan')">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
+        <span><span class="hide-mobile">Pengajuan Training</span><span class="show-mobile">Pengajuan</span></span>
+      </button>
+      <button type="button" class="tds-nav-item" data-page="skill-matrix" onclick="goToPage('skill-matrix')">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10"></path><path d="M18 20V4"></path><path d="M6 20v-4"></path></svg>
+        <span>Skill Matrix</span>
+      </button>
+      <button type="button" class="tds-nav-item" data-page="ai-studio" onclick="goToPage('ai-studio')">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path></svg>
+        <span>AI Studio</span>
+      </button>
+      <button type="button" class="tds-nav-item" data-page="kalender" onclick="goToPage('kalender')">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+        <span>Kalender</span>
+      </button>
+      <button type="button" class="tds-nav-item" data-page="training-saya" onclick="goToPage('training-saya')">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+        <span>Training Saya</span>
+      </button>
+            <button type="button" class="tds-nav-item" data-page="vendor" onclick="goToPage('vendor')">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"></path><path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"></path><path d="M9 8h1"></path><path d="M9 12h1"></path><path d="M9 16h1"></path><path d="M14 8h1"></path><path d="M14 12h1"></path><path d="M14 16h1"></path></svg>
+        <span>Vendor</span>
+      </button>
+      <button type="button" class="tds-nav-item" data-page="post-training" onclick="goToPage('post-training')">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"></path>
+          <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"></path>
+          <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"></path>
+          <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"></path>
+        </svg>
+        <span><span class="hide-mobile">Post Training Trampoline</span><span class="show-mobile">Trampoline</span></span>
+      </button>
+    </nav>
+
+    <div class="tds-sidebar-footer">
+      <span class="tds-version-tag" onclick="requestAdminAccess()" title="Akses Khusus Admin (PIN)">v1.0 &bull; TDS</span>
+    </div>
+  </aside>
+
+  <!-- ================= MAIN TDS CONTAINER ================= -->
+  <div class="tds-main">
+    <div class="page">
+
+      <!-- ================= 1. PAGE: DASHBOARD (#page-dashboard) ================= -->
+            <section class="tds-page active" id="page-dashboard">
+        <!-- Dashboard Operations Header -->
+        <header class="dash-op-header">
+          <div class="dash-op-text">
+            <div class="dash-op-kicker">
+              <span class="dash-op-dot"></span>
+              <span>Operasional Pelatihan Karyawan</span>
+            </div>
+            <h1 class="dash-op-title voice">Ringkasan &amp; Jadwal Training</h1>
+            <p class="dash-op-desc">Pantau jadwal sesi aktif terdekat, status antrean persetujuan, dan komitmen anggaran pelatihan.</p>
+          </div>
+          <div class="dash-op-actions">
+            <button type="button" class="btn-primary" onclick="goToPage('ajukan')" style="gap:8px;padding:9px 18px;font-size:13.5px;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+              <span>Ajukan Training Baru</span>
+            </button>
+          </div>
+        </header>
+
+        <!-- Asymmetric Metrics Strip: Priority Action + Core Stats -->
+        <div class="dash-metrics-grid">
+          <!-- Metric 1: Priority Action Anchor (Status Persetujuan) -->
+          <div class="dash-metric-card priority" onclick="goToPage('portal-approval')" title="Buka Portal Persetujuan" style="cursor:pointer;">
+            <div class="dash-metric-top">
+              <span class="dash-metric-label">Antrean Persetujuan</span>
+              <span class="dash-metric-tag alert">Perlu Aksi</span>
+            </div>
+            <div class="dash-metric-main">
+              <span class="dash-metric-val" id="dashKpiPending">0 <small>Pending</small></span>
+            </div>
+            <div class="dash-metric-meta" id="dashKpiStatusSub">
+              <span class="mini-pill approved" style="padding:2px 7px;font-size:11px;"><span class="dot"></span>0 Approved</span>
+              <span class="mini-pill rejected" style="padding:2px 7px;font-size:11px;"><span class="dot"></span>0 Rejected</span>
+            </div>
+          </div>
+
+          <!-- Metric 2: Program Berjalan & Breakdown -->
+          <div class="dash-metric-card">
+            <div class="dash-metric-top">
+              <span class="dash-metric-label">Program Tahun Berjalan</span>
+              <span class="dash-metric-tag" id="dashKpiTotalSub">Tahun berjalan</span>
+            </div>
+            <div class="dash-metric-main">
+              <span class="dash-metric-val" id="dashKpiTotal">0</span>
+              <span class="dash-metric-unit">Program</span>
+            </div>
+            <div class="dash-metric-meta" id="dashKpiJenisSub">
+              0 Internal &bull; 0 Eksternal &bull; 0 Mandiri
+            </div>
+            <span id="dashKpiJenis" style="display:none;">0 Program</span>
+          </div>
+
+          <!-- Metric 3: Komitmen Anggaran -->
+          <div class="dash-metric-card">
+            <div class="dash-metric-top">
+              <span class="dash-metric-label">Estimasi Budget Diajukan</span>
+              <span class="dash-metric-tag neutral">Akumulatif</span>
+            </div>
+            <div class="dash-metric-main">
+              <span class="dash-metric-val" id="dashKpiBudget" style="font-size:20px;">Rp 0</span>
+            </div>
+            <div class="dash-metric-meta" style="font-size:11.5px;color:var(--ink-soft);">
+              Total biaya pengajuan terdaftar di sistem
+            </div>
+          </div>
+        </div>
+
+        <!-- Main Workspace (2 Columns): Upcoming Schedule & Action Center -->
+        <div class="dash-workspace-grid">
+          <!-- Left Column: Upcoming Sessions Feed -->
+          <div class="dash-main-col">
+            <div class="dash-col-head">
+              <div>
+                <h2 class="dash-col-title voice">Jadwal Sesi Terdekat</h2>
+                <p class="dash-col-sub">Sesi pelatihan aktif yang akan berlangsung</p>
+              </div>
+              <button type="button" class="btn-secondary" onclick="goToPage('kalender')" style="font-size:12px;padding:6px 12px;gap:6px;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                <span>Lihat Kalender</span>
+              </button>
+            </div>
+            <div id="dashUpcomingList" class="dash-upcoming-feed"></div>
+          </div>
+
+          <!-- Right Column: Quick Action Center & Navigation -->
+          <div class="dash-side-col">
+            <div class="dash-side-card">
+              <div class="dash-side-head">
+                <h3 class="dash-side-title voice">Pusat Tindakan Terpadu</h3>
+                <p class="dash-side-sub">Akses langsung ke modul operasional penting</p>
+              </div>
+
+              <div class="dash-quick-links">
+                <div class="dash-quick-link" onclick="goToPage('training-saya')">
+                  <div class="dash-ql-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                  </div>
+                  <div class="dash-ql-content">
+                    <span class="dash-ql-title">Pelatihan Saya</span>
+                    <span class="dash-ql-desc">Cek status pengajuan dan riwayat pelatihan Anda</span>
+                  </div>
+                  <svg class="dash-ql-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                </div>
+
+                <div class="dash-quick-link" onclick="goToPage('skill-matrix')">
+                  <div class="dash-ql-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10"></path><path d="M18 20V4"></path><path d="M6 20v-4"></path></svg>
+                  </div>
+                  <div class="dash-ql-content">
+                    <span class="dash-ql-title">Skill Matrix Divisi</span>
+                    <span class="dash-ql-desc">Tinjau gap kompetensi dan kebutuhan tim</span>
+                  </div>
+                  <svg class="dash-ql-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                </div>
+
+                <div class="dash-quick-link" onclick="goToPage('vendor')">
+                  <div class="dash-ql-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"></path><path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"></path></svg>
+                  </div>
+                  <div class="dash-ql-content">
+                    <span class="dash-ql-title">Direktori Vendor</span>
+                    <span class="dash-ql-desc">Daftar lembaga penyedia training &amp; instruktur</span>
+                  </div>
+                  <svg class="dash-ql-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                </div>
+
+                <div class="dash-quick-link" onclick="goToPage('ai-studio')">
+                  <div class="dash-ql-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path></svg>
+                  </div>
+                  <div class="dash-ql-content">
+                    <span class="dash-ql-title">AI Course Architect</span>
+                    <span class="dash-ql-desc">Rancang silabus modul &amp; KPI kurikulum otomatis</span>
+                  </div>
+                  <svg class="dash-ql-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Submissions Table (Real Operational Activity) -->
+        <div class="dash-recent-section">
+          <div class="dash-col-head" style="margin-bottom:12px;">
+            <div>
+              <h2 class="dash-col-title voice">Pengajuan Training Terkini</h2>
+              <p class="dash-col-sub">Daftar usulan program pelatihan terbaru yang tercatat dalam sistem</p>
+            </div>
+            <button type="button" class="btn-secondary" onclick="goToPage('training-saya')" style="font-size:12px;padding:6px 12px;gap:6px;">
+              <span>Lihat Semua</span>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+            </button>
+          </div>
+
+          <div class="tbl-wrap" style="background:var(--panel-solid);border:1px solid var(--line);border-radius:12px;overflow-x:auto;box-shadow:var(--shadow-sm);">
+            <table class="table-custom" style="width:100%;margin:0;border-collapse:collapse;" id="dashRecentTable">
+              <thead>
+                <tr style="background:var(--paper);border-bottom:1px solid var(--line);">
+                  <th style="padding:10px 14px;text-align:left;font-size:12px;font-weight:600;color:var(--ink-soft);white-space:nowrap;">ID &amp; Tanggal</th>
+                  <th style="padding:10px 14px;text-align:left;font-size:12px;font-weight:600;color:var(--ink-soft);white-space:nowrap;">Nama Pelatihan</th>
+                  <th style="padding:10px 14px;text-align:left;font-size:12px;font-weight:600;color:var(--ink-soft);white-space:nowrap;">Leader / Divisi</th>
+                  <th style="padding:10px 14px;text-align:left;font-size:12px;font-weight:600;color:var(--ink-soft);white-space:nowrap;">Metode &amp; Sesi</th>
+                  <th style="padding:10px 14px;text-align:left;font-size:12px;font-weight:600;color:var(--ink-soft);white-space:nowrap;">Status</th>
+                  <th style="padding:10px 14px;text-align:center;font-size:12px;font-weight:600;color:var(--ink-soft);width:70px;white-space:nowrap;">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="dashRecentTableBody">
+                <!-- Rendered dynamically via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+
+      <!-- ================= 2. PAGE: AJUKAN TRAINING (#page-ajukan) ================= -->
+            <section class="tds-page" id="page-ajukan">
+        <!-- Main Top Header -->
+        <header class="doc-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:14px;">
+          <div style="display:flex;align-items:center;gap:14px;">
+            <div class="header-icon-box" style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg, #6E62F0, #372FB0);display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 14px rgba(55, 47, 176, 0.25);">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+                <path d="M2 17l10 5 10-5"></path>
+                <path d="M2 12l10 5 10-5"></path>
+              </svg>
+            </div>
+            <div>
+              <p class="kicker">Employee Development Program</p>
+              <h1 class="voice">Request Training &amp; Development</h1>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <button type="button" class="btn-ai-badge" onclick="openAiAssistantModal()" title="Buka AI Course Architect untuk merancang silabus otomatis">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path></svg>
+              <span>AI Assistant</span>
+            </button>
+          </div>
+        </header>
+
+        <!-- ================= FORM VIEW ================= -->
+        <main id="formView">
 
     <!-- Stepper Navigation Header -->
     <nav class="stepper-nav" aria-label="Tahapan formulir">
       <div class="mobile-stepper-info">
-        <span id="mobileStepText">Langkah 1 dari 4: Profil &amp; Sasaran</span>
-        <span id="mobileProgressPercent" style="color:var(--moss);">25%</span>
+        <span id="mobileStepText">Langkah 1 dari 2: Profil &amp; Sasaran</span>
+        <span id="mobileProgressPercent" style="color:var(--moss);">50%</span>
       </div>
 
       <div class="stepper-progress-bar">
-        <div class="stepper-progress-fill" id="stepperProgressFill"></div>
+        <div class="stepper-progress-fill" id="stepperProgressFill" style="width:50%;"></div>
       </div>
 
       <div class="stepper-items">
@@ -60,21 +306,7 @@
           <div class="step-tab-num">2</div>
           <div class="step-tab-info">
             <span class="step-tab-label">Langkah 02</span>
-            <span class="step-tab-title">Pelaksanaan &amp; Peserta</span>
-          </div>
-        </div>
-        <div class="step-tab" id="stepTab3" onclick="goToStep(3)">
-          <div class="step-tab-num">3</div>
-          <div class="step-tab-info">
-            <span class="step-tab-label">Langkah 03</span>
-            <span class="step-tab-title">Biaya &amp; Evaluasi</span>
-          </div>
-        </div>
-        <div class="step-tab" id="stepTab4" onclick="goToStep(4)">
-          <div class="step-tab-num">4</div>
-          <div class="step-tab-info">
-            <span class="step-tab-label">Langkah 04</span>
-            <span class="step-tab-title">Review &amp; Konfirmasi</span>
+            <span class="step-tab-title">Pelaksanaan &amp; Evaluasi</span>
           </div>
         </div>
       </div>
@@ -99,7 +331,13 @@
             <input type="text" placeholder="Lengkapi Tanggal, Departemen &amp; Kategori terlebih dahulu" id="trainingId" data-field="ID training" readonly style="font-weight:600;color:var(--moss);background:#FAF9F5;" required>
           </div>
           <div class="field">
-            <label>Nama Training <span style="color:var(--danger)">*</span></label>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+              <label style="margin-bottom:0;">Nama Training <span style="color:var(--danger)">*</span></label>
+              <button type="button" class="btn-ai-sparkle" onclick="openAiAssistantModal()" title="Bantu susun silabus &amp; sasaran dengan AI">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path></svg>
+                <span>✨ Bantu Rancang (AI)</span>
+              </button>
+            </div>
             <input type="text" placeholder="Masukkan nama / topik pelatihan..." id="trainingName" data-field="Nama training" required>
           </div>
         </div>
@@ -167,7 +405,15 @@
           </div>
           <div class="field">
             <label>Tanggal Pengajuan</label>
-            <input type="date" id="tglPengajuan" data-field="Tanggal pengajuan" onchange="updateTrainingId()">
+            <div class="date-picker-wrap">
+              <div class="date-picker-trigger" onclick="toggleDatePicker('tglPengajuan')">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                <span id="tglPengajuan_display">Pilih tanggal</span>
+                <svg class="chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+              </div>
+              <input type="hidden" id="tglPengajuan" data-field="Tanggal pengajuan" onchange="updateTrainingId()">
+              <div class="date-picker-popover" id="tglPengajuan_popover" style="display:none;"></div>
+            </div>
           </div>
         </div>
       </section>
@@ -270,26 +516,14 @@
           <input type="hidden" id="levelKemahiran" data-field="Target level kemahiran" value="Basic">
         </div>
 
-        <div class="field-row cols-2">
-          <div class="field">
-            <label>Training Plan Purpose <span class="hint">(Latar belakang)</span></label>
-            <textarea placeholder="Mengapa training internal ini diadakan?" id="purpose" data-field="Training plan purpose"></textarea>
+        <div class="field">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+            <label style="margin-bottom:0;">Training Goals <span class="hint">(Tujuan &amp; hasil yang diharapkan)</span></label>
+            <button type="button" class="btn-ai-sparkle" onclick="openAiAssistantModal()" title="Generate sasaran training dengan AI">
+              <span>✨ Generate Goals (AI)</span>
+            </button>
           </div>
-          <div class="field">
-            <label>Training Goals <span class="hint">(Hasil spesifik)</span></label>
-            <textarea placeholder="Apa hasil spesifik yang ingin dicapai dari training ini?" id="goals" data-field="Training goals"></textarea>
-          </div>
-        </div>
-
-        <div class="field-row cols-2">
-          <div class="field">
-            <label>Prasyarat Peserta <span class="hint">(Opsional)</span></label>
-            <input type="text" placeholder="cth. Minimal staf level, familiar tools X" id="prereq" data-field="Prasyarat peserta">
-          </div>
-          <div class="field">
-            <label>Sertifikasi / Output</label>
-            <input type="text" placeholder="cth. Sertifikat internal, badge skill" id="certOutput" data-field="Sertifikasi / output">
-          </div>
+          <textarea placeholder="Jelaskan kebutuhan yang ingin dijawab dan hasil yang diharapkan setelah training." id="goals" data-field="Training goals" rows="3"></textarea>
         </div>
       </section>
 
@@ -372,84 +606,175 @@
 
         <!-- Bagian Ruangan Meeting (Hanya Onsite & Hybrid) -->
         <div class="field" id="lokasiSection" style="margin-bottom:16px;">
-          <div class="room-avail-header">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
             <label style="margin-bottom:0;display:inline-flex;align-items:center;gap:6px;">
               <span>Lokasi / Ruangan Meeting</span>
-              <span class="hint" style="color:var(--moss);">Live Calendar</span>
+              <span class="hint" style="color:var(--moss);">(Onsite)</span>
             </label>
-            <div style="display:inline-flex;align-items:center;gap:8px;">
-              <span class="room-avail-info" id="roomAvailInfo">
-                <span class="room-avail-badge avail-free" style="padding:1px 6px;">●</span> 4 Ruangan Siap Dipilih
+            <div style="display:inline-flex;align-items:center;gap:6px;">
+              <span class="room-avail-info" id="roomAvailInfo" style="font-size:11.5px;color:var(--ink-soft);">
+                <span class="room-avail-badge avail-free" style="padding:1px 5px;font-size:10px;">●</span> Live Calendar
               </span>
-              <button type="button" class="btn-avail-action" onclick="fetchRoomAvailability(true)" title="Cek ulang ketersediaan ruangan di Google Calendar">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
-                <span>Cek Ulang</span>
+              <button type="button" class="btn-avail-action" onclick="fetchRoomAvailability(true)" title="Cek ulang ketersediaan ruangan di Google Calendar" style="padding:3px 8px;font-size:11px;height:26px;">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
+                <span>Cek</span>
               </button>
             </div>
           </div>
-          <div class="chip-grid" id="lokasiChipGrid">
-            <div class="chip-card room-chip" data-room="Ruangan Meeting Neptunus" onclick="selectChip('lokasi', 'Ruangan Meeting Neptunus', this)">
-              <div class="chip-icon"><svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="9" fill="#4C6FE0"/></svg></div>
-              <div class="chip-content">
-                <span class="chip-title">Neptunus</span>
+
+          <!-- Custom Styled Dropdown dengan Ikon Planet SVG -->
+          <div class="custom-room-dropdown" id="roomDropdownContainer">
+            <button type="button" class="room-dropdown-trigger" id="roomDropdownTrigger" onclick="toggleRoomDropdown()" aria-haspopup="listbox" aria-expanded="false">
+              <span class="room-trigger-icon" id="roomTriggerIcon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+              </span>
+              <span class="room-trigger-label placeholder" id="roomTriggerLabel">Pilih Ruangan Meeting...</span>
+              <span class="room-trigger-badge" id="roomTriggerBadge" style="display:none;"></span>
+              <svg class="room-trigger-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="room-dropdown-menu" id="roomDropdownMenu" role="listbox">
+              <!-- Neptunus -->
+              <div class="room-dropdown-item" role="option" data-room="Ruangan Meeting Neptunus" onclick="selectCustomRoom('Ruangan Meeting Neptunus')">
+                <div class="room-item-icon">
+                  <svg viewBox="0 0 24 24" width="22" height="22"><circle cx="12" cy="12" r="9" fill="#4C6FE0"/></svg>
+                </div>
+                <div class="room-item-text">
+                  <span class="room-item-title">Neptunus</span>
+                  <span class="room-item-sub">Ruangan Meeting Neptunus</span>
+                </div>
                 <span class="room-avail-badge avail-free" id="badge-neptunus">Tersedia</span>
               </div>
-            </div>
-            <div class="chip-card room-chip" data-room="Ruangan Meeting Saturnus" onclick="selectChip('lokasi', 'Ruangan Meeting Saturnus', this)">
-              <div class="chip-icon"><svg viewBox="0 0 24 24" width="20" height="20"><ellipse cx="12" cy="13" rx="11" ry="3.2" fill="none" stroke="#D9A441" stroke-width="1.6" transform="rotate(-18 12 13)"/><circle cx="12" cy="12" r="6" fill="#E8C170"/></svg></div>
-              <div class="chip-content">
-                <span class="chip-title">Saturnus</span>
+
+              <!-- Saturnus -->
+              <div class="room-dropdown-item" role="option" data-room="Ruangan Meeting Saturnus" onclick="selectCustomRoom('Ruangan Meeting Saturnus')">
+                <div class="room-item-icon">
+                  <svg viewBox="0 0 24 24" width="24" height="24"><ellipse cx="12" cy="13" rx="11" ry="3.2" fill="none" stroke="#D9A441" stroke-width="1.6" transform="rotate(-18 12 13)"/><circle cx="12" cy="12" r="6" fill="#E8C170"/></svg>
+                </div>
+                <div class="room-item-text">
+                  <span class="room-item-title">Saturnus</span>
+                  <span class="room-item-sub">Ruangan Meeting Saturnus</span>
+                </div>
                 <span class="room-avail-badge avail-free" id="badge-saturnus">Tersedia</span>
               </div>
-            </div>
-            <div class="chip-card room-chip" data-room="Ruangan Meeting Mars" onclick="selectChip('lokasi', 'Ruangan Meeting Mars', this)">
-              <div class="chip-icon"><svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="9" fill="#C1440E"/></svg></div>
-              <div class="chip-content">
-                <span class="chip-title">Mars</span>
+
+              <!-- Mars -->
+              <div class="room-dropdown-item" role="option" data-room="Ruangan Meeting Mars" onclick="selectCustomRoom('Ruangan Meeting Mars')">
+                <div class="room-item-icon">
+                  <svg viewBox="0 0 24 24" width="22" height="22"><circle cx="12" cy="12" r="9" fill="#C1440E"/></svg>
+                </div>
+                <div class="room-item-text">
+                  <span class="room-item-title">Mars</span>
+                  <span class="room-item-sub">Ruangan Meeting Mars</span>
+                </div>
                 <span class="room-avail-badge avail-free" id="badge-mars">Tersedia</span>
               </div>
-            </div>
-            <div class="chip-card room-chip" data-room="Ruangan Meeting Merkurius" onclick="selectChip('lokasi', 'Ruangan Meeting Merkurius', this)">
-              <div class="chip-icon"><svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="9" fill="#9AA0A6"/></svg></div>
-              <div class="chip-content">
-                <span class="chip-title">Merkurius</span>
+
+              <!-- Merkurius -->
+              <div class="room-dropdown-item" role="option" data-room="Ruangan Meeting Merkurius" onclick="selectCustomRoom('Ruangan Meeting Merkurius')">
+                <div class="room-item-icon">
+                  <svg viewBox="0 0 24 24" width="22" height="22"><circle cx="12" cy="12" r="9" fill="#9AA0A6"/></svg>
+                </div>
+                <div class="room-item-text">
+                  <span class="room-item-title">Merkurius</span>
+                  <span class="room-item-sub">Ruangan Meeting Merkurius</span>
+                </div>
                 <span class="room-avail-badge avail-free" id="badge-merkurius">Tersedia</span>
               </div>
-            </div>
-            <div class="chip-card room-chip" data-room="custom" onclick="selectChip('lokasi', 'custom', this)">
-              <div class="chip-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"></path><circle cx="12" cy="10" r="3"></circle></svg></div>
-              <div class="chip-content">
-                <span class="chip-title">Lainnya</span>
+
+              <!-- Lainnya / Custom -->
+              <div class="room-dropdown-item" role="option" data-room="custom" onclick="selectCustomRoom('custom')">
+                <div class="room-item-icon">
+                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                </div>
+                <div class="room-item-text">
+                  <span class="room-item-title">Lainnya / Ruangan Eksternal</span>
+                  <span class="room-item-sub">Ketik manual nama venue / gedung</span>
+                </div>
                 <span class="room-avail-badge avail-custom">Eksternal</span>
               </div>
             </div>
           </div>
+
+          <!-- Hidden inputs untuk kompatibilitas form & Google Sheets -->
+          <input type="hidden" id="lokasiSelect" value="">
           <input type="hidden" id="lokasi" data-field="Lokasi / venue" value="">
-          <input type="text" id="customLokasiInput" placeholder="cth. Hotel Mulia Jakarta, atau nama/alamat venue dari vendor training" style="display:none;margin-top:8px;">
+
+          <!-- Status Ketersediaan Dinamis (Badge Status Muncul di Bawah Dropdown) -->
+          <div id="roomStatusNotice" style="display:none;margin-top:8px;"></div>
+          <input type="text" id="customLokasiInput" placeholder="cth. Hotel Mulia Jakarta, atau nama/alamat venue dari vendor training" style="display:none;margin-top:8px;" oninput="handleCustomLokasiInput(this.value)">
         </div>
 
-        <!-- Input Jadwal Utama (Top-Down Flow: Aktif & Mengendalikan Live Calendar) -->
-        <div class="field-row cols-3" id="mainScheduleRow">
-          <div class="field">
-            <label>
-              <span>Tanggal Pelaksanaan</span>
-              <span style="color:var(--danger)">*</span>
-            </label>
-            <input type="date" id="tglPelaksanaan" data-field="Tanggal pelaksanaan (raw)" onchange="handleMainScheduleChange()" required>
+        <!-- Dedicated Executive Schedule Card (Top-Down Flow: Aktif & Mengendalikan Live Calendar) -->
+        <div class="schedule-executive-card">
+          <div class="schedule-executive-card-header">
+            <div class="schedule-header-title">
+              <div class="schedule-header-icon-box">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+              </div>
+              <div class="schedule-header-text">
+                <h4>Jadwal &amp; Jam Pelaksanaan</h4>
+                <span>Tentukan tanggal dan rentang jam pelatihan</span>
+              </div>
+            </div>
+            <div id="mainScheduleDurationBadge" class="schedule-duration-pill">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+              <span id="mainScheduleDurationText">6 Jam Pembelajaran</span>
+            </div>
           </div>
-          <div class="field">
-            <label>
-              <span>Jam Mulai</span>
-              <span style="color:var(--danger)">*</span>
-            </label>
-            <input type="time" id="jamMulai" data-field="Jam mulai (raw)" value="09:00" onchange="handleMainScheduleChange()" required>
+
+          <div class="field-row cols-3" id="mainScheduleRow" style="margin-bottom:0;">
+            <div class="field">
+              <label>
+                <span>Tanggal Pelaksanaan</span>
+                <span style="color:var(--danger)">*</span>
+              </label>
+              <div class="date-picker-wrap">
+                <div class="date-picker-trigger" onclick="toggleDatePicker('tglPelaksanaan')">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                  <span id="tglPelaksanaan_display">Pilih tanggal</span>
+                  <svg class="chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </div>
+                <input type="hidden" id="tglPelaksanaan" data-field="Tanggal pelaksanaan (raw)" onchange="handleMainScheduleChange()" required>
+                <div class="date-picker-popover" id="tglPelaksanaan_popover" style="display:none;"></div>
+              </div>
+            </div>
+            <div class="field">
+              <label>
+                <span>Jam Mulai</span>
+                <span style="color:var(--danger)">*</span>
+              </label>
+              <div class="datetime-field-wrap">
+                <span class="datetime-prefix-icon">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                </span>
+                <input type="time" id="jamMulai" data-field="Jam mulai (raw)" value="09:00" onchange="handleMainScheduleChange()" required>
+                <span class="datetime-suffix-badge">WIB</span>
+              </div>
+            </div>
+            <div class="field">
+              <label>
+                <span>Jam Selesai</span>
+                <span style="color:var(--danger)">*</span>
+              </label>
+              <div class="datetime-field-wrap">
+                <span class="datetime-prefix-icon">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                </span>
+                <input type="time" id="jamSelesai" data-field="Jam selesai (raw)" value="15:00" onchange="handleMainScheduleChange()" required>
+                <span class="datetime-suffix-badge">WIB</span>
+              </div>
+            </div>
           </div>
-          <div class="field">
-            <label>
-              <span>Jam Selesai</span>
-              <span style="color:var(--danger)">*</span>
-            </label>
-            <input type="time" id="jamSelesai" data-field="Jam selesai (raw)" value="15:00" onchange="handleMainScheduleChange()" required>
+
+          <!-- Live Human-Readable Summary -->
+          <div id="mainScheduleLiveSummary" class="schedule-live-summary-bar">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+            <span id="mainScheduleLiveSummaryText">Rentang Jam: <strong>09:00 - 15:00 WIB</strong> (6 Jam) &bull; <em>Pilih tanggal pelaksanaan di atas</em></span>
           </div>
         </div>
         <input type="hidden" id="jadwal" data-field="Tanggal &amp; jam pelaksanaan">
@@ -531,7 +856,7 @@
               <tr>
                 <th style="width:36px">No</th>
                 <th style="min-width:180px">Nama Karyawan</th>
-                <th style="min-width:220px">Email Karyawan <span style="color:var(--danger)">*</span></th>
+                <th style="width:190px">Email</th>
                 <th style="width:200px">Departemen / Divisi</th>
                 <th style="width:40px"></th>
               </tr>
@@ -549,54 +874,6 @@
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
             Quick Paste dari Excel
           </button>
-        </div>
-      </section>
-
-    </div>
-
-    <!-- ================= STEP 3: BIAYA & EVALUASI ================= -->
-    <div class="step-panel" id="stepPanel3">
-
-      <!-- Card: Anggaran & Rincian Biaya -->
-      <section class="form-card">
-        <div class="card-head">
-          <div class="card-icon-wrap">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
-          </div>
-          <h2>Anggaran &amp; Estimasi Biaya</h2>
-          <span class="card-sub">Rincian pengeluaran training</span>
-        </div>
-
-        <div class="field-row cols-4" style="margin-bottom:18px;">
-          <div class="field">
-            <label>Fee Trainer / Narasumber</label>
-            <input type="text" inputmode="numeric" placeholder="Rp 0" id="budgetFee" data-field="Fee trainer" oninput="formatRupiah(this); calcBudgetBreakdown();">
-          </div>
-          <div class="field">
-            <label>Konsumsi &amp; Catering</label>
-            <input type="text" inputmode="numeric" placeholder="Rp 0" id="budgetKonsumsi" data-field="Konsumsi & catering" oninput="formatRupiah(this); calcBudgetBreakdown();">
-          </div>
-          <div class="field">
-            <label>Materi / Sertifikat</label>
-            <input type="text" inputmode="numeric" placeholder="Rp 0" id="budgetMateri" data-field="Materi & sertifikat" oninput="formatRupiah(this); calcBudgetBreakdown();">
-          </div>
-          <div class="field">
-            <label>Transportasi</label>
-            <input type="text" inputmode="numeric" placeholder="Rp 0" id="budgetTransport" data-field="Transportasi" oninput="formatRupiah(this); calcBudgetBreakdown();">
-          </div>
-        </div>
-
-        <div class="budget-grid">
-          <div class="budget-card">
-            <label>Total Estimasi Biaya</label>
-            <input type="text" inputmode="numeric" placeholder="Rp 0" id="estBudget" data-field="Estimasi biaya" oninput="formatRupiah(this)">
-            <p class="budget-variance">Akumulasi seluruh sub-komponen biaya</p>
-          </div>
-          <div class="budget-card">
-            <label>Budget yang Diajukan</label>
-            <input type="text" inputmode="numeric" placeholder="Rp 0" id="apprBudget" data-field="Budget diajukan" oninput="formatRupiah(this)">
-            <p class="budget-variance">Untuk training yang membutuhkan vendor (Training Eksternal)</p>
-          </div>
         </div>
       </section>
 
@@ -646,246 +923,1251 @@
             <input type="text" placeholder="Nama orang yang akan memantau penerapan hasil training" id="picEvaluasi" data-field="PIC evaluasi">
           </div>
         </div>
-      </section>
 
-    </div>
-
-    <!-- ================= STEP 4: REVIEW & KONFIRMASI ================= -->
-    <div class="step-panel" id="stepPanel4">
-
-      <!-- Executive Review Summary Card -->
-      <section class="form-card">
-        <div class="card-head">
-          <div class="card-icon-wrap">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
-          </div>
-          <h2>Ringkasan Pengajuan (Preview)</h2>
-          <span class="card-sub">Periksa kembali sebelum mengirim</span>
-        </div>
-
-        <div class="review-box">
-          <div class="review-grid">
-            <div class="review-item"><label>ID Training</label><div id="revId">-</div></div>
-            <div class="review-item"><label>Jenis Training</label><div id="revJenis">-</div></div>
-            <div class="review-item"><label>Nama Training</label><div id="revName">-</div></div>
-            <div class="review-item"><label>Nama Pengaju</label><div id="revLeader">-</div></div>
-            <div class="review-item"><label>Departemen / Divisi</label><div id="revDept">-</div></div>
-            <div class="review-item"><label>Kategori / Level</label><div id="revCategory">-</div></div>
-            <div class="review-item"><label>Kebutuhan (Urgensi)</label><div id="revNeed">-</div></div>
-            <div class="review-item"><label>Metode &amp; Jadwal</label><div id="revSchedule">-</div></div>
-            <div class="review-item"><label>Lokasi / Platform</label><div id="revVenue">-</div></div>
-            <div class="review-item"><label>Trainer</label><div id="revTrainer">-</div></div>
-            <div class="review-item"><label>Durasi &amp; Partisipan</label><div id="revDurationParticipants">-</div></div>
-            <div class="review-item"><label>Budget Diajukan</label><div id="revBudget">-</div></div>
-          </div>
-          <div class="review-divider"></div>
-          <div style="font-size:12.5px;color:var(--ink-faint);">
-            Detail lengkap (seluruh baris peserta dan modul) akan tersimpan di Google Spreadsheet dan master data.
-          </div>
-        </div>
+        <input type="hidden" id="linkEvaluasi" data-field="Link form evaluasi" value="https://docs.google.com/forms/d/e/1FAIpQLSdLNo9kzy22HEKq3xSCBHmZO2ksfCE2K7U_Y3EA2hCzQtRYmw/viewform">
       </section>
 
     </div>
 
   </main>
+      </section>
 
-  <!-- ================= MASTER / TRAINING DASHBOARD VIEW ================= -->
-  <main id="masterView" style="display:none;">
-    <div class="master-toolbar">
-      <div>
-        <h2 class="voice">Training Dashboard</h2>
-        <span class="helper-note" style="margin:0;">Ringkasan dan jadwal pelaksanaan program training internal.</span>
-      </div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
-        <button type="button" class="btn-secondary" onclick="exportToCsv()">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-          Export CSV
-        </button>
-        <button type="button" class="btn-secondary" onclick="loadMasterData()">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
-          Refresh
-        </button>
-        <button type="button" class="btn-secondary" onclick="lockAdminAccess()" title="Kunci sesi admin dan kembali ke formulir">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-          Kunci
-        </button>
-        <button type="button" class="btn-secondary" onclick="requestApprovalAccess()" style="display:inline-flex;align-items:center;gap:6px;" title="Buka Portal Approval">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-          Portal Approval
-        </button>
-        <button type="button" class="btn-primary" onclick="switchView('form')" style="gap:6px;">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
-          Kembali ke Form
-        </button>
-      </div>
-    </div>
 
-    <!-- Admin View Tabs -->
-    <div class="view-tabs" id="adminTabs" style="margin-bottom: 20px;">
-      <button type="button" id="tabBtnDashboard" class="active" onclick="switchAdminTab('dashboard')">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-        Dashboard
-      </button>
-      <button type="button" id="tabBtnDataList" onclick="switchAdminTab('datalist')">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
-        Data List
-      </button>
-    </div>
-
-    <!-- TAB 1: DASHBOARD -->
-    <div id="adminTabDashboard">
-      <!-- 4 KPI Summary Cards -->
-      <div class="dashboard-kpi-grid">
-        <!-- KPI 1: Total Training (Tahun Berjalan) -->
-        <div class="kpi-card">
-          <div class="kpi-card-header">
-            <span class="kpi-card-title">Total Training</span>
-            <div class="kpi-card-icon">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+      <!-- ================= 3. PAGE: AI TRAINING STUDIO (#page-ai-studio) ================= -->
+            <section class="tds-page" id="page-ai-studio">
+        <!-- Studio Header -->
+        <div class="ai-studio-header-wrap">
+          <div class="ai-studio-header-inner">
+            <div style="display:flex;align-items:center;gap:16px;">
+              <div class="header-icon-box" style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg, #4F46E5, #372FB0);display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 14px rgba(79, 70, 229, 0.3);">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path>
+                </svg>
+              </div>
+              <div>
+                <p class="kicker" style="color:var(--accent);margin:0 0 2px 0;">✨ TDS INTELLIGENCE LAB</p>
+                <h1 class="voice" style="margin:0 0 4px;font-size:22px;">AI Learning &amp; Development Studio</h1>
+                <p style="margin:0;font-size:13px;color:var(--ink-soft);">Platform cerdas untuk perancangan silabus enterprise, diagnosa kesenjangan kompetensi tim, kalkulasi ROI, dan penyusunan instrumen tes.</p>
+              </div>
             </div>
-          </div>
-          <div class="kpi-card-val" id="kpiTotalTraining">0</div>
-          <div class="kpi-card-sub" id="kpiTotalTrainingSub">Tahun berjalan</div>
-        </div>
-
-        <!-- KPI 2: Status Breakdown -->
-        <div class="kpi-card">
-          <div class="kpi-card-header">
-            <span class="kpi-card-title">Status Pengajuan</span>
-            <div class="kpi-card-icon">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg>
-            </div>
-          </div>
-          <div class="kpi-card-val" id="kpiPendingCount">0 <span style="font-size:13px;font-weight:500;color:var(--ink-soft);">Pending</span></div>
-          <div class="kpi-card-sub" id="kpiStatusBreakdown">
-            <span class="mini-pill approved" style="padding:2px 7px;font-size:11px;"><span class="dot"></span>0 Approved</span>
-            <span class="mini-pill rejected" style="padding:2px 7px;font-size:11px;"><span class="dot"></span>0 Rejected</span>
           </div>
         </div>
 
-        <!-- KPI 3: Total Budget Diajukan -->
-        <div class="kpi-card">
-          <div class="kpi-card-header">
-            <span class="kpi-card-title">Total Budget Diajukan</span>
-            <div class="kpi-card-icon">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-            </div>
-          </div>
-          <div class="kpi-card-val" id="kpiBudgetDiajukan">Rp 0</div>
-          <div class="kpi-card-sub" id="kpiBudgetRealisasi">Akumulasi pengajuan</div>
+        <!-- 4 Specialized Studio Mode Tabs -->
+        <div class="ai-mode-tabs" role="tablist">
+          <button type="button" class="ai-mode-tab active" id="modeTabCurriculum" onclick="switchStudioMode('curriculum')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+            <span>1. Curriculum Architect</span>
+          </button>
+          <button type="button" class="ai-mode-tab" id="modeTabTna" onclick="switchStudioMode('tna')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><path d="M11 8v6"></path><path d="M8 11h6"></path></svg>
+            <span>2. TNA &amp; Skill Gap Diagnostic</span>
+          </button>
+          <button type="button" class="ai-mode-tab" id="modeTabRoi" onclick="switchStudioMode('roi')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+            <span>3. Business ROI &amp; Kirkpatrick</span>
+          </button>
+          <button type="button" class="ai-mode-tab" id="modeTabAssessment" onclick="switchStudioMode('assessment')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+            <span>4. Assessment &amp; Quiz Builder</span>
+          </button>
         </div>
 
-        <!-- KPI 4: Jenis Training -->
-        <div class="kpi-card">
-          <div class="kpi-card-header">
-            <span class="kpi-card-title">Jenis Training</span>
-            <div class="kpi-card-icon">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+        <!-- Spacious Studio Workspace (Split View) -->
+        <div class="ai-studio-workspace">
+          <!-- Left Panel: Dedicated Mode Inputs -->
+          <div class="ai-studio-panel-card">
+            <div class="ai-studio-panel-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+              <h3 class="voice" style="margin:0;font-size:15px;" id="studioPanelTitle">Parameter Kurikulum</h3>
+            </div>
+
+            <!-- MODE 1: Curriculum Architect Inputs -->
+            <div id="paneModeCurriculum">
+              <div class="field" style="margin-bottom:16px;">
+                <label>Topik / Keahlian Pelatihan <span class="required">*</span></label>
+                <input type="text" id="curriculumTopic" class="field" placeholder="Contoh: Microservices with Golang, Team Leadership, Power BI..." style="padding:11px 13px;border:1px solid var(--line);border-radius:8px;width:100%;font-size:13.5px;">
+              </div>
+
+              <div style="margin-bottom:16px;">
+                <span style="font-size:11.5px;color:var(--ink-faint);display:block;margin-bottom:6px;">Topik populer:</span>
+                <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                  <span class="ai-chip" onclick="setStudioTopicAndRun('Modern React &amp; TypeScript Architecture')">React &amp; TS</span>
+                  <span class="ai-chip" onclick="setStudioTopicAndRun('Effective Leadership &amp; Team Coaching')">Leadership</span>
+                  <span class="ai-chip" onclick="setStudioTopicAndRun('Data Analysis with Excel &amp; Power BI')">Power BI</span>
+                  <span class="ai-chip" onclick="setStudioTopicAndRun('Customer Service Excellence')">Service</span>
+                  <span class="ai-chip" onclick="setStudioTopicAndRun('High-Impact Negotiation &amp; Deal Closing')">Negosiasi</span>
+                </div>
+              </div>
+
+              <div class="field-row cols-2" style="margin-bottom:16px;">
+                <div class="field">
+                  <label>Target Level</label>
+                  <select id="curriculumLevel" class="field" style="padding:10px 10px;border:1px solid var(--line);border-radius:8px;width:100%;font-size:13px;">
+                    <option value="Basic">Basic (Foundational)</option>
+                    <option value="Intermediate" selected>Intermediate (Practitioner)</option>
+                    <option value="Advanced">Advanced (Mastery)</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label>Format &amp; Sesi</label>
+                  <select id="curriculumFormat" class="field" style="padding:10px 10px;border:1px solid var(--line);border-radius:8px;width:100%;font-size:13px;">
+                    <option value="1_day" selected>1 Hari (2 Sesi - 6 Jam)</option>
+                    <option value="half_day">Setengah Hari (3 Jam)</option>
+                    <option value="2_days">2 Hari Bootcamp (12 Jam)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="field" style="margin-bottom:18px;">
+                <label>Target Peserta &amp; Departemen</label>
+                <input type="text" id="curriculumTarget" placeholder="Contoh: Mid-level Software Engineers, Team Lead Finance, Customer Care..." style="padding:10px 12px;border:1px solid var(--line);border-radius:8px;width:100%;font-size:13px;">
+              </div>
+            </div>
+
+            <!-- MODE 2: TNA Diagnostic Inputs -->
+            <div id="paneModeTna" style="display:none;">
+              <div class="field" style="margin-bottom:16px;">
+                <label>Gejala Masalah / Kesenjangan Performa Tim <span class="required">*</span></label>
+                <textarea id="tnaIssue" placeholder="Contoh: Tim customer service sering kewalahan menangani komplain pelanggan yang eskalasi, dan waktu penutupan tiket melebihi SLA 4 jam..." style="width:100%;height:100px;border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-family:'Inter',sans-serif;font-size:13px;resize:vertical;"></textarea>
+                <span class="helper-note" style="margin-top:4px;">Deskripsikan masalah apa yang terjadi di lapangan. AI akan mendiagnosa apakah solusinya butuh training atau perbaikan SOP.</span>
+              </div>
+
+              <div class="field-row cols-2" style="margin-bottom:16px;">
+                <div class="field">
+                  <label>Departemen Terkait</label>
+                  <select id="tnaDept" style="padding:10px 12px;border:1px solid var(--line);border-radius:8px;width:100%;font-size:13px;background:var(--surface);color:var(--ink);">
+                    <option value="">Pilih Departemen Terkait...</option>
+                    <option value="HR">HR</option>
+                    <option value="GA">GA</option>
+                    <option value="LEGAL">LEGAL</option>
+                    <option value="FINANCE">FINANCE</option>
+                    <option value="ACCOUNTING">ACCOUNTING</option>
+                    <option value="TAX">TAX</option>
+                    <option value="MARKETING">MARKETING</option>
+                    <option value="SALES OPS">SALES OPS</option>
+                    <option value="SALES ENABLEMENT">SALES ENABLEMENT</option>
+                    <option value="TELEMARKETING">TELEMARKETING</option>
+                    <option value="PEC">PEC</option>
+                    <option value="CUSTOMER EXPERIENCE">CUSTOMER EXPERIENCE</option>
+                    <option value="QA">QA</option>
+                    <option value="WEB DEVELOPER">WEB DEVELOPER</option>
+                    <option value="INTEGRATION">INTEGRATION</option>
+                    <option value="MOBILE DEVELOPER">MOBILE DEVELOPER</option>
+                    <option value="UI/UX DESIGNER">UI/UX DESIGNER</option>
+                    <option value="AI">AI</option>
+                    <option value="BUSINESS ANALYST">BUSINESS ANALYST</option>
+                    <option value="IT INFRASTRUCTURE">IT INFRASTRUCTURE</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label>Perkiraan Anggota Tim</label>
+                  <input type="number" id="tnaTeamSize" placeholder="Contoh: 12" style="padding:10px 12px;border:1px solid var(--line);border-radius:8px;width:100%;font-size:13px;">
+                </div>
+              </div>
+
+              <div style="margin-bottom:18px;">
+                <span style="font-size:11.5px;color:var(--ink-faint);display:block;margin-bottom:6px;">Contoh kasus cepat:</span>
+                <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                  <span class="ai-chip" onclick="setTnaCase('Sales sering kalah saat negosiasi harga dan tingkat closing penawaran menurun 20% dalam 2 kuartal terakhir.', 'SALES OPS')">Dilema Closing Sales</span>
+                  <span class="ai-chip" onclick="setTnaCase('Banyak bug lolos ke production setelah sprint rilis dan lead developer kesulitan mendelegasikan tugas ke junior.', 'QA')">Kualitas Kode &amp; Bug QA</span>
+                  <span class="ai-chip" onclick="setTnaCase('Leader baru sering ragu memberikan teguran/feedback kepada anggota tim yang underperform sehingga kinerja stagnan.', 'HR')">Leader Ragu Kasih Feedback</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- MODE 3: ROI & Business Impact Inputs -->
+            <div id="paneModeRoi" style="display:none;">
+              <div class="field" style="margin-bottom:16px;">
+                <label>Topik Program Pelatihan <span class="required">*</span></label>
+                <input type="text" id="roiTopic" placeholder="Contoh: Automasi Laporan Excel &amp; Data Pipeline" style="padding:10px 12px;border:1px solid var(--line);border-radius:8px;width:100%;font-size:13.5px;">
+              </div>
+
+              <div class="field-row cols-2" style="margin-bottom:16px;">
+                <div class="field">
+                  <label>Jumlah Partisipan</label>
+                  <input type="number" id="roiParticipants" value="10" min="1" style="padding:10px 12px;border:1px solid var(--line);border-radius:8px;width:100%;font-size:13px;">
+                </div>
+                <div class="field">
+                  <label>Estimasi Biaya Program</label>
+                  <input type="text" id="roiCost" placeholder="Rp 5.000.000" style="padding:10px 12px;border:1px solid var(--line);border-radius:8px;width:100%;font-size:13px;">
+                </div>
+              </div>
+
+              <div class="field" style="margin-bottom:18px;">
+                <label>Fokus Tolok Ukur yang Ditargetkan</label>
+                <select id="roiMetricFocus" style="padding:10px 10px;border:1px solid var(--line);border-radius:8px;width:100%;font-size:13px;">
+                  <option value="time_saved">Penghematan Jam Kerja &amp; Efisiensi Waktu</option>
+                  <option value="error_reduction">Penurunan Tingkat Kesalahan / Defect Rate</option>
+                  <option value="revenue_growth">Pertumbuhan Konversi Penjualan &amp; Revenue</option>
+                  <option value="csat_improvement">Peningkatan Kepuasan Pelanggan (CSAT / NPS)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- MODE 4: Assessment Builder Inputs -->
+            <div id="paneModeAssessment" style="display:none;">
+              <div class="field" style="margin-bottom:16px;">
+                <label>Topik / Silabus Materi Ujian <span class="required">*</span></label>
+                <input type="text" id="quizTopic" placeholder="Contoh: Dasar Manajemen Proyek Agile &amp; Scrum" style="padding:10px 12px;border:1px solid var(--line);border-radius:8px;width:100%;font-size:13.5px;">
+              </div>
+
+              <div class="field-row cols-2" style="margin-bottom:16px;">
+                <div class="field">
+                  <label>Tingkat Kesulitan</label>
+                  <select id="quizDifficulty" style="padding:10px 10px;border:1px solid var(--line);border-radius:8px;width:100%;font-size:13px;">
+                    <option value="Menengah" selected>Menengah (Penerapan Kasus)</option>
+                    <option value="Dasar">Dasar (Konseptual)</option>
+                    <option value="Lanjutan">Lanjutan (Analisis Kasus Kritis)</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label>Tipe Instrumen</label>
+                  <select id="quizType" style="padding:10px 10px;border:1px solid var(--line);border-radius:8px;width:100%;font-size:13px;">
+                    <option value="mcq">Pilihan Ganda Skenario Kasus (5 Soal)</option>
+                    <option value="case_study">Studi Kasus Naratif &amp; Rubrik Penilaian</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Action Button -->
+            <button type="button" class="btn-primary" id="btnStudioRun" onclick="runStudioEngine()" style="width:100%;justify-content:center;padding:13px;background:linear-gradient(135deg, #4F46E5, #372FB0);box-shadow:0 3px 12px rgba(79, 70, 229, 0.3);font-size:14px;border-radius:8px;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+              <span id="btnStudioRunText">Analisis &amp; Rancang Kurikulum</span>
+            </button>
+          </div>
+
+          <!-- Right Panel: Executive Document Canvas -->
+          <div class="ai-doc-canvas">
+            <!-- Canvas Header & Toolbar -->
+            <div class="ai-doc-toolbar">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <span class="mini-pill in_review" id="studioActiveModeBadge" style="font-size:11.5px;padding:3px 10px;">Mode 1: Curriculum Architect</span>
+                <span class="mini-pill draft" id="studioDocStatusBadge" style="font-size:11.5px;padding:3px 10px;"><span class="dot"></span>Menunggu Analisis</span>
+              </div>
+              <div id="studioDocActions" style="display:none;align-items:center;gap:8px;">
+                <button type="button" class="btn-secondary" onclick="copyActiveDocContent()" style="font-size:12px;padding:6px 12px;gap:6px;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                  Salin Dokumen
+                </button>
+                <button type="button" class="btn-primary" onclick="applyStudioPlanAndGoToForm()" style="font-size:12px;padding:6px 14px;gap:6px;background:var(--moss);">
+                  <span>Ajukan ke Form</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Subtabs inside the document view -->
+            <div class="ai-doc-subtabs" id="studioDocSubtabs" style="display:none;">
+              <button type="button" class="ai-doc-subtab-btn active" id="subtabBtnOverview" onclick="switchStudioDocTab('overview')">📄 Ringkasan &amp; Rundown</button>
+              <button type="button" class="ai-doc-subtab-btn" id="subtabBtnKsa" onclick="switchStudioDocTab('ksa')">🎯 Matriks Kompetensi (KSA)</button>
+              <button type="button" class="ai-doc-subtab-btn" id="subtabBtnEvaluation" onclick="switchStudioDocTab('evaluation')">📊 Dampak &amp; Kirkpatrick</button>
+              <button type="button" class="ai-doc-subtab-btn" id="subtabBtnQuiz" onclick="switchStudioDocTab('quiz')">📝 Evaluasi / Soal Test</button>
+            </div>
+
+            <!-- 1. Canvas Empty State -->
+            <div id="studioCanvasEmpty" style="text-align:center;padding:70px 24px;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+              <div class="card-icon-wrap" style="width:60px;height:60px;border-radius:18px;background:rgba(79, 70, 229, 0.08);color:var(--accent);display:flex;align-items:center;justify-content:center;margin-bottom:18px;">
+                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+              </div>
+              <h4 class="voice" style="margin:0 0 8px;font-size:17px;color:var(--ink);">Ruang Analisis &amp; Perancangan L&amp;D Eksekutif</h4>
+              <p style="max-width:440px;font-size:13.5px;color:var(--ink-soft);line-height:1.6;margin:0 0 20px;">Pilih salah satu fitur cerdas di atas: <strong>Curriculum Architect</strong>, <strong>TNA Diagnostic</strong>, <strong>Kalkulator ROI</strong>, atau <strong>Quiz Builder</strong> untuk menghasilkan blueprint komprehensif.</p>
+              <div style="font-size:12px;color:var(--ink-faint);background:var(--panel);padding:10px 18px;border-radius:100px;border:1px dashed var(--line);">
+                💡 Hasil analisis dapat langsung disalin atau ditransfer ke Formulir Pengajuan dalam 1 klik.
+              </div>
+            </div>
+
+            <!-- 2. Canvas Loading State -->
+            <div id="studioCanvasLoading" style="display:none;text-align:center;padding:70px 24px;flex:1;">
+              <div class="spinner" style="width:38px;height:38px;border:3px solid rgba(79,70,229,0.2);border-top-color:#4F46E5;border-radius:50%;margin:0 auto 18px;animation:spin 0.8s linear infinite;"></div>
+              <div style="font-weight:600;font-size:15px;color:var(--ink);" id="studioLoadingTitle">Menganalisis Kebutuhan L&amp;D...</div>
+              <div style="font-size:13px;color:var(--ink-soft);margin-top:6px;" id="studioLoadingSubtitle">Memproses matriks kompetensi, struktur sesi, dan dampak bisnis</div>
+            </div>
+
+            <!-- 3. Canvas Result State -->
+            <div id="studioCanvasResult" style="display:none;flex:1;">
+              <!-- Dynamic subtab panes populated by JS -->
+              <div id="paneDocOverview" class="studio-doc-pane"></div>
+              <div id="paneDocKsa" class="studio-doc-pane" style="display:none;"></div>
+              <div id="paneDocEvaluation" class="studio-doc-pane" style="display:none;"></div>
+              <div id="paneDocQuiz" class="studio-doc-pane" style="display:none;"></div>
             </div>
           </div>
-          <div class="kpi-card-val" id="kpiJenisTotal">0 Program</div>
-          <div class="kpi-card-sub" id="kpiJenisBreakdown">0 Internal • 0 Eksternal • 0 Mandiri</div>
         </div>
-      </div>
+      </section>
 
-      <!-- Calendar & Schedule Section -->
-      <div class="calendar-section-grid">
-        <!-- Left: Month Calendar -->
-        <div class="cal-card">
-          <div class="cal-nav-bar">
-            <h3 class="cal-nav-title" id="calMonthTitle">Maret 2026</h3>
-            <div class="cal-nav-btns">
-              <button type="button" class="cal-nav-btn" onclick="prevCalMonth()" title="Bulan Sebelumnya">
+
+      <!-- ================= PAGE: SKILL MATRIX (#page-skill-matrix) ================= -->
+            <section class="tds-page" id="page-skill-matrix" style="display:none;">
+        <!-- Header Halaman Skill Matrix -->
+        <div class="doc-header" style="margin-bottom:8px;">
+          <div style="display:flex;align-items:center;gap:14px;">
+            <div class="icon-box" style="width:52px;height:52px;border-radius:16px;background:linear-gradient(135deg,#4B96FF,#7CB8F0);display:flex;align-items:center;justify-content:center;box-shadow:0 6px 14px -4px rgba(75,150,255,0.45);flex-shrink:0;">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><!-- icon grid/matrix 4 kotak --><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect><rect x="14" y="14" width="7" height="7" rx="1"></rect></svg>
+            </div>
+            <div>
+              <p class="kicker">Employee Development Program</p>
+              <h1 class="voice">Skill Matrix</h1>
+            </div>
+          </div>
+        </div>
+
+        <!-- Penjelasan singkat di atas halaman -->
+        <div style="margin:10px 0 20px;padding:12px 18px;background:rgba(255,255,255,0.7);border:1px solid var(--line-soft);border-radius:10px;">
+          <p style="font-size:13px;color:var(--ink-soft);line-height:1.6;margin:0;">
+            Skill Matrix memetakan level kompetensi tiap karyawan dibandingkan standar jabatannya, sehingga gap kompetensi dan kebutuhan training dapat ditentukan secara objektif dan terukur.
+          </p>
+        </div>
+
+        <!-- STATE 1: Empty Selection Prompt (No department chosen yet) -->
+        <div id="skillMatrixEmptyPrompt" class="form-card" style="text-align:center;padding:50px 24px;margin-bottom:24px;background:linear-gradient(180deg, #FFFFFF 0%, #FAF9F5 100%);border:1.5px dashed var(--line-soft);border-radius:14px;">
+          <div style="width:60px;height:60px;border-radius:50%;background:rgba(63, 90, 68, 0.1);color:var(--moss);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+          </div>
+          <h3 class="voice" style="font-size:20px;margin:0 0 8px;color:var(--ink);">Silahkan Pilih Divisi &amp; Departemen Terlebih Dahulu</h3>
+          <p style="font-size:13.5px;color:var(--ink-soft);max-width:540px;margin:0 auto 22px;line-height:1.6;">
+            Pilih departemen untuk melihat daftar nama karyawan di divisi tersebut, kemudian klik nama karyawan untuk membuka matriks kompetensi individualnya:
+          </p>
+
+          <div style="max-width:380px;margin:0 auto 22px;">
+            <select id="skillMatrixEmptyDeptSelect" onchange="handleSkillDeptChange(this.value)" class="form-control" style="width:100%;padding:11px 16px;font-size:14px;border:1.5px solid var(--accent);border-radius:10px;font-weight:700;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,0.05);cursor:pointer;">
+              <option value="">-- Pilih Divisi / Departemen --</option>
+              <option value="HR">HR</option>
+              <option value="GA">GA</option>
+              <option value="LEGAL">LEGAL</option>
+              <option value="FINANCE">FINANCE</option>
+              <option value="ACCOUNTING">ACCOUNTING</option>
+              <option value="TAX">TAX</option>
+              <option value="MARKETING">MARKETING</option>
+              <option value="SALES OPS">SALES OPS</option>
+              <option value="SALES ENABLEMENT">SALES ENABLEMENT</option>
+              <option value="TELEMARKETING">TELEMARKETING</option>
+              <option value="PEC">PEC</option>
+              <option value="CUSTOMER EXPERIENCE">CUSTOMER EXPERIENCE</option>
+              <option value="QA">QA</option>
+              <option value="WEB DEVELOPER">WEB DEVELOPER</option>
+              <option value="INTEGRATION">INTEGRATION</option>
+              <option value="MOBILE DEVELOPER">MOBILE DEVELOPER</option>
+              <option value="UI/UX DESIGNER">UI/UX DESIGNER</option>
+              <option value="AI">AI</option>
+              <option value="BUSINESS ANALYST">BUSINESS ANALYST</option>
+              <option value="IT INFRASTRUCTURE">IT INFRASTRUCTURE</option>
+            </select>
+          </div>
+
+          <!-- Quick Chips -->
+          <div style="display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:8px;">
+            <span style="font-size:12px;color:var(--ink-soft);font-weight:600;margin-right:2px;">Atau pilih cepat divisi:</span>
+            <button type="button" class="skill-dept-chip" onclick="selectSkillDeptDirectly('HR')">HR</button>
+            <button type="button" class="skill-dept-chip" onclick="selectSkillDeptDirectly('WEB DEVELOPER')">WEB DEVELOPER</button>
+            <button type="button" class="skill-dept-chip" onclick="selectSkillDeptDirectly('QA')">QA</button>
+            <button type="button" class="skill-dept-chip" onclick="selectSkillDeptDirectly('FINANCE')">FINANCE</button>
+            <button type="button" class="skill-dept-chip" onclick="selectSkillDeptDirectly('MARKETING')">MARKETING</button>
+            <button type="button" class="skill-dept-chip" onclick="selectSkillDeptDirectly('SALES OPS')">SALES OPS</button>
+            <button type="button" class="skill-dept-chip" onclick="selectSkillDeptDirectly('AI')">AI</button>
+            <button type="button" class="skill-dept-chip" onclick="selectSkillDeptDirectly('IT INFRASTRUCTURE')">IT INFRASTRUCTURE</button>
+          </div>
+        </div>
+
+        <!-- STATE 2: Employee List View for Selected Division -->
+        <div id="skillMatrixEmployeeListView" style="display:none;">
+          <!-- Division Navigation & Action Toolbar (Top Toolbar with Search Bar) -->
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:12px;">
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;flex:1;min-width:280px;">
+              <button type="button" class="btn-secondary" onclick="changeSkillDept()" style="font-size:12.5px;padding:8px 14px;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                <span>← Pilih Divisi Lain</span>
+              </button>
+
+              <!-- Kolom Pencarian Karyawan Tetap di Atas -->
+              <div style="position:relative;flex:1;max-width:320px;min-width:180px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink-soft)" stroke-width="2" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);pointer-events:none;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <input type="text" id="skillEmpSearchInput" placeholder="Cari nama karyawan..." oninput="filterSkillEmployeesList(this.value)" style="padding:7.5px 12px 7.5px 32px;border:1px solid var(--line);border-radius:8px;font-size:12.5px;width:100%;background:#fff;box-sizing:border-box;">
+              </div>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <button type="button" class="btn-secondary" onclick="generateAiSkillSummaryForDivision()" style="font-size:12px;padding:8px 12px;display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg, rgba(75, 150, 255, 0.08), rgba(124, 184, 240, 0.15));border-color:#4B96FF;color:#1D4ED8;font-weight:700;" title="AI Summary Kebutuhan Training Divisi">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                <span>✨ AI Summary Divisi <span class="active-dept-label">HR</span></span>
+              </button>
+
+              <button type="button" class="btn-secondary" onclick="resetSkillMatrixSampleData()" style="font-size:12px;padding:8px 12px;display:inline-flex;align-items:center;gap:6px;" title="Muat Ulang Contoh Data">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+                <span>Reset Contoh Data</span>
+              </button>
+            </div>
+          </div>
+          <!-- Ringkasan Divisi (3 KPI Cards) -->
+          <div class="dashboard-kpi-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 20px;">
+            <div class="kpi-card">
+              <div class="kpi-card-header">
+                <span class="kpi-card-title">Karyawan <span class="active-dept-label">HR</span></span>
+                <div class="kpi-card-icon" style="background:rgba(63, 90, 68, 0.1);color:var(--moss);">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                </div>
+              </div>
+              <div class="kpi-card-val" id="kpiDivTotalEmployees">0</div>
+              <div class="kpi-card-sub">Personel terdaftar di divisi</div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-card-header">
+                <span class="kpi-card-title">Karyawan Sudah Dinilai</span>
+                <div class="kpi-card-icon" style="background:rgba(75, 150, 255, 0.1);color:#4B96FF;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+                </div>
+              </div>
+              <div class="kpi-card-val" id="kpiDivScoredEmployees">0</div>
+              <div class="kpi-card-sub">Memiliki catatan matriks kompetensi</div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-card-header">
+                <span class="kpi-card-title">Rata-rata GAP Divisi</span>
+                <div class="kpi-card-icon" style="background:rgba(76, 201, 160, 0.15);color:#4CC9A0;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                </div>
+              </div>
+              <div class="kpi-card-val" id="kpiDivAvgGap">-</div>
+              <div class="kpi-card-sub" id="kpiDivAvgGapSub">Kesenjangan kumulatif divisi</div>
+            </div>
+          </div>
+
+          <!-- Section: Card Roster Karyawan -->
+          <div class="form-card" style="margin-bottom:24px;">
+            <div style="margin-bottom:16px;">
+              <h3 class="card-head-title" style="font-size:16px;margin:0 0 4px;color:var(--ink);display:flex;align-items:center;gap:8px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
+                <span>Daftar Karyawan Divisi <span class="active-dept-label">HR</span></span>
+              </h3>
+              <span class="helper-note" style="margin:0;font-size:12.5px;">Klik kartu salah satu karyawan di bawah ini untuk melihat &amp; mengelola Skill Matrix individualnya.</span>
+            </div>
+
+            <!-- Toolbar + Tambah Karyawan Baru -->
+            <div style="display:flex;align-items:center;gap:8px;padding:12px 14px;background:var(--sand-soft);border:1px solid var(--line-soft);border-radius:10px;margin-bottom:18px;flex-wrap:wrap;">
+              <span style="font-size:12px;font-weight:700;color:var(--ink);white-space:nowrap;">+ Tambah Karyawan:</span>
+              <input type="text" id="newSkillEmpNameInput" placeholder="Nama karyawan baru..." style="padding:7px 12px;border:1px solid var(--line);border-radius:6px;font-size:12.5px;flex:1;min-width:180px;" onkeydown="if(event.key==='Enter') addNewSkillEmployeeFromList()">
+              <input type="text" id="newSkillEmpRoleInput" placeholder="Jabatan / Sub-divisi (opsional)..." style="padding:7px 12px;border:1px solid var(--line);border-radius:6px;font-size:12.5px;flex:1;min-width:180px;" onkeydown="if(event.key==='Enter') addNewSkillEmployeeFromList()">
+              <button type="button" class="btn-primary" onclick="addNewSkillEmployeeFromList()" style="font-size:12.5px;padding:7px 14px;white-space:nowrap;">
+                <span>+ Simpan Karyawan</span>
+              </button>
+            </div>
+
+            <!-- Grid Kartu Karyawan -->
+            <div class="skill-emp-grid" id="skillEmployeesGridContainer">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+        </div>
+
+        <!-- STATE 3: Individual Employee Skill Matrix View -->
+        <div id="skillMatrixIndividualView" style="display:none;">
+          <!-- Top Navigation & Action Bar -->
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px;">
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+              <button type="button" class="btn-secondary" onclick="backToSkillEmployeeList()" style="font-size:12.5px;padding:7px 14px;display:inline-flex;align-items:center;gap:6px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                <span>Kembali ke Daftar Karyawan <span class="active-dept-label">HR</span></span>
+              </button>
+
+              <!-- Employee Switcher Quick Dropdown -->
+              <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-soft);">
+                <span>Ganti Karyawan:</span>
+                <select id="indivEmployeeSwitcher" onchange="openEmployeeSkillMatrix(this.value)" style="padding:6px 10px;border:1px solid var(--line);border-radius:6px;font-size:12px;background:#fff;font-weight:600;color:var(--ink);cursor:pointer;">
+                  <!-- Populated dynamically -->
+                </select>
+              </div>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <button type="button" class="btn-secondary" onclick="generateAiSkillSummaryForActiveEmp()" style="font-size:12.5px;padding:7px 14px;display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg, rgba(75, 150, 255, 0.08), rgba(124, 184, 240, 0.15));border-color:#4B96FF;color:#1D4ED8;font-weight:700;" title="Analisis AI & Summary Kebutuhan Pelatihan">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                <span>✨ AI Summary Kebutuhan Training</span>
+              </button>
+
+              <button type="button" class="btn-primary" onclick="proposeTrainingForActiveEmp()" style="font-size:12.5px;padding:7px 14px;display:inline-flex;align-items:center;gap:6px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                <span>Ajukan Training Manual</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Employee Executive Header Profile Card -->
+          <div class="form-card" style="margin-bottom:18px;padding:18px 20px;background:linear-gradient(135deg, #FAF9F5 0%, #FFFFFF 100%);border:1px solid var(--line);">
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:18px;">
+              <div style="display:flex;align-items:center;gap:16px;">
+                <div id="indivEmpAvatar" style="width:56px;height:56px;border-radius:50%;background:rgba(63, 90, 68, 0.15);color:var(--moss);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;border:1.5px solid rgba(63, 90, 68, 0.3);">
+                  FR
+                </div>
+                <div>
+                  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                    <h3 id="indivEmpName" style="font-size:19px;margin:0;font-weight:800;color:var(--ink);">FERNANDA RUSLI</h3>
+                    <span class="badge" id="indivEmpDeptBadge" style="background:rgba(63, 90, 68, 0.1);color:var(--moss);font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:6px;">Divisi HR</span>
+                  </div>
+                  <div id="indivEmpRoleText" style="font-size:13px;color:var(--ink-soft);margin-top:2px;">TRAINING &amp; PEOPLE DEVELOPMENT JUNIOR</div>
+                </div>
+              </div>
+
+              <!-- 4 Mini Metric Pills -->
+              <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+                <div style="padding:8px 14px;background:#fff;border:1px solid var(--line);border-radius:8px;text-align:center;">
+                  <div style="font-size:10.5px;color:var(--ink-soft);font-weight:700;text-transform:uppercase;">Kompetensi</div>
+                  <div id="indivMetricComps" style="font-size:16px;font-weight:800;color:var(--ink);">5</div>
+                </div>
+                <div style="padding:8px 14px;background:#fff;border:1px solid var(--line);border-radius:8px;text-align:center;">
+                  <div style="font-size:10.5px;color:var(--ink-soft);font-weight:700;text-transform:uppercase;">Rata-rata Skor</div>
+                  <div id="indivMetricAvgScore" style="font-size:16px;font-weight:800;color:var(--ink);">3.4</div>
+                </div>
+                <div style="padding:8px 14px;background:#fff;border:1px solid var(--line);border-radius:8px;text-align:center;">
+                  <div style="font-size:10.5px;color:var(--ink-soft);font-weight:700;text-transform:uppercase;">Rata-rata GAP</div>
+                  <div id="indivMetricAvgGap" style="font-size:16px;font-weight:800;color:#4CC9A0;">0.0</div>
+                </div>
+                <div style="padding:8px 14px;background:#fff;border:1px solid var(--line);border-radius:8px;text-align:center;">
+                  <div style="font-size:10.5px;color:var(--ink-soft);font-weight:700;text-transform:uppercase;">Status Evaluasi</div>
+                  <div id="indivMetricStatus" style="font-size:12px;font-weight:700;color:var(--moss);margin-top:2px;">Sesuai Standar</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Smart GAP Training Recommendation Alert (Visible if GAP < 0) -->
+            <div id="indivGapRecommendationBox" style="display:none;margin-top:16px;padding:12px 16px;background:rgba(255, 179, 122, 0.12);border:1px solid rgba(255, 179, 122, 0.4);border-radius:8px;">
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+                <div style="display:flex;align-items:flex-start;gap:10px;">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2" style="flex-shrink:0;margin-top:2px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                  <div>
+                    <div style="font-weight:700;font-size:13px;color:#92400E;">Rekomendasi Peningkatan Kompetensi:</div>
+                    <div id="indivGapRecommendationText" style="font-size:12.5px;color:var(--ink);margin-top:2px;">
+                      Ditemukan kesenjangan kompetensi yang memerlukan pelatihan.
+                    </div>
+                  </div>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                  <button type="button" class="btn-primary" onclick="generateAiSkillSummaryForActiveEmp()" style="font-size:11.5px;padding:6px 12px;background:#D97706;border-color:#D97706;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                    <span>✨ Analisis Solusi AI</span>
+                  </button>
+                  <button type="button" class="btn-secondary" onclick="proposeTrainingForActiveEmp()" style="font-size:11.5px;padding:6px 10px;background:#fff;border-color:#D97706;color:#92400E;white-space:nowrap;">
+                    Ajukan Manual
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Panduan Skala Penilaian & Keterangan GAP (Hanya Muncul di Section Karyawan) -->
+          <details class="skill-guide-details" open style="margin-bottom:18px;background:var(--sand-soft);border:1px solid var(--line-soft);border-radius:12px;overflow:hidden;">
+            <summary style="padding:11px 16px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;user-select:none;font-size:13px;font-weight:700;color:var(--ink);">
+              <span style="display:flex;align-items:center;gap:8px;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                <span>Panduan Skala Penilaian (1 - 4) &amp; Keterangan GAP</span>
+              </span>
+              <span style="font-size:11.5px;color:var(--ink-soft);font-weight:600;">Klik untuk melipat / membuka</span>
+            </summary>
+            
+            <div style="padding:6px 16px 16px;border-top:1px solid var(--line-soft);display:grid;grid-template-columns:repeat(auto-fit, minmax(300px, 1fr));gap:16px;">
+              <!-- Kolom 1: Skala 1 - 4 -->
+              <div style="background:#fff;border:1px solid var(--line-soft);border-radius:8px;padding:12px 14px;">
+                <div style="font-size:11.5px;font-weight:700;color:var(--ink);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+                  <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--moss);"></span>
+                  <span>1. Skala Penilaian Kompetensi (1 - 4)</span>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:6px;">
+                  <div style="display:flex;align-items:center;gap:8px;font-size:12px;">
+                    <span style="width:22px;height:22px;border-radius:5px;background:#FEE2E2;color:#B91C1C;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;flex-shrink:0;">1</span>
+                    <strong style="color:var(--ink);">Pemahaman Dasar</strong>
+                    <span style="color:var(--ink-soft);font-size:11.5px;">— Konsep dasar di bawah supervisi</span>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:8px;font-size:12px;">
+                    <span style="width:22px;height:22px;border-radius:5px;background:#FEF3C7;color:#B45309;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;flex-shrink:0;">2</span>
+                    <strong style="color:var(--ink);">Cukup Kompeten</strong>
+                    <span style="color:var(--ink-soft);font-size:11.5px;">— Tugas rutin dengan arahan minimal</span>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:8px;font-size:12px;">
+                    <span style="width:22px;height:22px;border-radius:5px;background:#D1FAE5;color:#047857;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;flex-shrink:0;">3</span>
+                    <strong style="color:var(--ink);">Kompeten</strong>
+                    <span style="color:var(--ink-soft);font-size:11.5px;">— Mandiri &amp; memenuhi standar kerja</span>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:8px;font-size:12px;">
+                    <span style="width:22px;height:22px;border-radius:5px;background:#DBEAFE;color:#1D4ED8;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;flex-shrink:0;">4</span>
+                    <strong style="color:var(--ink);">Ahli</strong>
+                    <span style="color:var(--ink-soft);font-size:11.5px;">— Membimbing &amp; menangani kasus kompleks</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Kolom 2: Keterangan GAP -->
+              <div style="background:#fff;border:1px solid var(--line-soft);border-radius:8px;padding:12px 14px;">
+                <div style="font-size:11.5px;font-weight:700;color:var(--ink);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+                  <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent);"></span>
+                  <span>2. Keterangan GAP (Kompetensi Aktual - Kompetensi Ideal)</span>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:5px;">
+                  <div style="display:flex;align-items:center;gap:10px;font-size:12px;">
+                    <span class="gap-badge gap-m3" style="margin-top:0;min-width:68px;text-align:center;">GAP ≤ -3</span>
+                    <span style="color:var(--ink);font-weight:600;">Memerlukan pengembangan menyeluruh / intensif</span>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:10px;font-size:12px;">
+                    <span class="gap-badge gap-m2" style="margin-top:0;min-width:68px;text-align:center;">GAP -2</span>
+                    <span style="color:var(--ink);font-weight:600;">Memerlukan pengembangan</span>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:10px;font-size:12px;">
+                    <span class="gap-badge gap-m1" style="margin-top:0;min-width:68px;text-align:center;">GAP -1</span>
+                    <span style="color:var(--ink);font-weight:600;">Memerlukan peningkatan kompetensi</span>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:10px;font-size:12px;">
+                    <span class="gap-badge gap-0" style="margin-top:0;min-width:68px;text-align:center;">GAP 0</span>
+                    <span style="color:var(--ink);font-weight:600;">Sesuai kompetensi ideal (Standar)</span>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:10px;font-size:12px;">
+                    <span class="gap-badge gap-p" style="margin-top:0;min-width:68px;text-align:center;">GAP &gt; 0</span>
+                    <span style="color:var(--ink);font-weight:600;">Melampaui kompetensi ideal</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </details>
+
+          <!-- Individual Matrix Table Card -->
+          <div class="form-card" style="margin-bottom:20px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;flex-wrap:wrap;">
+              <div>
+                <h4 style="font-size:15px;margin:0 0 2px;color:var(--ink);font-weight:700;">Matriks Kompetensi Jabatan &amp; Analisis GAP</h4>
+                <span class="helper-note" style="margin:0;font-size:12px;">Pilih skor penguasaan aktual (1 - 4) langsung pada tombol di bawah untuk memperbarui GAP.</span>
+              </div>
+              <button type="button" class="btn-primary" onclick="openAddSkillCompetencyModal()" style="font-size:12px;padding:7px 12px;display:inline-flex;align-items:center;gap:6px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                <span>+ Tambah Parameter Kompetensi</span>
+              </button>
+            </div>
+
+            <!-- Table -->
+            <div class="tbl-wrap" style="border:1px solid var(--line);border-radius:10px;overflow-x:auto;">
+              <table class="dyn skill-matrix-table" style="margin:0;width:100%;">
+                <thead>
+                  <tr style="background:#f4f6fa;color:var(--ink);font-size:12px;">
+                    <th style="width:40px;text-align:center;">No</th>
+                    <th style="text-align:left;min-width:220px;">Parameter Kompetensi</th>
+                    <th style="width:140px;text-align:center;">Kompetensi Ideal</th>
+                    <th style="width:180px;text-align:center;">Kompetensi Aktual</th>
+                    <th style="width:100px;text-align:center;">Nilai GAP</th>
+                    <th style="min-width:200px;text-align:left;">Keterangan Status</th>
+                    <th style="width:50px;text-align:center;">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="indivSkillTableBody">
+                  <!-- Populated dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+
+      <!-- ================= 4. PAGE: KALENDER TRAINING (#page-kalender) ================= -->
+            <section class="tds-page" id="page-kalender">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px;">
+          <div>
+            <h2 class="voice" style="font-size:22px;margin:0 0 4px;color:var(--ink);">Kalender Jadwal Training</h2>
+            <span class="helper-note" style="margin:0;font-size:13px;">Linimasa visual jadwal pelatihan karyawan per ruangan meeting dan departemen.</span>
+          </div>
+          <button type="button" class="btn-primary" onclick="goToPage('ajukan')" style="gap:6px;font-size:13px;padding:8px 14px;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            Ajukan Training Baru
+          </button>
+        </div>
+
+        <div class="calendar-app-layout">
+          <!-- Tombol Filter Mobile -->
+          <div class="cal-mobile-bar show-mobile">
+            <button type="button" class="btn-secondary" id="btnToggleCalFilter" onclick="toggleCalFilterDrawer()" style="gap:6px;font-size:12.5px;padding:6px 12px;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+              <span>Filter Ruangan &amp; Divisi</span>
+            </button>
+            <span class="cal-filter-active-count" id="calFilterActiveCount">Semua Aktif</span>
+          </div>
+
+          <div class="calendar-split-container">
+            <!-- SIDEBAR KIRI: Filter Ruangan, Divisi & Mini Calendar -->
+            <aside class="cal-filter-sidebar" id="calFilterSidebar">
+              <div class="cal-filter-sidebar-head hide-desktop show-mobile">
+                <h4 style="margin:0;font-size:15px;font-weight:700;">Filter Kalender Training</h4>
+                <button type="button" class="modal-close" onclick="toggleCalFilterDrawer()">&times;</button>
+              </div>
+
+              <!-- Filter 1: Ruangan Meeting -->
+              <div class="cal-filter-section">
+                <div class="cal-filter-header">
+                  <span class="cal-filter-title">Ruangan Meeting</span>
+                  <button type="button" class="cal-filter-reset" onclick="selectAllRooms(true)">Pilih Semua</button>
+                </div>
+                <div class="cal-checkbox-list" id="roomFilterList">
+                  <label class="cal-checkbox-item">
+                    <input type="checkbox" name="roomFilter" value="Neptunus" checked onchange="onCalendarFilterChange()">
+                    <span class="cal-checkbox-indicator" style="background:#4C6FE0;"></span>
+                    <span class="cal-checkbox-label">Neptunus</span>
+                  </label>
+                  <label class="cal-checkbox-item">
+                    <input type="checkbox" name="roomFilter" value="Saturnus" checked onchange="onCalendarFilterChange()">
+                    <span class="cal-checkbox-indicator" style="background:#E67E22;"></span>
+                    <span class="cal-checkbox-label">Saturnus</span>
+                  </label>
+                  <label class="cal-checkbox-item">
+                    <input type="checkbox" name="roomFilter" value="Mars" checked onchange="onCalendarFilterChange()">
+                    <span class="cal-checkbox-indicator" style="background:#E74C3C;"></span>
+                    <span class="cal-checkbox-label">Mars</span>
+                  </label>
+                  <label class="cal-checkbox-item">
+                    <input type="checkbox" name="roomFilter" value="Merkurius" checked onchange="onCalendarFilterChange()">
+                    <span class="cal-checkbox-indicator" style="background:#27AE60;"></span>
+                    <span class="cal-checkbox-label">Merkurius</span>
+                  </label>
+                  <label class="cal-checkbox-item">
+                    <input type="checkbox" name="roomFilter" value="Lainnya" checked onchange="onCalendarFilterChange()">
+                    <span class="cal-checkbox-indicator" style="background:#6B7280;"></span>
+                    <span class="cal-checkbox-label">Lainnya / Online</span>
+                  </label>
+                </div>
+              </div>
+
+              <!-- Filter 2: Divisi / Departemen -->
+              <div class="cal-filter-section">
+                <div class="cal-filter-header">
+                  <span class="cal-filter-title">Divisi / Departemen</span>
+                  <button type="button" class="cal-filter-reset" onclick="selectAllDivisions(true)">Pilih Semua</button>
+                </div>
+                <div class="cal-checkbox-list" id="divisionFilterList">
+                  <div style="font-size:12px;color:var(--ink-faint);padding:4px;">Memuat divisi...</div>
+                </div>
+              </div>
+
+              <!-- Filter 3: Status Dokumen -->
+              <div class="cal-filter-section">
+                <div class="cal-filter-header">
+                  <span class="cal-filter-title">Status Training</span>
+                </div>
+                <div class="cal-checkbox-list">
+                  <label class="cal-checkbox-item">
+                    <input type="checkbox" name="statusFilter" value="Approved" checked onchange="onCalendarFilterChange()">
+                    <span class="cal-checkbox-indicator" style="background:#16A34A;"></span>
+                    <span class="cal-checkbox-label">Disetujui (Approved)</span>
+                  </label>
+                  <label class="cal-checkbox-item">
+                    <input type="checkbox" name="statusFilter" value="Pending" checked onchange="onCalendarFilterChange()">
+                    <span class="cal-checkbox-indicator" style="background:#EAB308;"></span>
+                    <span class="cal-checkbox-label">Menunggu (Pending)</span>
+                  </label>
+                  <label class="cal-checkbox-item">
+                    <input type="checkbox" name="statusFilter" value="Rejected" checked onchange="onCalendarFilterChange()">
+                    <span class="cal-checkbox-indicator" style="background:#DC2626;"></span>
+                    <span class="cal-checkbox-label">Ditolak (Rejected)</span>
+                  </label>
+                </div>
+              </div>
+
+              <!-- Mini Kalender -->
+              <div class="cal-mini-calendar-section">
+                <div class="cal-mini-header">
+                  <span class="cal-mini-title" id="miniCalTitle">Memuat Bulan...</span>
+                  <div class="cal-mini-nav">
+                    <button type="button" class="mini-nav-btn" onclick="prevMiniCalMonth()" title="Bulan sebelumnya">&lsaquo;</button>
+                    <button type="button" class="mini-nav-btn" onclick="nextMiniCalMonth()" title="Bulan berikutnya">&rsaquo;</button>
+                  </div>
+                </div>
+                <div class="cal-mini-weekdays">
+                  <span>S</span><span>S</span><span>R</span><span>K</span><span>J</span><span>S</span><span>M</span>
+                </div>
+                <div class="cal-mini-grid" id="miniCalGrid"></div>
+              </div>
+            </aside>
+
+            <!-- AREA UTAMA KALENDER -->
+            <main class="cal-main-area">
+              <!-- Top Calendar Toolbar -->
+              <div class="cal-top-toolbar">
+                <div class="cal-top-left">
+                  <button type="button" class="btn-cal-today" onclick="goToCalToday()">Hari Ini</button>
+                  <div class="cal-nav-arrow-group">
+                    <button type="button" class="cal-nav-arrow-btn" onclick="goToCalPrev()" title="Sebelumnya">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                    </button>
+                    <button type="button" class="cal-nav-arrow-btn" onclick="goToCalNext()" title="Berikutnya">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    </button>
+                  </div>
+                  <h2 class="cal-active-title voice" id="calActiveTitle">...</h2>
+                </div>
+
+                <div class="cal-top-right">
+                  <div class="cal-view-toggle-group">
+                    <button type="button" class="cal-view-btn" id="btnViewDay" onclick="switchCalView('timeGridDay')">Hari</button>
+                    <button type="button" class="cal-view-btn" id="btnViewWeek" onclick="switchCalView('timeGridWeek')">Minggu</button>
+                    <button type="button" class="cal-view-btn active" id="btnViewMonth" onclick="switchCalView('dayGridMonth')">Bulan</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Loading State & Error Container -->
+              <div id="calLoadingState" class="cal-feedback-card" style="display:none;">
+                <span class="spinner" style="width:18px;height:18px;border-width:2px;border-color:var(--accent);border-top-color:transparent;"></span>
+                <span>Sedang memuat jadwal training dari server, silahkan tunggu...</span>
+              </div>
+              <div id="calEmptyState" class="cal-feedback-card" style="display:none;">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                <span id="calEmptyMsg">Tidak ada jadwal training yang cocok dengan filter. Silahkan sesuaikan filter ruangan atau divisi.</span>
+              </div>
+
+              <!-- FullCalendar Mount -->
+              <div id="fullCalendarMount" class="fullcalendar-custom-wrap"></div>
+            </main>
+          </div>
+        </div>
+      </section>
+
+
+      <!-- ================= 4. PAGE: TRAINING SAYA (#page-training-saya) ================= -->
+            <section class="tds-page" id="page-training-saya">
+        <div style="margin-bottom:20px;">
+          <h2 class="voice" style="font-size:22px;margin:0 0 4px;color:var(--ink);">Training Saya</h2>
+          <span class="helper-note" style="margin:0;font-size:13px;">Lacak status pengajuan pelatihan Anda dalam papan status Kanban.</span>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="form-card" style="padding:16px 20px;margin-bottom:20px;">
+          <form onsubmit="event.preventDefault(); searchMyTrainings();" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+            <div style="flex:1;min-width:240px;position:relative;">
+              <input type="text" id="myTrainingSearchInput" placeholder="Cari berdasarkan nama Leader Pengaju..." style="width:100%;padding:10px 14px;border:1px solid var(--line);border-radius:10px;font-size:14px;background:#FAF9F5;">
+            </div>
+            <button type="submit" class="btn-primary" style="gap:6px;padding:10px 18px;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+              Cari
+            </button>
+            <button type="button" class="btn-secondary" onclick="resetMyTrainingSearch()" style="padding:10px 14px;">Reset</button>
+          </form>
+        </div>
+
+        <!-- Search Result Status & Kanban Board Container -->
+        <div id="myTrainingsContainer">
+          <div id="myTrainingsPrompt" class="helper-note" style="padding:40px 20px;text-align:center;background:var(--panel);border-radius:var(--radius);border:1px dashed var(--line);max-width:540px;margin:24px auto;">
+            <div class="card-icon-wrap" style="width:48px;height:48px;border-radius:14px;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;background:var(--accent-tint);color:var(--accent);">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            </div>
+            <div style="font-weight:600;color:var(--ink);font-size:15px;margin-bottom:4px;">Masukkan nama untuk melihat training yang pernah kamu ajukan</div>
+            <div style="font-size:12.5px;color:var(--ink-soft);">Ketik nama lengkap atau sebagian nama Leader/Pengaju pada kotak pencarian di atas.</div>
+          </div>
+          <div id="myTrainingsKanban" style="display:none;"></div>
+        </div>
+      </section>
+
+
+      <!-- ================= 5. PAGE: VENDOR DIRECTORY (#page-vendor) ================= -->
+            <section class="tds-page" id="page-vendor">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px;">
+          <div>
+            <h2 class="voice" style="font-size:22px;margin:0 0 4px;color:var(--ink);">Vendor Directory</h2>
+            <span class="helper-note" style="margin:0;font-size:13px;">Daftar vendor penyedia training eksternal yang pernah digunakan beserta PIC dan kontaknya.</span>
+          </div>
+        </div>
+
+        <div id="vendorDirectoryContainer">
+          <!-- Filled by renderVendorDirectoryPage() -->
+        </div>
+      </section>
+
+
+      <!-- ================= PAGE: POST TRAINING TRAMPOLINE (#page-post-training) ================= -->
+            <section class="tds-page" id="page-post-training" style="display:none;">
+        <!-- Header Halaman -->
+        <header class="doc-header" style="margin-bottom:18px;">
+          <div style="display:flex;align-items:center;gap:14px;">
+            <div class="header-icon-box" style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg, #4B96FF, #00178F);display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 6px 16px -4px rgba(75,150,255,0.45);color:#fff;">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"></path>
+                <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"></path>
+                <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"></path>
+                <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"></path>
+              </svg>
+            </div>
+            <div>
+              <p class="kicker">Performance Impact &amp; Evaluation Hub</p>
+              <h1 class="voice" style="font-size:24px;margin:0 0 2px;">Post Training Trampoline</h1>
+              <span class="helper-note" style="margin:0;font-size:13px;">Pusat tindak lanjut pasca-pelatihan: unggah bukti kegiatan ke Google Drive &amp; evaluasi hasil post-test.</span>
+            </div>
+          </div>
+        </header>
+
+        <!-- Tab Switcher (Post Test & Unggah Bukti) -->
+        <div class="trampoline-tabs-bar">
+          <div class="trampoline-tabs">
+            <button type="button" class="trampoline-tab-btn active" id="tabBtnEvidence" onclick="switchTrampolineTab('evidence')">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+              <span>Unggah Bukti</span>
+            </button>
+            <button type="button" class="trampoline-tab-btn" id="tabBtnPostTest" onclick="switchTrampolineTab('posttest')">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+              <span>Post Test</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- ================= TAB 1: UNGGAH BUKTI ================= -->
+        <div class="trampoline-tab-panel active" id="trampolinePanelEvidence">
+          <div class="form-card" style="margin-bottom:20px;">
+            <div class="card-head">
+              <div class="card-icon-wrap">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+              </div>
+              <h2>Formulir Unggah Bukti Pelatihan</h2>
+              <span class="card-sub">Dokumentasi foto kegiatan pelatihan yang otomatis disimpan ke folder Google Drive departemen</span>
+            </div>
+
+            <form id="evidenceForm" onsubmit="submitEvidence(event)">
+              <div class="field-row cols-2">
+                <div class="field">
+                  <label for="evidenceTrainingSelect">Pilih Training Terdaftar <span style="color:var(--danger)">*</span></label>
+                  <select id="evidenceTrainingSelect" required onchange="handleEvidenceTrainingChange(this.value)">
+                    <option value="">-- Silahkan Pilih Training --</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="evidenceNamaPeserta">Nama Peserta / PIC Dokumentasi <span style="color:var(--danger)">*</span></label>
+                  <input type="text" id="evidenceNamaPeserta" placeholder="Silahkan masukkan nama lengkap" required>
+                </div>
+              </div>
+
+              <div class="field-row cols-2">
+                <div class="field">
+                  <label for="evidenceDivisi">Divisi / Departemen <span style="color:var(--danger)">*</span></label>
+                  <select id="evidenceDivisi" required>
+                    <option value="">-- Silahkan Pilih Divisi --</option>
+                    <option value="HR">HR</option>
+                    <option value="GA">GA</option>
+                    <option value="LEGAL">LEGAL</option>
+                    <option value="FINANCE">FINANCE</option>
+                    <option value="ACCOUNTING">ACCOUNTING</option>
+                    <option value="TAX">TAX</option>
+                    <option value="MARKETING">MARKETING</option>
+                    <option value="SALES OPS">SALES OPS</option>
+                    <option value="SALES ENABLEMENT">SALES ENABLEMENT</option>
+                    <option value="TELEMARKETING">TELEMARKETING</option>
+                    <option value="PEC">PEC</option>
+                    <option value="CUSTOMER EXPERIENCE">CUSTOMER EXPERIENCE</option>
+                    <option value="QA">QA</option>
+                    <option value="WEB DEVELOPER">WEB DEVELOPER</option>
+                    <option value="INTEGRATION">INTEGRATION</option>
+                    <option value="MOBILE DEVELOPER">MOBILE DEVELOPER</option>
+                    <option value="UI/UX DESIGNER">UI/UX DESIGNER</option>
+                    <option value="AI">AI</option>
+                    <option value="BUSINESS ANALYST">BUSINESS ANALYST</option>
+                    <option value="IT INFRASTRUCTURE">IT INFRASTRUCTURE</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label>Kategori Training <span style="color:var(--danger)">*</span></label>
+                  <div class="chip-grid" style="grid-template-columns: repeat(2, 1fr); margin-top:2px;">
+                    <div class="chip-card selected" id="chipCatSoft" onclick="selectEvidenceCategory('Soft skill')">
+                      <div class="chip-icon">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                      </div>
+                      <span>Soft skill</span>
+                    </div>
+                    <div class="chip-card" id="chipCatHard" onclick="selectEvidenceCategory('Hard skill')">
+                      <div class="chip-icon">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+                      </div>
+                      <span>Hard skill</span>
+                    </div>
+                  </div>
+                  <input type="hidden" id="evidenceKategori" value="Soft skill">
+                </div>
+              </div>
+
+              <!-- Upload Area (Dropzone) -->
+              <div class="field" style="margin-top:10px;margin-bottom:16px;">
+                <label>Foto Dokumentasi Pelatihan (Maksimal 5 Foto, JPG / PNG, Max 5MB per file) <span style="color:var(--danger)">*</span></label>
+                <div class="evidence-dropzone" id="evidenceDropzone" onclick="document.getElementById('evidenceFileInput').click()" ondragover="handleEvidenceDragOver(event)" ondragleave="handleEvidenceDragLeave(event)" ondrop="handleEvidenceDrop(event)">
+                  <div class="evidence-dropzone-icon">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                      <polyline points="17 8 12 3 7 8"></polyline>
+                      <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                  </div>
+                  <div class="evidence-dropzone-text">
+                    <span class="dropzone-primary-text">Klik untuk memilih foto atau seret ke area ini</span>
+                    <span class="dropzone-sub-text">Hanya format JPG atau PNG (Maksimal 5 MB per foto, maksimal 5 file)</span>
+                  </div>
+                  <input type="file" id="evidenceFileInput" accept="image/jpeg,image/png" multiple style="display:none;" onchange="handleEvidenceFileSelect(event)">
+                </div>
+              </div>
+
+              <!-- Preview Grid -->
+              <div id="evidencePreviewSection" style="display:none;margin-bottom:20px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                  <span style="font-weight:700;font-size:13px;color:var(--ink);" id="evidencePreviewCount">0 Foto Terpilih</span>
+                  <button type="button" class="btn-clear-all-photos" onclick="clearAllEvidenceFiles()">Bersihkan Semua</button>
+                </div>
+                <div class="evidence-preview-grid" id="evidencePreviewGrid"></div>
+              </div>
+
+              <!-- Submit Feedback Alert / Status Banner -->
+              <div id="evidenceStatusBanner" style="display:none;margin-bottom:18px;"></div>
+
+              <div style="display:flex;justify-content:flex-end;gap:12px;align-items:center;padding-top:14px;border-top:1px solid var(--line);">
+                <button type="submit" class="btn-primary" id="btnSubmitEvidence" style="min-width:200px;display:inline-flex;align-items:center;justify-content:center;gap:8px;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                  <span id="btnSubmitEvidenceText">Unggah &amp; Simpan ke Drive</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- ================= TAB 2: POST TEST ================= -->
+        <div class="trampoline-tab-panel" id="trampolinePanelPostTest" style="display:none;">
+          <div class="form-card" style="margin-bottom:20px;">
+            <div class="card-head">
+              <div class="card-icon-wrap">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+              </div>
+              <h2>Formulir Skor &amp; Hasil Post-Test Pelatihan</h2>
+              <span class="card-sub">Pencatatan hasil evaluasi pemahaman materi pasca-pelatihan karyawan</span>
+            </div>
+
+            <form id="postTestForm" onsubmit="submitPostTest(event)">
+              <div class="field-row cols-2">
+                <div class="field">
+                  <label for="postTestTrainingSelect">Pilih Training Terdaftar <span style="color:var(--danger)">*</span></label>
+                  <select id="postTestTrainingSelect" required onchange="handlePostTestTrainingChange(this.value)">
+                    <option value="">-- Silahkan Pilih Training --</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="postTestNamaPeserta">Nama Peserta <span style="color:var(--danger)">*</span></label>
+                  <input type="text" id="postTestNamaPeserta" placeholder="Silahkan masukkan nama peserta" required>
+                </div>
+              </div>
+
+              <div class="field-row cols-2">
+                <div class="field">
+                  <label for="postTestDivisi">Divisi / Departemen <span style="color:var(--danger)">*</span></label>
+                  <select id="postTestDivisi" required>
+                    <option value="">-- Silahkan Pilih Divisi --</option>
+                    <option value="HR">HR</option>
+                    <option value="GA">GA</option>
+                    <option value="LEGAL">LEGAL</option>
+                    <option value="FINANCE">FINANCE</option>
+                    <option value="ACCOUNTING">ACCOUNTING</option>
+                    <option value="TAX">TAX</option>
+                    <option value="MARKETING">MARKETING</option>
+                    <option value="SALES OPS">SALES OPS</option>
+                    <option value="SALES ENABLEMENT">SALES ENABLEMENT</option>
+                    <option value="TELEMARKETING">TELEMARKETING</option>
+                    <option value="PEC">PEC</option>
+                    <option value="CUSTOMER EXPERIENCE">CUSTOMER EXPERIENCE</option>
+                    <option value="QA">QA</option>
+                    <option value="WEB DEVELOPER">WEB DEVELOPER</option>
+                    <option value="INTEGRATION">INTEGRATION</option>
+                    <option value="MOBILE DEVELOPER">MOBILE DEVELOPER</option>
+                    <option value="UI/UX DESIGNER">UI/UX DESIGNER</option>
+                    <option value="AI">AI</option>
+                    <option value="BUSINESS ANALYST">BUSINESS ANALYST</option>
+                    <option value="IT INFRASTRUCTURE">IT INFRASTRUCTURE</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="postTestSkor">Skor / Nilai Akhir Post-Test (Skala 0 - 100) <span style="color:var(--danger)">*</span></label>
+                  <input type="number" id="postTestSkor" min="0" max="100" placeholder="cth. 85" required style="font-weight:700;color:var(--accent);">
+                </div>
+              </div>
+
+              <!-- ========================================================================= -->
+              <!-- TODO: Bagian detail butir soal dan kunci jawaban post-test menyusul di sini -->
+              <!-- ========================================================================= -->
+              <div class="trampoline-todo-notice">
+                <div class="todo-notice-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                </div>
+                <div class="todo-notice-body">
+                  <strong>Kerangka Butir Soal Post-Test</strong>
+                  <p>Modul bank soal interaktif dan kuis pilihan ganda sedang dalam tahap pengembangan lanjutan. Silahkan input skor atau ringkasan hasil evaluasi akhir peserta terlebih dahulu.</p>
+                </div>
+              </div>
+
+              <div class="field" style="margin-top:14px;margin-bottom:18px;">
+                <label for="postTestCatatan">Catatan / Jawaban Evaluasi Tambahan (Opsional)</label>
+                <textarea id="postTestCatatan" rows="3" placeholder="Silahkan masukkan catatan pemahaman peserta atau poin evaluasi khusus"></textarea>
+              </div>
+
+              <!-- Submit Feedback Alert / Status Banner -->
+              <div id="postTestStatusBanner" style="display:none;margin-bottom:18px;"></div>
+
+              <div style="display:flex;justify-content:flex-end;gap:12px;align-items:center;padding-top:14px;border-top:1px solid var(--line);">
+                <button type="submit" class="btn-primary" id="btnSubmitPostTest" style="min-width:200px;display:inline-flex;align-items:center;justify-content:center;gap:8px;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                  <span id="btnSubmitPostTestText">Simpan Hasil Post-Test</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </section>
+
+
+      <!-- ================= 6. PAGE: PORTAL APPROVAL (#page-portal-approval) ================= -->
+            <section class="tds-page" id="page-portal-approval">
+        <!-- ================= MASTER / TRAINING DASHBOARD VIEW ================= -->
+        <main id="masterView">
+          <!-- Operations Header -->
+          <header class="dash-op-header" style="margin-bottom:20px;">
+            <div class="dash-op-text">
+              <div class="dash-op-kicker">
+                <span class="dash-op-dot"></span>
+                <span>Otorisasi &amp; Master Data</span>
+              </div>
+              <h1 class="dash-op-title voice">Portal Approval &amp; Master Data</h1>
+              <p class="dash-op-desc">Ringkasan evaluasi kelayakan program, otorisasi pengajuan, dan audit data historis pelatihan.</p>
+            </div>
+            <div class="dash-op-actions">
+              <button type="button" class="btn-secondary" onclick="exportToCsv()" style="font-size:12.5px;padding:8px 14px;gap:6px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                <span>Export CSV</span>
+              </button>
+              <button type="button" class="btn-secondary" onclick="loadMasterData()" style="font-size:12.5px;padding:8px 14px;gap:6px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                <span>Refresh</span>
+              </button>
+              <button type="button" class="btn-secondary" onclick="lockAdminAccess()" title="Kunci sesi admin dan kembali ke dashboard" style="font-size:12.5px;padding:8px 14px;gap:6px;color:var(--danger);border-color:var(--danger-tint);">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                <span>Kunci</span>
+              </button>
+              <button type="button" class="btn-primary" onclick="goToPage('dashboard')" style="font-size:12.5px;padding:8px 14px;gap:6px;">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
-                Sebelumnya
-              </button>
-              <button type="button" class="cal-nav-btn" onclick="nextCalMonth()" title="Bulan Berikutnya">
-                Berikutnya
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                <span>Dashboard</span>
               </button>
             </div>
+          </header>
+
+          <!-- Admin View Tabs -->
+          <div class="view-tabs" id="adminTabs" style="margin-bottom: 22px;">
+            <button type="button" id="tabBtnDashboard" class="active" onclick="switchAdminTab('dashboard')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+              <span>Ringkasan Metrik</span>
+            </button>
+            <button type="button" id="tabBtnDataList" onclick="switchAdminTab('datalist')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+              <span>Daftar Pengajuan</span>
+            </button>
           </div>
 
-          <div class="cal-weekdays">
-            <span>Sen</span>
-            <span>Sel</span>
-            <span>Rab</span>
-            <span>Kam</span>
-            <span>Jum</span>
-            <span>Sab</span>
-            <span>Min</span>
-          </div>
+          <!-- TAB 1: DASHBOARD METRICS -->
+          <div id="adminTabDashboard">
+            <div class="dash-metrics-grid">
+              <!-- Priority Card: Antrean Persetujuan -->
+              <div class="dash-metric-card priority" onclick="switchAdminTab('datalist')" style="cursor:pointer;" title="Klik untuk lihat daftar pengajuan">
+                <div class="dash-metric-top">
+                  <span class="dash-metric-label">Status Persetujuan</span>
+                  <span class="dash-metric-tag alert">Perlu Aksi</span>
+                </div>
+                <div class="dash-metric-main">
+                  <span class="dash-metric-val"><span id="kpiPendingCount">0</span> <small>Pending</small></span>
+                </div>
+                <div class="dash-metric-meta" id="kpiStatusBreakdown">
+                  <span class="mini-pill approved" style="padding:2px 7px;font-size:11px;"><span class="dot"></span>0 Approved</span>
+                  <span class="mini-pill rejected" style="padding:2px 7px;font-size:11px;"><span class="dot"></span>0 Rejected</span>
+                </div>
+              </div>
 
-          <div class="cal-grid" id="calGrid"></div>
+              <!-- Program Tahun Berjalan -->
+              <div class="dash-metric-card">
+                <div class="dash-metric-top">
+                  <span class="dash-metric-label">Program Terdaftar</span>
+                  <span class="dash-metric-tag" id="kpiTotalTrainingSub">Tahun berjalan</span>
+                </div>
+                <div class="dash-metric-main">
+                  <span class="dash-metric-val" id="kpiTotalTraining">0</span>
+                  <span class="dash-metric-unit">Program</span>
+                </div>
+                <div class="dash-metric-meta" id="kpiJenisBreakdown" style="font-size:11.5px;color:var(--ink-soft);">
+                  0 Internal &bull; 0 Eksternal &bull; 0 Mandiri
+                </div>
+                <span id="kpiJenisTotal" style="display:none;">0 Program</span>
+              </div>
 
-          <div class="cal-legend">
-            <span class="cal-legend-item"><span class="cal-dot upcoming"></span> Akan Datang (Upcoming)</span>
-            <span class="cal-legend-item"><span class="cal-dot past"></span> Sudah Lewat (Past)</span>
-          </div>
-        </div>
-
-        <!-- Right: Selected Date & Upcoming Training -->
-        <div>
-          <!-- Selected Date Sessions Card -->
-          <div class="sidebar-card">
-            <div class="sidebar-card-title">
-              <span id="selectedDateTitle">Sesi Tanggal Terpilih</span>
-              <span class="sidebar-card-badge" id="selectedDateBadge">0 Sesi</span>
+              <!-- Total Budget Diajukan -->
+              <div class="dash-metric-card">
+                <div class="dash-metric-top">
+                  <span class="dash-metric-label">Estimasi Anggaran</span>
+                  <span class="dash-metric-tag neutral" id="kpiBudgetRealisasi">Akumulasi pengajuan</span>
+                </div>
+                <div class="dash-metric-main">
+                  <span class="dash-metric-val" id="kpiBudgetDiajukan" style="font-size:20px;">Rp 0</span>
+                </div>
+                <div class="dash-metric-meta" style="font-size:11.5px;color:var(--ink-soft);">
+                  Akumulasi biaya pengajuan dalam sistem
+                </div>
+              </div>
             </div>
-            <div class="session-item-list" id="selectedDateList">
-              <div class="session-empty-state">Pilih tanggal dengan indikator dot di kalender untuk melihat daftar sesi training.</div>
+
+            <!-- Quick Action Info Box -->
+            <div class="dash-side-card" style="margin-top:16px;flex-direction:row;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;">
+              <div style="display:flex;align-items:center;gap:12px;">
+                <div class="dash-ql-icon">
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+                </div>
+                <div>
+                  <div style="font-size:13.5px;font-weight:600;color:var(--ink);">Audit Seluruh Dokumen Pengajuan</div>
+                  <div style="font-size:12px;color:var(--ink-soft);">Buka tab Daftar Pengajuan untuk meninjau rincian peserta, durasi modul, dan mengubah status pengajuan.</div>
+                </div>
+              </div>
+              <button type="button" class="btn-secondary" onclick="switchAdminTab('datalist')" style="font-size:12px;padding:6px 14px;gap:6px;">
+                <span>Buka Data List</span>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+              </button>
             </div>
           </div>
 
-          <!-- Upcoming Sessions Card -->
-          <div class="sidebar-card">
-            <div class="sidebar-card-title">
-              <span>Training Akan Datang</span>
-              <span class="sidebar-card-badge" id="upcomingCountBadge">5 Terdekat</span>
+          <!-- TAB 2: DATA LIST -->
+          <div id="adminTabDataList" style="display:none;">
+            <div class="tbl-wrap" style="background:var(--panel-solid);border:1px solid var(--line);border-radius:12px;overflow-x:auto;box-shadow:var(--shadow-sm);">
+              <table class="master" style="width:100%;margin:0;border-collapse:collapse;">
+                <thead>
+                  <tr style="background:var(--paper);border-bottom:1px solid var(--line);">
+                    <th style="padding:10px 14px;text-align:left;font-size:12px;font-weight:600;color:var(--ink-soft);white-space:nowrap;">ID Training</th>
+                    <th style="padding:10px 14px;text-align:left;font-size:12px;font-weight:600;color:var(--ink-soft);white-space:nowrap;">Nama Training</th>
+                    <th style="padding:10px 14px;text-align:left;font-size:12px;font-weight:600;color:var(--ink-soft);white-space:nowrap;">Nama Pengaju</th>
+                    <th style="padding:10px 14px;text-align:left;font-size:12px;font-weight:600;color:var(--ink-soft);white-space:nowrap;">Departemen</th>
+                    <th style="padding:10px 14px;text-align:left;font-size:12px;font-weight:600;color:var(--ink-soft);white-space:nowrap;">Kategori</th>
+                    <th style="padding:10px 14px;text-align:left;font-size:12px;font-weight:600;color:var(--ink-soft);white-space:nowrap;">Status</th>
+                    <th style="padding:10px 14px;text-align:left;font-size:12px;font-weight:600;color:var(--ink-soft);white-space:nowrap;">Peserta</th>
+                    <th style="padding:10px 14px;text-align:left;font-size:12px;font-weight:600;color:var(--ink-soft);white-space:nowrap;">Waktu Submit</th>
+                  </tr>
+                </thead>
+                <tbody id="masterBody"></tbody>
+              </table>
             </div>
-            <div class="session-item-list" id="upcomingList">
-              <div class="session-empty-state">Belum ada agenda training mendatang.</div>
+
+            <div id="masterEmpty" class="dash-empty-box" style="display:none;margin-top:16px;">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color:var(--ink-faint);margin-bottom:8px;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+              <div style="font-weight:600;font-size:13.5px;color:var(--ink);margin-bottom:3px;">Belum Ada Pengajuan Masuk</div>
+              <div style="font-size:12px;color:var(--ink-soft);">Data submission akan tercatat secara otomatis setelah pengajuan training dikirim.</div>
             </div>
           </div>
-        </div>
-      </div>
+
+          <div id="detailPanel"></div>
+        </main>
+      </section>
+
     </div>
-
-    <!-- TAB 2: DATA LIST (Original Table) -->
-    <div id="adminTabDataList" style="display:none;">
-      <div class="master-tbl-wrap">
-        <table class="master">
-          <thead>
-            <tr>
-              <th>ID Training</th>
-              <th>Nama Training</th>
-              <th>Nama Pengaju</th>
-              <th>Departemen</th>
-              <th>Kategori</th>
-              <th>Status</th>
-              <th>Peserta</th>
-              <th>Waktu Submit</th>
-            </tr>
-          </thead>
-          <tbody id="masterBody"></tbody>
-        </table>
-      </div>
-
-      <div id="masterEmpty" class="helper-note" style="display:none;padding:24px;text-align:center;background:var(--panel);border-radius:var(--radius);border:1px dashed var(--line);">
-        Belum ada submission masuk. Data akan tercatat otomatis di sini setelah formulir disubmit.
-      </div>
-    </div>
-
-    <div id="detailPanel"></div>
-  </main>
-
+  </div>
 </div>
 
 <!-- ================= STICKY BOTTOM ACTION BAR ================= -->
 <div class="sticky-bottom-bar" id="stickyBottomBar">
   <div class="bottom-bar-inner">
     <div class="bottom-bar-info">
-      <span id="bottomStepIndicator">Langkah 1 dari 4: Profil &amp; Sasaran</span>
+      <span id="bottomStepIndicator">Langkah 1 dari 2: Profil &amp; Sasaran</span>
     </div>
     <div class="bottom-bar-actions">
       <button type="button" class="btn-secondary" id="prevStepBtn" onclick="prevStep()" disabled>
@@ -897,8 +2179,8 @@
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
       </button>
       <button type="button" class="btn-primary" id="submitBtn" onclick="submitPlan()" style="display:none;">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-        Submit Pengajuan
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+        Preview &amp; Kirim
       </button>
     </div>
   </div>
@@ -925,20 +2207,157 @@
   </div>
 </div>
 
-<!-- 2. Modal Konfirmasi Submit -->
+<!-- 2. Modal Preview & Konfirmasi Submit -->
 <div class="modal-overlay" id="modalConfirmSubmit">
-  <div class="modal-card">
+  <div class="modal-card" style="max-width:680px;">
     <div class="modal-header">
-      <h3 class="voice">Konfirmasi Pengajuan</h3>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div class="card-icon-wrap" style="width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:var(--accent-tint);color:var(--ink);">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+        </div>
+        <div>
+          <h3 class="voice" style="margin:0;font-size:16px;">Ringkasan Pengajuan (Preview)</h3>
+          <span style="font-size:12px;color:var(--ink-soft);">Periksa kembali sebelum mengirim</span>
+        </div>
+      </div>
       <button type="button" class="modal-close" onclick="closeModal('modalConfirmSubmit')">&times;</button>
     </div>
-    <div class="modal-body">
-      <p>Apakah rincian formulir training di bawah ini sudah benar dan siap diajukan ke sistem?</p>
-      <div class="summary-box" id="confirmSummaryBox"></div>
+    <div class="modal-body" style="padding-top:14px;">
+      <p style="margin:0 0 12px;font-size:13px;color:var(--ink-soft);">Pastikan seluruh rincian formulir training di bawah ini sudah benar sebelum diajukan ke sistem:</p>
+
+      <div class="review-box" style="margin-bottom:14px;">
+        <div class="review-grid">
+          <div class="review-item"><label>ID Training</label><div id="revId">-</div></div>
+          <div class="review-item"><label>Jenis Training</label><div id="revJenis">-</div></div>
+          <div class="review-item"><label>Nama Training</label><div id="revName">-</div></div>
+          <div class="review-item"><label>Nama Pengaju</label><div id="revLeader">-</div></div>
+          <div class="review-item"><label>Departemen / Divisi</label><div id="revDept">-</div></div>
+          <div class="review-item"><label>Kategori / Level</label><div id="revCategory">-</div></div>
+          <div class="review-item"><label>Kebutuhan (Urgensi)</label><div id="revNeed">-</div></div>
+          <div class="review-item"><label>Metode &amp; Jadwal</label><div id="revSchedule">-</div></div>
+          <div class="review-item"><label>Lokasi / Platform</label><div id="revVenue">-</div></div>
+          <div class="review-item"><label>Trainer</label><div id="revTrainer">-</div></div>
+          <div class="review-item"><label>Durasi &amp; Partisipan</label><div id="revDurationParticipants">-</div></div>
+          <div class="review-item"><label>Waktu &amp; PIC Evaluasi</label><div id="revEvaluasi">-</div></div>
+        </div>
+        <div id="revGoalsWrapper" style="display:none;margin-top:12px;padding-top:10px;border-top:1px dashed var(--line);font-size:12.5px;">
+          <label style="font-size:11px;font-weight:600;text-transform:uppercase;color:var(--ink-faint);display:block;margin-bottom:3px;">Training Goals (Tujuan &amp; Hasil)</label>
+          <div id="revGoals" style="color:var(--ink);line-height:1.5;">-</div>
+        </div>
+        <div class="review-divider"></div>
+        <div style="font-size:12px;color:var(--ink-faint);line-height:1.5;">
+          Detail lengkap (seluruh baris peserta dan modul) akan tersimpan di Google Spreadsheet dan master data.
+        </div>
+      </div>
     </div>
-    <div class="modal-footer">
-      <button type="button" class="btn-secondary" onclick="closeModal('modalConfirmSubmit')">Periksa Kembali</button>
-      <button type="button" class="btn-primary" onclick="confirmAndExecuteSubmit()">Ya, Kirim Sekarang</button>
+    <div class="modal-footer" style="display:flex;justify-content:space-between;align-items:center;">
+      <button type="button" class="btn-secondary" onclick="closeModal('modalConfirmSubmit')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        Periksa Kembali
+      </button>
+      <button type="button" class="btn-primary" onclick="confirmAndExecuteSubmit()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+        Ya, Kirim Pengajuan
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Set Skill Score -->
+<div class="modal-overlay" id="modalSkillScorePicker">
+  <div class="modal-card" style="max-width:440px;">
+    <div class="modal-header">
+      <div>
+        <h3 class="voice" style="margin:0 0 2px 0;font-size:16px;">Penilaian Kompetensi</h3>
+        <div id="modalSkillScoreSubtitle" style="font-size:12px;color:var(--ink-soft);">-</div>
+      </div>
+      <button type="button" class="modal-close" onclick="closeModal('modalSkillScorePicker')">&times;</button>
+    </div>
+    <div class="modal-body" style="padding:16px 20px;">
+      <div style="font-size:12px;font-weight:600;color:var(--ink-soft);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.02em;">Pilih Skor Penguasaan:</div>
+      <div style="display:flex;flex-direction:column;gap:8px;" id="skillScoreOptionsContainer">
+        <!-- Populated dynamically -->
+      </div>
+    </div>
+    <div class="modal-footer" style="display:flex;justify-content:space-between;align-items:center;">
+      <button type="button" class="btn-secondary" style="color:var(--danger);font-size:12px;padding:7px 12px;" onclick="saveSelectedSkillScore(null)">
+        Hapus / Belum Dinilai
+      </button>
+      <button type="button" class="btn-secondary" style="font-size:12px;padding:7px 14px;" onclick="closeModal('modalSkillScorePicker')">
+        Tutup
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Tambah Kompetensi Baru -->
+<div class="modal-overlay" id="modalAddSkillCompetency">
+  <div class="modal-card" style="max-width:420px;">
+    <div class="modal-header">
+      <div>
+        <h3 class="voice" style="margin:0;font-size:16px;">+ Tambah Kompetensi Baru</h3>
+        <div id="modalAddSkillCompSubtitle" style="font-size:12px;color:var(--ink-soft);margin-top:2px;">Divisi: -</div>
+      </div>
+      <button type="button" class="modal-close" onclick="closeModal('modalAddSkillCompetency')">&times;</button>
+    </div>
+    <div class="modal-body" style="padding:16px 20px;">
+      <div class="field" style="margin-bottom:14px;">
+        <label>Nama Kompetensi <span style="color:var(--danger)">*</span></label>
+        <input type="text" id="modalNewCompName" placeholder="Contoh: HR Analytics &amp; Dashboarding..." style="width:100%;padding:8px 12px;border:1px solid var(--line);border-radius:8px;font-size:13px;" onkeydown="if(event.key==='Enter') submitModalNewCompetency()">
+      </div>
+      <div class="field">
+        <label>Kompetensi Ideal / Standar Jabatan (Skala 1 - 4)</label>
+        <select id="modalNewCompStandard" style="width:100%;padding:8px 12px;border:1px solid var(--line);border-radius:8px;font-size:13px;">
+          <option value="1">1 - Pemahaman Dasar</option>
+          <option value="2">2 - Cukup Kompeten</option>
+          <option value="3" selected>3 - Kompeten (Default Ideal)</option>
+          <option value="4">4 - Ahli</option>
+        </select>
+        <span class="helper-note" style="margin-top:4px;">Kompetensi ideal dapat diedit kembali kapan saja langsung pada tabel matriks.</span>
+      </div>
+    </div>
+    <div class="modal-footer" style="display:flex;justify-content:flex-end;gap:8px;">
+      <button type="button" class="btn-secondary" onclick="closeModal('modalAddSkillCompetency')">Batal</button>
+      <button type="button" class="btn-primary" onclick="submitModalNewCompetency()">Simpan Kompetensi</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: AI Training Needs Summary (TNA Diagnostic from Skill Matrix) -->
+<div class="modal-overlay" id="modalAiSkillSummary">
+  <div class="modal-card" style="max-width:720px;max-height:90vh;display:flex;flex-direction:column;border-radius:14px;box-shadow:0 20px 45px rgba(0,0,0,0.18);">
+    <div class="modal-header" style="border-bottom:1px solid var(--line-soft);padding:16px 22px;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(135deg, #FAF9F5 0%, #FFFFFF 100%);">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div style="width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,#4B96FF,#7CB8F0);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(75,150,255,0.35);flex-shrink:0;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+        </div>
+        <div>
+          <h3 class="voice" style="margin:0;font-size:17px;color:var(--ink);">AI Training Needs Summary &amp; Rekomendasi</h3>
+          <div id="modalAiSkillSummarySubtitle" style="font-size:12.5px;color:var(--ink-soft);margin-top:2px;">Analisis kesenjangan kompetensi (GAP) berbasis AI</div>
+        </div>
+      </div>
+      <button type="button" class="modal-close" onclick="closeModal('modalAiSkillSummary')">&times;</button>
+    </div>
+    
+    <div class="modal-body" id="modalAiSkillSummaryBody" style="padding:20px 22px;overflow-y:auto;flex:1;">
+      <!-- Dynamic content rendered by JS -->
+    </div>
+
+    <div class="modal-footer" id="modalAiSkillSummaryFooter" style="padding:14px 22px;border-top:1px solid var(--line-soft);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;background:var(--sand-soft);">
+      <button type="button" class="btn-secondary" onclick="closeModal('modalAiSkillSummary')" style="font-size:12.5px;padding:7px 14px;">Tutup</button>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <button type="button" class="btn-secondary" id="btnCopyAiSummary" onclick="copyAiSkillSummary()" style="font-size:12px;padding:7px 12px;display:inline-flex;align-items:center;gap:6px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+          <span>Salin Summary</span>
+        </button>
+        <button type="button" class="btn-secondary" id="btnOpenInAiStudio" onclick="openActiveAiSkillInStudio()" style="font-size:12px;padding:7px 12px;display:inline-flex;align-items:center;gap:6px;border-color:#4B96FF;color:#1D4ED8;background:#fff;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+          <span>Buka di AI Studio</span>
+        </button>
+        <button type="button" class="btn-primary" id="btnApplyAiSummaryToForm" onclick="applyAiSkillSummaryToForm()" style="font-size:12.5px;padding:7px 14px;display:inline-flex;align-items:center;gap:6px;background:var(--moss);">
+          <span>Ajukan Form Training</span>
+        </button>
+      </div>
     </div>
   </div>
 </div>
@@ -1016,6 +2435,196 @@
     <div class="modal-footer">
       <button type="button" class="btn-secondary" onclick="cancelApprovalPin()">Batal</button>
       <button type="button" class="btn-primary" onclick="verifyAndOpenApproval()">Buka Portal</button>
+    </div>
+  </div>
+</div>
+
+<!-- 6. Modal Detail Submission -->
+<div class="modal-overlay" id="modalDetailSubmission">
+  <div class="modal-card" style="max-width:720px;width:100%;max-height:92vh;display:flex;flex-direction:column;padding:0;overflow:hidden;">
+    <div class="modal-header" style="padding:16px 20px;border-bottom:1px solid var(--line);">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div class="card-icon-wrap" style="width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:var(--accent-tint);color:var(--accent);">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+        </div>
+        <div>
+          <h3 class="voice" style="margin:0;font-size:16px;" id="modalDetailTitle">Detail Training</h3>
+          <span style="font-size:12px;color:var(--ink-soft);" id="modalDetailSub">Informasi lengkap program pelatihan</span>
+        </div>
+      </div>
+      <button type="button" class="modal-close" onclick="closeModal('modalDetailSubmission')">&times;</button>
+    </div>
+    <div class="modal-body" id="modalDetailContent" style="padding:20px;overflow-y:auto;">
+    </div>
+    <div class="modal-footer" style="padding:12px 20px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;">
+      <button type="button" class="btn-secondary" onclick="closeModal('modalDetailSubmission')">Tutup</button>
+    </div>
+  </div>
+</div>
+
+<!-- 7. Modal AI Training Course Architect -->
+<div class="modal-overlay" id="modalAiAssistant">
+  <div class="modal-card" style="max-width:680px;width:100%;max-height:92vh;display:flex;flex-direction:column;padding:0;overflow:hidden;">
+    <div class="modal-header" style="padding:16px 20px;border-bottom:1px solid var(--line);background:linear-gradient(135deg, rgba(79, 70, 229, 0.05), rgba(55, 47, 176, 0.08));">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div class="card-icon-wrap" style="width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg, #4F46E5, #372FB0);color:#fff;box-shadow:0 3px 10px rgba(79, 70, 229, 0.3);">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path></svg>
+        </div>
+        <div>
+          <h3 class="voice" style="margin:0;font-size:16px;">AI Training Course Architect</h3>
+          <span style="font-size:12px;color:var(--ink-soft);">Rancang silabus modul, sasaran SMART, dan indikator KPI otomatis</span>
+        </div>
+      </div>
+      <button type="button" class="modal-close" onclick="closeModal('modalAiAssistant')">&times;</button>
+    </div>
+
+    <div class="modal-body" style="padding:20px;overflow-y:auto;">
+      <!-- Input Section -->
+      <div class="field" style="margin-bottom:12px;">
+        <label>Topik / Nama Program Training</label>
+        <input type="text" id="aiTopicInput" class="field" placeholder="Contoh: Mastering Golang Microservices, Problem Solving Leadership, Power BI..." style="padding:10px 12px;border:1px solid var(--line);border-radius:8px;width:100%;font-size:13.5px;">
+      </div>
+
+      <!-- Quick Suggested Topics -->
+      <div style="margin-bottom:14px;">
+        <span style="font-size:11.5px;color:var(--ink-faint);display:block;margin-bottom:6px;">Contoh topik cepat (klik untuk coba):</span>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <span class="ai-chip" onclick="setAiTopic('Modern React &amp; TypeScript Architecture')">React &amp; TypeScript</span>
+          <span class="ai-chip" onclick="setAiTopic('Effective Leadership &amp; Team Coaching')">Leadership &amp; Coaching</span>
+          <span class="ai-chip" onclick="setAiTopic('Data Analysis with Excel &amp; Power BI')">Excel &amp; Power BI</span>
+          <span class="ai-chip" onclick="setAiTopic('Customer Service Excellence &amp; Handling Complaints')">Customer Service</span>
+          <span class="ai-chip" onclick="setAiTopic('Git, CI/CD Pipeline &amp; DevOps Automation')">DevOps &amp; CI/CD</span>
+        </div>
+      </div>
+
+      <div class="field-row cols-2" style="margin-bottom:12px;">
+        <div class="field">
+          <label>Target Level Kemahiran</label>
+          <select id="aiLevelSelect" class="field" style="padding:8px 10px;border:1px solid var(--line);border-radius:8px;width:100%;font-size:13px;">
+            <option value="Basic">Basic (Pemula)</option>
+            <option value="Intermediate" selected>Intermediate (Menengah)</option>
+            <option value="Advanced">Advanced (Mahir / Lanjutan)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Estimasi Format &amp; Sesi</label>
+          <select id="aiFormatSelect" class="field" style="padding:8px 10px;border:1px solid var(--line);border-radius:8px;width:100%;font-size:13px;">
+            <option value="1_day" selected>1 Hari Penuh (2 Sesi - 6 Jam)</option>
+            <option value="half_day">Setengah Hari (1 Sesi - 3 Jam)</option>
+            <option value="2_days">2 Hari Workshop (4 Sesi - 12 Jam)</option>
+          </select>
+        </div>
+      </div>
+
+      <button type="button" class="btn-primary" id="btnAiGenerate" onclick="executeAiGeneration()" style="width:100%;justify-content:center;background:linear-gradient(135deg, #4F46E5, #372FB0);box-shadow:0 3px 10px rgba(79, 70, 229, 0.3);">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path></svg>
+        <span>Rancang Program dengan AI</span>
+      </button>
+
+      <!-- Loading State -->
+      <div id="aiLoadingState" style="display:none;text-align:center;padding:24px 12px;">
+        <div class="spinner" style="width:32px;height:32px;border:3px solid rgba(79,70,229,0.2);border-top-color:#4F46E5;border-radius:50%;margin:0 auto 12px;animation:spin 0.8s linear infinite;"></div>
+        <div style="font-weight:600;font-size:13.5px;color:var(--ink);" id="aiLoadingStep">Merumuskan tujuan &amp; silabus pembelajaran...</div>
+        <div style="font-size:12px;color:var(--ink-soft);margin-top:4px;">Memproses silabus modul, pembagian durasi, dan tolok ukur evaluasi</div>
+      </div>
+
+      <!-- Preview Container -->
+      <div id="aiPreviewContainer" style="display:none;margin-top:16px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <span style="font-size:12px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:0.04em;">Hasil Rancangan AI</span>
+          <span class="mini-pill approved" style="font-size:11px;padding:2px 8px;">Siap Diterapkan</span>
+        </div>
+
+        <div class="ai-preview-section">
+          <h4>🎯 Training Goals &amp; Urgensi</h4>
+          <p id="previewAiGoals">-</p>
+        </div>
+
+        <div class="ai-preview-section">
+          <h4>📋 Silabus Sesi Pelatihan (<span id="previewAiModuleCount">0</span> Sesi)</h4>
+          <div id="previewAiModulesList"></div>
+        </div>
+
+        <div class="ai-preview-section">
+          <h4>📊 Tolok Ukur &amp; Evaluasi Dampak</h4>
+          <p style="margin-bottom:6px;"><strong>Hasil Diharapkan:</strong> <span id="previewAiExpected">-</span></p>
+          <p style="margin-bottom:6px;"><strong>Penerapan di Pekerjaan:</strong> <span id="previewAiApply">-</span></p>
+          <p><strong>Indikator Keberhasilan:</strong> <span id="previewAiKpi">-</span></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer" style="padding:12px 20px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;">
+      <button type="button" class="btn-secondary" onclick="closeModal('modalAiAssistant')">Tutup</button>
+      <button type="button" class="btn-primary" id="btnAiApply" onclick="applyAiPlanToForm()" disabled style="background:var(--accent);">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        Terapkan ke Formulir
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Detail Event Kalender (Read-Only) -->
+<div class="modal-overlay" id="modalTrainingEventDetail">
+  <div class="modal-card" style="max-width:540px;">
+    <div class="modal-header">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div class="card-icon-wrap" style="width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:var(--accent-tint);color:var(--ink);">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+          </svg>
+        </div>
+        <div>
+          <h3 class="voice" style="margin:0;font-size:16px;">Detail Jadwal Training</h3>
+          <span style="font-size:12px;color:var(--ink-soft);">Informasi lengkap sesi pelaksanaan</span>
+        </div>
+      </div>
+      <button type="button" class="modal-close" onclick="closeModal('modalTrainingEventDetail')">&times;</button>
+    </div>
+    <div class="modal-body" style="padding-top:14px;">
+      <div style="margin-bottom:14px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+          <span class="mini-pill" id="calDetailStatusBadge" style="font-size:11px;padding:2px 8px;">Status</span>
+          <span id="calDetailId" style="font-family:monospace;font-size:12px;color:var(--ink-faint);font-weight:600;">TRN-XXXX</span>
+        </div>
+        <h4 id="calDetailJudul" class="voice" style="font-size:18px;margin:0 0 6px;color:var(--ink);line-height:1.3;">-</h4>
+        <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--ink-soft);">
+          <span id="calDetailKategori" class="mini-pill" style="background:rgba(0,0,0,0.05);color:var(--ink);font-size:11.5px;padding:2px 8px;">Soft skill</span>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;background:var(--panel-strong);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:14px;">
+        <div>
+          <div style="font-size:11.5px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.03em;font-weight:600;margin-bottom:2px;">Waktu &amp; Tanggal</div>
+          <div id="calDetailWaktu" style="font-size:13px;font-weight:600;color:var(--ink);">-</div>
+        </div>
+        <div>
+          <div style="font-size:11.5px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.03em;font-weight:600;margin-bottom:2px;">Ruangan / Lokasi</div>
+          <div id="calDetailRuangan" style="font-size:13px;font-weight:600;color:var(--ink);display:flex;align-items:center;gap:6px;">
+            <span id="calDetailRoomDot" style="width:8px;height:8px;border-radius:50%;display:inline-block;background:#2563EB;"></span>
+            <span id="calDetailRoomName">-</span>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:11.5px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.03em;font-weight:600;margin-bottom:2px;">Pemohon (Leader)</div>
+          <div id="calDetailPemohon" style="font-size:13px;font-weight:600;color:var(--ink);">-</div>
+        </div>
+        <div>
+          <div style="font-size:11.5px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.03em;font-weight:600;margin-bottom:2px;">Divisi / Dept</div>
+          <div id="calDetailDivisi" style="font-size:13px;font-weight:600;color:var(--ink);">-</div>
+        </div>
+      </div>
+
+      <div id="calDetailExtraWrap" style="font-size:12.5px;color:var(--ink-soft);background:rgba(0,0,0,0.02);border:1px dashed var(--line-soft);border-radius:8px;padding:10px 12px;line-height:1.5;">
+        <span style="font-weight:600;color:var(--ink);">Keterangan:</span>
+        <span id="calDetailExtra">-</span>
+      </div>
+    </div>
+    <div class="modal-footer" style="display:flex;justify-content:flex-end;">
+      <button type="button" class="btn-secondary" onclick="closeModal('modalTrainingEventDetail')">Tutup</button>
     </div>
   </div>
 </div>

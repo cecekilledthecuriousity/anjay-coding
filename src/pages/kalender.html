@@ -1,0 +1,158 @@
+      <section class="tds-page" id="page-kalender">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px;">
+          <div>
+            <h2 class="voice" style="font-size:22px;margin:0 0 4px;color:var(--ink);">Kalender Jadwal Training</h2>
+            <span class="helper-note" style="margin:0;font-size:13px;">Linimasa visual jadwal pelatihan karyawan per ruangan meeting dan departemen.</span>
+          </div>
+          <button type="button" class="btn-primary" onclick="goToPage('ajukan')" style="gap:6px;font-size:13px;padding:8px 14px;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            Ajukan Training Baru
+          </button>
+        </div>
+
+        <div class="calendar-app-layout">
+          <!-- Tombol Filter Mobile -->
+          <div class="cal-mobile-bar show-mobile">
+            <button type="button" class="btn-secondary" id="btnToggleCalFilter" onclick="toggleCalFilterDrawer()" style="gap:6px;font-size:12.5px;padding:6px 12px;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+              <span>Filter Ruangan &amp; Divisi</span>
+            </button>
+            <span class="cal-filter-active-count" id="calFilterActiveCount">Semua Aktif</span>
+          </div>
+
+          <div class="calendar-split-container">
+            <!-- SIDEBAR KIRI: Filter Ruangan, Divisi & Mini Calendar -->
+            <aside class="cal-filter-sidebar" id="calFilterSidebar">
+              <div class="cal-filter-sidebar-head hide-desktop show-mobile">
+                <h4 style="margin:0;font-size:15px;font-weight:700;">Filter Kalender Training</h4>
+                <button type="button" class="modal-close" onclick="toggleCalFilterDrawer()">&times;</button>
+              </div>
+
+              <!-- Filter 1: Ruangan Meeting -->
+              <div class="cal-filter-section">
+                <div class="cal-filter-header">
+                  <span class="cal-filter-title">Ruangan Meeting</span>
+                  <button type="button" class="cal-filter-reset" onclick="selectAllRooms(true)">Pilih Semua</button>
+                </div>
+                <div class="cal-checkbox-list" id="roomFilterList">
+                  <label class="cal-checkbox-item">
+                    <input type="checkbox" name="roomFilter" value="Neptunus" checked onchange="onCalendarFilterChange()">
+                    <span class="cal-checkbox-indicator" style="background:#4C6FE0;"></span>
+                    <span class="cal-checkbox-label">Neptunus</span>
+                  </label>
+                  <label class="cal-checkbox-item">
+                    <input type="checkbox" name="roomFilter" value="Saturnus" checked onchange="onCalendarFilterChange()">
+                    <span class="cal-checkbox-indicator" style="background:#E67E22;"></span>
+                    <span class="cal-checkbox-label">Saturnus</span>
+                  </label>
+                  <label class="cal-checkbox-item">
+                    <input type="checkbox" name="roomFilter" value="Mars" checked onchange="onCalendarFilterChange()">
+                    <span class="cal-checkbox-indicator" style="background:#E74C3C;"></span>
+                    <span class="cal-checkbox-label">Mars</span>
+                  </label>
+                  <label class="cal-checkbox-item">
+                    <input type="checkbox" name="roomFilter" value="Merkurius" checked onchange="onCalendarFilterChange()">
+                    <span class="cal-checkbox-indicator" style="background:#27AE60;"></span>
+                    <span class="cal-checkbox-label">Merkurius</span>
+                  </label>
+                  <label class="cal-checkbox-item">
+                    <input type="checkbox" name="roomFilter" value="Lainnya" checked onchange="onCalendarFilterChange()">
+                    <span class="cal-checkbox-indicator" style="background:#6B7280;"></span>
+                    <span class="cal-checkbox-label">Lainnya / Online</span>
+                  </label>
+                </div>
+              </div>
+
+              <!-- Filter 2: Divisi / Departemen -->
+              <div class="cal-filter-section">
+                <div class="cal-filter-header">
+                  <span class="cal-filter-title">Divisi / Departemen</span>
+                  <button type="button" class="cal-filter-reset" onclick="selectAllDivisions(true)">Pilih Semua</button>
+                </div>
+                <div class="cal-checkbox-list" id="divisionFilterList">
+                  <div style="font-size:12px;color:var(--ink-faint);padding:4px;">Memuat divisi...</div>
+                </div>
+              </div>
+
+              <!-- Filter 3: Status Dokumen -->
+              <div class="cal-filter-section">
+                <div class="cal-filter-header">
+                  <span class="cal-filter-title">Status Training</span>
+                </div>
+                <div class="cal-checkbox-list">
+                  <label class="cal-checkbox-item">
+                    <input type="checkbox" name="statusFilter" value="Approved" checked onchange="onCalendarFilterChange()">
+                    <span class="cal-checkbox-indicator" style="background:#16A34A;"></span>
+                    <span class="cal-checkbox-label">Disetujui (Approved)</span>
+                  </label>
+                  <label class="cal-checkbox-item">
+                    <input type="checkbox" name="statusFilter" value="Pending" checked onchange="onCalendarFilterChange()">
+                    <span class="cal-checkbox-indicator" style="background:#EAB308;"></span>
+                    <span class="cal-checkbox-label">Menunggu (Pending)</span>
+                  </label>
+                  <label class="cal-checkbox-item">
+                    <input type="checkbox" name="statusFilter" value="Rejected" checked onchange="onCalendarFilterChange()">
+                    <span class="cal-checkbox-indicator" style="background:#DC2626;"></span>
+                    <span class="cal-checkbox-label">Ditolak (Rejected)</span>
+                  </label>
+                </div>
+              </div>
+
+              <!-- Mini Kalender -->
+              <div class="cal-mini-calendar-section">
+                <div class="cal-mini-header">
+                  <span class="cal-mini-title" id="miniCalTitle">Memuat Bulan...</span>
+                  <div class="cal-mini-nav">
+                    <button type="button" class="mini-nav-btn" onclick="prevMiniCalMonth()" title="Bulan sebelumnya">&lsaquo;</button>
+                    <button type="button" class="mini-nav-btn" onclick="nextMiniCalMonth()" title="Bulan berikutnya">&rsaquo;</button>
+                  </div>
+                </div>
+                <div class="cal-mini-weekdays">
+                  <span>S</span><span>S</span><span>R</span><span>K</span><span>J</span><span>S</span><span>M</span>
+                </div>
+                <div class="cal-mini-grid" id="miniCalGrid"></div>
+              </div>
+            </aside>
+
+            <!-- AREA UTAMA KALENDER -->
+            <main class="cal-main-area">
+              <!-- Top Calendar Toolbar -->
+              <div class="cal-top-toolbar">
+                <div class="cal-top-left">
+                  <button type="button" class="btn-cal-today" onclick="goToCalToday()">Hari Ini</button>
+                  <div class="cal-nav-arrow-group">
+                    <button type="button" class="cal-nav-arrow-btn" onclick="goToCalPrev()" title="Sebelumnya">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                    </button>
+                    <button type="button" class="cal-nav-arrow-btn" onclick="goToCalNext()" title="Berikutnya">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    </button>
+                  </div>
+                  <h2 class="cal-active-title voice" id="calActiveTitle">...</h2>
+                </div>
+
+                <div class="cal-top-right">
+                  <div class="cal-view-toggle-group">
+                    <button type="button" class="cal-view-btn" id="btnViewDay" onclick="switchCalView('timeGridDay')">Hari</button>
+                    <button type="button" class="cal-view-btn" id="btnViewWeek" onclick="switchCalView('timeGridWeek')">Minggu</button>
+                    <button type="button" class="cal-view-btn active" id="btnViewMonth" onclick="switchCalView('dayGridMonth')">Bulan</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Loading State & Error Container -->
+              <div id="calLoadingState" class="cal-feedback-card" style="display:none;">
+                <span class="spinner" style="width:18px;height:18px;border-width:2px;border-color:var(--accent);border-top-color:transparent;"></span>
+                <span>Sedang memuat jadwal training dari server, silahkan tunggu...</span>
+              </div>
+              <div id="calEmptyState" class="cal-feedback-card" style="display:none;">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                <span id="calEmptyMsg">Tidak ada jadwal training yang cocok dengan filter. Silahkan sesuaikan filter ruangan atau divisi.</span>
+              </div>
+
+              <!-- FullCalendar Mount -->
+              <div id="fullCalendarMount" class="fullcalendar-custom-wrap"></div>
+            </main>
+          </div>
+        </div>
+      </section>

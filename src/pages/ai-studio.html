@@ -1,0 +1,261 @@
+      <section class="tds-page" id="page-ai-studio">
+        <!-- Studio Header -->
+        <div class="ai-studio-header-wrap">
+          <div class="ai-studio-header-inner">
+            <div style="display:flex;align-items:center;gap:16px;">
+              <div class="header-icon-box" style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg, #4F46E5, #372FB0);display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 14px rgba(79, 70, 229, 0.3);">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path>
+                </svg>
+              </div>
+              <div>
+                <p class="kicker" style="color:var(--accent);margin:0 0 2px 0;">✨ TDS INTELLIGENCE LAB</p>
+                <h1 class="voice" style="margin:0 0 4px;font-size:22px;">AI Learning &amp; Development Studio</h1>
+                <p style="margin:0;font-size:13px;color:var(--ink-soft);">Platform cerdas untuk perancangan silabus enterprise, diagnosa kesenjangan kompetensi tim, kalkulasi ROI, dan penyusunan instrumen tes.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4 Specialized Studio Mode Tabs -->
+        <div class="ai-mode-tabs" role="tablist">
+          <button type="button" class="ai-mode-tab active" id="modeTabCurriculum" onclick="switchStudioMode('curriculum')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+            <span>1. Curriculum Architect</span>
+          </button>
+          <button type="button" class="ai-mode-tab" id="modeTabTna" onclick="switchStudioMode('tna')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><path d="M11 8v6"></path><path d="M8 11h6"></path></svg>
+            <span>2. TNA &amp; Skill Gap Diagnostic</span>
+          </button>
+          <button type="button" class="ai-mode-tab" id="modeTabRoi" onclick="switchStudioMode('roi')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+            <span>3. Business ROI &amp; Kirkpatrick</span>
+          </button>
+          <button type="button" class="ai-mode-tab" id="modeTabAssessment" onclick="switchStudioMode('assessment')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+            <span>4. Assessment &amp; Quiz Builder</span>
+          </button>
+        </div>
+
+        <!-- Spacious Studio Workspace (Split View) -->
+        <div class="ai-studio-workspace">
+          <!-- Left Panel: Dedicated Mode Inputs -->
+          <div class="ai-studio-panel-card">
+            <div class="ai-studio-panel-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+              <h3 class="voice" style="margin:0;font-size:15px;" id="studioPanelTitle">Parameter Kurikulum</h3>
+            </div>
+
+            <!-- MODE 1: Curriculum Architect Inputs -->
+            <div id="paneModeCurriculum">
+              <div class="field" style="margin-bottom:16px;">
+                <label>Topik / Keahlian Pelatihan <span class="required">*</span></label>
+                <input type="text" id="curriculumTopic" class="field" placeholder="Contoh: Microservices with Golang, Team Leadership, Power BI..." style="padding:11px 13px;border:1px solid var(--line);border-radius:8px;width:100%;font-size:13.5px;">
+              </div>
+
+              <div style="margin-bottom:16px;">
+                <span style="font-size:11.5px;color:var(--ink-faint);display:block;margin-bottom:6px;">Topik populer:</span>
+                <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                  <span class="ai-chip" onclick="setStudioTopicAndRun('Modern React &amp; TypeScript Architecture')">React &amp; TS</span>
+                  <span class="ai-chip" onclick="setStudioTopicAndRun('Effective Leadership &amp; Team Coaching')">Leadership</span>
+                  <span class="ai-chip" onclick="setStudioTopicAndRun('Data Analysis with Excel &amp; Power BI')">Power BI</span>
+                  <span class="ai-chip" onclick="setStudioTopicAndRun('Customer Service Excellence')">Service</span>
+                  <span class="ai-chip" onclick="setStudioTopicAndRun('High-Impact Negotiation &amp; Deal Closing')">Negosiasi</span>
+                </div>
+              </div>
+
+              <div class="field-row cols-2" style="margin-bottom:16px;">
+                <div class="field">
+                  <label>Target Level</label>
+                  <select id="curriculumLevel" class="field" style="padding:10px 10px;border:1px solid var(--line);border-radius:8px;width:100%;font-size:13px;">
+                    <option value="Basic">Basic (Foundational)</option>
+                    <option value="Intermediate" selected>Intermediate (Practitioner)</option>
+                    <option value="Advanced">Advanced (Mastery)</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label>Format &amp; Sesi</label>
+                  <select id="curriculumFormat" class="field" style="padding:10px 10px;border:1px solid var(--line);border-radius:8px;width:100%;font-size:13px;">
+                    <option value="1_day" selected>1 Hari (2 Sesi - 6 Jam)</option>
+                    <option value="half_day">Setengah Hari (3 Jam)</option>
+                    <option value="2_days">2 Hari Bootcamp (12 Jam)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="field" style="margin-bottom:18px;">
+                <label>Target Peserta &amp; Departemen</label>
+                <input type="text" id="curriculumTarget" placeholder="Contoh: Mid-level Software Engineers, Team Lead Finance, Customer Care..." style="padding:10px 12px;border:1px solid var(--line);border-radius:8px;width:100%;font-size:13px;">
+              </div>
+            </div>
+
+            <!-- MODE 2: TNA Diagnostic Inputs -->
+            <div id="paneModeTna" style="display:none;">
+              <div class="field" style="margin-bottom:16px;">
+                <label>Gejala Masalah / Kesenjangan Performa Tim <span class="required">*</span></label>
+                <textarea id="tnaIssue" placeholder="Contoh: Tim customer service sering kewalahan menangani komplain pelanggan yang eskalasi, dan waktu penutupan tiket melebihi SLA 4 jam..." style="width:100%;height:100px;border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-family:'Inter',sans-serif;font-size:13px;resize:vertical;"></textarea>
+                <span class="helper-note" style="margin-top:4px;">Deskripsikan masalah apa yang terjadi di lapangan. AI akan mendiagnosa apakah solusinya butuh training atau perbaikan SOP.</span>
+              </div>
+
+              <div class="field-row cols-2" style="margin-bottom:16px;">
+                <div class="field">
+                  <label>Departemen Terkait</label>
+                  <select id="tnaDept" style="padding:10px 12px;border:1px solid var(--line);border-radius:8px;width:100%;font-size:13px;background:var(--surface);color:var(--ink);">
+                    <option value="">Pilih Departemen Terkait...</option>
+                    <option value="HR">HR</option>
+                    <option value="GA">GA</option>
+                    <option value="LEGAL">LEGAL</option>
+                    <option value="FINANCE">FINANCE</option>
+                    <option value="ACCOUNTING">ACCOUNTING</option>
+                    <option value="TAX">TAX</option>
+                    <option value="MARKETING">MARKETING</option>
+                    <option value="SALES OPS">SALES OPS</option>
+                    <option value="SALES ENABLEMENT">SALES ENABLEMENT</option>
+                    <option value="TELEMARKETING">TELEMARKETING</option>
+                    <option value="PEC">PEC</option>
+                    <option value="CUSTOMER EXPERIENCE">CUSTOMER EXPERIENCE</option>
+                    <option value="QA">QA</option>
+                    <option value="WEB DEVELOPER">WEB DEVELOPER</option>
+                    <option value="INTEGRATION">INTEGRATION</option>
+                    <option value="MOBILE DEVELOPER">MOBILE DEVELOPER</option>
+                    <option value="UI/UX DESIGNER">UI/UX DESIGNER</option>
+                    <option value="AI">AI</option>
+                    <option value="BUSINESS ANALYST">BUSINESS ANALYST</option>
+                    <option value="IT INFRASTRUCTURE">IT INFRASTRUCTURE</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label>Perkiraan Anggota Tim</label>
+                  <input type="number" id="tnaTeamSize" placeholder="Contoh: 12" style="padding:10px 12px;border:1px solid var(--line);border-radius:8px;width:100%;font-size:13px;">
+                </div>
+              </div>
+
+              <div style="margin-bottom:18px;">
+                <span style="font-size:11.5px;color:var(--ink-faint);display:block;margin-bottom:6px;">Contoh kasus cepat:</span>
+                <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                  <span class="ai-chip" onclick="setTnaCase('Sales sering kalah saat negosiasi harga dan tingkat closing penawaran menurun 20% dalam 2 kuartal terakhir.', 'SALES OPS')">Dilema Closing Sales</span>
+                  <span class="ai-chip" onclick="setTnaCase('Banyak bug lolos ke production setelah sprint rilis dan lead developer kesulitan mendelegasikan tugas ke junior.', 'QA')">Kualitas Kode &amp; Bug QA</span>
+                  <span class="ai-chip" onclick="setTnaCase('Leader baru sering ragu memberikan teguran/feedback kepada anggota tim yang underperform sehingga kinerja stagnan.', 'HR')">Leader Ragu Kasih Feedback</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- MODE 3: ROI & Business Impact Inputs -->
+            <div id="paneModeRoi" style="display:none;">
+              <div class="field" style="margin-bottom:16px;">
+                <label>Topik Program Pelatihan <span class="required">*</span></label>
+                <input type="text" id="roiTopic" placeholder="Contoh: Automasi Laporan Excel &amp; Data Pipeline" style="padding:10px 12px;border:1px solid var(--line);border-radius:8px;width:100%;font-size:13.5px;">
+              </div>
+
+              <div class="field-row cols-2" style="margin-bottom:16px;">
+                <div class="field">
+                  <label>Jumlah Partisipan</label>
+                  <input type="number" id="roiParticipants" value="10" min="1" style="padding:10px 12px;border:1px solid var(--line);border-radius:8px;width:100%;font-size:13px;">
+                </div>
+                <div class="field">
+                  <label>Estimasi Biaya Program</label>
+                  <input type="text" id="roiCost" placeholder="Rp 5.000.000" style="padding:10px 12px;border:1px solid var(--line);border-radius:8px;width:100%;font-size:13px;">
+                </div>
+              </div>
+
+              <div class="field" style="margin-bottom:18px;">
+                <label>Fokus Tolok Ukur yang Ditargetkan</label>
+                <select id="roiMetricFocus" style="padding:10px 10px;border:1px solid var(--line);border-radius:8px;width:100%;font-size:13px;">
+                  <option value="time_saved">Penghematan Jam Kerja &amp; Efisiensi Waktu</option>
+                  <option value="error_reduction">Penurunan Tingkat Kesalahan / Defect Rate</option>
+                  <option value="revenue_growth">Pertumbuhan Konversi Penjualan &amp; Revenue</option>
+                  <option value="csat_improvement">Peningkatan Kepuasan Pelanggan (CSAT / NPS)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- MODE 4: Assessment Builder Inputs -->
+            <div id="paneModeAssessment" style="display:none;">
+              <div class="field" style="margin-bottom:16px;">
+                <label>Topik / Silabus Materi Ujian <span class="required">*</span></label>
+                <input type="text" id="quizTopic" placeholder="Contoh: Dasar Manajemen Proyek Agile &amp; Scrum" style="padding:10px 12px;border:1px solid var(--line);border-radius:8px;width:100%;font-size:13.5px;">
+              </div>
+
+              <div class="field-row cols-2" style="margin-bottom:16px;">
+                <div class="field">
+                  <label>Tingkat Kesulitan</label>
+                  <select id="quizDifficulty" style="padding:10px 10px;border:1px solid var(--line);border-radius:8px;width:100%;font-size:13px;">
+                    <option value="Menengah" selected>Menengah (Penerapan Kasus)</option>
+                    <option value="Dasar">Dasar (Konseptual)</option>
+                    <option value="Lanjutan">Lanjutan (Analisis Kasus Kritis)</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label>Tipe Instrumen</label>
+                  <select id="quizType" style="padding:10px 10px;border:1px solid var(--line);border-radius:8px;width:100%;font-size:13px;">
+                    <option value="mcq">Pilihan Ganda Skenario Kasus (5 Soal)</option>
+                    <option value="case_study">Studi Kasus Naratif &amp; Rubrik Penilaian</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Action Button -->
+            <button type="button" class="btn-primary" id="btnStudioRun" onclick="runStudioEngine()" style="width:100%;justify-content:center;padding:13px;background:linear-gradient(135deg, #4F46E5, #372FB0);box-shadow:0 3px 12px rgba(79, 70, 229, 0.3);font-size:14px;border-radius:8px;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+              <span id="btnStudioRunText">Analisis &amp; Rancang Kurikulum</span>
+            </button>
+          </div>
+
+          <!-- Right Panel: Executive Document Canvas -->
+          <div class="ai-doc-canvas">
+            <!-- Canvas Header & Toolbar -->
+            <div class="ai-doc-toolbar">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <span class="mini-pill in_review" id="studioActiveModeBadge" style="font-size:11.5px;padding:3px 10px;">Mode 1: Curriculum Architect</span>
+                <span class="mini-pill draft" id="studioDocStatusBadge" style="font-size:11.5px;padding:3px 10px;"><span class="dot"></span>Menunggu Analisis</span>
+              </div>
+              <div id="studioDocActions" style="display:none;align-items:center;gap:8px;">
+                <button type="button" class="btn-secondary" onclick="copyActiveDocContent()" style="font-size:12px;padding:6px 12px;gap:6px;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                  Salin Dokumen
+                </button>
+                <button type="button" class="btn-primary" onclick="applyStudioPlanAndGoToForm()" style="font-size:12px;padding:6px 14px;gap:6px;background:var(--moss);">
+                  <span>Ajukan ke Form</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Subtabs inside the document view -->
+            <div class="ai-doc-subtabs" id="studioDocSubtabs" style="display:none;">
+              <button type="button" class="ai-doc-subtab-btn active" id="subtabBtnOverview" onclick="switchStudioDocTab('overview')">📄 Ringkasan &amp; Rundown</button>
+              <button type="button" class="ai-doc-subtab-btn" id="subtabBtnKsa" onclick="switchStudioDocTab('ksa')">🎯 Matriks Kompetensi (KSA)</button>
+              <button type="button" class="ai-doc-subtab-btn" id="subtabBtnEvaluation" onclick="switchStudioDocTab('evaluation')">📊 Dampak &amp; Kirkpatrick</button>
+              <button type="button" class="ai-doc-subtab-btn" id="subtabBtnQuiz" onclick="switchStudioDocTab('quiz')">📝 Evaluasi / Soal Test</button>
+            </div>
+
+            <!-- 1. Canvas Empty State -->
+            <div id="studioCanvasEmpty" style="text-align:center;padding:70px 24px;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+              <div class="card-icon-wrap" style="width:60px;height:60px;border-radius:18px;background:rgba(79, 70, 229, 0.08);color:var(--accent);display:flex;align-items:center;justify-content:center;margin-bottom:18px;">
+                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+              </div>
+              <h4 class="voice" style="margin:0 0 8px;font-size:17px;color:var(--ink);">Ruang Analisis &amp; Perancangan L&amp;D Eksekutif</h4>
+              <p style="max-width:440px;font-size:13.5px;color:var(--ink-soft);line-height:1.6;margin:0 0 20px;">Pilih salah satu fitur cerdas di atas: <strong>Curriculum Architect</strong>, <strong>TNA Diagnostic</strong>, <strong>Kalkulator ROI</strong>, atau <strong>Quiz Builder</strong> untuk menghasilkan blueprint komprehensif.</p>
+              <div style="font-size:12px;color:var(--ink-faint);background:var(--panel);padding:10px 18px;border-radius:100px;border:1px dashed var(--line);">
+                💡 Hasil analisis dapat langsung disalin atau ditransfer ke Formulir Pengajuan dalam 1 klik.
+              </div>
+            </div>
+
+            <!-- 2. Canvas Loading State -->
+            <div id="studioCanvasLoading" style="display:none;text-align:center;padding:70px 24px;flex:1;">
+              <div class="spinner" style="width:38px;height:38px;border:3px solid rgba(79,70,229,0.2);border-top-color:#4F46E5;border-radius:50%;margin:0 auto 18px;animation:spin 0.8s linear infinite;"></div>
+              <div style="font-weight:600;font-size:15px;color:var(--ink);" id="studioLoadingTitle">Menganalisis Kebutuhan L&amp;D...</div>
+              <div style="font-size:13px;color:var(--ink-soft);margin-top:6px;" id="studioLoadingSubtitle">Memproses matriks kompetensi, struktur sesi, dan dampak bisnis</div>
+            </div>
+
+            <!-- 3. Canvas Result State -->
+            <div id="studioCanvasResult" style="display:none;flex:1;">
+              <!-- Dynamic subtab panes populated by JS -->
+              <div id="paneDocOverview" class="studio-doc-pane"></div>
+              <div id="paneDocKsa" class="studio-doc-pane" style="display:none;"></div>
+              <div id="paneDocEvaluation" class="studio-doc-pane" style="display:none;"></div>
+              <div id="paneDocQuiz" class="studio-doc-pane" style="display:none;"></div>
+            </div>
+          </div>
+        </div>
+      </section>

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Training &amp; Development System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" type="image/x-icon" href="favicon/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png">
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.15/locales/id.global.min.js"></script>
+  <script src="js/app.js?v=20260921_final" defer></script>
+</head>
+<body>
+
+<div class="tds-layout">
+
+  <!-- ================= TDS SIDEBAR ================= -->
+  <!-- @@include('components/sidebar.html') -->
+
+  <!-- ================= MAIN TDS CONTAINER ================= -->
+  <div class="tds-main">
+    <div class="page">
+
+      <!-- ================= 1. PAGE: DASHBOARD (#page-dashboard) ================= -->
+      <!-- @@include('pages/dashboard.html') -->
+
+      <!-- ================= 2. PAGE: AJUKAN TRAINING (#page-ajukan) ================= -->
+      <!-- @@include('pages/ajukan-training.html') -->
+
+      <!-- ================= 3. PAGE: AI TRAINING STUDIO (#page-ai-studio) ================= -->
+      <!-- @@include('pages/ai-studio.html') -->
+
+      <!-- ================= PAGE: SKILL MATRIX (#page-skill-matrix) ================= -->
+      <!-- @@include('pages/skill-matrix.html') -->
+
+      <!-- ================= 4. PAGE: KALENDER TRAINING (#page-kalender) ================= -->
+      <!-- @@include('pages/kalender.html') -->
+
+      <!-- ================= 4. PAGE: TRAINING SAYA (#page-training-saya) ================= -->
+      <!-- @@include('pages/training-saya.html') -->
+
+      <!-- ================= 5. PAGE: VENDOR DIRECTORY (#page-vendor) ================= -->
+      <!-- @@include('pages/vendor.html') -->
+
+      <!-- ================= PAGE: POST TRAINING TRAMPOLINE (#page-post-training) ================= -->
+      <!-- @@include('pages/post-training.html') -->
+
+      <!-- ================= 6. PAGE: PORTAL APPROVAL (#page-portal-approval) ================= -->
+      <!-- @@include('pages/portal-approval.html') -->
+
+    </div>
+  </div>
+</div>
+
+<!-- ================= STICKY BOTTOM ACTION BAR ================= -->
+<!-- @@include('components/sticky-bar.html') -->
+
+<!-- ================= MODALS ================= -->
+
+<!-- 1. Modal Quick Paste Excel -->
+<!-- @@include('modals/quick-paste.html') -->
+
+<!-- 2. Modal Preview & Konfirmasi Submit -->
+<!-- @@include('modals/confirm-submit.html') -->
+
+<!-- Modal: Set Skill Score -->
+<!-- @@include('modals/skill-score.html') -->
+
+<!-- Modal: Tambah Kompetensi Baru -->
+<!-- @@include('modals/add-skill.html') -->
+
+<!-- Modal: AI Training Needs Summary (TNA Diagnostic from Skill Matrix) -->
+<!-- @@include('modals/ai-skill-summary.html') -->
+
+<!-- 3. Modal Sukses Submit -->
+<!-- @@include('modals/success-submit.html') -->
+
+<!-- 4. Modal Admin PIN -->
+<!-- @@include('modals/admin-pin.html') -->
+
+<!-- 5. Modal Approval PIN -->
+<!-- @@include('modals/approval-pin.html') -->
+
+<!-- 6. Modal Detail Submission -->
+<!-- @@include('modals/detail-submission.html') -->
+
+<!-- 7. Modal AI Training Course Architect -->
+<!-- @@include('modals/ai-assistant.html') -->
+
+<!-- Modal Detail Event Kalender (Read-Only) -->
+<!-- @@include('modals/calendar-detail.html') -->
+
+<!-- Container Toast -->
+<div class="toast-container" id="toastContainer"></div>
+
+</body>
+</html>
