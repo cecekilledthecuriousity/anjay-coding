@@ -28,12 +28,101 @@ const INDO_MONTHS = [
   'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
 ];
 
+// ==========================================
+// Sidebar Collapse Management (Desktop / Tablet)
+// ==========================================
+const SIDEBAR_COLLAPSE_KEY = 'tds_sidebar_collapsed';
+
+function applySidebarCollapse(collapsed, animate = true) {
+  const sidebar = document.getElementById('tdsSidebar');
+  const layout = document.querySelector('.tds-layout');
+  const toggleBtn = document.getElementById('btnToggleSidebar');
+
+  if (!sidebar) return;
+
+  if (collapsed) {
+    sidebar.classList.add('collapsed');
+    if (layout) layout.classList.add('sidebar-collapsed');
+    if (toggleBtn) {
+      toggleBtn.setAttribute('aria-expanded', 'false');
+      toggleBtn.setAttribute('title', 'Luaskan Sidebar (Ctrl+B)');
+    }
+  } else {
+    sidebar.classList.remove('collapsed');
+    if (layout) layout.classList.remove('sidebar-collapsed');
+    if (toggleBtn) {
+      toggleBtn.setAttribute('aria-expanded', 'true');
+      toggleBtn.setAttribute('title', 'Kecilkan Sidebar (Ctrl+B)');
+    }
+  }
+
+  // Trigger resize event after transition so FullCalendar / tables adapt smoothly
+  setTimeout(() => {
+    window.dispatchEvent(new Event('resize'));
+  }, animate ? 280 : 0);
+}
+
+function toggleSidebarCollapse() {
+  const sidebar = document.getElementById('tdsSidebar');
+  if (!sidebar) return;
+  const isCurrentlyCollapsed = sidebar.classList.contains('collapsed');
+  const nextState = !isCurrentlyCollapsed;
+
+  try {
+    localStorage.setItem(SIDEBAR_COLLAPSE_KEY, nextState ? 'true' : 'false');
+  } catch (e) {
+    // Graceful fallback if localStorage is disabled
+  }
+
+  applySidebarCollapse(nextState, true);
+}
+
+function initSidebarCollapse() {
+  let isCollapsed = false;
+  try {
+    isCollapsed = localStorage.getItem(SIDEBAR_COLLAPSE_KEY) === 'true';
+  } catch (e) {
+    isCollapsed = false;
+  }
+
+  // Apply saved state immediately on desktop screens (> 768px)
+  if (window.innerWidth > 768 && isCollapsed) {
+    applySidebarCollapse(true, false);
+  }
+
+  const toggleBtn = document.getElementById('btnToggleSidebar');
+  if (toggleBtn) {
+    toggleBtn.onclick = function(e) {
+      if (e) e.preventDefault();
+      toggleSidebarCollapse();
+    };
+  }
+
+  // Keyboard shortcut: Ctrl+B or Cmd+B
+  window.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'b' || e.key === 'B')) {
+      const activeEl = document.activeElement;
+      const tag = activeEl ? activeEl.tagName.toLowerCase() : '';
+      if (tag === 'input' || tag === 'textarea' || activeEl?.isContentEditable) {
+        return;
+      }
+      e.preventDefault();
+      toggleSidebarCollapse();
+    }
+  });
+}
+
+window.applySidebarCollapse = applySidebarCollapse;
+window.toggleSidebarCollapse = toggleSidebarCollapse;
+window.initSidebarCollapse = initSidebarCollapse;
+
 // ==============================================================================
 // 3. INISIALISASI APLIKASI
 // ==============================================================================
 function startApprovalApp() {
   initAuth();
   bindEventHandlers();
+  initSidebarCollapse();
 }
 
 if (document.readyState === 'loading') {
@@ -43,9 +132,32 @@ if (document.readyState === 'loading') {
 }
 
 /**
+ * Ekstraksi ID Training dari URL parameter query (?id=, ?trn=, ?submission=) atau hash (#TRN-...)
+ */
+function getDeepLinkIdFromUrl() {
+  const urlParams = new URLSearchParams(window.location.search);
+  let targetId = urlParams.get('id') || urlParams.get('trn') || urlParams.get('trainingId') || urlParams.get('submission');
+  if (!targetId && window.location.hash) {
+    const hash = window.location.hash;
+    const match = hash.match(/(TRN-[a-zA-Z0-9_-]+)/i);
+    if (match) {
+      targetId = match[1];
+    } else {
+      const hashParams = new URLSearchParams(hash.replace(/^#/, ''));
+      targetId = hashParams.get('id') || hashParams.get('trn');
+    }
+  }
+  return targetId ? String(targetId).trim() : null;
+}
+
+/**
  * Memeriksa status autentikasi PIN pada sessionStorage.
  */
 function initAuth() {
+  const initialDeepId = getDeepLinkIdFromUrl();
+  if (initialDeepId) {
+    showToast(`Memuat pengajuan ${initialDeepId}...`, 'info', 2500);
+  }
   // Langsung tampilkan seluruh portal approval secara lengkap (tanpa gerbang PIN)
   showDashboard();
 }
@@ -215,13 +327,13 @@ function showLoginGate() {
   if (approvalAppLayout) approvalAppLayout.style.display = 'none';
   if (loginGate) loginGate.style.display = 'flex';
 
-  // Cek jika terdapat parameter URL deep-link ?id=TRN-XXXX
+  // Cek jika terdapat parameter URL deep-link
   const deepNotice = document.getElementById('deepLinkNotice');
   const deepTarget = document.getElementById('deepLinkTargetId');
-  const targetId = new URLSearchParams(window.location.search).get('id');
+  const targetId = getDeepLinkIdFromUrl();
   if (deepNotice && deepTarget) {
     if (targetId) {
-      deepTarget.textContent = targetId.trim();
+      deepTarget.textContent = targetId;
       deepNotice.style.display = 'block';
     } else {
       deepNotice.style.display = 'none';
@@ -284,6 +396,80 @@ window.goToApprPage = goToApprPage;
 // 5. DATA NORMALIZATION & SINKRONISASI
 // ==============================================================================
 
+const DELETED_SUBMISSIONS_KEY = 'tds_appr_deleted_submission_ids';
+
+/**
+ * Mengambil daftar ID pengajuan yang telah dihapus oleh Approver dari localStorage
+ */
+function getDeletedSubmissionIds() {
+  try {
+    const raw = localStorage.getItem(DELETED_SUBMISSIONS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+/**
+ * Menyimpan ID pengajuan yang dihapus ke dalam localStorage blacklist
+ */
+function addDeletedSubmissionId(id) {
+  if (!id) return;
+  const list = getDeletedSubmissionIds();
+  const cleanId = String(id).trim().toUpperCase();
+  if (!list.includes(cleanId)) {
+    list.push(cleanId);
+    try {
+      localStorage.setItem(DELETED_SUBMISSIONS_KEY, JSON.stringify(list));
+    } catch (e) {}
+  }
+}
+
+/**
+ * Memeriksa apakah suatu baris merupakan data dummy pengujian atau telah dihapus oleh approver
+ */
+function isDummyOrDeletedSubmission(id, namaTraining, pengaju) {
+  const cleanId = String(id || '').trim().toUpperCase();
+  const cleanNama = String(namaTraining || '').trim();
+  const cleanPengaju = String(pengaju || '').trim();
+
+  // 1. Cek apakah ID telah dihapus secara eksplisit oleh Approver
+  const deletedIds = getDeletedSubmissionIds();
+  if (deletedIds.includes(cleanId)) {
+    return true;
+  }
+
+  // 2. Daftar ID dummy / test yang perlu dihilangkan dari antrean
+  const knownDummyIds = [
+    'TRN',
+    'TRN-TEST-1234',
+    'TRN-2026-001',
+    'TRN-2026-002',
+    'TRN-20261005-GEN-SS'
+  ];
+
+  if (knownDummyIds.includes(cleanId)) {
+    return true;
+  }
+
+  if (cleanId.startsWith('TRN-TEST')) {
+    return true;
+  }
+
+  // 3. Cek apakah data tidak memiliki nama atau merupakan submission uji coba
+  if (
+    !cleanNama ||
+    cleanNama === '-' ||
+    cleanNama.toLowerCase().includes('antigravity') ||
+    cleanPengaju === 'Test Leader' ||
+    (cleanPengaju === '-' && cleanNama === '-')
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
 /**
  * Normalisasi objek data baik dari respon Google Sheets (doGet)
  * maupun format localStorage form submission.
@@ -307,6 +493,13 @@ function normalizeSubmission(raw) {
 
   const id = String(meta['ID training'] || raw['ID Training'] || raw.id || raw.ID || '-').trim();
   const namaTraining = String(meta['Nama training'] || raw['Nama Training'] || raw.namaTraining || '-').trim();
+  const pengaju = String(meta['Nama pengaju'] || meta['Leader pengaju'] || raw['Nama Pengaju'] || raw.pengaju || '-').trim();
+
+  // Filter pengajuan yang merupakan dummy atau sudah dihapus
+  if (isDummyOrDeletedSubmission(id, namaTraining, pengaju)) {
+    return null;
+  }
+
   const rawStatus = String(raw.status || raw['Status Dokumen'] || meta['Status Dokumen'] || 'Diajukan').trim();
 
   let status = 'Diajukan';
@@ -323,7 +516,6 @@ function normalizeSubmission(raw) {
     statusClass = 'submitted';
   }
 
-  const pengaju = String(meta['Nama pengaju'] || meta['Leader pengaju'] || raw['Nama Pengaju'] || raw.pengaju || '-').trim();
   const departemen = String(meta['Departemen / divisi'] || raw['Departemen / Divisi'] || raw.departemen || '-').trim();
   const kategori = String(meta['Kategori training'] || raw['Kategori Training'] || raw.kategori || '-').trim();
   const level = String(meta['Target level kemahiran'] || raw['Target Level Kemahiran'] || raw.level || 'General').trim();
@@ -449,22 +641,38 @@ async function fetchSubmissions(forceRefresh = false) {
 }
 
 /**
- * Otomatis membuka modal review jika terdapat URL parameter ?id=TRN-XXXX
+ * Otomatis membuka modal review jika terdapat URL parameter ?id=TRN-XXXX atau query/hash pendukung
  */
-function checkUrlDeepLink() {
+function checkUrlDeepLink(isRetry = false) {
   if (deepLinkHandled) return;
-  const urlParams = new URLSearchParams(window.location.search);
-  const targetId = urlParams.get('id');
+  const targetId = getDeepLinkIdFromUrl();
   if (!targetId) return;
 
   const cleanId = String(targetId).trim().toUpperCase();
-  const item = allSubmissions.find(s => String(s.id).trim().toUpperCase() === cleanId);
+  const norm = (str) => String(str || '').replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+  const targetNorm = norm(targetId);
+
+  const item = allSubmissions.find(s => {
+    if (!s || !s.id) return false;
+    const sId = String(s.id).trim().toUpperCase();
+    return sId === cleanId || norm(sId) === targetNorm;
+  });
+
   if (item) {
     deepLinkHandled = true;
     setTimeout(() => {
       openReviewModal(item.id);
-      showToast(`Membuka pengajuan training ${item.id} secara otomatis.`, 'info');
-    }, 120);
+      showToast(`Membuka pengajuan training ${item.id} secara otomatis.`, 'success');
+    }, 150);
+  } else if (!isRetry && allSubmissions.length > 0) {
+    // Retry sekali dengan sinkronisasi paksa jika dokumen baru saja disubmit ke spreadsheet
+    setTimeout(() => {
+      fetchSubmissions(true).then(() => {
+        checkUrlDeepLink(true);
+      });
+    }, 400);
+  } else if (isRetry || allSubmissions.length > 0) {
+    showToast(`Pengajuan training ${cleanId} tidak ditemukan di sistem.`, 'error', 4500);
   }
 }
 
@@ -539,7 +747,7 @@ function renderUrgentPendingList() {
         </div>
       </div>
       <div style="display:flex;gap:8px;align-items:center;">
-        <button type="button" class="btn-primary" style="font-size:12.5px;padding:7px 14px;gap:5px;box-shadow:0 4px 12px rgba(63,90,68,0.25);" onclick="openReviewModal('${escapeHtml(item.id)}')">
+        <button type="button" class="btn-primary" style="font-size:12.5px;padding:7px 14px;gap:5px;box-shadow:0 4px 12px rgba(0,23,143,0.25);" onclick="openReviewModal('${escapeHtml(item.id)}')">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
             <polyline points="14 2 14 8 20 8"></polyline>
@@ -732,10 +940,18 @@ function renderTable(items) {
       <td>
         <span class="mini-pill ${item.statusClass}"><span class="dot"></span>${escapeHtml(item.status)}</span>
       </td>
-      <td style="text-align:center;">
-        <button type="button" class="btn-secondary" style="padding:6px 14px;font-size:12.5px;white-space:nowrap;" onclick="openReviewModal('${escapeHtml(item.id)}')">
-          Tinjau Dokumen
-        </button>
+      <td style="text-align:center;white-space:nowrap;">
+        <div style="display:inline-flex;gap:6px;align-items:center;">
+          <button type="button" class="btn-secondary" style="padding:6px 12px;font-size:12px;white-space:nowrap;" onclick="openReviewModal('${escapeHtml(item.id)}')">
+            Tinjau
+          </button>
+          <button type="button" class="btn-secondary" style="padding:6px 8px;font-size:12px;color:var(--danger);border-color:rgba(220,38,38,0.25);background:#FFF;" title="Hapus Pengajuan ${escapeHtml(item.id)}" onclick="deleteSubmission('${escapeHtml(item.id)}')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="3 6 5 6 21 6"></polyline>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            </svg>
+          </button>
+        </div>
       </td>
     </tr>
   `).join('');
@@ -953,6 +1169,14 @@ async function fetchApprCalendarEvents(forceRefresh = false) {
 
   if (!fetchedEvents || fetchedEvents.length === 0) {
     fetchedEvents = buildCalendarEventsFromSubmissions(allSubmissions);
+  }
+
+  // Filter event kalender dari ID dummy / yang telah dihapus
+  if (Array.isArray(fetchedEvents)) {
+    fetchedEvents = fetchedEvents.filter(ev => {
+      const subId = ev.submissionId || ev.id || '';
+      return !isDummyOrDeletedSubmission(subId, ev.judul || ev.title, ev.pemohon);
+    });
   }
 
   rawApprCalendarEvents = fetchedEvents;
@@ -1369,7 +1593,14 @@ window.exportApprovalCsv = exportApprovalCsv;
 // 10. MODAL TINJAUAN DOKUMEN & APPROVAL DECISION
 // ==============================================================================
 function openReviewModal(id) {
-  const item = allSubmissions.find(s => s.id === id);
+  const cleanId = String(id || '').trim().toUpperCase();
+  const norm = (str) => String(str || '').replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+  const targetNorm = norm(id);
+  const item = allSubmissions.find(s => {
+    if (!s || !s.id) return false;
+    const sId = String(s.id).trim().toUpperCase();
+    return sId === cleanId || norm(sId) === targetNorm;
+  }) || allSubmissions.find(s => s.id === id);
   if (!item) return;
 
   currentReviewItem = item;
@@ -1392,12 +1623,24 @@ function openReviewModal(id) {
   const notesInput = document.getElementById('approverNotesInput');
 
   if (nameInput) {
-    nameInput.value = localStorage.getItem('last_approver_name') || '';
+    nameInput.value = localStorage.getItem('last_approver_name') || 'Fernanda Rusli';
     nameInput.classList.remove('error');
   }
   if (notesInput) {
     notesInput.value = '';
     notesInput.classList.remove('error');
+  }
+
+  // Reset status tombol keputusan
+  const btnApprove = document.getElementById('btnApproveAction');
+  const btnReject = document.getElementById('btnRejectAction');
+  if (btnApprove) {
+    btnApprove.disabled = false;
+    btnApprove.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Setujui Training`;
+  }
+  if (btnReject) {
+    btnReject.disabled = false;
+    btnReject.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg> Tolak Training`;
   }
 
   // Tampilkan modal
@@ -1427,36 +1670,61 @@ function renderModalDetails(item) {
 
   // Link Silabus
   const silabusUrl = meta['Link silabus materi'] || raw['Link Silabus / Materi'] || '';
-  let silabusLinkHtml = '-';
+  let silabusLinkHtml = '<span style="color:var(--ink-faint);font-size:13px;">Tidak dilampirkan</span>';
   if (silabusUrl && silabusUrl.startsWith('http')) {
-    silabusLinkHtml = `<a href="${escapeHtml(silabusUrl)}" target="_blank" rel="noopener noreferrer" style="color:var(--accent);font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:5px;"><span>Buka Silabus di Google Drive</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg></a>`;
+    silabusLinkHtml = `
+      <a href="${escapeHtml(silabusUrl)}" target="_blank" rel="noopener noreferrer" class="btn-secondary" style="padding:6px 14px;font-size:12.5px;gap:7px;display:inline-flex;align-items:center;color:var(--ink);border-color:rgba(0,23,143,0.18);background:#FFFFFF;text-decoration:none;border-radius:8px;font-weight:600;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color:#2563EB;">
+          <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+        </svg>
+        <span>Buka Silabus di Google Drive</span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+          <polyline points="15 3 21 3 21 9"></polyline>
+          <line x1="10" y1="14" x2="21" y2="3"></line>
+        </svg>
+      </a>
+    `;
   } else if (silabusUrl && silabusUrl !== '-') {
     silabusLinkHtml = escapeHtml(silabusUrl);
   }
 
   // Rincian Peserta
-  let participantsHtml = '<div style="color:var(--ink-faint);font-size:13px;padding:8px 0;">Tidak ada daftar peserta tersimpan.</div>';
+  let participantsHtml = '<div style="color:var(--ink-faint);font-size:13px;padding:14px;text-align:center;background:rgba(0,0,0,0.02);border-radius:10px;">Tidak ada daftar peserta tersimpan.</div>';
   if (participants.length > 0) {
     participantsHtml = `
-      <div class="tbl-wrap" style="max-height:180px;overflow-y:auto;border:1px solid var(--line);border-radius:var(--radius-sm);margin-bottom:16px;">
+      <div class="tbl-wrap" style="max-height:220px;overflow-y:auto;border:1px solid var(--line);border-radius:10px;margin-bottom:18px;background:#FFF;">
         <table class="master" style="font-size:12.5px;margin:0;">
           <thead>
             <tr>
               <th style="width:36px;text-align:center;">#</th>
               <th>Nama Lengkap</th>
               <th>Email</th>
-              <th>Departemen</th>
+              <th>Departemen / Divisi</th>
             </tr>
           </thead>
           <tbody>
-            ${participants.map((p, idx) => `
-              <tr>
-                <td style="text-align:center;color:var(--ink-faint);">${idx + 1}</td>
-                <td style="font-weight:600;color:var(--ink);">${escapeHtml(p.nama || p.name || '-')}</td>
-                <td>${escapeHtml(p.email || '-')}</td>
-                <td>${escapeHtml(p.departemen || p.divisi || p.department || '-')}</td>
-              </tr>
-            `).join('')}
+            ${participants.map((p, idx) => {
+              const pNama = p.nama || p.name || '-';
+              const initial = pNama.charAt(0).toUpperCase() || '?';
+              return `
+                <tr>
+                  <td style="text-align:center;color:var(--ink-faint);font-weight:600;">${idx + 1}</td>
+                  <td>
+                    <div style="display:flex;align-items:center;gap:9px;">
+                      <div style="width:26px;height:26px;border-radius:50%;background:rgba(0,23,143,0.08);color:var(--ink);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;">
+                        ${escapeHtml(initial)}
+                      </div>
+                      <span style="font-weight:600;color:var(--ink);">${escapeHtml(pNama)}</span>
+                    </div>
+                  </td>
+                  <td style="color:var(--ink-soft);">${escapeHtml(p.email || '-')}</td>
+                  <td>
+                    <span class="mini-pill" style="font-size:11px;padding:2px 8px;">${escapeHtml(p.departemen || p.divisi || p.department || '-')}</span>
+                  </td>
+                </tr>
+              `;
+            }).join('')}
           </tbody>
         </table>
       </div>
@@ -1464,10 +1732,10 @@ function renderModalDetails(item) {
   }
 
   // Rangkaian Modul
-  let modulesHtml = '<div style="color:var(--ink-faint);font-size:13px;padding:8px 0;">Tidak ada rincian modul.</div>';
+  let modulesHtml = '<div style="color:var(--ink-faint);font-size:13px;padding:14px;text-align:center;background:rgba(0,0,0,0.02);border-radius:10px;">Tidak ada rincian modul.</div>';
   if (modules.length > 0) {
     modulesHtml = `
-      <div class="tbl-wrap" style="max-height:180px;overflow-y:auto;border:1px solid var(--line);border-radius:var(--radius-sm);margin-bottom:16px;">
+      <div class="tbl-wrap" style="max-height:220px;overflow-y:auto;border:1px solid var(--line);border-radius:10px;margin-bottom:18px;background:#FFF;">
         <table class="master" style="font-size:12.5px;margin:0;">
           <thead>
             <tr>
@@ -1481,11 +1749,11 @@ function renderModalDetails(item) {
           <tbody>
             ${modules.map(m => `
               <tr>
-                <td>${escapeHtml(m.tanggal || '-')}</td>
-                <td>${escapeHtml(m.jamMulai || '')} - ${escapeHtml(m.jamSelesai || '')}</td>
+                <td style="white-space:nowrap;font-weight:600;color:var(--ink);">${escapeHtml(m.tanggal || '-')}</td>
+                <td style="white-space:nowrap;color:var(--ink-soft);">${escapeHtml(m.jamMulai || '')} - ${escapeHtml(m.jamSelesai || '')} WIB</td>
                 <td style="font-weight:600;color:var(--ink);">${escapeHtml(m.modul || m.name || '-')}</td>
                 <td>${escapeHtml(m.pic || '-')}</td>
-                <td>${escapeHtml(m.durasi || '-')}</td>
+                <td><span class="mini-pill" style="font-size:11px;padding:2px 8px;">${escapeHtml(m.durasi || '-')}</span></td>
               </tr>
             `).join('')}
           </tbody>
@@ -1494,95 +1762,136 @@ function renderModalDetails(item) {
     `;
   }
 
+  // Purpose / Goals Box
+  const purposeText = meta['Purpose / latar belakang'] || '';
+  const goalsText = meta['Goals / tujuan terukur'] || '';
+  let purposeGoalsHtml = '';
+  if (purposeText || goalsText) {
+    purposeGoalsHtml = `
+      <div style="background:#FFFFFF;border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-bottom:18px;box-shadow:var(--shadow-sm);">
+        <div style="font-size:13.5px;font-weight:700;color:var(--ink);margin-bottom:12px;display:flex;align-items:center;gap:7px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent);">
+            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+          </svg>
+          Sasaran &amp; Tujuan Pelatihan
+        </div>
+        ${purposeText ? `
+          <div style="margin-bottom:10px;">
+            <div style="font-size:10.5px;font-weight:700;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:3px;">Latar Belakang (Purpose):</div>
+            <div style="font-size:13px;color:var(--ink);line-height:1.55;">${escapeHtml(purposeText)}</div>
+          </div>
+        ` : ''}
+        ${goalsText ? `
+          <div>
+            <div style="font-size:10.5px;font-weight:700;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:3px;">Tujuan Terukur (Goals):</div>
+            <div style="font-size:13px;color:var(--ink);line-height:1.55;">${escapeHtml(goalsText)}</div>
+          </div>
+        ` : ''}
+      </div>
+    `;
+  }
+
+  // Approver decision stamp (if already reviewed)
+  let decisionStampHtml = '';
+  if (item.approver && item.approver !== '-') {
+    const isAppr = item.statusClass === 'approved';
+    decisionStampHtml = `
+      <div style="background:${isAppr ? 'rgba(22,163,74,0.06)' : 'rgba(220,38,38,0.06)'};border:1.5px solid ${isAppr ? 'rgba(22,163,74,0.25)' : 'rgba(220,38,38,0.25)'};border-radius:14px;padding:16px 20px;margin-bottom:18px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:8px;">
+          <span style="font-weight:700;font-size:13.5px;color:${isAppr ? '#15803D' : '#DC2626'};display:flex;align-items:center;gap:6px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              ${isAppr ? '<polyline points="20 6 9 17 4 12"></polyline>' : '<circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line>'}
+            </svg>
+            Keputusan Approver: ${escapeHtml(item.status)}
+          </span>
+          <span style="font-size:12px;color:var(--ink-soft);">${escapeHtml(item.tanggalApproval || '-')}</span>
+        </div>
+        <div style="font-size:13px;color:var(--ink);margin-bottom:4px;">
+          Oleh: <strong>${escapeHtml(item.approver)}</strong>
+        </div>
+        ${item.catatanApprover ? `
+          <div style="font-size:12.5px;color:var(--ink-soft);font-style:italic;background:#FFF;padding:10px 14px;border-radius:8px;border:1px solid var(--line-soft);margin-top:8px;line-height:1.5;">
+            &ldquo;${escapeHtml(item.catatanApprover)}&rdquo;
+          </div>
+        ` : ''}
+      </div>
+    `;
+  }
+
   container.innerHTML = `
-    <div class="detail-grid">
-      <div class="detail-item detail-full">
-        <span class="lbl">Nama Training</span>
-        <span class="val" style="font-size:15px;font-weight:700;color:var(--ink);">${escapeHtml(item.namaTraining)}</span>
+    <!-- Top Executive Hero Card -->
+    <div style="background:linear-gradient(135deg, #FFFFFF 0%, #F5F8FF 100%);border:1px solid rgba(0,23,143,0.12);border-radius:16px;padding:22px 24px;margin-bottom:18px;box-shadow:0 4px 16px -4px rgba(0,23,143,0.06);">
+      <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:12px;">
+        <span class="mini-pill" style="font-weight:700;font-size:11.5px;background:rgba(0,23,143,0.08);color:var(--ink);">${escapeHtml(item.departemen || 'Semua Divisi')}</span>
+        <span class="mini-pill" style="font-size:11.5px;">${escapeHtml(item.kategori || 'Pelatihan')} &bull; ${escapeHtml(item.level || 'All Level')}</span>
+        ${meta['Metode training'] ? `<span class="mini-pill" style="font-size:11.5px;background:rgba(75,150,255,0.14);color:var(--ink);">${escapeHtml(meta['Metode training'])}</span>` : ''}
+        <span class="mini-pill ${item.statusClass}" style="margin-left:auto;font-weight:700;font-size:11.5px;"><span class="dot"></span>${escapeHtml(item.status)}</span>
       </div>
+      
+      <h2 class="voice" style="font-size:21px;font-weight:700;color:var(--ink);line-height:1.35;margin:0 0 16px;">
+        ${escapeHtml(item.namaTraining)}
+      </h2>
 
-      <div class="detail-item">
-        <span class="lbl">Pengaju / Leader</span>
-        <span class="val">${escapeHtml(item.pengaju)}</span>
-      </div>
-      <div class="detail-item">
-        <span class="lbl">Departemen / Divisi</span>
-        <span class="val">${escapeHtml(item.departemen)}</span>
-      </div>
-
-      <div class="detail-item">
-        <span class="lbl">Kategori Skill &amp; Level</span>
-        <span class="val">${escapeHtml(item.kategori)} &bull; ${escapeHtml(item.level)}</span>
-      </div>
-      <div class="detail-item">
-        <span class="lbl">Budget Diajukan</span>
-        <span class="val" style="font-weight:700;color:var(--ink);">${escapeHtml(item.budget)}</span>
-      </div>
-
-      <div class="detail-item">
-        <span class="lbl">Jadwal Pelaksanaan</span>
-        <span class="val">${escapeHtml(item.jadwal)}</span>
-      </div>
-      <div class="detail-item">
-        <span class="lbl">Durasi Belajar</span>
-        <span class="val">${escapeHtml(item.durasi)}</span>
-      </div>
-
-      <div class="detail-item">
-        <span class="lbl">Trainer / Fasilitator</span>
-        <span class="val">${escapeHtml(item.trainer)}</span>
-      </div>
-      <div class="detail-item">
-        <span class="lbl">Lokasi / Platform</span>
-        <span class="val">${escapeHtml(item.venue)}</span>
-      </div>
-
-      <div class="detail-item detail-full">
-        <span class="lbl">Silabus / Materi Drive</span>
-        <span class="val">${silabusLinkHtml}</span>
-      </div>
-
-      ${item.approver && item.approver !== '-' ? `
-        <div class="detail-item">
-          <span class="lbl">Approver Terakhir</span>
-          <span class="val">${escapeHtml(item.approver)}</span>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(160px, 1fr));gap:10px;padding-top:14px;border-top:1px solid rgba(0,23,143,0.08);">
+        <div style="background:#FFF;border:1px solid var(--line-soft);border-radius:10px;padding:10px 12px;">
+          <div style="font-size:10.5px;font-weight:700;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:2px;">Leader Pengaju</div>
+          <div style="font-size:13.5px;font-weight:700;color:var(--ink);">${escapeHtml(item.pengaju)}</div>
         </div>
-        <div class="detail-item">
-          <span class="lbl">Waktu Keputusan</span>
-          <span class="val">${escapeHtml(item.tanggalApproval)}</span>
+        <div style="background:#FFF;border:1px solid rgba(0,23,143,0.14);border-radius:10px;padding:10px 12px;">
+          <div style="font-size:10.5px;font-weight:700;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:2px;">Komitmen Budget</div>
+          <div style="font-size:15px;font-weight:700;color:#00178F;">${escapeHtml(item.budget)}</div>
         </div>
-        <div class="detail-item detail-full">
-          <span class="lbl">Catatan Keputusan</span>
-          <span class="val" style="font-style:italic;">${escapeHtml(item.catatanApprover)}</span>
+        <div style="background:#FFF;border:1px solid var(--line-soft);border-radius:10px;padding:10px 12px;">
+          <div style="font-size:10.5px;font-weight:700;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:2px;">Jadwal Pelaksanaan</div>
+          <div style="font-size:13px;font-weight:600;color:var(--ink);">${escapeHtml(item.jadwal)}</div>
         </div>
-      ` : ''}
+        <div style="background:#FFF;border:1px solid var(--line-soft);border-radius:10px;padding:10px 12px;">
+          <div style="font-size:10.5px;font-weight:700;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:2px;">Total Durasi</div>
+          <div style="font-size:13.5px;font-weight:700;color:var(--ink);">${escapeHtml(item.durasi)}</div>
+        </div>
+      </div>
     </div>
 
-    <!-- Sasaran & KPI -->
-    ${meta['Purpose / latar belakang'] || meta['Goals / tujuan terukur'] ? `
-      <div class="form-card" style="margin-bottom:16px;padding:16px;background:rgba(255,255,255,0.6);">
-        <h4 style="font-size:13.5px;margin:0 0 10px;font-weight:700;color:var(--ink);">Latar Belakang &amp; Tujuan Training</h4>
-        ${meta['Purpose / latar belakang'] ? `
-          <div style="margin-bottom:8px;">
-            <div style="font-size:11px;font-weight:700;color:var(--ink-faint);text-transform:uppercase;">Latar Belakang:</div>
-            <div style="font-size:13px;color:var(--ink);">${escapeHtml(meta['Purpose / latar belakang'])}</div>
-          </div>
-        ` : ''}
-        ${meta['Goals / tujuan terukur'] ? `
-          <div>
-            <div style="font-size:11px;font-weight:700;color:var(--ink-faint);text-transform:uppercase;">Tujuan Terukur:</div>
-            <div style="font-size:13px;color:var(--ink);">${escapeHtml(meta['Goals / tujuan terukur'])}</div>
-          </div>
-        ` : ''}
+    <!-- Logistics Grid -->
+    <div class="detail-grid" style="margin-bottom:18px;">
+      <div class="detail-item">
+        <span class="lbl">Fasilitator / Trainer</span>
+        <span class="val" style="font-weight:600;">${escapeHtml(item.trainer || '-')}</span>
       </div>
-    ` : ''}
+      <div class="detail-item">
+        <span class="lbl">Lokasi / Ruangan / Venue</span>
+        <span class="val" style="font-weight:600;">${escapeHtml(item.venue || '-')}</span>
+      </div>
+      <div class="detail-item detail-full">
+        <span class="lbl">Silabus &amp; Materi Pembelajaran</span>
+        <span class="val" style="margin-top:4px;">${silabusLinkHtml}</span>
+      </div>
+    </div>
+
+    <!-- Approver Decision History (if any) -->
+    ${decisionStampHtml}
+
+    <!-- Purpose & Goals -->
+    ${purposeGoalsHtml}
 
     <!-- Daftar Peserta -->
-    <div style="font-weight:700;font-size:13.5px;color:var(--ink);margin-bottom:6px;">Daftar Peserta Terdaftar (${participants.length || raw['Jumlah Peserta Terdaftar'] || 0} orang):</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+      <div style="font-weight:700;font-size:13.5px;color:var(--ink);display:flex;align-items:center;gap:6px;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent);"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+        Daftar Peserta Terdaftar
+      </div>
+      <span class="mini-pill" style="font-size:11px;font-weight:700;padding:2px 8px;">${participants.length || raw['Jumlah Peserta Terdaftar'] || 0} Orang</span>
+    </div>
     ${participantsHtml}
 
     <!-- Modul & Sesi -->
-    <div style="font-weight:700;font-size:13.5px;color:var(--ink);margin-bottom:6px;">Rangkaian Modul Pelatihan:</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+      <div style="font-weight:700;font-size:13.5px;color:var(--ink);display:flex;align-items:center;gap:6px;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent);"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+        Rangkaian Modul Pelatihan
+      </div>
+      <span class="mini-pill" style="font-size:11px;font-weight:700;padding:2px 8px;">${modules.length} Modul</span>
+    </div>
     ${modulesHtml}
   `;
 }
@@ -1604,10 +1913,11 @@ async function executeApproval(decision) {
 
   // Validasi Approver Name
   if (!approverName) {
-    showToast('Nama Approver / Reviewer wajib diisi.', 'error');
+    showToast('Silahkan isi kolom "Nama Approver / Reviewer" terlebih dahulu sebelum menyetujui.', 'error');
     if (nameInput) {
       nameInput.classList.add('error');
       nameInput.focus();
+      nameInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
     return;
   }
@@ -1618,6 +1928,7 @@ async function executeApproval(decision) {
     if (notesInput) {
       notesInput.classList.add('error');
       notesInput.focus();
+      notesInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
     return;
   }
@@ -1704,7 +2015,11 @@ async function executeApproval(decision) {
   localStorage.setItem('last_approver_name', approverName);
 
   // 5. Feedback Sukses & UI Refresh
-  showToast(`Pengajuan ${currentReviewItem.id} berhasil ${decision.toLowerCase()}.`, 'success');
+  if (decision === 'Disetujui') {
+    showToast(`Pengajuan ${currentReviewItem.id} berhasil disetujui. Ruangan meeting ter-booking & undangan kalender terkirim ke peserta.`, 'success');
+  } else {
+    showToast(`Pengajuan ${currentReviewItem.id} berhasil ditolak.`, 'info');
+  }
   closeReviewModal();
   renderKPIs();
   renderUrgentPendingList();
@@ -1721,6 +2036,71 @@ async function executeApproval(decision) {
     btnReject.disabled = false;
     btnReject.innerHTML = originalRejectHtml;
   }
+}
+
+/**
+ * Menghapus dokumen pengajuan training dari antrean approver & sinkronisasi ke server
+ */
+async function deleteSubmission(id) {
+  if (!id) return;
+  const cleanId = String(id).trim().toUpperCase();
+  const item = allSubmissions.find(s => String(s.id).trim().toUpperCase() === cleanId);
+  const displayTitle = item ? item.namaTraining : cleanId;
+
+  const confirmed = confirm(`Apakah Anda yakin ingin menghapus pengajuan training "${displayTitle}" (${cleanId})?\n\nData yang dihapus tidak akan ditampilkan lagi di antrean portal approver.`);
+  if (!confirmed) return;
+
+  // 1. Simpan ke blacklist ID terhapus lokal
+  addDeletedSubmissionId(cleanId);
+
+  // 2. Hapus dari riwayat localStorage lokal
+  try {
+    const rawLocal = localStorage.getItem(SUBMISSIONS_STORAGE_KEY);
+    if (rawLocal) {
+      let list = JSON.parse(rawLocal);
+      if (Array.isArray(list)) {
+        list = list.filter(entry => {
+          const locId = String((entry.meta && entry.meta['ID training']) || entry.id || '').trim().toUpperCase();
+          return locId !== cleanId;
+        });
+        localStorage.setItem(SUBMISSIONS_STORAGE_KEY, JSON.stringify(list));
+      }
+    }
+  } catch (e) {}
+
+  // 3. Hapus dari memori array allSubmissions
+  allSubmissions = allSubmissions.filter(s => String(s.id).trim().toUpperCase() !== cleanId);
+
+  // 4. Tutup modal jika dokumen yang dihapus sedang ditinjau
+  if (currentReviewItem && String(currentReviewItem.id).trim().toUpperCase() === cleanId) {
+    closeReviewModal();
+  }
+
+  // 5. Update seluruh tampilan portal approver
+  renderKPIs();
+  renderUrgentPendingList();
+  renderDashboardStats();
+  applyFilterAndSearch();
+  renderApprCalendar();
+
+  showToast(`Pengajuan ${cleanId} berhasil dihapus dari antrean approval.`, 'info');
+
+  // 6. Kirim permintaan sinkronisasi hapus ke Google Apps Script backend
+  try {
+    fetch(GOOGLE_SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({
+        action: 'delete_submission',
+        id: cleanId
+      })
+    }).catch(err => console.warn('Gagal sinkronisasi hapus ke spreadsheet:', err));
+  } catch (e) {}
+}
+
+function handleModalDeleteSubmission() {
+  if (!currentReviewItem) return;
+  deleteSubmission(currentReviewItem.id);
 }
 
 // ==============================================================================
@@ -1832,6 +2212,8 @@ window.logout = logout;
 window.fetchSubmissions = fetchSubmissions;
 window.executeApproval = executeApproval;
 window.handleRowClick = handleRowClick;
+window.deleteSubmission = deleteSubmission;
+window.handleModalDeleteSubmission = handleModalDeleteSubmission;
 
 // ==============================================================================
 // 14. EVIDENCE & DOKUMENTASI COLLECTION (POST TRAINING INTEGRATION)
@@ -1844,76 +2226,8 @@ let evidenceCatFilter = 'all';
 let currentViewingEvidence = null;
 const EVIDENCE_LOCAL_STORAGE_KEY = 'tds_post_training_evidence_list';
 
-const SAMPLE_EVIDENCE_COLLECTION = [
-  {
-    id: 'EVD-SAMPLE-01',
-    namaTraining: 'Workshop Golang Backend High Performance',
-    idTraining: 'TRN-2026-001',
-    divisi: 'WEB DEVELOPER',
-    kategori: 'Hard skill',
-    namaPeserta: 'Duta Ramadhan (PIC Web Team)',
-    waktuSubmit: '2026-09-22 17:30 WIB',
-    tanggalTraining: '2026-09-21',
-    trainer: 'Duta TnD & Senior Backend Architect',
-    jumlahFile: 4,
-    folderUrl: 'https://drive.google.com/drive/folders/evidence-golang-backend-sample',
-    detailFile: '1. golang_workshop_coding_session.jpg (https://drive.google.com/open?id=demo1)\n2. demo_concurrency_goroutines.jpg (https://drive.google.com/open?id=demo2)\n3. live_code_review_api.jpg (https://drive.google.com/open?id=demo3)\n4. team_certificate_photo.jpg (https://drive.google.com/open?id=demo4)',
-    skorPostTest: '94',
-    catatan: 'Seluruh peserta berhasil mengimplementasikan RESTful API dengan goroutines & channels tanpa memory leak. Lulus uji beban 5000 RPS dengan latensi di bawah 45ms.',
-    status: 'Selesai & Berdokumentasi',
-    photos: [
-      { name: 'Sesi Coding & Benchmarking Golang', dataUrl: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=600&auto=format&fit=crop&q=70' },
-      { name: 'Review Arsitektur Microservices', dataUrl: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=600&auto=format&fit=crop&q=70' },
-      { name: 'Implementasi Concurrency Pipeline', dataUrl: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?w=600&auto=format&fit=crop&q=70' },
-      { name: 'Dokumentasi Tim & Pembagian Sertifikat', dataUrl: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=600&auto=format&fit=crop&q=70' }
-    ]
-  },
-  {
-    id: 'EVD-SAMPLE-02',
-    namaTraining: 'Advanced UI/UX Figma Design System',
-    idTraining: 'TRN-2026-002',
-    divisi: 'UI/UX DESIGNER',
-    kategori: 'Hard skill',
-    namaPeserta: 'Cece & Sarah (Product Design Lead)',
-    waktuSubmit: '2026-09-24 16:45 WIB',
-    tanggalTraining: '2026-09-23',
-    trainer: 'Lead Product Designer',
-    jumlahFile: 3,
-    folderUrl: 'https://drive.google.com/drive/folders/evidence-figma-design-sample',
-    detailFile: '1. figma_tokens_architecture.png (https://drive.google.com/open?id=demo5)\n2. interactive_prototype_testing.png (https://drive.google.com/open?id=demo6)\n3. handoff_design_tokens.png (https://drive.google.com/open?id=demo7)',
-    skorPostTest: '90',
-    catatan: 'Komponen design tokens telah diselaraskan dengan codebase frontend CSS. Variabel color & spacing 100% konsisten antar-platform.',
-    status: 'Selesai & Berdokumentasi',
-    photos: [
-      { name: 'Audit Design System & Tokens', dataUrl: 'https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?w=600&auto=format&fit=crop&q=70' },
-      { name: 'User Journey Mapping Session', dataUrl: 'https://images.unsplash.com/photo-1542744094-24638eff58bb?w=600&auto=format&fit=crop&q=70' },
-      { name: 'Prototyping & Usability Testing', dataUrl: 'https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=600&auto=format&fit=crop&q=70' }
-    ]
-  },
-  {
-    id: 'EVD-SAMPLE-03',
-    namaTraining: 'Effective Leadership & People Management',
-    idTraining: 'TRN-2026-003',
-    divisi: 'HR',
-    kategori: 'Soft skill',
-    namaPeserta: 'Budi Santoso (People Development)',
-    waktuSubmit: '2026-09-26 18:00 WIB',
-    tanggalTraining: '2026-09-25',
-    trainer: 'Certified Executive Coach',
-    jumlahFile: 4,
-    folderUrl: 'https://drive.google.com/drive/folders/evidence-leadership-hr-sample',
-    detailFile: '1. roleplay_1on1_coaching.jpg (https://drive.google.com/open?id=demo8)\n2. team_dynamic_analysis.jpg (https://drive.google.com/open?id=demo9)\n3. conflict_resolution_framework.jpg (https://drive.google.com/open?id=demo10)\n4. closing_group_photo.jpg (https://drive.google.com/open?id=demo11)',
-    skorPostTest: '88',
-    catatan: 'Peserta mempraktikkan kerangka 1-on-1 feedback dan active listening. Format evaluasi kuartal disepakati untuk diterapkan pada review kinerja tim.',
-    status: 'Selesai & Berdokumentasi',
-    photos: [
-      { name: 'Simulasi Coaching 1-on-1', dataUrl: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=600&auto=format&fit=crop&q=70' },
-      { name: 'Diskusi Studi Kasus Manajerial', dataUrl: 'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=600&auto=format&fit=crop&q=70' },
-      { name: 'Presentasi Solusi Masalah Tim', dataUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=600&auto=format&fit=crop&q=70' },
-      { name: 'Foto Bersama Sesi Penutupan', dataUrl: 'https://images.unsplash.com/photo-1528605248644-14dd04022da1?w=600&auto=format&fit=crop&q=70' }
-    ]
-  }
-];
+// Koleksi evidence murni dari submission nyata (data dummy dibersihkan)
+const SAMPLE_EVIDENCE_COLLECTION = [];
 
 /**
  * Mengambil data evidence & dokumentasi dari Google Apps Script dan sinkronisasi dengan localStorage.
@@ -1944,13 +2258,20 @@ async function fetchEvidenceData(forceRefresh = false) {
     fetchOk = false;
   }
 
-  // Ambil cache lokal dari localStorage yang disimpan oleh user portal saat submit bukti
+  // Ambil cache lokal dari localStorage dan bersihkan dari sampel dummy lama
   let localEvidence = [];
   try {
     const rawLocal = localStorage.getItem(EVIDENCE_LOCAL_STORAGE_KEY);
     if (rawLocal) {
-      localEvidence = JSON.parse(rawLocal);
-      if (!Array.isArray(localEvidence)) localEvidence = [];
+      const parsed = JSON.parse(rawLocal);
+      if (Array.isArray(parsed)) {
+        localEvidence = parsed.filter(item => {
+          const evId = String(item.id || '').toUpperCase();
+          const trnId = String(item.idTraining || '').toUpperCase();
+          return !evId.startsWith('EVD-SAMPLE') && trnId !== 'TRN-2026-001' && trnId !== 'TRN-2026-002' && trnId !== 'TRN-2026-003';
+        });
+        localStorage.setItem(EVIDENCE_LOCAL_STORAGE_KEY, JSON.stringify(localEvidence));
+      }
     }
   } catch (e) {
     localEvidence = [];
@@ -1959,16 +2280,18 @@ async function fetchEvidenceData(forceRefresh = false) {
   // Gabungkan remote dan local
   let mergedMap = new Map();
 
-  // 1. Masukkan sampel awal sebagai baseline
+  // 1. Masukkan sampel awal sebagai baseline (kosong jika tidak ada)
   SAMPLE_EVIDENCE_COLLECTION.forEach(sample => {
     mergedMap.set(sample.namaTraining.toLowerCase().trim(), { ...sample });
   });
 
-  // 2. Timpa / gabungkan dengan data remote
+  // 2. Timpa / gabungkan dengan data remote (filter dummy)
   if (fetchOk && Array.isArray(remoteEvidence) && remoteEvidence.length > 0) {
     remoteEvidence.forEach(rem => {
       const nameKey = (rem.namaTraining || '').toLowerCase().trim();
-      if (!nameKey) return;
+      const remTrnId = String(rem.idTraining || rem.id || '').trim().toUpperCase();
+      if (!nameKey || isDummyOrDeletedSubmission(remTrnId, rem.namaTraining, rem.namaPeserta)) return;
+
       const existing = mergedMap.get(nameKey) || {};
       mergedMap.set(nameKey, {
         ...existing,
@@ -1989,10 +2312,12 @@ async function fetchEvidenceData(forceRefresh = false) {
     });
   }
 
-  // 3. Gabungkan dengan unggahan lokal terbaru
+  // 3. Gabungkan dengan unggahan lokal terbaru (filter dummy)
   localEvidence.forEach(loc => {
     const nameKey = (loc.namaTraining || '').toLowerCase().trim();
-    if (!nameKey) return;
+    const locTrnId = String(loc.idTraining || loc.id || '').trim().toUpperCase();
+    if (!nameKey || isDummyOrDeletedSubmission(locTrnId, loc.namaTraining, loc.namaPeserta)) return;
+
     const existing = mergedMap.get(nameKey) || {};
     mergedMap.set(nameKey, {
       ...existing,
@@ -2443,4 +2768,353 @@ function openReviewModalFromEvidence() {
   }
 }
 window.openReviewModalFromEvidence = openReviewModalFromEvidence;
+
+// ==============================================================================
+// 17. OFFICIAL AUTHORIZATION SHEET (LEMBAR OTORISASI FORMAL A4) & PRINT LOGIC
+// ==============================================================================
+
+/**
+ * Menyusun struktur HTML dokumen Lembar Otorisasi Pelatihan berstandar formal A4
+ * @param {Object} item Data pengajuan dari allSubmissions atau currentReviewItem
+ * @returns {string} String HTML dokumen formal
+ */
+function buildAuthSheetHtml(item) {
+  if (!item) return '<div style="padding:20px;text-align:center;">Data pengajuan tidak valid.</div>';
+
+  const raw = item.rawEntry || {};
+  const meta = raw.meta || {};
+  const participants = Array.isArray(raw.participants) ? raw.participants : [];
+  const modules = Array.isArray(raw.modules) ? raw.modules : [];
+  const approvals = Array.isArray(raw.approvals) ? raw.approvals : [];
+
+  const trainingId = item.id || meta['ID training'] || 'TRN-XXXX';
+  const trainingName = item.judul || item.namaTraining || meta['Nama training'] || 'Program Pelatihan Karyawan';
+  const leaderName = item.pengaju || meta['Leader pengaju'] || '-';
+  const deptName = item.departemen || item.divisi || meta['Departemen / divisi'] || '-';
+  const skillCategory = item.kategori || meta['Kategori'] || 'Soft skill';
+  const skillLevel = item.level || meta['Target level kemahiran'] || 'All Level';
+  const method = meta['Metode training'] || (item.venue && item.venue.toLowerCase().includes('meet') ? 'Online' : 'Onsite');
+  const venue = item.venue || meta['Lokasi / venue'] || meta['Platform online'] || '-';
+  const trainer = item.trainer || meta['Trainer'] || '-';
+  const duration = item.durasi || meta['Total durasi belajar'] || '-';
+  const schedule = item.jadwal || meta['Tanggal & jam pelaksanaan'] || item.waktu || '-';
+
+  // Purpose & Goals
+  const purpose = meta['Purpose / latar belakang'] || meta['Purpose'] || '-';
+  const goals = meta['Goals / tujuan terukur'] || meta['Goals'] || '-';
+
+  // Budget
+  const estCost = item.budget || meta['Estimasi biaya'] || 'Rp 0';
+  const apprBudget = item.budgetDisetujui || meta['Budget disetujui'] || estCost;
+  const feeTrainer = meta['Fee trainer / instruktur'] || '-';
+  const feeKonsumsi = meta['Konsumsi peserta'] || '-';
+  const feeMateri = meta['Materi / modul pelatihan'] || '-';
+  const feeVenue = meta['Sewa venue / ruangan'] || '-';
+  const feeLain = meta['Lain-lain'] || '-';
+
+  // Status handling
+  const statusStr = String(item.status || 'Pending').trim();
+  const isApproved = statusStr.toLowerCase().includes('approv');
+  const isRejected = statusStr.toLowerCase().includes('reject') || statusStr.toLowerCase().includes('tolak');
+
+  let stampClass = 'pending';
+  let stampText = 'DALAM PROSES / PENDING';
+  let badgeClass = 'pending';
+  let badgeText = 'MENUNGGU / PENDING';
+
+  if (isApproved) {
+    stampClass = 'approved';
+    stampText = 'DISETUJUI / APPROVED';
+    badgeClass = 'approved';
+    badgeText = 'DISANGGUPI / APPROVED';
+  } else if (isRejected) {
+    stampClass = 'rejected';
+    stampText = 'DITOLAK / REJECTED';
+    badgeClass = 'rejected';
+    badgeText = 'DITOLAK / REJECTED';
+  }
+
+  // QR Code URL (SVG / High-Res PNG)
+  const qrDataText = `TDS-AUTH|ID:${trainingId}|STATUS:${statusStr}|APPR:${item.approver || 'PENDING'}|DATE:${item.tanggalApproval || item.waktu || ''}`;
+  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&margin=4&data=${encodeURIComponent(qrDataText)}`;
+
+  // Approver Data
+  const approverName = (item.approver && item.approver !== '-') ? item.approver : (isApproved ? 'Tim Otorisasi HR / GM' : '-');
+  const approvalDate = (item.tanggalApproval && item.tanggalApproval !== '-') ? item.tanggalApproval : (isApproved ? 'Telah Disetujui' : '-');
+  const submitDate = item.waktu || meta['Waktu submit'] || 'Tercatat di Sistem';
+
+  // Participants Table
+  let participantsRows = '';
+  if (participants.length > 0) {
+    participantsRows = participants.map((p, idx) => `
+      <tr>
+        <td style="text-align:center;width:32px;">${idx + 1}</td>
+        <td style="font-weight:600;">${escapeHtml(p.nama || p.name || '-')}</td>
+        <td>${escapeHtml(p.email || '-')}</td>
+        <td>${escapeHtml(p.departemen || p.divisi || deptName)}</td>
+      </tr>
+    `).join('');
+  } else {
+    participantsRows = `<tr><td colspan="4" style="text-align:center;font-style:italic;color:#6B7264;padding:10px;">Daftar peserta terdaftar: ${escapeHtml(raw['Jumlah Peserta Terdaftar'] || '1')} Orang</td></tr>`;
+  }
+
+  // Modules Table
+  let modulesRows = '';
+  if (modules.length > 0) {
+    modulesRows = modules.map((m, idx) => `
+      <tr>
+        <td style="text-align:center;width:32px;">${idx + 1}</td>
+        <td style="font-weight:600;">${escapeHtml(m.modul || m.namaModul || `Sesi ${idx + 1}`)}</td>
+        <td>${escapeHtml(m.tanggal || schedule)}</td>
+        <td>${escapeHtml(m.jamMulai && m.jamSelesai ? `${m.jamMulai} - ${m.jamSelesai}` : (m.durasi || '-'))}</td>
+        <td>${escapeHtml(m.pic || trainer)}</td>
+      </tr>
+    `).join('');
+  } else {
+    modulesRows = `
+      <tr>
+        <td style="text-align:center;">1</td>
+        <td style="font-weight:600;">Pelaksanaan Utama (${escapeHtml(trainingName)})</td>
+        <td>${escapeHtml(schedule)}</td>
+        <td>${escapeHtml(duration)}</td>
+        <td>${escapeHtml(trainer)}</td>
+      </tr>
+    `;
+  }
+
+  return `
+    <div class="auth-sheet-top-rule">
+      <div class="auth-sheet-brand">
+        <img src="../favicon/logo.svg" alt="TDS" class="auth-sheet-logo" onerror="this.src='../favicon/apple-touch-icon.png'">
+        <div>
+          <div class="auth-sheet-org-name">Training &amp; Development System &bull; Human Capital</div>
+          <div class="auth-sheet-doc-title">LEMBAR PERSETUJUAN &amp; OTORISASI PELATIHAN</div>
+          <div class="auth-sheet-doc-sub">Internal Employee Development &amp; Training Plan Authorization</div>
+        </div>
+      </div>
+      <div class="auth-sheet-stamp-box">
+        <div class="auth-sheet-stamp-badge ${badgeClass}">${badgeText}</div>
+        <div class="auth-sheet-doc-meta">NO. DOKUMEN: <strong>${escapeHtml(trainingId)}</strong></div>
+      </div>
+    </div>
+
+    <!-- 1. PROFIL PROGRAM -->
+    <div class="auth-sheet-sec-title">1. Profil Program Pelatihan</div>
+    <table class="auth-sheet-meta-table">
+      <tr>
+        <td class="lbl">Nama Training:</td>
+        <td class="val" colspan="3" style="font-size:13px;font-weight:700;color:var(--moss,#3F5A44);">${escapeHtml(trainingName)}</td>
+      </tr>
+      <tr>
+        <td class="lbl">Leader Pengaju:</td>
+        <td class="val">${escapeHtml(leaderName)}</td>
+        <td class="lbl">Departemen / Divisi:</td>
+        <td class="val">${escapeHtml(deptName)}</td>
+      </tr>
+      <tr>
+        <td class="lbl">Kategori &amp; Level:</td>
+        <td class="val">${escapeHtml(skillCategory)} &bull; ${escapeHtml(skillLevel)}</td>
+        <td class="lbl">Metode &amp; Durasi:</td>
+        <td class="val">${escapeHtml(method)} &bull; ${escapeHtml(duration)}</td>
+      </tr>
+      <tr>
+        <td class="lbl">Trainer / Fasilitator:</td>
+        <td class="val">${escapeHtml(trainer)}</td>
+        <td class="lbl">Lokasi / Platform:</td>
+        <td class="val">${escapeHtml(venue)}</td>
+      </tr>
+    </table>
+
+    <!-- 2. SASARAN & TUJUAN -->
+    <div class="auth-sheet-sec-title">2. Latar Belakang &amp; Sasaran Pelatihan</div>
+    <div class="auth-sheet-box-text">
+      <div style="margin-bottom:6px;"><strong>Latar Belakang &amp; Urgensi:</strong> ${escapeHtml(purpose)}</div>
+      <div><strong>Tujuan Terukur (KPI / Goals):</strong> ${escapeHtml(goals)}</div>
+    </div>
+
+    <!-- 3. RANGKAIAN MODUL -->
+    <div class="auth-sheet-sec-title">3. Rangkaian Modul Pelatihan</div>
+    <table class="auth-sheet-data-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Modul / Materi Pelatihan</th>
+          <th>Tanggal</th>
+          <th>Waktu / Durasi</th>
+          <th>Trainer / PIC</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${modulesRows}
+      </tbody>
+    </table>
+
+    <!-- 4. DAFTAR PESERTA -->
+    <div class="auth-sheet-sec-title">4. Daftar Peserta Terdaftar (${participants.length || raw['Jumlah Peserta Terdaftar'] || 1} Peserta)</div>
+    <table class="auth-sheet-data-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Nama Lengkap Peserta</th>
+          <th>Email Kantor</th>
+          <th>Divisi / Departemen</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${participantsRows}
+      </tbody>
+    </table>
+
+    <!-- 5. RINCIAN ANGGARAN -->
+    <div class="auth-sheet-sec-title">5. Rincian Anggaran &amp; Komitmen Biaya</div>
+    <table class="auth-sheet-data-table">
+      <thead>
+        <tr>
+          <th>Komponen Biaya</th>
+          <th>Keterangan / Breakdown</th>
+          <th style="text-align:right;">Nominal (Rp)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Fee Trainer / Instruktur</td>
+          <td>Narasumber &amp; Sertifikasi Trainer</td>
+          <td style="text-align:right;">${escapeHtml(feeTrainer !== '-' ? feeTrainer : estCost)}</td>
+        </tr>
+        ${feeKonsumsi !== '-' ? `<tr><td>Konsumsi Peserta</td><td>Konsumsi &amp; Refreshment Sesi</td><td style="text-align:right;">${escapeHtml(feeKonsumsi)}</td></tr>` : ''}
+        ${feeMateri !== '-' ? `<tr><td>Materi &amp; Ujian Modul</td><td>Modul Fisik / Digital &amp; Lab Praktik</td><td style="text-align:right;">${escapeHtml(feeMateri)}</td></tr>` : ''}
+        ${feeVenue !== '-' ? `<tr><td>Ruangan / Venue</td><td>Sewa Ruangan / Fasilitas Onsite</td><td style="text-align:right;">${escapeHtml(feeVenue)}</td></tr>` : ''}
+        ${feeLain !== '-' ? `<tr><td>Biaya Lain-lain</td><td>Operasional Tambahan</td><td style="text-align:right;">${escapeHtml(feeLain)}</td></tr>` : ''}
+        <tr style="background:#F2F4F0;font-weight:700;">
+          <td colspan="2" style="text-align:right;text-transform:uppercase;">Total Komitmen Budget:</td>
+          <td style="text-align:right;color:var(--moss,#3F5A44);font-size:12.5px;">${escapeHtml(apprBudget)}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- 6. MATRIKS TANDA TANGAN OTORISASI -->
+    <div class="auth-sheet-sec-title">6. Matriks Otorisasi &amp; Tanda Tangan Digital</div>
+    <div class="auth-sig-matrix">
+      <!-- 1. Leader Pengaju -->
+      <div class="auth-sig-col">
+        <div class="auth-sig-role">1. Pemohon (Leader)</div>
+        <div class="auth-sig-space">
+          <div class="auth-sig-stamp-digital">TERDAFTAR &bull; DIAJUKAN</div>
+        </div>
+        <div class="auth-sig-name">${escapeHtml(leaderName)}</div>
+        <div class="auth-sig-date">${escapeHtml(submitDate)}</div>
+      </div>
+
+      <!-- 2. Direct Supervisor -->
+      <div class="auth-sig-col">
+        <div class="auth-sig-role">2. Direct Supervisor</div>
+        <div class="auth-sig-space">
+          <div class="auth-sig-stamp-digital ${stampClass}">${isApproved ? 'VERIFIED' : (isRejected ? 'REJECTED' : 'PENDING')}</div>
+        </div>
+        <div class="auth-sig-name">${approvals[0] ? escapeHtml(approvals[0].nama || approvals[0].role) : (isApproved ? 'Atasan Langsung' : 'Belum Diverifikasi')}</div>
+        <div class="auth-sig-date">${approvals[0] && approvals[0].tanggal ? escapeHtml(approvals[0].tanggal) : (isApproved ? escapeHtml(approvalDate) : 'Menunggu Verifikasi')}</div>
+      </div>
+
+      <!-- 3. Approver Management / HR -->
+      <div class="auth-sig-col">
+        <div class="auth-sig-role">3. Otorisasi (HR / GM)</div>
+        <div class="auth-sig-space">
+          <div class="auth-sig-stamp-digital ${stampClass}">${stampText}</div>
+        </div>
+        <div class="auth-sig-name">${approverName !== '-' ? escapeHtml(approverName) : (isRejected ? 'Ditolak Tanpa Otorisasi' : 'Belum Ditandatangani')}</div>
+        <div class="auth-sig-date">${approvalDate !== '-' ? escapeHtml(approvalDate) : 'Menunggu Keputusan'}</div>
+      </div>
+    </div>
+
+    <!-- 7. FOOTER AUDIT & QR CODE -->
+    <div class="auth-sheet-footer">
+      <div class="auth-sheet-qr-box">
+        <img src="${qrCodeUrl}" alt="QR Verifikasi" class="auth-sheet-qr-img" onerror="this.style.display='none'">
+        <div>
+          <div style="font-weight:700;font-size:11px;color:#1F2421;margin-bottom:2px;">VERIFIKASI KEABSAHAN DOKUMEN OTORISASI</div>
+          <div style="font-size:10px;color:#6B7264;font-family:monospace;">ID: ${escapeHtml(trainingId)} &bull; STATUS: ${escapeHtml(statusStr)}</div>
+        </div>
+      </div>
+      <div class="auth-sheet-legal-text">
+        Dokumen ini diterbitkan secara otomatis oleh Training &amp; Development System (TDS). Berkas ini memiliki kekuatan pembuktian otorisasi internal yang sah untuk keperluan audit, pelaksanaan pelatihan, dan pencairan anggaran.
+      </div>
+    </div>
+  `;
+}
+
+/**
+ * Membuka Modal Pratinjau Lembar Otorisasi berdasarkan ID Training
+ * @param {string} trainingId ID Pelatihan
+ */
+function openAuthSheetModal(trainingId) {
+  let item = null;
+  if (trainingId) {
+    const cleanId = String(trainingId).trim().toUpperCase();
+    item = allSubmissions.find(s => s && s.id && String(s.id).trim().toUpperCase() === cleanId);
+  }
+  if (!item && currentReviewItem) {
+    item = currentReviewItem;
+  }
+  if (!item) {
+    showToast('Dokumen pengajuan training tidak ditemukan.', 'warning');
+    return;
+  }
+
+  const printArea = document.getElementById('authSheetPrintArea');
+  const modal = document.getElementById('modalAuthSheetPreview');
+  if (!printArea || !modal) return;
+
+  printArea.innerHTML = buildAuthSheetHtml(item);
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+
+  // Listener keyboard Escape
+  const escHandler = (e) => {
+    if (e.key === 'Escape') {
+      closeAuthSheetModal();
+      window.removeEventListener('keydown', escHandler);
+    }
+  };
+  window.addEventListener('keydown', escHandler);
+}
+
+/**
+ * Pemicu pratinjau lembar otorisasi dari submission yang sedang aktif dibuka di modal review
+ */
+function openAuthSheetFromCurrentReview() {
+  if (currentReviewItem) {
+    openAuthSheetModal(currentReviewItem.id);
+  } else {
+    showToast('Silahkan pilih salah satu pengajuan untuk melihat lembar otorisasi.', 'info');
+  }
+}
+
+/**
+ * Menutup Modal Pratinjau Lembar Otorisasi
+ */
+function closeAuthSheetModal() {
+  const modal = document.getElementById('modalAuthSheetPreview');
+  if (modal) {
+    modal.style.display = 'none';
+    const reviewModal = document.getElementById('modalReviewApproval');
+    if (!reviewModal || !reviewModal.classList.contains('active')) {
+      document.body.style.overflow = '';
+    }
+  }
+}
+
+/**
+ * Memicu dialog cetak / Simpan PDF native browser
+ */
+function printAuthSheet() {
+  window.print();
+}
+
+// Ekspor ke window scope
+window.buildAuthSheetHtml = buildAuthSheetHtml;
+window.openAuthSheetModal = openAuthSheetModal;
+window.openAuthSheetFromCurrentReview = openAuthSheetFromCurrentReview;
+window.closeAuthSheetModal = closeAuthSheetModal;
+window.printAuthSheet = printAuthSheet;
+
 

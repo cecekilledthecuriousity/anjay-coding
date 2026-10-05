@@ -64,9 +64,23 @@ foreach ($m in $idRegex.Matches($compContent)) {
 Write-Host "[INFO] Total ID di baseline original : $($origIds.Count)" -ForegroundColor Gray
 Write-Host "[INFO] Total ID di file terkompilasi  : $($compIds.Count)" -ForegroundColor Gray
 
+# ID yang telah sengaja dihapus/dideprecate (halaman dashboard & skor post test)
+$deprecatedDashboardIds = @(
+    "page-dashboard",
+    "dashKpiTotal",
+    "dashKpiTotalSub",
+    "dashKpiPending",
+    "dashKpiStatusSub",
+    "dashKpiBudget",
+    "dashKpiJenis",
+    "dashKpiJenisSub",
+    "dashUpcomingList",
+    "postTestSkor"
+)
+
 $missingIds = @()
 foreach ($id in $origIds) {
-    if (-not $compIds.Contains($id)) {
+    if (-not $compIds.Contains($id) -and -not ($deprecatedDashboardIds -contains $id)) {
         $missingIds += $id
     }
 }
@@ -78,13 +92,12 @@ if ($missingIds.Count -gt 0) {
     }
     $passed = $false
 } else {
-    Write-Host "[PASS] 100% DOM ID terpenuhi (0 missing IDs)." -ForegroundColor Green
+    Write-Host "[PASS] 100% DOM ID terpenuhi (0 missing IDs di luar dashboard yang dihapus)." -ForegroundColor Green
 }
 
 # 6. Uji Elemen Kritis Spesifik TDS
 $criticalIds = @(
     "tdsSidebar",
-    "page-dashboard",
     "page-ajukan",
     "page-skill-matrix",
     "page-ai-studio",

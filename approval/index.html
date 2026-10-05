@@ -16,17 +16,6 @@
   <link rel="icon" type="image/png" sizes="16x16" href="../favicon/favicon-16.png">
   <link rel="apple-touch-icon" sizes="180x180" href="../favicon/apple-touch-icon.png">
   <style>
-    /* Ensure typography matches user view perfectly */
-    .voice,
-    .doc-header h1,
-    .doc-header .kicker,
-    .tds-brand-name,
-    .dash-hero-text h2,
-    .section-head h3,
-    .card-head h2 {
-      font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
-    }
-
     /* Scoped styles for Approval Portal */
     .login-gate-wrap {
       display: flex;
@@ -41,19 +30,20 @@
       text-align: center;
       background: var(--panel-solid);
       border: 1px solid var(--line);
-      border-radius: 14px;
-      padding: 34px 28px;
-      box-shadow: var(--shadow-sm);
+      border-radius: 10px;
+      padding: 36px 30px;
+      box-shadow: var(--shadow-lg);
       animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     }
     .login-icon-box {
-      width: 54px;
-      height: 54px;
-      border-radius: 12px;
+      width: 58px;
+      height: 58px;
+      border-radius: 10px;
       margin: 0 auto 16px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
+      background: var(--accent-tint);
     }
     .approval-filter-bar {
       display: flex;
@@ -72,15 +62,15 @@
     .search-input-wrap input {
       width: 100%;
       border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 10px 16px 10px 40px;
-      font-family: 'Inter', sans-serif;
+      border-radius: 6px;
+      padding: 9px 16px 9px 38px;
+      font-family: inherit;
       font-size: 13.5px;
       color: var(--ink);
       background: var(--panel-solid);
       outline: none;
-      transition: all 0.18s ease;
-      min-height: 42px;
+      transition: border-color 0.18s ease;
+      min-height: 40px;
     }
     .search-input-wrap input:focus {
       border-color: var(--accent);
@@ -96,29 +86,35 @@
       pointer-events: none;
     }
     .modal-card.modal-card-lg {
-      max-width: 780px;
+      max-width: 820px;
       width: 100%;
       max-height: 92vh;
       display: flex;
       flex-direction: column;
       padding: 0;
       overflow: hidden;
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow-lg);
+      border-radius: 12px;
+      background: #FFFFFF;
     }
     .modal-scrollable-body {
-      padding: 22px 24px;
+      padding: 24px 26px;
       overflow-y: auto;
       flex: 1;
       min-height: 0;
+      background: #FAF9F6;
     }
     .detail-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 14px 20px;
-      background: rgba(255, 255, 255, 0.55);
+      gap: 14px 18px;
+      background: #FFFFFF;
       border: 1px solid var(--line);
-      border-radius: var(--radius);
-      padding: 18px 20px;
-      margin-bottom: 18px;
+      border-radius: 8px;
+      padding: 16px 18px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow-sm);
     }
     .detail-item {
       display: flex;
@@ -126,16 +122,16 @@
       min-width: 0;
     }
     .detail-item .lbl {
-      font-size: 11px;
+      font-size: 10.5px;
       text-transform: uppercase;
       font-weight: 700;
-      letter-spacing: 0.03em;
+      letter-spacing: 0.04em;
       color: var(--ink-faint);
       margin-bottom: 3px;
     }
     .detail-item .val {
       font-size: 13.5px;
-      font-weight: 500;
+      font-weight: 600;
       color: var(--ink);
       word-break: break-word;
     }
@@ -160,7 +156,7 @@
       .modal-card.modal-card-lg {
         max-width: 100%;
         max-height: 96vh;
-        border-radius: var(--radius);
+        border-radius: 16px;
       }
       .modal-scrollable-body {
         padding: 16px 14px;
@@ -202,9 +198,9 @@
         Masukkan Master PIN untuk mengakses verifikasi, evaluasi, dan otorisasi pengajuan training karyawan.
       </p>
 
-      <div id="deepLinkNotice" style="display:none;margin-bottom:18px;padding:10px 14px;background:rgba(63,90,68,0.08);border:1px solid rgba(63,90,68,0.25);border-radius:10px;font-size:12.5px;color:var(--accent);text-align:center;line-height:1.4;">
-        <div style="font-weight:700;margin-bottom:2px;">Tinjau Pengajuan Terpilih:</div>
-        <div id="deepLinkTargetId" style="font-family:monospace;font-size:13px;font-weight:700;"></div>
+      <div id="deepLinkNotice" style="display:none;margin-bottom:18px;padding:12px 14px;background:var(--accent-tint);border:1px solid var(--accent-tint-strong);border-radius:6px;font-size:12.5px;color:var(--ink);text-align:center;line-height:1.4;">
+        <div style="font-weight:700;margin-bottom:2px;color:var(--accent);">Tinjau Pengajuan Terpilih:</div>
+        <div id="deepLinkTargetId" style="font-family:monospace;font-size:13.5px;font-weight:700;color:var(--ink);"></div>
       </div>
 
       <div class="field" style="margin-bottom:18px;text-align:left;">
@@ -243,16 +239,25 @@
 
     <!-- ================= TDS SIDEBAR ================= -->
     <aside class="tds-sidebar" id="tdsSidebar">
-      <div class="tds-sidebar-brand" style="cursor:pointer;" onclick="goToApprPage('dashboard')" title="Klik untuk kembali ke Dashboard">
-        <img src="../favicon/logo.svg" alt="TDS" class="tds-brand-logo" onerror="this.src='../favicon/apple-touch-icon.png'">
-        <div class="tds-brand-info">
-          <span class="tds-brand-name voice">Training &amp; Development System</span>
-          <span class="tds-brand-sub">Approver &amp; Leadership Portal</span>
+      <!-- Floating Edge Collapse Toggle (Centered vertically on the border rail) -->
+      <button type="button" class="tds-sidebar-toggle-btn" id="btnToggleSidebar" onclick="toggleSidebarCollapse()" title="Kecilkan Sidebar (Ctrl+B)" aria-label="Kecilkan / Luaskan Sidebar" aria-expanded="true">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="sidebar-toggle-icon">
+          <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+      </button>
+
+      <div class="tds-sidebar-header">
+        <div class="tds-sidebar-brand" style="cursor:pointer;" onclick="goToApprPage('dashboard')" title="Klik untuk kembali ke Dashboard">
+          <img src="../favicon/logo.svg" alt="TDS" class="tds-brand-logo" onerror="this.src='../favicon/apple-touch-icon.png'">
+          <div class="tds-brand-info">
+            <span class="tds-brand-name voice">Training &amp; Development System</span>
+            <span class="tds-brand-sub">Approver &amp; Leadership Portal</span>
+          </div>
         </div>
       </div>
 
       <nav class="tds-nav" aria-label="Navigasi Portal Approval">
-        <button type="button" class="tds-nav-item active" data-page="dashboard" onclick="goToApprPage('dashboard')">
+        <button type="button" class="tds-nav-item active" data-page="dashboard" data-tooltip="Dashboard" title="Dashboard" onclick="goToApprPage('dashboard')">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
             <rect x="3" y="3" width="7" height="7"></rect>
             <rect x="14" y="3" width="7" height="7"></rect>
@@ -262,7 +267,7 @@
           <span>Dashboard</span>
         </button>
 
-        <button type="button" class="tds-nav-item" data-page="queue" onclick="goToApprPage('queue')">
+        <button type="button" class="tds-nav-item" data-page="queue" data-tooltip="Antrean Approval" title="Antrean Approval" onclick="goToApprPage('queue')">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
             <polyline points="14 2 14 8 20 8"></polyline>
@@ -274,7 +279,7 @@
           <span id="sidebarPendingBadge" class="mini-pill submitted" style="margin-left:auto;font-size:11px;padding:1px 7px;font-weight:700;">0</span>
         </button>
 
-        <button type="button" class="tds-nav-item" data-page="calendar" onclick="goToApprPage('calendar')">
+        <button type="button" class="tds-nav-item" data-page="calendar" data-tooltip="Kalender Training" title="Kalender Training" onclick="goToApprPage('calendar')">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
             <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
             <line x1="16" y1="2" x2="16" y2="6"></line>
@@ -284,17 +289,17 @@
           <span>Kalender Training</span>
         </button>
 
-        <button type="button" class="tds-nav-item" data-page="evidence" onclick="goToApprPage('evidence')">
+        <button type="button" class="tds-nav-item" data-page="evidence" data-tooltip="Bukti Pelatihan" title="Bukti Pelatihan" onclick="goToApprPage('evidence')">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
             <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
             <circle cx="8.5" cy="8.5" r="1.5"></circle>
             <polyline points="21 15 16 10 5 21"></polyline>
           </svg>
-          <span>Evidence &amp; Bukti</span>
+          <span>Bukti Pelatihan</span>
           <span id="sidebarEvidenceBadge" class="mini-pill approved" style="margin-left:auto;font-size:11px;padding:1px 7px;font-weight:700;">0</span>
         </button>
 
-        <button type="button" class="tds-nav-item" data-page="reports" onclick="goToApprPage('reports')">
+        <button type="button" class="tds-nav-item" data-page="reports" data-tooltip="Rekap &amp; Laporan" title="Rekap &amp; Laporan" onclick="goToApprPage('reports')">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
             <line x1="18" y1="20" x2="18" y2="10"></line>
             <line x1="12" y1="20" x2="12" y2="4"></line>
@@ -305,13 +310,17 @@
       </nav>
 
       <div class="tds-sidebar-footer">
-        <div style="display:flex;align-items:center;justify-content:space-between;width:100%;">
-          <span style="font-size:11.5px;color:var(--ink-soft);display:flex;align-items:center;gap:6px;">
-            <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#2E7D32;"></span>
-            Approver Aktif
+        <div class="approver-footer-content" style="display:flex;align-items:center;justify-content:space-between;width:100%;">
+          <span class="approver-status-label" style="font-size:11.5px;color:var(--ink-soft);display:flex;align-items:center;gap:6px;" title="Status: Approver Aktif">
+            <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#2E7D32;flex-shrink:0;"></span>
+            <span class="status-text">Approver Aktif</span>
           </span>
-          <button type="button" id="btnLogout" class="btn-secondary" style="padding:4px 9px;font-size:11.5px;border-color:#F5C6BE;color:var(--danger);cursor:pointer;" title="Kunci Portal">
-            Kunci
+          <button type="button" id="btnLogout" class="btn-secondary btn-logout-compact" style="padding:4px 9px;font-size:11.5px;border-color:#F5C6BE;color:var(--danger);cursor:pointer;display:inline-flex;align-items:center;gap:5px;" title="Kunci Portal">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+            <span class="logout-label">Kunci</span>
           </button>
         </div>
       </div>
@@ -324,7 +333,7 @@
         <!-- Top Header Toolbar -->
         <header class="doc-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px;margin-bottom:28px;padding-bottom:22px;border-bottom:1px solid var(--line-soft);">
           <div style="display:flex;align-items:center;gap:16px;">
-            <div class="header-icon-box" style="width:48px;height:48px;border-radius:12px;background:var(--moss);display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 14px rgba(63, 90, 68, 0.2);">
+            <div class="header-icon-box" style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg, #00178F 0%, #4B96FF 100%);display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 6px 18px -3px rgba(0, 23, 143, 0.35);">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
                 <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
@@ -743,15 +752,15 @@
           </div>
         </section>
 
-        <!-- ================= 5. PAGE: EVIDENCE & BUKTI PELATIHAN (#page-evidence) ================= -->
+        <!-- ================= 5. PAGE: BUKTI PELATIHAN (#page-evidence) ================= -->
         <section class="tds-page" id="page-evidence" style="display:none;">
           <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:28px;">
             <div>
-              <h2 class="voice" style="font-size:24px;margin:0 0 6px;color:var(--ink);">Koleksi Evidence &amp; Dokumentasi Training</h2>
+              <h2 class="voice" style="font-size:24px;margin:0 0 6px;color:var(--ink);">Koleksi Bukti &amp; Dokumentasi Pelatihan</h2>
               <span class="helper-note" style="margin:0;font-size:13.5px;line-height:1.5;">Arsip foto bukti kegiatan dan hasil evaluasi post-test dari pelatihan yang telah selesai dilaksanakan oleh peserta dan departemen.</span>
             </div>
             <div style="display:flex;gap:10px;">
-              <button type="button" class="btn-secondary" onclick="fetchEvidenceData(true)" title="Sinkronkan Evidence dari Sheets &amp; Drive" style="gap:7px;font-size:12.5px;padding:8px 14px;">
+              <button type="button" class="btn-secondary" onclick="fetchEvidenceData(true)" title="Sinkronkan Bukti dari Sheets &amp; Drive" style="gap:7px;font-size:12.5px;padding:8px 14px;">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
                 <span>Refresh Data</span>
               </button>
@@ -814,14 +823,14 @@
 
           <!-- Empty State Placeholder -->
           <div id="evidenceEmptyState" style="display:none;padding:48px 24px;text-align:center;background:var(--panel);border-radius:var(--radius);border:1px dashed var(--line);margin-top:20px;">
-            <div style="width:54px;height:54px;border-radius:50%;background:rgba(63,90,68,0.08);color:var(--accent);display:inline-flex;align-items:center;justify-content:center;margin-bottom:12px;">
+            <div style="width:54px;height:54px;border-radius:50%;background:rgba(0,23,143,0.06);color:var(--ink);display:inline-flex;align-items:center;justify-content:center;margin-bottom:12px;">
               <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
                 <circle cx="8.5" cy="8.5" r="1.5"></circle>
                 <polyline points="21 15 16 10 5 21"></polyline>
               </svg>
             </div>
-            <div style="font-weight:700;font-size:16px;color:var(--ink);margin-bottom:4px;">Belum Ada Evidence / Dokumentasi</div>
+            <div style="font-weight:700;font-size:16px;color:var(--ink);margin-bottom:4px;">Belum Ada Bukti / Dokumentasi</div>
             <div class="helper-note" style="margin:0 0 16px;font-size:13px;">Belum ada foto atau bukti kegiatan yang cocok dengan kriteria pencarian saat ini. Bukti dapat diunggah melalui formulir "Post Training Trampoline" di portal peserta.</div>
             <button type="button" class="btn-secondary" onclick="resetEvidenceFilters()" style="margin:0 auto;font-size:12.5px;">Reset Filter Pencarian</button>
           </div>
@@ -835,10 +844,10 @@
   <div class="modal-overlay" id="modalReviewApproval" role="dialog" aria-modal="true" aria-labelledby="modalTitleText">
     <div class="modal-card modal-card-lg">
       <!-- Header -->
-      <div class="modal-header" style="padding:20px 24px 16px;border-bottom:1px solid var(--line-soft);margin-bottom:0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
-        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-          <div class="modal-icon-badge info" style="width:36px;height:36px;border-radius:10px;margin-bottom:0;flex-shrink:0;">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <div class="modal-header" style="padding:20px 26px 18px;border-bottom:1px solid var(--line-soft);margin-bottom:0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;background:linear-gradient(180deg, #FFFFFF 0%, #F8FAFD 100%);">
+        <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+          <div class="modal-icon-badge info" style="width:42px;height:42px;border-radius:12px;margin-bottom:0;flex-shrink:0;background:linear-gradient(135deg, #00178F 0%, #4B96FF 100%);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0, 23, 143, 0.25);">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
               <polyline points="14 2 14 8 20 8"></polyline>
               <line x1="16" y1="13" x2="8" y2="13"></line>
@@ -846,58 +855,78 @@
             </svg>
           </div>
           <div>
-            <h3 class="voice" id="modalTitleText" style="font-size:18px;margin:0;color:var(--ink);">Detail Pengajuan Training</h3>
+            <h3 class="voice" id="modalTitleText" style="font-size:18px;margin:0 0 3px;color:var(--ink);">Detail Pengajuan Training</h3>
             <div style="display:flex;align-items:center;gap:8px;margin-top:2px;">
-              <span id="modalTrainingId" style="font-size:13px;font-weight:700;color:var(--accent);">TRN-0000-000</span>
-              <span id="modalStatusPill" class="mini-pill" style="font-size:11.5px;padding:2px 8px;">Pending</span>
+              <span id="modalTrainingId" style="font-family:monospace;font-size:12.5px;font-weight:700;color:var(--ink);background:rgba(0,23,143,0.06);padding:2px 8px;border-radius:6px;border:1px solid rgba(0,23,143,0.12);">TRN-0000-000</span>
+              <span id="modalStatusPill" class="mini-pill" style="font-size:11.5px;padding:2px 8px;font-weight:700;">Pending</span>
             </div>
           </div>
         </div>
-        <button type="button" class="modal-close" id="modalCloseBtn" aria-label="Tutup modal">&times;</button>
+        <button type="button" class="modal-close" id="modalCloseBtn" aria-label="Tutup modal" style="font-size:24px;width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;">&times;</button>
       </div>
 
       <!-- Scrollable Modal Body -->
-      <div class="modal-scrollable-body">
+      <div class="modal-scrollable-body" style="padding:24px 26px;background:#FAFBFD;">
         <!-- Details Container (Populated dynamically by approval.js) -->
         <div id="modalDetailsContent">
-          <div style="padding:28px 16px;text-align:center;color:var(--ink-faint);">
+          <div style="padding:32px 16px;text-align:center;color:var(--ink-faint);">
+            <div style="width:36px;height:36px;border:3px solid rgba(0,23,143,0.1);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 12px;"></div>
             Memuat rincian dokumen pengajuan training...
           </div>
         </div>
 
         <!-- Decision Action Box -->
-        <div id="modalDecisionBox" class="form-card" style="margin-top:20px;margin-bottom:0;padding:20px;border:1px solid rgba(76, 63, 224, 0.2);background:rgba(255, 255, 255, 0.88);">
-          <div class="card-head" style="margin-bottom:14px;padding-bottom:10px;">
-            <div class="card-icon-wrap" style="width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg, #2E7D32, #4CAF50);box-shadow:none;">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <div id="modalDecisionBox" class="form-card" style="margin-top:22px;margin-bottom:0;padding:22px 24px;border:1.5px solid rgba(0, 23, 143, 0.16);background:linear-gradient(180deg, #FFFFFF 0%, #F5F8FF 100%);border-radius:16px;box-shadow:0 8px 24px -6px rgba(0, 23, 143, 0.08);">
+          <div class="card-head" style="margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid rgba(0, 23, 143, 0.08);display:flex;align-items:center;gap:12px;">
+            <div class="card-icon-wrap" style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg, #00178F 0%, #4B96FF 100%);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:none;flex-shrink:0;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
               </svg>
             </div>
-            <h2 style="font-size:16px;">Keputusan Persetujuan (Approval Decision)</h2>
+            <div>
+              <h2 style="font-size:16px;font-weight:700;margin:0;color:var(--ink);">Keputusan Persetujuan (Approval Decision)</h2>
+              <span style="font-size:12px;color:var(--ink-soft);">Pilih untuk menyetujui atau menolak proposal pelatihan ini</span>
+            </div>
           </div>
 
           <div class="field-row" style="margin-bottom:14px;">
             <div class="field">
-              <label for="approverNameInput">
+              <label for="approverNameInput" style="font-size:12.5px;font-weight:700;color:var(--ink);display:flex;justify-content:space-between;margin-bottom:6px;">
                 <span>Nama Approver / Reviewer <strong style="color:var(--danger)">*</strong></span>
-                <span class="hint">Wajib diisi</span>
+                <span class="hint" style="font-weight:400;color:var(--ink-faint);font-size:11.5px;">Wajib diisi</span>
               </label>
-              <input type="text" id="approverNameInput" placeholder="Contoh: Budi Santoso - HR Manager">
+              <input type="text" id="approverNameInput" placeholder="Contoh: Budi Santoso - HR Manager" style="border-radius:10px;padding:10px 14px;border:1px solid var(--line);font-size:13.5px;width:100%;background:#FFF;">
             </div>
           </div>
 
-          <div class="field-row" style="margin-bottom:16px;">
+          <div class="field-row" style="margin-bottom:18px;">
             <div class="field">
-              <label for="approverNotesInput">
+              <label for="approverNotesInput" style="font-size:12.5px;font-weight:700;color:var(--ink);display:flex;justify-content:space-between;margin-bottom:6px;">
                 <span>Catatan / Arahan Tindak Lanjut</span>
-                <span class="hint">Wajib jika ditolak</span>
+                <span class="hint" style="font-weight:400;color:var(--ink-faint);font-size:11.5px;">Wajib jika ditolak</span>
               </label>
-              <textarea id="approverNotesInput" rows="3" placeholder="Tambahkan catatan, arahan tindak lanjut, atau alasan penolakan..."></textarea>
+              <textarea id="approverNotesInput" rows="3" placeholder="Tambahkan catatan, arahan tindak lanjut, atau alasan penolakan..." style="border-radius:10px;padding:10px 14px;border:1px solid var(--line);font-size:13.5px;width:100%;background:#FFF;line-height:1.5;"></textarea>
             </div>
           </div>
 
-          <div style="display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap;padding-top:4px;">
-            <button type="button" id="btnRejectAction" class="btn-secondary" style="color:var(--danger);border-color:#F5C6BE;">
+          <div style="display:flex;justify-content:flex-end;align-items:center;gap:10px;flex-wrap:wrap;padding-top:4px;">
+            <button type="button" id="btnOpenAuthSheet" class="btn-secondary" onclick="openAuthSheetFromCurrentReview()" style="gap:7px;font-size:13px;font-weight:600;padding:9px 16px;border-radius:10px;" title="Pratinjau lembar formulir otorisasi resmi & cetak ke PDF">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+              </svg>
+              <span>Lembar Otorisasi (PDF)</span>
+            </button>
+            <button type="button" id="btnDeleteReviewAction" class="btn-secondary" onclick="handleModalDeleteSubmission()" style="gap:7px;font-size:13px;font-weight:600;padding:9px 14px;margin-right:auto;border-radius:10px;color:var(--danger);border-color:#FCA5A5;background:#FFF;" title="Hapus pengajuan training ini dari antrean approval">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              </svg>
+              <span>Hapus</span>
+            </button>
+            <button type="button" id="btnRejectAction" class="btn-secondary" style="color:var(--danger);border-color:#FCA5A5;font-weight:700;font-size:13px;padding:9px 18px;border-radius:10px;background:#FFF;">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="10"></circle>
                 <line x1="15" y1="9" x2="9" y2="15"></line>
@@ -905,7 +934,7 @@
               </svg>
               Tolak Training
             </button>
-            <button type="button" id="btnApproveAction" class="btn-primary" style="background:#2E7D32;box-shadow:0 8px 20px -6px rgba(46, 125, 50, 0.5);">
+            <button type="button" id="btnApproveAction" class="btn-primary" style="background:linear-gradient(135deg, #16A34A 0%, #15803D 100%);box-shadow:0 6px 20px -4px rgba(22, 163, 74, 0.45);font-weight:700;font-size:13px;padding:9px 22px;border-radius:10px;border:none;">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="20 6 9 17 4 12"></polyline>
               </svg>
@@ -915,6 +944,7 @@
         </div>
       </div>
     </div>
+  </div>
   <!-- Modal Detail Event Kalender (Read-Only) -->
   <div class="modal-overlay" id="modalApprEventDetail">
     <div class="modal-card" style="max-width:540px;">
@@ -985,7 +1015,7 @@
     <div class="modal-card modal-card-lg" style="max-width:760px;">
       <div class="modal-header" style="padding:18px 24px;border-bottom:1px solid var(--line-soft);display:flex;align-items:center;justify-content:space-between;">
         <div style="display:flex;align-items:center;gap:12px;">
-          <div class="card-icon-wrap" style="width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:rgba(63,90,68,0.12);color:var(--accent);">
+          <div class="card-icon-wrap" style="width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:rgba(0,23,143,0.08);color:var(--ink);">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
               <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
               <circle cx="8.5" cy="8.5" r="1.5"></circle>
@@ -1036,7 +1066,7 @@
               <div style="font-size:11.5px;color:var(--ink-soft);">Seluruh berkas foto resolusi tinggi tersimpan aman di cloud departemen.</div>
             </div>
           </div>
-          <a id="modalEvDriveLink" href="#" target="_blank" rel="noopener" class="btn-primary" style="padding:6px 14px;font-size:12px;background:var(--moss);box-shadow:none;text-decoration:none;display:inline-flex;align-items:center;gap:6px;">
+          <a id="modalEvDriveLink" href="#" target="_blank" rel="noopener" class="btn-primary" style="padding:6px 14px;font-size:12px;background:linear-gradient(135deg, #00178F 0%, #4B96FF 100%);box-shadow:none;text-decoration:none;display:inline-flex;align-items:center;gap:6px;">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
             Buka Folder Drive
           </a>
@@ -1082,6 +1112,45 @@
       <button type="button" onclick="closeEvidenceLightbox()" style="position:absolute;top:-40px;right:0;background:none;border:none;color:#FFF;font-size:32px;cursor:pointer;line-height:1;">&times;</button>
       <img id="evidenceLightboxImg" src="" alt="Bukti Kegiatan" style="max-width:100%;max-height:80vh;border-radius:8px;box-shadow:0 10px 40px rgba(0,0,0,0.6);object-fit:contain;">
       <div id="evidenceLightboxCaption" style="color:#FFF;font-size:13px;margin-top:10px;text-align:center;"></div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL PRATINJAU LEMBAR OTORISASI (PDF / PRINT) ================= -->
+  <div class="modal-overlay" id="modalAuthSheetPreview" role="dialog" aria-modal="true" style="display:none;z-index:9998;background:rgba(15,20,18,0.78);backdrop-filter:blur(4px);">
+    <div class="modal-card auth-sheet-modal-card" style="max-width:920px;width:95%;max-height:92vh;display:flex;flex-direction:column;padding:0;background:var(--panel-solid);border-radius:14px;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,0.35);">
+      <!-- Header Preview Modal (Hidden on Print) -->
+      <div class="auth-sheet-modal-header no-print" style="padding:14px 22px;border-bottom:1px solid var(--line);background:var(--panel-strong);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div class="card-icon-wrap" style="width:34px;height:34px;border-radius:9px;background:rgba(0,23,143,0.08);color:var(--ink);display:flex;align-items:center;justify-content:center;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+            </svg>
+          </div>
+          <div>
+            <h3 class="voice" style="margin:0;font-size:16px;color:var(--ink);">Pratinjau Lembar Otorisasi Pelatihan</h3>
+            <span style="font-size:12px;color:var(--ink-soft);">Format resmi siap cetak / simpan ke PDF A4</span>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <button type="button" class="btn-primary" onclick="printAuthSheet()" style="gap:7px;font-size:13px;padding:8px 16px;background:linear-gradient(135deg, #00178F 0%, #4B96FF 100%);" title="Cetak atau Simpan PDF Lembar Otorisasi">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 6 2 18 2 18 9"></polyline>
+              <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+              <rect x="6" y="14" width="12" height="8"></rect>
+            </svg>
+            <span>Cetak / Simpan PDF</span>
+          </button>
+          <button type="button" class="modal-close" onclick="closeAuthSheetModal()" aria-label="Tutup pratinjau" style="font-size:24px;line-height:1;cursor:pointer;">&times;</button>
+        </div>
+      </div>
+      <!-- Scrollable Preview Viewport -->
+      <div class="auth-sheet-modal-body" style="flex:1;overflow-y:auto;padding:26px 20px;background:#E8EAE6;display:flex;justify-content:center;">
+        <!-- The Printable Document Container -->
+        <div id="authSheetPrintArea" class="auth-sheet-paper"></div>
+      </div>
     </div>
   </div>
 

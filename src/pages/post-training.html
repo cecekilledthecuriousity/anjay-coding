@@ -29,6 +29,10 @@
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
               <span>Post Test</span>
             </button>
+            <button type="button" class="trampoline-tab-btn" id="tabBtnSharing" onclick="switchTrampolineTab('sharing')">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+              <span>Knowledge Sharing</span>
+            </button>
           </div>
         </div>
 
@@ -104,32 +108,75 @@
                 </div>
               </div>
 
-              <!-- Upload Area (Dropzone) -->
-              <div class="field" style="margin-top:10px;margin-bottom:16px;">
-                <label>Foto Dokumentasi Pelatihan (Maksimal 5 Foto, JPG / PNG, Max 5MB per file) <span style="color:var(--danger)">*</span></label>
-                <div class="evidence-dropzone" id="evidenceDropzone" onclick="document.getElementById('evidenceFileInput').click()" ondragover="handleEvidenceDragOver(event)" ondragleave="handleEvidenceDragLeave(event)" ondrop="handleEvidenceDrop(event)">
-                  <div class="evidence-dropzone-icon">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                      <polyline points="17 8 12 3 7 8"></polyline>
-                      <line x1="12" y1="3" x2="12" y2="15"></line>
-                    </svg>
+              <!-- 2 Upload Zones: Foto Dokumentasi & Modul/Materi -->
+              <div class="field-row cols-2" style="margin-top:10px;margin-bottom:16px;">
+                <!-- Zone 1: Foto Dokumentasi -->
+                <div class="field">
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                    <label style="margin-bottom:0;">📸 1. Foto Dokumentasi Kegiatan</label>
+                    <span class="hint" style="color:var(--ink-soft);font-size:11.5px;">(Maks 5 Foto, JPG/PNG)</span>
                   </div>
-                  <div class="evidence-dropzone-text">
-                    <span class="dropzone-primary-text">Klik untuk memilih foto atau seret ke area ini</span>
-                    <span class="dropzone-sub-text">Hanya format JPG atau PNG (Maksimal 5 MB per foto, maksimal 5 file)</span>
+                  <div class="evidence-dropzone" id="evidenceDropzone" onclick="document.getElementById('evidenceFileInput').click()" ondragover="handleEvidenceDragOver(event)" ondragleave="handleEvidenceDragLeave(event)" ondrop="handleEvidenceDrop(event)">
+                    <div class="evidence-dropzone-icon">
+                      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline>
+                      </svg>
+                    </div>
+                    <div class="evidence-dropzone-text">
+                      <span class="dropzone-primary-text">Klik atau seret foto kegiatan</span>
+                      <span class="dropzone-sub-text">Format JPG/PNG (Maks 5 MB/foto)</span>
+                    </div>
+                    <input type="file" id="evidenceFileInput" accept="image/jpeg,image/png,image/jpg" multiple style="display:none;" onchange="handleEvidenceFileSelect(event)">
                   </div>
-                  <input type="file" id="evidenceFileInput" accept="image/jpeg,image/png" multiple style="display:none;" onchange="handleEvidenceFileSelect(event)">
+
+                  <!-- Preview Grid Foto -->
+                  <div id="evidencePreviewSection" style="display:none;margin-top:12px;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                      <span style="font-weight:700;font-size:12px;color:var(--ink);" id="evidencePreviewCount">0 Foto Terpilih</span>
+                      <button type="button" class="btn-clear-all-photos" onclick="clearAllEvidenceFiles()">Bersihkan</button>
+                    </div>
+                    <div class="evidence-preview-grid" id="evidencePreviewGrid"></div>
+                  </div>
+                </div>
+
+                <!-- Zone 2: Modul & Materi Pelatihan -->
+                <div class="field">
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                    <label style="margin-bottom:0;">📚 2. Modul &amp; Materi Pelatihan</label>
+                    <span class="hint" style="color:var(--ink-soft);font-size:11.5px;">(Maks 5 File, PDF/PPT/DOC/ZIP)</span>
+                  </div>
+                  <div class="evidence-dropzone material-dropzone" id="materialDropzone" onclick="document.getElementById('materialFileInput').click()" ondragover="handleMaterialDragOver(event)" ondragleave="handleMaterialDragLeave(event)" ondrop="handleMaterialDrop(event)">
+                    <div class="evidence-dropzone-icon" style="background:rgba(21,128,61,0.1);color:#15803D;">
+                      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <polyline points="10 9 9 9 8 9"></polyline>
+                      </svg>
+                    </div>
+                    <div class="evidence-dropzone-text">
+                      <span class="dropzone-primary-text">Klik atau seret slide presentasi / modul</span>
+                      <span class="dropzone-sub-text">PDF, PPTX, DOCX, XLSX, ZIP (Maks 25 MB/file)</span>
+                    </div>
+                    <input type="file" id="materialFileInput" accept=".pdf,.ppt,.pptx,.doc,.docx,.xls,.xlsx,.zip" multiple style="display:none;" onchange="handleMaterialFileSelect(event)">
+                  </div>
+
+                  <!-- Preview List Materi -->
+                  <div id="materialPreviewSection" style="display:none;margin-top:12px;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                      <span style="font-weight:700;font-size:12px;color:var(--ink);" id="materialPreviewCount">0 File Terpilih</span>
+                      <button type="button" class="btn-clear-all-photos" onclick="clearAllMaterialFiles()">Bersihkan</button>
+                    </div>
+                    <div class="material-preview-list" id="materialPreviewList"></div>
+                  </div>
                 </div>
               </div>
 
-              <!-- Preview Grid -->
-              <div id="evidencePreviewSection" style="display:none;margin-bottom:20px;">
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-                  <span style="font-weight:700;font-size:13px;color:var(--ink);" id="evidencePreviewCount">0 Foto Terpilih</span>
-                  <button type="button" class="btn-clear-all-photos" onclick="clearAllEvidenceFiles()">Bersihkan Semua</button>
-                </div>
-                <div class="evidence-preview-grid" id="evidencePreviewGrid"></div>
+              <!-- Note Drive Structure -->
+              <div class="post-training-info-tip" style="margin-bottom:16px;background:rgba(0,23,143,0.04);border:1px dashed rgba(0,23,143,0.25);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--ink-soft);display:flex;align-items:center;gap:10px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00178F" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                <span><strong>Struktur Otomatis Google Drive:</strong> Berkas akan otomatis dikelompokkan ke dalam 1 folder sesi training terpadu dengan sub-folder <code>📁 Dokumentasi Foto</code> dan <code>📁 Modul &amp; Materi</code>. Anda dapat mengunggah salah satu atau keduanya sekaligus.</span>
               </div>
 
               <!-- Submit Feedback Alert / Status Banner -->
@@ -152,12 +199,12 @@
               <div class="card-icon-wrap">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
               </div>
-              <h2>Formulir Skor &amp; Hasil Post-Test Pelatihan</h2>
-              <span class="card-sub">Pencatatan hasil evaluasi pemahaman materi pasca-pelatihan karyawan</span>
+              <h2>Formulir Evaluasi &amp; Post-Test Pelatihan</h2>
+              <span class="card-sub">Pencatatan konfirmasi evaluasi dan pengerjaan post-test peserta</span>
             </div>
 
             <form id="postTestForm" onsubmit="submitPostTest(event)">
-              <div class="field-row cols-2">
+              <div class="field-row cols-3">
                 <div class="field">
                   <label for="postTestTrainingSelect">Pilih Training Terdaftar <span style="color:var(--danger)">*</span></label>
                   <select id="postTestTrainingSelect" required onchange="handlePostTestTrainingChange(this.value)">
@@ -168,9 +215,6 @@
                   <label for="postTestNamaPeserta">Nama Peserta <span style="color:var(--danger)">*</span></label>
                   <input type="text" id="postTestNamaPeserta" placeholder="Silahkan masukkan nama peserta" required>
                 </div>
-              </div>
-
-              <div class="field-row cols-2">
                 <div class="field">
                   <label for="postTestDivisi">Divisi / Departemen <span style="color:var(--danger)">*</span></label>
                   <select id="postTestDivisi" required>
@@ -197,22 +241,74 @@
                     <option value="IT INFRASTRUCTURE">IT INFRASTRUCTURE</option>
                   </select>
                 </div>
-                <div class="field">
-                  <label for="postTestSkor">Skor / Nilai Akhir Post-Test (Skala 0 - 100) <span style="color:var(--danger)">*</span></label>
-                  <input type="number" id="postTestSkor" min="0" max="100" placeholder="cth. 85" required style="font-weight:700;color:var(--accent);">
-                </div>
               </div>
 
               <!-- ========================================================================= -->
-              <!-- TODO: Bagian detail butir soal dan kunci jawaban post-test menyusul di sini -->
+              <!-- LEMBAR EVALUASI & SOAL POST-TEST (GOOGLE FORM TERINTEGRASI)               -->
               <!-- ========================================================================= -->
-              <div class="trampoline-todo-notice">
-                <div class="todo-notice-icon">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+              <div class="post-test-link-card">
+                <div class="pt-card-header">
+                  <div class="pt-card-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                      <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                      <path d="m9 14 2 2 4-4"></path>
+                    </svg>
+                  </div>
+                  <div class="pt-card-info">
+                    <div class="pt-badge-row">
+                      <span class="pt-badge-live">Tautan Resmi Aktif</span>
+                      <span class="pt-badge-type">Google Form</span>
+                    </div>
+                    <h3 class="pt-card-title">Form Evaluasi Pasca Training (Trainer &amp; Peserta)</h3>
+                    <p class="pt-card-desc">
+                      Pengerjaan lembar soal dan evaluasi pasca-pelatihan dilakukan secara langsung melalui tautan Google Form resmi di bawah ini. Peserta maupun trainer dapat mengisi kuis evaluasi melalui form ini.
+                    </p>
+                  </div>
                 </div>
-                <div class="todo-notice-body">
-                  <strong>Kerangka Butir Soal Post-Test</strong>
-                  <p>Modul bank soal interaktif dan kuis pilihan ganda sedang dalam tahap pengembangan lanjutan. Silahkan input skor atau ringkasan hasil evaluasi akhir peserta terlebih dahulu.</p>
+
+                <div class="pt-link-box">
+                  <div class="pt-link-url-wrap">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                    </svg>
+                    <input type="text" readonly class="pt-link-input" id="postTestGoogleFormUrl" value="https://docs.google.com/forms/d/e/1FAIpQLSdLNo9kzy22HEKq3xSCBHmZO2ksfCE2K7U_Y3EA2hCzQtRYmw/viewform" title="Klik untuk memilih teks tautan" onclick="this.select()">
+                  </div>
+
+                  <div class="pt-actions-wrap">
+                    <button type="button" class="btn-secondary pt-btn-copy" onclick="copyPostTestFormLink()" title="Salin tautan ke clipboard">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect>
+                        <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path>
+                      </svg>
+                      <span>Salin Link</span>
+                    </button>
+
+                    <button type="button" class="pt-btn-preview-toggle" id="btnTogglePtPreview" onclick="togglePostTestPreview()" title="Buka pratinjau langsung di dalam halaman">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                      </svg>
+                      <span id="ptPreviewBtnText">Tampilkan Form di Sini</span>
+                    </button>
+
+                    <a href="https://docs.google.com/forms/d/e/1FAIpQLSdLNo9kzy22HEKq3xSCBHmZO2ksfCE2K7U_Y3EA2hCzQtRYmw/viewform" target="_blank" rel="noopener noreferrer" class="btn-primary pt-btn-open" title="Buka di tab baru">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                        <polyline points="15 3 21 3 21 9"></polyline>
+                        <line x1="10" y1="14" x2="21" y2="3"></line>
+                      </svg>
+                      <span>Buka Google Form</span>
+                    </a>
+                  </div>
+                </div>
+
+                <!-- Live Embedded Iframe Accordion Container (Lazy Loaded) -->
+                <div class="pt-preview-collapse" id="ptPreviewContainer">
+                  <div class="pt-iframe-wrap">
+                    <iframe id="ptGoogleFormIframe" src="about:blank" title="Google Form Evaluasi Pasca Training" loading="lazy">Memuat formulir...</iframe>
+                  </div>
                 </div>
               </div>
 
@@ -228,6 +324,98 @@
                 <button type="submit" class="btn-primary" id="btnSubmitPostTest" style="min-width:200px;display:inline-flex;align-items:center;justify-content:center;gap:8px;">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
                   <span id="btnSubmitPostTestText">Simpan Hasil Post-Test</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- ================= TAB 3: KNOWLEDGE SHARING ================= -->
+        <div class="trampoline-tab-panel" id="trampolinePanelSharing" style="display:none;">
+          <div class="form-card" style="margin-bottom:20px;">
+            <div class="card-head">
+              <div class="card-icon-wrap" style="background:rgba(75,150,255,0.1);color:#00178F;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                  <line x1="12" y1="19" x2="12" y2="23"></line>
+                  <line x1="8" y1="23" x2="16" y2="23"></line>
+                </svg>
+              </div>
+              <h2>Pelaporan Sesi Knowledge Sharing ke Tim</h2>
+              <span class="card-sub">Dokumentasi realisasi transfer materi &amp; ilmu hasil pelatihan kepada rekan satu divisi/unit kerja</span>
+            </div>
+
+            <form id="knowledgeSharingForm" onsubmit="submitKnowledgeSharing(event)">
+              <div class="field-row cols-2">
+                <div class="field">
+                  <label for="sharingTrainingSelect">Pilih Training Terdaftar <span style="color:var(--danger)">*</span></label>
+                  <select id="sharingTrainingSelect" required onchange="handleSharingTrainingChange(this.value)">
+                    <option value="">-- Silahkan Pilih Training --</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="sharingNamaSpeaker">Nama Pembicara / Pemateri (Alumni Training) <span style="color:var(--danger)">*</span></label>
+                  <input type="text" id="sharingNamaSpeaker" placeholder="Silahkan masukkan nama lengkap pembicara" required>
+                </div>
+              </div>
+
+              <div class="field-row cols-2">
+                <div class="field">
+                  <label for="sharingDivisi">Divisi / Departemen Audiens <span style="color:var(--danger)">*</span></label>
+                  <select id="sharingDivisi" required>
+                    <option value="">-- Silahkan Pilih Divisi --</option>
+                    <option value="HR">HR</option>
+                    <option value="GA">GA</option>
+                    <option value="LEGAL">LEGAL</option>
+                    <option value="FINANCE">FINANCE</option>
+                    <option value="ACCOUNTING">ACCOUNTING</option>
+                    <option value="TAX">TAX</option>
+                    <option value="MARKETING">MARKETING</option>
+                    <option value="SALES OPS">SALES OPS</option>
+                    <option value="SALES ENABLEMENT">SALES ENABLEMENT</option>
+                    <option value="TELEMARKETING">TELEMARKETING</option>
+                    <option value="PEC">PEC</option>
+                    <option value="CUSTOMER EXPERIENCE">CUSTOMER EXPERIENCE</option>
+                    <option value="QA">QA</option>
+                    <option value="WEB DEVELOPER">WEB DEVELOPER</option>
+                    <option value="INTEGRATION">INTEGRATION</option>
+                    <option value="MOBILE DEVELOPER">MOBILE DEVELOPER</option>
+                    <option value="UI/UX DESIGNER">UI/UX DESIGNER</option>
+                    <option value="AI">AI</option>
+                    <option value="BUSINESS ANALYST">BUSINESS ANALYST</option>
+                    <option value="IT INFRASTRUCTURE">IT INFRASTRUCTURE</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="sharingTanggalSesi">Tanggal Pelaksanaan Sharing <span style="color:var(--danger)">*</span></label>
+                  <input type="date" id="sharingTanggalSesi" required>
+                </div>
+              </div>
+
+              <div class="field-row cols-2">
+                <div class="field">
+                  <label for="sharingJumlahPeserta">Estimasi Jumlah Rekan Tim yang Hadir <span style="color:var(--danger)">*</span></label>
+                  <input type="number" id="sharingJumlahPeserta" min="1" placeholder="cth. 8 orang" required style="font-weight:700;color:var(--accent);">
+                </div>
+                <div class="field">
+                  <label for="sharingLinkRecording">Link Slide / Notulen / Rekaman Meeting (Meet/Drive/Doc)</label>
+                  <input type="url" id="sharingLinkRecording" placeholder="https://meet.google.com/... atau https://drive.google.com/...">
+                </div>
+              </div>
+
+              <div class="field" style="margin-top:14px;margin-bottom:18px;">
+                <label for="sharingTopikRingkas">Topik &amp; Intisari Materi yang Dibagikan</label>
+                <textarea id="sharingTopikRingkas" rows="3" placeholder="Jelaskan ringkas pokok bahasan materi atau keterampilan yang ditransfer ke rekan tim..."></textarea>
+              </div>
+
+              <!-- Submit Feedback Alert / Status Banner -->
+              <div id="sharingStatusBanner" style="display:none;margin-bottom:18px;"></div>
+
+              <div style="display:flex;justify-content:flex-end;gap:12px;align-items:center;padding-top:14px;border-top:1px solid var(--line);">
+                <button type="submit" class="btn-primary" id="btnSubmitSharing" style="min-width:200px;display:inline-flex;align-items:center;justify-content:center;gap:8px;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                  <span id="btnSubmitSharingText">Simpan Laporan Sharing</span>
                 </button>
               </div>
             </form>

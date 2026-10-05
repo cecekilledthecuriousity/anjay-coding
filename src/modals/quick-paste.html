@@ -1,13 +1,31 @@
 <div class="modal-overlay" id="modalQuickPasteExcel">
   <div class="modal-card">
     <div class="modal-header">
-      <h3 class="voice">Quick Import Peserta dari Excel</h3>
+      <h3 class="voice">Impor Peserta dari Spreadsheet (Excel / Google Sheets)</h3>
       <button type="button" class="modal-close" onclick="closeModal('modalQuickPasteExcel')">&times;</button>
     </div>
     <div class="modal-body">
-      <p>Salin daftar nama peserta dari Excel / Google Sheet / WhatsApp, lalu tempelkan di bawah ini. Tabel peserta akan langsung terisi otomatis tanpa perlu menambah baris secara manual:</p>
-      <textarea id="excelPasteArea" placeholder="Contoh format (Copy 3 kolom Nama, Email, Dept dari Excel):&#10;Budi Santoso&#9;budi@kantor.com&#9;IT&#10;Siti Rahma&#9;siti@kantor.com&#9;Finance&#10;Ahmad Fauzi&#9;ahmad@kantor.com&#9;HR&#10;(Tabel akan langsung otomatis terisi sesuai daftar tanpa perlu menambah baris satu per satu)" style="width:100%;height:140px;border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-family:'Inter',sans-serif;font-size:13px;"></textarea>
-      <p class="helper-note">Format baris: <code>Nama Peserta [Tab / Koma] Email [Tab / Koma] Departemen</code>. Sistem otomatis mendeteksi email jika terdapat simbol <code>@</code> dan langsung membentuk baris tabel sesuai daftar.</p>
+      <!-- Template Action Banner -->
+      <div style="background:rgba(75,150,255,0.06);border:1px dashed rgba(75,150,255,0.3);border-radius:10px;padding:10px 14px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+        <div style="font-size:12px;color:var(--ink);">
+          <strong>Belum punya formatnya?</strong> Unduh template resmi atau pilih berkas CSV:
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button type="button" class="btn-secondary" onclick="downloadPesertaTemplate()" style="padding:5px 10px;font-size:11.5px;display:inline-flex;align-items:center;gap:6px;" title="Unduh template format CSV / Excel">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            <span>Unduh Template (.CSV)</span>
+          </button>
+          <button type="button" class="btn-secondary" onclick="document.getElementById('participantCsvFileInput').click()" style="padding:5px 10px;font-size:11.5px;display:inline-flex;align-items:center;gap:6px;" title="Pilih file CSV dari laptop">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
+            <span>Pilih File CSV</span>
+          </button>
+          <input type="file" id="participantCsvFileInput" accept=".csv,.txt" style="display:none;" onchange="handleParticipantCsvFile(event)">
+        </div>
+      </div>
+
+      <p style="font-size:12.5px;margin-bottom:8px;color:var(--ink-soft);">Salin (Copy <code>Ctrl+C</code>) daftar peserta dari Excel atau Google Sheets, lalu tempelkan (<code>Ctrl+V</code>) di bawah ini:</p>
+      <textarea id="excelPasteArea" placeholder="Contoh format (Copy 3 kolom: Nama, Email, Dept):&#10;Budi Santoso&#9;budi@cpssoft.com&#9;WEB DEVELOPER&#10;Siti Rahmawati&#9;siti@cpssoft.com&#9;QA&#10;Ahmad Fauzi&#9;ahmad@cpssoft.com&#9;FINANCE&#10;(Tabel akan langsung otomatis terisi tanpa perlu menambah baris satu per satu)" style="width:100%;height:140px;border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-family:'Inter',sans-serif;font-size:13px;"></textarea>
+      <p class="helper-note" style="margin-top:6px;font-size:11.5px;">Format baris: <code>Nama Peserta [Tab / Koma] Email [Tab / Koma] Departemen</code>. Sistem otomatis mendeteksi email jika terdapat simbol <code>@</code> dan langsung membentuk baris tabel peserta.</p>
     </div>
     <div class="modal-footer">
       <button type="button" class="btn-secondary" onclick="closeModal('modalQuickPasteExcel')">Batal</button>

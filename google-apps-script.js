@@ -33,15 +33,15 @@ const TIME_ZONE = "Asia/Jakarta";
 const LOGO_IMAGE_URL = "https://raw.githubusercontent.com/cecekilledthecuriousity/anjay-coding/main/favicon/apple-touch-icon.png";
 
 // URL Portal Approval (Tautan langsung pada tombol notifikasi email approver)
-const APPROVAL_PORTAL_URL = "https://form-training-cece-main.vercel.app/approval/index.html";
+const APPROVAL_PORTAL_URL = "https://request-training-development.vercel.app/approval";
 
 // URL Google Form Evaluasi Trainer & Post-Test
 const DEFAULT_EVALUATION_URL = "https://docs.google.com/forms/d/e/1FAIpQLSdLNo9kzy22HEKq3xSCBHmZO2ksfCE2K7U_Y3EA2hCzQtRYmw/viewform";
 
 // Konfigurasi 2-3 Approver Utama (Tersimpan aman di script backend, tersembunyi dari form & master data publik)
 const APPROVER_EMAILS = [
-  "approver1@perusahaan.com",
-  "approver2@perusahaan.com"
+  "training@cpssoft.com",
+  "fernanda.rusli@cpssoft.com"
 ];
 
 // Opsi kirim email invite Google Calendar ke tamu / peserta
@@ -57,43 +57,42 @@ const ROOM_CALENDAR_MAP = {
 const HEADERS = [
   "Waktu Submit",
   "ID Training",
-  "Nama Training",
   "Status Dokumen",
+  "Jenis Training",
+  "Nama Training",
   "Nama Pengaju",
   "Email Pengaju",
   "Departemen / Divisi",
   "Kategori Training",
-  "Kategori Kebutuhan Training",
   "Target Level Kemahiran",
+  "Kategori Kebutuhan Training",
   "Tanggal Pengajuan",
   "Metode Training",
-  "Platform & Link Meeting",
   "Jadwal Pelaksanaan",
   "Lokasi / Venue",
+  "Platform & Link Meeting",
   "Trainer / Fasilitator",
-  "Jumlah Peserta Terdaftar",
+  "Opsi Vendor (Eksternal)",
   "Total Durasi Belajar",
-  "Rincian Biaya (Fee/Konsumsi/Materi/Venue)",
-  "Estimasi Biaya",
-  "Budget Diajukan",
-  "Tujuan & Purpose",
-  "Goals (Target)",
-  "Prasyarat & Output",
-  "Link Silabus / Materi",
-  "Link Form Evaluasi / Post-Test",
-  "Evaluasi & KPI",
-  "Follow-up & PIC",
+  "Jumlah Partisipan (Rencana)",
+  "Jumlah Peserta Terdaftar",
   "Daftar Peserta (Ringkasan)",
   "Modul & Sesi (Ringkasan)",
-  "Approval Workflow (Ringkasan)",
+  "Training Goals",
+  "Hasil yang Diharapkan",
+  "Penerapan di Pekerjaan",
+  "Indikator Keberhasilan",
+  "Waktu Evaluasi",
+  "PIC Evaluasi",
+  "Link Form Evaluasi",
   "Status Email Konfirmasi",
   "Status Email Reminder H-1",
   "Status Reminder Approval",
   "ID Event Google Calendar",
-  "Raw Data JSON",
   "Approver",
   "Tanggal Approval",
-  "Catatan Approver"
+  "Catatan Approver",
+  "Raw Data JSON"
 ];
 
 // ==============================================================================
@@ -131,6 +130,11 @@ function doPost(e) {
       return handleUpdateApproval(sheet, data);
     }
 
+    // Aksi hapus pengajuan training dari portal approval
+    if (data.action === "delete_submission" || data.action === "deleteSubmission") {
+      return handleDeleteSubmission(sheet, data);
+    }
+
     // Aksi Unggah Evidence Post Training Trampoline (Google Drive & Sheets)
     if (data.action === "submitPostTrainingEvidence" || data.action === "post_training_evidence") {
       return handlePostTrainingEvidence(ss, data);
@@ -141,13 +145,23 @@ function doPost(e) {
       return handlePostTestSubmission(ss, data);
     }
 
+    // Aksi Simpan Pelaporan Knowledge Sharing Post Training Trampoline
+    if (data.action === "submitKnowledgeSharing" || data.action === "post_training_sharing") {
+      return handleKnowledgeSharingSubmission(ss, data);
+    }
+
     const meta = data.meta || {};
     const participants = data.participants || [];
     const modules = data.modules || [];
     const approvals = data.approvals || [];
 
-    // Pastikan ID Training tersimpan dengan rapi
-    const trainingId = meta["ID training"] || data.id || "TRN";
+    // Pastikan ID Training tersimpan dengan rapi (mendukung format divisi TRN-YYYYMMDD-DEPT-CAT atau format kustom)
+    let trainingId = String(meta["ID training"] || data.id || "").trim();
+    if (!trainingId || trainingId === "TRN" || trainingId === "-") {
+      trainingId = generateTrainingIdFromMeta(meta, sheet);
+      meta["ID training"] = trainingId;
+      data.id = trainingId;
+    }
 
     // Format ringkasan peserta (termasuk email)
     const participantsSummary = participants
@@ -165,10 +179,11 @@ function doPost(e) {
       })
       .join("\n");
 
-    // Format ringkasan approval
-    const approvalsSummary = approvals
-      .filter(a => a.role)
-      .map((a, idx) => `${idx + 1}. ${a.role}: ${a.nama || "-"} (${a.tanggal || "-"})`)
+    // Format ringkasan vendor (jika jenis pelatihan eksternal)
+    const vendors = data.vendors || [];
+    const vendorsSummary = vendors
+      .filter(v => v.nama)
+      .map((v, idx) => `${idx + 1}. ${v.nama} [Kontak: ${v.kontak || "-"} | Est. Biaya: ${v.biaya || "-"} | Info: ${v.catatan || "-"}]`)
       .join("\n");
 
     // Format meeting info
@@ -177,53 +192,26 @@ function doPost(e) {
       meetingInfo = [meta["Platform online"], meta["Link meeting online"]].filter(Boolean).join(" - ");
     }
 
-    // Format rincian biaya breakdown
-    const rincianBiaya = `Fee: ${meta["Fee trainer"] || "0"} | Konsumsi: ${meta["Konsumsi & catering"] || "0"} | Materi: ${meta["Materi & sertifikat"] || "0"} | Transportasi: ${meta["Transportasi"] || "0"}`;
-
-    // Format prasyarat & output
-    const prasyaratOutput = `Prasyarat: ${meta["Prasyarat peserta"] || "-"} | Output: ${meta["Sertifikasi / output"] || "-"}`;
-
-    // Format evaluasi & indikator
+    // Format data sasaran SMART, evaluasi & target
+    const goals = meta["Training goals"] || meta["Training plan purpose"] || "-";
     const hasilDiharapkan = meta["Hasil yang diharapkan"] || meta["Expected outcomes"] || "-";
     const penerapanKerja = meta["Penerapan di pekerjaan"] || meta["Aplikasi / implementasi"] || "-";
     const indikator = meta["Indikator keberhasilan"] || "-";
-    const evaluasiKpi = `Hasil: ${hasilDiharapkan} | Penerapan: ${penerapanKerja} | Indikator: ${indikator}`;
-
-    // Format follow-up / waktu evaluasi & PIC
     const waktuEval = meta["Waktu evaluasi"] || meta["Interval follow-up"] || "-";
     const picEval = meta["PIC evaluasi"] || meta["PIC monitoring"] || "-";
-    const followupInfo = `Waktu: ${waktuEval} | PIC: ${picEval}`;
+    const linkEvaluasi = meta["Link form evaluasi"] || DEFAULT_EVALUATION_URL;
 
-    // 1. Kirim Email Konfirmasi Pendaftaran ke Peserta
-    let confirmationEmailStatus = "Belum Ada Email";
-    try {
-      confirmationEmailStatus = sendRegistrationEmails(meta, participants, modules);
-    } catch (mailErr) {
-      Logger.log("Gagal kirim email konfirmasi: " + mailErr.toString());
-      confirmationEmailStatus = "Error: " + mailErr.message;
-    }
+    // 1. Status Email Konfirmasi ke Peserta (Ditahan & baru dikirim bersamaan dengan kalender setelah Disetujui oleh Approver)
+    const confirmationEmailStatus = "Menunggu Approval";
 
-    // 2. Auto-Booking Ruangan Internal atau Buat Kalender Event (Mendukung Multi-Sesi)
-    let calendarEventId = "-";
-    let bookingResult = null;
-
-    try {
-      bookingResult = bookMeetingRoom(meta, participants, modules);
-      if (bookingResult && bookingResult.booked && bookingResult.eventId) {
-        calendarEventId = bookingResult.eventId;
-      }
-    } catch (bookErr) {
-      Logger.log("Peringatan bookMeetingRoom: " + bookErr.toString());
-    }
-
-    if (calendarEventId === "-" || !calendarEventId) {
-      try {
-        calendarEventId = createCalendarEvent(meta, participants, modules);
-      } catch (calErr) {
-        Logger.log("Gagal buat kalender event: " + calErr.toString());
-        calendarEventId = "Gagal: " + calErr.message;
-      }
-    }
+    // 2. Status Booking Ruangan & Kalender (Ditahan & baru dibuat otomatis setelah Disetujui oleh Approver)
+    const calendarEventId = "Menunggu Approval";
+    const bookingResult = {
+      booked: false,
+      status: "pending_approval",
+      room: meta["Lokasi / venue"] || "-",
+      message: "Pilihan ruangan tersimpan. Booking ruangan dan jadwal kalender akan dibuat otomatis setelah pengajuan disetujui oleh Approver."
+    };
 
     // 3. Kirim Email Notifikasi ke 2-3 Approver Utama
     let approverNotifStatus = "Belum terkirim";
@@ -243,43 +231,42 @@ function doPost(e) {
     const rowMap = {
       "Waktu Submit": data.submittedAt || Utilities.formatDate(new Date(), TIME_ZONE, "yyyy-MM-dd HH:mm:ss"),
       "ID Training": trainingId,
-      "Nama Training": meta["Nama training"] || "-",
       "Status Dokumen": data.status || "Diajukan",
+      "Jenis Training": meta["Jenis training"] || "Training Internal",
+      "Nama Training": meta["Nama training"] || "-",
       "Nama Pengaju": meta["Nama pengaju"] || meta["Leader pengaju"] || "-",
       "Email Pengaju": meta["Email pengaju"] || meta["Email leader"] || "-",
       "Departemen / Divisi": meta["Departemen / divisi"] || "-",
       "Kategori Training": meta["Kategori training"] || "-",
-      "Kategori Kebutuhan Training": meta["Kategori kebutuhan training"] || "-",
       "Target Level Kemahiran": meta["Target level kemahiran"] || "-",
+      "Kategori Kebutuhan Training": meta["Kategori kebutuhan training"] || "-",
       "Tanggal Pengajuan": meta["Tanggal pengajuan"] || "-",
       "Metode Training": meta["Metode training"] || "-",
-      "Platform & Link Meeting": meetingInfo,
       "Jadwal Pelaksanaan": meta["Tanggal & jam pelaksanaan"] || "-",
       "Lokasi / Venue": meta["Lokasi / venue"] || "-",
+      "Platform & Link Meeting": meetingInfo,
       "Trainer / Fasilitator": meta["Trainer"] || "-",
-      "Jumlah Peserta Terdaftar": participants.filter(p => p.nama).length,
+      "Opsi Vendor (Eksternal)": vendorsSummary || "-",
       "Total Durasi Belajar": meta["Total durasi belajar"] || "-",
-      "Rincian Biaya (Fee/Konsumsi/Materi/Venue)": rincianBiaya,
-      "Estimasi Biaya": meta["Estimasi biaya"] || "-",
-      "Budget Diajukan": meta["Budget diajukan"] || "-",
-      "Tujuan & Purpose": meta["Training plan purpose"] || "-",
-      "Goals (Target)": meta["Training goals"] || "-",
-      "Prasyarat & Output": prasyaratOutput,
-      "Link Silabus / Materi": meta["Link silabus materi"] || "-",
-      "Link Form Evaluasi / Post-Test": meta["Link form evaluasi"] || DEFAULT_EVALUATION_URL,
-      "Evaluasi & KPI": evaluasiKpi,
-      "Follow-up & PIC": followupInfo,
+      "Jumlah Partisipan (Rencana)": meta["Jumlah partisipan (rencana)"] || "-",
+      "Jumlah Peserta Terdaftar": participants.filter(p => p.nama).length,
       "Daftar Peserta (Ringkasan)": participantsSummary || "-",
       "Modul & Sesi (Ringkasan)": modulesSummary || "-",
-      "Approval Workflow (Ringkasan)": approvalsSummary || "-",
+      "Training Goals": goals,
+      "Hasil yang Diharapkan": hasilDiharapkan,
+      "Penerapan di Pekerjaan": penerapanKerja,
+      "Indikator Keberhasilan": indikator,
+      "Waktu Evaluasi": waktuEval,
+      "PIC Evaluasi": picEval,
+      "Link Form Evaluasi": linkEvaluasi,
       "Status Email Konfirmasi": confirmationEmailStatus,
       "Status Email Reminder H-1": reminderStatus,
       "Status Reminder Approval": slaReminderStatus,
       "ID Event Google Calendar": calendarEventId,
-      "Raw Data JSON": JSON.stringify(data),
       "Approver": "-",
       "Tanggal Approval": "-",
-      "Catatan Approver": "-"
+      "Catatan Approver": "-",
+      "Raw Data JSON": JSON.stringify(data)
     };
 
     const rowData = currentHeaders.map(h => (rowMap[h] !== undefined ? rowMap[h] : "-"));
@@ -332,6 +319,9 @@ function handleUpdateApproval(sheet, data) {
   const colApprover = headersLower.indexOf("approver");
   const colApprovalDate = headersLower.indexOf("tanggal approval");
   const colApprovalNotes = headersLower.indexOf("catatan approver");
+  const colCalEventId = headersLower.indexOf("id event google calendar");
+  const colEmailConfirm = headersLower.indexOf("status email konfirmasi");
+  const colRawJson = headersLower.indexOf("raw data json");
 
   if (colId === -1) {
     return ContentService.createTextOutput(
@@ -372,7 +362,7 @@ function handleUpdateApproval(sheet, data) {
     sheet.getRange(targetRowNum, colApprovalNotes + 1).setValue(notes);
   }
 
-  // Bangun objek data row untuk keperluan notifikasi email
+  // Bangun objek data row untuk keperluan notifikasi email & pemrosesan
   const rowObj = {};
   rawHeaders.forEach((h, idx) => {
     rowObj[h] = values[foundRowIdx][idx];
@@ -381,6 +371,104 @@ function handleUpdateApproval(sheet, data) {
   rowObj["Approver"] = approverName;
   rowObj["Tanggal Approval"] = timestamp;
   rowObj["Catatan Approver"] = notes;
+
+  const isApproved = String(status).toLowerCase().includes("setuju") || String(status).toLowerCase().includes("approve");
+  const isRejected = String(status).toLowerCase().includes("tolak") || String(status).toLowerCase().includes("reject");
+
+  let calendarEventId = colCalEventId !== -1 ? String(values[foundRowIdx][colCalEventId] || "").trim() : "";
+  let confirmationEmailStatus = colEmailConfirm !== -1 ? String(values[foundRowIdx][colEmailConfirm] || "").trim() : "";
+  let bookingResult = null;
+
+  if (isApproved) {
+    // 1. Ekstrak data meta, participants, dan modules dari Raw Data JSON atau rowObj
+    let meta = {};
+    let participants = [];
+    let modules = [];
+
+    if (colRawJson !== -1 && values[foundRowIdx][colRawJson]) {
+      try {
+        const parsed = JSON.parse(values[foundRowIdx][colRawJson]);
+        meta = parsed.meta || {};
+        participants = parsed.participants || [];
+        modules = parsed.modules || [];
+      } catch (jsonErr) {
+        Logger.log("Peringatan parse Raw Data JSON di handleUpdateApproval: " + jsonErr.toString());
+      }
+    }
+
+    // Fallback data meta jika belum lengkap di JSON
+    if (!meta["ID training"]) meta["ID training"] = rowObj["ID Training"] || trainingId;
+    if (!meta["Nama training"]) meta["Nama training"] = rowObj["Nama Training"] || "-";
+    if (!meta["Lokasi / venue"]) meta["Lokasi / venue"] = rowObj["Lokasi / Venue"] || "-";
+    if (!meta["Tanggal & jam pelaksanaan"]) meta["Tanggal & jam pelaksanaan"] = rowObj["Jadwal Pelaksanaan"] || "-";
+    if (!meta["Trainer"]) meta["Trainer"] = rowObj["Trainer / Fasilitator"] || "-";
+    if (!meta["Nama pengaju"]) meta["Nama pengaju"] = rowObj["Nama Pengaju"] || "-";
+    if (!meta["Email pengaju"]) meta["Email pengaju"] = rowObj["Email Pengaju"] || "";
+    if (!meta["Departemen / divisi"]) meta["Departemen / divisi"] = rowObj["Departemen / Divisi"] || "-";
+    if (!meta["Metode training"]) meta["Metode training"] = rowObj["Metode Training"] || "Onsite";
+    if (!meta["Link silabus materi"]) meta["Link silabus materi"] = rowObj["Link Silabus / Materi"] || "";
+
+    // 2. Eksekusi booking ruangan internal & Google Calendar hanya jika belum dibuat sebelumnya
+    const needsCalendarBooking = !calendarEventId || calendarEventId === "-" || calendarEventId === "Menunggu Approval" || calendarEventId.toLowerCase().startsWith("gagal");
+
+    if (needsCalendarBooking) {
+      try {
+        bookingResult = bookMeetingRoom(meta, participants, modules);
+        if (bookingResult && bookingResult.booked && bookingResult.eventId) {
+          calendarEventId = bookingResult.eventId;
+        }
+      } catch (bookErr) {
+        Logger.log("Peringatan bookMeetingRoom saat approval: " + bookErr.toString());
+      }
+
+      if (calendarEventId === "-" || !calendarEventId || calendarEventId === "Menunggu Approval") {
+        try {
+          calendarEventId = createCalendarEvent(meta, participants, modules);
+        } catch (calErr) {
+          Logger.log("Gagal createCalendarEvent saat approval: " + calErr.toString());
+          calendarEventId = "Gagal: " + calErr.message;
+        }
+      }
+
+      if (colCalEventId !== -1) {
+        sheet.getRange(targetRowNum, colCalEventId + 1).setValue(calendarEventId);
+        rowObj["ID Event Google Calendar"] = calendarEventId;
+      }
+    }
+
+    // 3. Kirim Email Konfirmasi Pendaftaran ke Peserta Terdaftar (Kini resmi berjalan setelah disetujui)
+    const needsParticipantEmail = !confirmationEmailStatus || confirmationEmailStatus === "-" || confirmationEmailStatus === "Menunggu Approval" || confirmationEmailStatus.toLowerCase().startsWith("error");
+
+    if (needsParticipantEmail) {
+      try {
+        confirmationEmailStatus = sendRegistrationEmails(meta, participants, modules);
+      } catch (mailErr) {
+        Logger.log("Gagal kirim email konfirmasi ke peserta saat approval: " + mailErr.toString());
+        confirmationEmailStatus = "Error: " + mailErr.message;
+      }
+
+      if (colEmailConfirm !== -1) {
+        sheet.getRange(targetRowNum, colEmailConfirm + 1).setValue(confirmationEmailStatus);
+        rowObj["Status Email Konfirmasi"] = confirmationEmailStatus;
+      }
+    }
+  } else if (isRejected) {
+    // Jika ditolak, tandai status kalender dan email konfirmasi jika sebelumnya berstatus 'Menunggu Approval'
+    if (calendarEventId === "Menunggu Approval" || !calendarEventId || calendarEventId === "-") {
+      calendarEventId = "Dibatalkan (Ditolak)";
+      if (colCalEventId !== -1) {
+        sheet.getRange(targetRowNum, colCalEventId + 1).setValue(calendarEventId);
+        rowObj["ID Event Google Calendar"] = calendarEventId;
+      }
+    }
+    if (confirmationEmailStatus === "Menunggu Approval" || !confirmationEmailStatus || confirmationEmailStatus === "-") {
+      confirmationEmailStatus = "Dibatalkan (Ditolak)";
+      if (colEmailConfirm !== -1) {
+        sheet.getRange(targetRowNum, colEmailConfirm + 1).setValue(confirmationEmailStatus);
+        rowObj["Status Email Konfirmasi"] = confirmationEmailStatus;
+      }
+    }
+  }
 
   let emailStatus = "Belum terkirim";
   try {
@@ -393,10 +481,67 @@ function handleUpdateApproval(sheet, data) {
   return ContentService.createTextOutput(
     JSON.stringify({
       success: true,
-      message: "Status approval berhasil diperbarui",
+      message: isApproved 
+        ? "Status approval berhasil disetujui, ruangan telah di-booked, dan undangan kalender dikirim ke peserta."
+        : "Status pengajuan berhasil ditolak.",
       id: trainingId,
       status: status,
+      calendarEventId: calendarEventId,
+      roomBooking: bookingResult,
+      confirmationEmailStatus: confirmationEmailStatus,
       emailStatus: emailStatus
+    })
+  ).setMimeType(ContentService.MimeType.JSON);
+}
+
+// ==============================================================================
+// 1.2 HANDLER HAPUS SUBMISSION DARI SPREADSHEET
+// ==============================================================================
+function handleDeleteSubmission(sheet, data) {
+  const trainingId = String(data.id || data.idTraining || data["ID Training"] || "").trim().toUpperCase();
+  if (!trainingId) {
+    return ContentService.createTextOutput(
+      JSON.stringify({ success: false, message: "ID training tidak disertakan" })
+    ).setMimeType(ContentService.MimeType.JSON);
+  }
+
+  const values = sheet.getDataRange().getValues();
+  if (values.length < 2) {
+    return ContentService.createTextOutput(
+      JSON.stringify({ success: false, message: "Belum ada data pada spreadsheet" })
+    ).setMimeType(ContentService.MimeType.JSON);
+  }
+
+  const headersLower = values[0].map(h => String(h).trim().toLowerCase());
+  const colId = headersLower.indexOf("id training");
+  if (colId === -1) {
+    return ContentService.createTextOutput(
+      JSON.stringify({ success: false, message: "Kolom 'ID Training' tidak ditemukan pada sheet" })
+    ).setMimeType(ContentService.MimeType.JSON);
+  }
+
+  let foundRowIdx = -1;
+  for (let i = 1; i < values.length; i++) {
+    const rowId = String(values[i][colId]).trim().toUpperCase();
+    if (rowId === trainingId) {
+      foundRowIdx = i + 1; // 1-indexed untuk sheet row
+      break;
+    }
+  }
+
+  if (foundRowIdx === -1) {
+    return ContentService.createTextOutput(
+      JSON.stringify({ success: false, message: `Training dengan ID '${trainingId}' tidak ditemukan di sheet` })
+    ).setMimeType(ContentService.MimeType.JSON);
+  }
+
+  sheet.deleteRow(foundRowIdx);
+
+  return ContentService.createTextOutput(
+    JSON.stringify({
+      success: true,
+      message: `Pengajuan training ${trainingId} berhasil dihapus dari spreadsheet`,
+      id: trainingId
     })
   ).setMimeType(ContentService.MimeType.JSON);
 }
@@ -415,17 +560,126 @@ const DEFAULT_APPROVER_DIRECTORY = {
   "HR & GENERAL AFFAIRS": { name: "Maya Anggraini",     email: "maya.hr@perusahaan.com",   title: "HR & General Affairs Manager" },
   "MARKETING & SALES":    { name: "Hendra Wijaya",      email: "hendra.mkt@perusahaan.com",title: "Marketing Director" },
   "CUSTOMER SUPPORT":     { name: "Ratna Sari",         email: "ratna.cs@perusahaan.com",  title: "Customer Support Lead" },
-  "DEFAULT":              { name: "HR Training Team",    email: "tnd@perusahaan.com",       title: "Training & Development Lead" }
+  "DEFAULT":              { name: "HR Training Team",    email: "training@cpssoft.com",     title: "Training & Development Lead" }
 };
+
+const DEPT_CODE_MAP = {
+  'HR': 'HR',
+  'GA': 'GA',
+  'LEGAL': 'LEG',
+  'FINANCE': 'FIN',
+  'ACCOUNTING': 'ACC',
+  'TAX': 'TAX',
+  'MARKETING': 'MKT',
+  'SALES OPS': 'SOP',
+  'SALES ENABLEMENT': 'SEN',
+  'TELEMARKETING': 'TLM',
+  'PEC': 'PEC',
+  'CUSTOMER EXPERIENCE': 'CX',
+  'QA': 'QA',
+  'WEB DEVELOPER': 'WEB',
+  'INTEGRATION': 'INT',
+  'MOBILE DEVELOPER': 'MOB',
+  'UI/UX DESIGNER': 'UXD',
+  'UI/UX DESIGN': 'UXD',
+  'AI': 'AI',
+  'BUSINESS ANALYST': 'BA',
+  'IT INFRASTRUCTURE': 'ITI'
+};
+
+/**
+ * Menghasilkan ID Training format TRN-YYYYMMDD-DEPT-CATEGORY dari metadata pengajuan
+ * Contoh: TRN-20261004-FIN-SS (FINANCE -> FIN, HR -> HR, dsb)
+ */
+function generateTrainingIdFromMeta(meta, sheet) {
+  let datePart = "";
+  const tgl = String(meta["Tanggal pengajuan"] || "").trim();
+  if (tgl) {
+    const cleanTgl = tgl.replace(/[^0-9]/g, "");
+    if (cleanTgl.length >= 8) {
+      datePart = cleanTgl.substring(0, 8);
+    }
+  }
+  if (!datePart) {
+    datePart = Utilities.formatDate(new Date(), TIME_ZONE, "yyyyMMdd");
+  }
+
+  const dept = String(meta["Departemen / divisi"] || "").trim().toUpperCase();
+  let deptCode = DEPT_CODE_MAP[dept] || dept.replace(/[^A-Z]/g, "").substring(0, 3) || "GEN";
+
+  const cat = String(meta["Kategori training"] || "").trim().toLowerCase();
+  const catCode = cat.includes("hard") ? "HS" : "SS";
+
+  const basePrefix = `TRN-${datePart}-${deptCode}-${catCode}`;
+
+  let counter = 0;
+  if (sheet && sheet.getLastRow() > 1) {
+    try {
+      const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+      const colIdIdx = headers.map(h => String(h).trim().toLowerCase()).indexOf("id training");
+      if (colIdIdx !== -1) {
+        const idValues = sheet.getRange(2, colIdIdx + 1, sheet.getLastRow() - 1, 1).getValues();
+        idValues.forEach(r => {
+          const val = String(r[0] || "").trim().toUpperCase();
+          if (val === basePrefix) {
+            if (counter === 0) counter = 1;
+          } else if (val.startsWith(basePrefix + "-")) {
+            const num = parseInt(val.replace(basePrefix + "-", ""), 10);
+            if (!isNaN(num) && num > counter) counter = num;
+          }
+        });
+      }
+    } catch (e) {}
+  }
+
+  return counter > 0 ? `${basePrefix}-${String(counter + 1).padStart(2, "0")}` : basePrefix;
+}
+
+/**
+ * Menghasilkan ID Training sekuensial format TRN-YYYY-XXX dari baris Google Sheets yang sudah ada.
+ */
+function generateNextSequentialId(sheet, year) {
+  if (!year) year = new Date().getFullYear();
+  let maxSeq = 0;
+  try {
+    const lastRow = sheet.getLastRow();
+    if (lastRow > 1) {
+      const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+      const colIdIdx = headers.map(h => String(h).trim().toLowerCase()).indexOf("id training");
+      if (colIdIdx !== -1) {
+        const idValues = sheet.getRange(2, colIdIdx + 1, lastRow - 1, 1).getValues();
+        idValues.forEach(r => {
+          const val = String(r[0] || "").trim();
+          const match = val.match(new RegExp(`^TRN-${year}-(\\d+)`, "i"));
+          if (match) {
+            const num = parseInt(match[1], 10);
+            if (!isNaN(num) && num > maxSeq) maxSeq = num;
+          }
+        });
+      }
+    }
+  } catch (err) {
+    Logger.log("Peringatan generateNextSequentialId: " + err.toString());
+  }
+  const nextNum = maxSeq + 1;
+  return `TRN-${year}-${String(nextNum).padStart(3, "0")}`;
+}
+
+function formatHeaderRow(sheet, totalCols) {
+  const headerRange = sheet.getRange(1, 1, 1, totalCols);
+  headerRange.setFontWeight("bold");
+  headerRange.setBackground("#00178F");
+  headerRange.setFontColor("#FFFFFF");
+  headerRange.setHorizontalAlignment("center");
+  headerRange.setVerticalAlignment("middle");
+  sheet.setRowHeight(1, 38);
+  sheet.setFrozenRows(1);
+}
 
 function setupSheetHeaders(sheet) {
   if (sheet.getLastRow() === 0) {
     sheet.appendRow(HEADERS);
-    const headerRange = sheet.getRange(1, 1, 1, HEADERS.length);
-    headerRange.setFontWeight("bold");
-    headerRange.setBackground("#00178F");
-    headerRange.setFontColor("#FFFFFF");
-    sheet.setFrozenRows(1);
+    formatHeaderRow(sheet, HEADERS.length);
   } else {
     // Sinkronkan kolom baru jika ada header yang belum tercantum pada row 1
     const currentHeaders = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0].map(h => String(h).trim());
@@ -434,28 +688,168 @@ function setupSheetHeaders(sheet) {
     if (missingHeaders.length > 0) {
       const startCol = currentHeaders.length + 1;
       sheet.getRange(1, startCol, 1, missingHeaders.length).setValues([missingHeaders]);
-      const headerRange = sheet.getRange(1, startCol, 1, missingHeaders.length);
-      headerRange.setFontWeight("bold");
-      headerRange.setBackground("#00178F");
-      headerRange.setFontColor("#FFFFFF");
+      formatHeaderRow(sheet, currentHeaders.length + missingHeaders.length);
     }
   }
 }
 
 /**
+ * ==============================================================================
+ * 1. MENU KHUSUS GOOGLE SHEETS (Otomatis muncul di bar menu atas spreadsheet)
+ * ==============================================================================
+ */
+function onOpen() {
+  try {
+    SpreadsheetApp.getUi()
+      .createMenu("🎓 TDS Portal Training")
+      .addItem("🔄 Format / Reset Sheet Sesuai Preview (resetSheet)", "resetSheet")
+      .addItem("🚀 Setup Inisialisasi Sheet Baru", "setupInitialSpreadsheet")
+      .addSeparator()
+      .addItem("⏰ Cek & Kirim Reminder H-1 Sekarang", "checkAndSendReminders")
+      .addItem("📧 Test Kirim Notifikasi Email", "testSendAllEmails")
+      .addToUi();
+  } catch (e) {
+    Logger.log("onOpen non-UI context: " + e.toString());
+  }
+}
+
+/**
+ * ==============================================================================
+ * FUNGSI UTAMA: resetSheet (Muncul langsung pada dropdown editor Apps Script)
+ * ==============================================================================
+ * Menyelaraskan seluruh kolom spreadsheet menjadi 38 kolom persis sesuai preview.
+ */
+function resetSheet() {
+  resetSheetHeadersToPreview();
+}
+
+/**
+ * ALIAS FUNGSI: resetSheetHeaders
+ */
+function resetSheetHeaders() {
+  resetSheetHeadersToPreview();
+}
+
+/**
+ * ==============================================================================
+ * REFORMAT & SINKRONISASI SHEET DENGAN FORM PREVIEW (ONE-CLICK MIGRATION)
+ * ==============================================================================
+ * Jalankan fungsi ini dari editor Apps Script kapan saja untuk memperbarui sheet lama!
+ * Fitur:
+ * 1. Mengubah struktur kolom persis sesuai 38 data yang diajukan di preview.
+ * 2. Menghapus kolom usang yang sudah tidak dipakai (Rincian Biaya, Budget, Silabus, dll).
+ * 3. Menyelaraskan seluruh data baris historis yang sudah tersimpan agar tetap aman.
+ * 4. Otomatis mengekstrak kembali nilai asli dari 'Raw Data JSON' jika tersedia.
+ */
+function resetSheetHeadersToPreview() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName(SHEET_NAME);
+  if (!sheet) {
+    sheet = ss.insertSheet(SHEET_NAME, 0);
+  }
+
+  const lastRow = sheet.getLastRow();
+  const lastCol = sheet.getLastColumn();
+
+  if (lastRow <= 1) {
+    sheet.clear();
+    sheet.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]);
+    formatHeaderRow(sheet, HEADERS.length);
+    Logger.log("✅ Tab 'Training Submissions' berhasil diformat dengan 38 kolom header baru sesuai form & preview!");
+    return;
+  }
+
+  const oldHeaders = sheet.getRange(1, 1, 1, lastCol).getValues()[0].map(h => String(h).trim());
+  const oldData = sheet.getRange(2, 1, lastRow - 1, lastCol).getValues();
+
+  const aliasMap = {
+    "goals (target)": "Training Goals",
+    "tujuan & purpose": "Training Goals",
+    "link form evaluasi / post-test": "Link Form Evaluasi"
+  };
+
+  const newRows = oldData.map(row => {
+    const jsonIdx = oldHeaders.map(h => h.toLowerCase()).indexOf("raw data json");
+    let parsedMeta = null;
+    let parsedData = null;
+    if (jsonIdx !== -1 && row[jsonIdx]) {
+      try {
+        parsedData = JSON.parse(row[jsonIdx]);
+        parsedMeta = parsedData.meta || {};
+      } catch (e) {}
+    }
+
+    return HEADERS.map(newHeader => {
+      if (parsedMeta) {
+        if (newHeader === "Training Goals" && (parsedMeta["Training goals"] || parsedMeta["Training plan purpose"])) {
+          return parsedMeta["Training goals"] || parsedMeta["Training plan purpose"];
+        }
+        if (newHeader === "Jenis Training" && parsedMeta["Jenis training"]) {
+          return parsedMeta["Jenis training"];
+        }
+        if (newHeader === "Hasil yang Diharapkan" && (parsedMeta["Hasil yang diharapkan"] || parsedMeta["Expected outcomes"])) {
+          return parsedMeta["Hasil yang diharapkan"] || parsedMeta["Expected outcomes"];
+        }
+        if (newHeader === "Penerapan di Pekerjaan" && (parsedMeta["Penerapan di pekerjaan"] || parsedMeta["Aplikasi / implementasi"])) {
+          return parsedMeta["Penerapan di pekerjaan"] || parsedMeta["Aplikasi / implementasi"];
+        }
+        if (newHeader === "Indikator Keberhasilan" && parsedMeta["Indikator keberhasilan"]) {
+          return parsedMeta["Indikator keberhasilan"];
+        }
+        if (newHeader === "Waktu Evaluasi" && (parsedMeta["Waktu evaluasi"] || parsedMeta["Interval follow-up"])) {
+          return parsedMeta["Waktu evaluasi"] || parsedMeta["Interval follow-up"];
+        }
+        if (newHeader === "PIC Evaluasi" && (parsedMeta["PIC evaluasi"] || parsedMeta["PIC monitoring"])) {
+          return parsedMeta["PIC evaluasi"] || parsedMeta["PIC monitoring"];
+        }
+        if (newHeader === "Opsi Vendor (Eksternal)" && parsedData && parsedData.vendors && parsedData.vendors.length) {
+          const vList = parsedData.vendors.filter(v => v.nama).map((v, i) => `${i + 1}. ${v.nama} [Kontak: ${v.kontak || "-"} | Est. Biaya: ${v.biaya || "-"} | Info: ${v.catatan || "-"}]`).join("\n");
+          if (vList) return vList;
+        }
+      }
+
+      const exactIdx = oldHeaders.indexOf(newHeader);
+      if (exactIdx !== -1) return row[exactIdx];
+
+      const lowerNew = newHeader.toLowerCase();
+      const caseIdx = oldHeaders.map(h => h.toLowerCase()).indexOf(lowerNew);
+      if (caseIdx !== -1) return row[caseIdx];
+
+      for (const [oldKey, targetKey] of Object.entries(aliasMap)) {
+        if (targetKey.toLowerCase() === lowerNew) {
+          const aliasIdx = oldHeaders.map(h => h.toLowerCase()).indexOf(oldKey);
+          if (aliasIdx !== -1) return row[aliasIdx];
+        }
+      }
+
+      return "-";
+    });
+  });
+
+  sheet.clear();
+  sheet.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]);
+  if (newRows.length > 0) {
+    sheet.getRange(2, 1, newRows.length, HEADERS.length).setValues(newRows);
+  }
+  formatHeaderRow(sheet, HEADERS.length);
+
+  Logger.log(`✅ Berhasil merestrukturisasi & memigrasikan ${newRows.length} baris ke format 38 kolom sesuai preview!`);
+}
+
+/**
  * FUNGSI SETUP OTOMATIS MASTER SPREADSHEET
  * Jalankan fungsi ini 1 kali dari editor Apps Script pada Google Sheet kosong / baru!
- * Otomatis membuat tab "Training Submissions" (37 kolom lengkap) dan tab "Config_Approvers" (konfigurasi approver per divisi).
+ * Otomatis membuat tab "Training Submissions" (38 kolom lengkap), tab "Config_Approvers", dan tab "Post Training".
  */
 function setupInitialSpreadsheet() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
 
-  // 1. Inisialisasi Sheet Utama "Training Submissions"
+  // 1. Inisialisasi Sheet Utama "Training Submissions" sesuai format Preview
   let mainSheet = ss.getSheetByName(SHEET_NAME);
   if (!mainSheet) {
     mainSheet = ss.insertSheet(SHEET_NAME, 0);
   }
-  setupSheetHeaders(mainSheet);
+  resetSheetHeadersToPreview();
 
   // 2. Inisialisasi Sheet Rahasia "Config_Approvers"
   let cfgSheet = ss.getSheetByName(CONFIG_APPROVERS_SHEET);
@@ -488,7 +882,7 @@ function setupInitialSpreadsheet() {
 
   Logger.log("=================================================");
   Logger.log("✅ INISIALISASI SPREADSHEET BERHASIL!");
-  Logger.log(`- Tab 1: '${SHEET_NAME}' (37 Kolom Header Aktif)`);
+  Logger.log(`- Tab 1: '${SHEET_NAME}' (38 Kolom Sesuai Preview & Form)`);
   Logger.log(`- Tab 2: '${CONFIG_APPROVERS_SHEET}' (Daftar Approver per Divisi)`);
   Logger.log(`- Tab 3: '${POST_TRAINING_SHEET_NAME}' (Bukti Evidence Drive & Post-Test)`);
   Logger.log("=================================================");
@@ -834,8 +1228,8 @@ function sendApprovalDecisionEmail(rowObj, status, approverName, notes) {
   const statusBoxBorder = isApproved ? "#2E7D32" : "#D9534F";
   const statusTextColor = isApproved ? "#1B5E20" : "#B71C1C";
   const nextStepMsg = isApproved
-    ? "Pengajuan training ini telah disetujui. Silahkan lanjutkan koordinasi persiapan teknis, logistik, materi, dan konfirmasi kehadiran peserta sesuai jadwal."
-    : "Pengajuan training ini tidak disetujui / ditolak oleh approver. Silahkan tinjau catatan approver di atas untuk melakukan penyesuaian atau koordinasi lebih lanjut.";
+    ? "Pengajuan training ini telah disetujui. Ruangan meeting telah resmi di-booked, dan undangan jadwal Google Calendar serta email konfirmasi resmi telah otomatis dikirimkan ke seluruh peserta terdaftar."
+    : "Pengajuan training ini tidak disetujui / ditolak oleh approver. Ruangan tidak di-booked dan tidak ada undangan kalender yang dikirim ke peserta. Silahkan tinjau catatan approver di atas untuk melakukan penyesuaian atau koordinasi lebih lanjut.";
 
   const subject = `[${status.toUpperCase()}] Pengajuan Training: ${trainingName} (${trainingId})`;
 
@@ -896,8 +1290,8 @@ function sendApprovalDecisionEmail(rowObj, status, approverName, notes) {
               <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;color:#4A4F8F;">${trainer}</td>
             </tr>
             <tr>
-              <td style="padding:11px 16px;font-size:12px;font-weight:600;color:#8D93C2;">Budget / Estimasi</td>
-              <td style="padding:11px 16px;font-size:13.5px;font-weight:700;color:#00178F;">${budgetDiajukan !== "-" ? budgetDiajukan : estimasiBiaya}</td>
+              <td style="padding:11px 16px;font-size:12px;font-weight:600;color:#8D93C2;">Jenis Training</td>
+              <td style="padding:11px 16px;font-size:13.5px;font-weight:700;color:#00178F;">${rowObj["Jenis Training"] || "Training Internal"}</td>
             </tr>
           </table>
 
@@ -1026,19 +1420,23 @@ function sendApproverNotification(meta, participants, modules, trainingId) {
               <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;color:#4A4F8F;">${jmlPeserta} orang</td>
             </tr>
             <tr>
-              <td style="padding:11px 16px;font-size:12px;font-weight:600;color:#8D93C2;">Budget Diajukan</td>
-              <td style="padding:11px 16px;font-size:13.5px;font-weight:700;color:#00178F;">${totalBiaya}</td>
+              <td style="padding:11px 16px;font-size:12px;font-weight:600;color:#8D93C2;">Jenis Training</td>
+              <td style="padding:11px 16px;font-size:13.5px;font-weight:700;color:#00178F;">${meta["Jenis training"] || "Training Internal"}</td>
             </tr>
           </table>
 
-          <div style="text-align:center;margin:24px 0 16px;">
+          <div style="text-align:center;margin:24px 0 20px;">
             <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto;">
               <tr>
-                <td style="border-radius:100px;background:linear-gradient(180deg,#EAF1FF 0%,#BFDBFF 50%,#FFD3DE 100%);background-color:#FFD3DE;">
-                  <a href="${directApprovalLink}" target="_blank" style="display:inline-block;padding:14px 30px;font-size:14.5px;font-weight:700;color:#00178F;text-decoration:none;border-radius:100px;">Tinjau &amp; Berikan Keputusan &nbsp;&#8594;</a>
+                <td align="center" style="border-radius:100px;background:#00178F;">
+                  <a href="${directApprovalLink}" target="_blank" style="display:inline-block;padding:15px 36px;font-size:15px;font-weight:700;color:#FFFFFF;text-decoration:none;border-radius:100px;background-color:#00178F;">Tinjau &amp; Berikan Keputusan &nbsp;&#8594;</a>
                 </td>
               </tr>
             </table>
+            <p style="margin:12px 0 0;font-size:12px;color:#8D93C2;">
+              Jika tombol di atas tidak merespons, buka tautan langsung berikut:<br>
+              <a href="${directApprovalLink}" target="_blank" style="color:#00178F;word-break:break-all;font-weight:600;text-decoration:underline;">${directApprovalLink}</a>
+            </p>
           </div>
 
           <p style="margin:0;font-size:13.5px;color:#4A4F8F;line-height:1.6;">
@@ -1102,7 +1500,7 @@ function checkAndSendApprovalReminders() {
   const colPengaju = getCol("Nama Pengaju");
   const colDept = getCol("Departemen / Divisi");
   const colJadwal = getCol("Jadwal Pelaksanaan");
-  const colBudget = getCol("Budget Diajukan");
+  const colJenis = getCol("Jenis Training");
   const colStatusSla = getCol("Status Reminder Approval");
 
   const today = new Date();
@@ -1160,7 +1558,7 @@ function checkAndSendApprovalReminders() {
       const deptName = String(row[colDept - 1] || "");
       const pengaju = String(row[colPengaju - 1] || "Pengaju");
       const jadwal = String(row[colJadwal - 1] || "-");
-      const budget = String(row[colBudget - 1] || "-");
+      const jenisTraining = colJenis ? String(row[colJenis - 1] || "Training Internal").trim() : "Training Internal";
 
       const approverEmails = getApproverListForSubmission(deptName);
       if (approverEmails.length === 0) continue;
@@ -1205,19 +1603,23 @@ function checkAndSendApprovalReminders() {
             <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;font-weight:600;color:#00178F;">${jadwal}</td>
           </tr>
           <tr>
-            <td style="padding:11px 16px;font-size:12px;font-weight:600;color:#8D93C2;">Budget Diajukan</td>
-            <td style="padding:11px 16px;font-size:13.5px;font-weight:700;color:#00178F;">${budget}</td>
+            <td style="padding:11px 16px;font-size:12px;font-weight:600;color:#8D93C2;">Jenis Training</td>
+            <td style="padding:11px 16px;font-size:13.5px;font-weight:700;color:#00178F;">${jenisTraining}</td>
           </tr>
         </table>
 
-        <div style="text-align:center;margin:24px 0 16px;">
+        <div style="text-align:center;margin:24px 0 20px;">
           <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto;">
             <tr>
-              <td style="border-radius:100px;background:linear-gradient(180deg,#EAF1FF 0%,#BFDBFF 50%,#FFD3DE 100%);background-color:#FFD3DE;">
-                <a href="${directApprovalLink}" target="_blank" style="display:inline-block;padding:14px 30px;font-size:14.5px;font-weight:700;color:#00178F;text-decoration:none;border-radius:100px;">Buka &amp; Selesaikan Approval &nbsp;&#8594;</a>
+              <td align="center" style="border-radius:100px;background:#00178F;">
+                <a href="${directApprovalLink}" target="_blank" style="display:inline-block;padding:15px 36px;font-size:15px;font-weight:700;color:#FFFFFF;text-decoration:none;border-radius:100px;background-color:#00178F;">Buka &amp; Selesaikan Approval &nbsp;&#8594;</a>
               </td>
             </tr>
           </table>
+          <p style="margin:12px 0 0;font-size:12px;color:#8D93C2;">
+            Jika tombol di atas tidak merespons, buka tautan langsung berikut:<br>
+            <a href="${directApprovalLink}" target="_blank" style="color:#00178F;word-break:break-all;font-weight:600;text-decoration:underline;">${directApprovalLink}</a>
+          </p>
         </div>
 
         <p style="margin:0;font-size:13.5px;color:#4A4F8F;line-height:1.6;">
@@ -2273,6 +2675,60 @@ function testCreateRoomCalendarBooking() {
   return result;
 }
 
+/**
+ * 8.5. Utility Pembersih Data Dummy / Test dari Spreadsheet "Training Submissions"
+ * Jalankan fungsi ini dari editor Apps Script untuk membersihkan data dummy secara massal.
+ */
+function deleteDummySubmissions() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(SHEET_NAME);
+  if (!sheet) {
+    Logger.log("Sheet tidak ditemukan: " + SHEET_NAME);
+    return;
+  }
+  const data = sheet.getDataRange().getValues();
+  if (data.length < 2) {
+    Logger.log("Sheet masih kosong.");
+    return;
+  }
+
+  const headersLower = data[0].map(h => String(h).trim().toLowerCase());
+  const colId = headersLower.indexOf("id training");
+  const colNama = headersLower.indexOf("nama training");
+  const colPengaju = headersLower.indexOf("nama pengaju");
+
+  const dummyIds = [
+    "TRN",
+    "TRN-TEST-1234",
+    "TRN-2026-001",
+    "TRN-2026-002",
+    "TRN-20261005-GEN-SS"
+  ];
+
+  let deletedCount = 0;
+  // Loop dari baris paling bawah ke atas agar indeks baris tidak bergeser saat baris dihapus
+  for (let i = data.length - 1; i >= 1; i--) {
+    const id = String(data[i][colId] || "").trim().toUpperCase();
+    const nama = String(data[i][colNama] || "").trim();
+    const pengaju = String(data[i][colPengaju] || "").trim();
+
+    const isDummy = dummyIds.some(d => d.toUpperCase() === id) ||
+                    id === "TRN" ||
+                    id.startsWith("TRN-TEST") ||
+                    nama.toLowerCase().includes("antigravity") ||
+                    (nama === "-" && pengaju === "-") ||
+                    pengaju === "Test Leader";
+
+    if (isDummy) {
+      Logger.log(`Menghapus baris ${i + 1}: ID = "${id}", Nama = "${nama}", Pengaju = "${pengaju}"`);
+      sheet.deleteRow(i + 1);
+      deletedCount++;
+    }
+  }
+
+  Logger.log(`Pembersihan selesai! Sebanyak ${deletedCount} baris data dummy berhasil dihapus dari sheet.`);
+}
+
 // ==============================================================================
 // 9. WEB APP GET HANDLER (READ DATA TERSTRUKTUR & CHECK AVAILABILITY)
 // ==============================================================================
@@ -2296,6 +2752,17 @@ function doGet(e) {
     if (action === 'getPostTrainingEvidence' || action === 'getEvidence' || action === 'post_training_evidence') {
       const ss = SpreadsheetApp.getActiveSpreadsheet();
       return handleGetPostTrainingEvidence(ss);
+    }
+
+    // Aksi 4: Reset / Reformat Sheet langsung via URL Web App (?action=resetSheet)
+    if (action === 'resetSheet' || action === 'resetSheetHeaders' || action === 'reformatSheet') {
+      resetSheetHeadersToPreview();
+      return ContentService.createTextOutput(
+        JSON.stringify({
+          status: "success",
+          message: "Sheet berhasil di-reformat dan disinkronkan ke 38 kolom sesuai format preview pengajuan."
+        })
+      ).setMimeType(ContentService.MimeType.JSON);
     }
 
     // Aksi Default: Pengambilan seluruh submission spreadsheet untuk dashboard/approval
@@ -2959,8 +3426,33 @@ function handlePostTrainingEvidence(ss, data) {
       }
     }
 
-    const savedFiles = [];
+    const savedPhotos = [];
+    const savedMaterials = [];
+
+    // Helper resolusi tipe MIME modul & materi
+    function resolveMaterialMimeType(fileName, fallbackType) {
+      const lower = String(fileName || "").toLowerCase();
+      if (lower.endsWith(".pdf")) return MimeType.PDF;
+      if (lower.endsWith(".ppt")) return "application/vnd.ms-powerpoint";
+      if (lower.endsWith(".pptx")) return "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+      if (lower.endsWith(".doc")) return "application/msword";
+      if (lower.endsWith(".docx")) return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+      if (lower.endsWith(".xls")) return "application/vnd.ms-excel";
+      if (lower.endsWith(".xlsx")) return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+      if (lower.endsWith(".zip")) return MimeType.ZIP;
+      if (lower.endsWith(".rar")) return "application/x-rar-compressed";
+      return fallbackType || "application/octet-stream";
+    }
+
+    // 1. Simpan Foto Dokumentasi ke Sub-folder "📸 Dokumentasi Foto"
     if (Array.isArray(data.files) && data.files.length > 0) {
+      const photoFolder = getOrCreateSubFolder(targetFolder, "📸 Dokumentasi Foto");
+      try {
+        photoFolder.setSharing(DriveApp.Access.DOMAIN_WITH_LINK, DriveApp.Permission.VIEW);
+      } catch (ePhotoShare) {
+        try { photoFolder.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); } catch (ePhotoLink) {}
+      }
+
       data.files.forEach((f, idx) => {
         if (!f || !f.base64) return;
         try {
@@ -2972,10 +3464,10 @@ function handlePostTrainingEvidence(ss, data) {
           cleanBase64 = cleanBase64.replace(/[\r\n\s]/g, "");
 
           const decodedBytes = Utilities.base64Decode(cleanBase64);
-          const fileName = (f.name || `evidence_${idx + 1}.jpg`).toString().trim();
+          const fileName = (f.name || `dokumentasi_${idx + 1}.jpg`).toString().trim();
           const mimeType = f.type || (fileName.toLowerCase().endsWith(".png") ? "image/png" : "image/jpeg");
           const blob = Utilities.newBlob(decodedBytes, mimeType, fileName);
-          const driveFile = targetFolder.createFile(blob);
+          const driveFile = photoFolder.createFile(blob);
 
           // Berikan akses view untuk karyawan domain/link
           try {
@@ -2986,10 +3478,11 @@ function handlePostTrainingEvidence(ss, data) {
             } catch (eLinkShare) {}
           }
 
-          savedFiles.push({
+          savedPhotos.push({
             name: fileName,
             id: driveFile.getId(),
-            url: driveFile.getUrl()
+            url: driveFile.getUrl(),
+            category: "Foto Dokumentasi"
           });
         } catch (fileErr) {
           Logger.log("Gagal mengunggah file bukti (" + (f.name || idx) + "): " + fileErr.toString());
@@ -2997,19 +3490,80 @@ function handlePostTrainingEvidence(ss, data) {
       });
     }
 
+    // 2. Simpan Modul & Materi ke Sub-folder "📚 Modul & Materi"
+    if (Array.isArray(data.materials) && data.materials.length > 0) {
+      const materialFolder = getOrCreateSubFolder(targetFolder, "📚 Modul & Materi");
+      try {
+        materialFolder.setSharing(DriveApp.Access.DOMAIN_WITH_LINK, DriveApp.Permission.VIEW);
+      } catch (eMatShare) {
+        try { materialFolder.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); } catch (eMatLink) {}
+      }
+
+      data.materials.forEach((m, idx) => {
+        if (!m || !m.base64) return;
+        try {
+          let cleanBase64 = String(m.base64).trim();
+          if (cleanBase64.indexOf("base64,") !== -1) {
+            cleanBase64 = cleanBase64.substring(cleanBase64.indexOf("base64,") + 7);
+          }
+          cleanBase64 = cleanBase64.replace(/[\r\n\s]/g, "");
+
+          const decodedBytes = Utilities.base64Decode(cleanBase64);
+          const fileName = (m.name || `materi_${idx + 1}.pdf`).toString().trim();
+          const mimeType = resolveMaterialMimeType(fileName, m.type);
+          const blob = Utilities.newBlob(decodedBytes, mimeType, fileName);
+          const driveFile = materialFolder.createFile(blob);
+
+          try {
+            driveFile.setSharing(DriveApp.Access.DOMAIN_WITH_LINK, DriveApp.Permission.VIEW);
+          } catch (eMatFileShare) {
+            try {
+              driveFile.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+            } catch (eMatLinkShare) {}
+          }
+
+          savedMaterials.push({
+            name: fileName,
+            id: driveFile.getId(),
+            url: driveFile.getUrl(),
+            category: "Modul & Materi"
+          });
+        } catch (matErr) {
+          Logger.log("Gagal mengunggah modul/materi (" + (m.name || idx) + "): " + matErr.toString());
+        }
+      });
+    }
+
+    const totalSavedFiles = savedPhotos.concat(savedMaterials);
+    const totalCount = totalSavedFiles.length;
     const timestamp = Utilities.formatDate(new Date(), TIME_ZONE, "yyyy-MM-dd HH:mm:ss");
-    const fileDetails = savedFiles.map((f, i) => `${i + 1}. ${f.name} (${f.url})`).join("\n");
+
+    const detailsParts = [];
+    if (savedPhotos.length > 0) {
+      detailsParts.push("📸 [Dokumentasi Foto Kegiatan]:\n" + savedPhotos.map((f, i) => `${i + 1}. ${f.name} (${f.url})`).join("\n"));
+    }
+    if (savedMaterials.length > 0) {
+      detailsParts.push("📚 [Modul & Materi Pelatihan]:\n" + savedMaterials.map((f, i) => `${i + 1}. ${f.name} (${f.url})`).join("\n"));
+    }
+    const fileDetails = detailsParts.join("\n\n");
     const folderUrl = targetFolder.getUrl();
+
+    let activityType = "Unggah Bukti";
+    if (savedPhotos.length > 0 && savedMaterials.length > 0) {
+      activityType = "Unggah Bukti & Materi";
+    } else if (savedMaterials.length > 0) {
+      activityType = "Unggah Modul/Materi";
+    }
 
     const currentHeaders = postSheet.getRange(1, 1, 1, postSheet.getLastColumn()).getValues()[0].map(h => String(h).trim());
     const rowMap = {
       "Waktu Submit": timestamp,
-      "Tipe Aktivitas": "Unggah Bukti",
+      "Tipe Aktivitas": activityType,
       "Nama Peserta": data.namaPeserta || "-",
       "Divisi / Departemen": data.divisi || "-",
       "Nama Training": data.namaTraining || "-",
       "Kategori": data.kategori || "-",
-      "Jumlah File": savedFiles.length,
+      "Jumlah File": totalCount,
       "Link Folder Google Drive": folderUrl,
       "Detail File Upload": fileDetails || "-",
       "Skor Post-Test": "-",
@@ -3024,17 +3578,19 @@ function handlePostTrainingEvidence(ss, data) {
 
     return ContentService.createTextOutput(JSON.stringify({
       success: true,
-      message: "Evidence berhasil diunggah ke Google Drive dan dicatat ke spreadsheet",
+      message: "Evidence & Materi berhasil diunggah ke Google Drive dan dicatat ke spreadsheet",
       folderUrl: folderUrl,
-      count: savedFiles.length,
-      files: savedFiles
+      count: totalCount,
+      photoCount: savedPhotos.length,
+      materialCount: savedMaterials.length,
+      files: totalSavedFiles
     })).setMimeType(ContentService.MimeType.JSON);
 
   } catch (err) {
     Logger.log("Error handlePostTrainingEvidence: " + err.toString());
     return ContentService.createTextOutput(JSON.stringify({
       success: false,
-      message: "Gagal memproses evidence: " + err.message
+      message: "Gagal memproses evidence & materi: " + err.message
     })).setMimeType(ContentService.MimeType.JSON);
   }
 }
@@ -3082,6 +3638,54 @@ function handlePostTestSubmission(ss, data) {
     return ContentService.createTextOutput(JSON.stringify({
       success: false,
       message: "Gagal mencatat post-test: " + err.message
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+/**
+ * Menangani pencatatan pelaporan sesi Knowledge Sharing ke tab "Post Training".
+ */
+function handleKnowledgeSharingSubmission(ss, data) {
+  try {
+    let postSheet = ss.getSheetByName(POST_TRAINING_SHEET_NAME);
+    if (!postSheet) {
+      postSheet = ss.insertSheet(POST_TRAINING_SHEET_NAME);
+    }
+    setupPostTrainingSheet(postSheet);
+
+    const timestamp = Utilities.formatDate(new Date(), TIME_ZONE, "yyyy-MM-dd HH:mm:ss");
+    const currentHeaders = postSheet.getRange(1, 1, 1, postSheet.getLastColumn()).getValues()[0].map(h => String(h).trim());
+    const detailSharing = `Tanggal Sesi: ${data.tanggalSesi || "-"} | Peserta: ${data.jumlahPeserta || 0} orang\nTopik: ${data.topikMateri || "-"}`;
+    const rowMap = {
+      "Waktu Submit": timestamp,
+      "Tipe Aktivitas": "Knowledge Sharing",
+      "Nama Peserta": data.namaSpeaker || "-",
+      "Divisi / Departemen": data.divisi || "-",
+      "Nama Training": data.namaTraining || "-",
+      "Kategori": "Internal Sharing",
+      "Jumlah File": data.jumlahPeserta ? `${data.jumlahPeserta} Peserta Hadir` : "-",
+      "Link Folder Google Drive": data.linkRecording || "-",
+      "Detail File Upload": detailSharing,
+      "Skor Post-Test": "-",
+      "Jawaban / Catatan": data.topikMateri || "-",
+      "Status": "Selesai"
+    };
+
+    const newRow = currentHeaders.map(header => {
+      return rowMap[header] !== undefined ? rowMap[header] : "-";
+    });
+    postSheet.appendRow(newRow);
+
+    return ContentService.createTextOutput(JSON.stringify({
+      success: true,
+      message: "Laporan knowledge sharing berhasil dicatat ke Google Sheets"
+    })).setMimeType(ContentService.MimeType.JSON);
+
+  } catch (err) {
+    Logger.log("Error handleKnowledgeSharingSubmission: " + err.toString());
+    return ContentService.createTextOutput(JSON.stringify({
+      success: false,
+      message: "Gagal mencatat knowledge sharing: " + err.message
     })).setMimeType(ContentService.MimeType.JSON);
   }
 }
@@ -3156,6 +3760,9 @@ function testUploadEvidenceDummy() {
     tanggal: Utilities.formatDate(new Date(), TIME_ZONE, "yyyy-MM-dd"),
     files: [
       { name: "test_evidence.png", type: "image/png", base64: dummyBase64 }
+    ],
+    materials: [
+      { name: "modul_pelatihan_golang.pdf", type: "application/pdf", base64: dummyBase64 }
     ]
   };
   const res = handlePostTrainingEvidence(ss, mockPayload);
