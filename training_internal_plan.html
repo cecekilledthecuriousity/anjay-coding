@@ -1861,30 +1861,12 @@
             <div>
               <p class="kicker">Performance Impact &amp; Evaluation Hub</p>
               <h1 class="voice" style="font-size:24px;margin:0 0 2px;">Post Training Trampoline</h1>
-              <span class="helper-note" style="margin:0;font-size:13px;">Pusat tindak lanjut pasca-pelatihan: unggah bukti kegiatan ke Google Drive &amp; evaluasi hasil post-test.</span>
+              <span class="helper-note" id="trampolinePageSubtitle" style="margin:0;font-size:13px;">Pusat tindak lanjut pasca-pelatihan: unggah bukti kegiatan ke Google Drive &amp; evaluasi hasil post-test.</span>
             </div>
           </div>
         </header>
 
-        <!-- Tab Switcher (Unggah Bukti, Post Test, Knowledge Sharing) -->
-        <div class="trampoline-tabs-bar">
-          <div class="trampoline-tabs">
-            <button type="button" class="trampoline-tab-btn active" id="tabBtnEvidence" onclick="goToPostTrainingSub('evidence', event)">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-              <span>Unggah Bukti</span>
-            </button>
-            <button type="button" class="trampoline-tab-btn" id="tabBtnPostTest" onclick="goToPostTrainingSub('posttest', event)">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
-              <span>Post Test</span>
-            </button>
-            <button type="button" class="trampoline-tab-btn" id="tabBtnSharing" onclick="goToPostTrainingSub('sharing', event)">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
-              <span>Knowledge Sharing</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- ================= TAB 1: UNGGAH BUKTI ================= -->
+        <!-- ================= PANEL 1: UNGGAH BUKTI ================= -->
         <div class="trampoline-tab-panel active" id="trampolinePanelEvidence">
           <div class="form-card" style="margin-bottom:20px;">
             <div class="card-head">

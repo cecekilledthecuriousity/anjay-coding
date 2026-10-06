@@ -2876,6 +2876,17 @@ function switchTrampolineTab(tabName) {
     item.classList.toggle('active', sub === tabName);
   });
 
+  const headerSub = document.getElementById('trampolinePageSubtitle');
+  if (headerSub) {
+    if (tabName === 'evidence') {
+      headerSub.textContent = 'Pusat tindak lanjut pasca-pelatihan: unggah bukti foto kegiatan & modul materi ke Google Drive.';
+    } else if (tabName === 'posttest') {
+      headerSub.textContent = 'Pusat tindak lanjut pasca-pelatihan: evaluasi pemahaman peserta melalui lembar Google Form resmi.';
+    } else if (tabName === 'sharing') {
+      headerSub.textContent = 'Pusat tindak lanjut pasca-pelatihan: pelaporan realisasi sesi knowledge sharing kepada rekan tim.';
+    }
+  }
+
   const navGroup = document.getElementById('navGroupPostTraining');
   if (navGroup) {
     navGroup.classList.add('is-open');
