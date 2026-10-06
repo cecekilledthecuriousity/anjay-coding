@@ -1,95 +1,29 @@
-# Static HTML Assembler for Windows PowerShell (TDS)
-# Compiles modular components in src/ into root index.html and training_internal_plan.html.
-[CmdletBinding()]
-param(
-    [switch]$Watch
-)
+# PowerShell Static HTML Assembler for TDS
+$templatePath = Join-Path $PSScriptRoot "..\src\index.template.html"
+$srcDir = Join-Path $PSScriptRoot "..\src"
+$targetIndex = Join-Path $PSScriptRoot "..\index.html"
+$targetMirror = Join-Path $PSScriptRoot "..\training_internal_plan.html"
 
-$ErrorActionPreference = "Stop"
+$content = [System.IO.File]::ReadAllText($templatePath, [System.Text.Encoding]::UTF8)
+$includeRegex = [regex]'<!--\s*@@include\([''"]([^''"]+)[''"]\)\s*-->'
 
-$rootDir = Split-Path -Parent $PSScriptRoot
-$srcDir = Join-Path $rootDir "src"
-$templateFile = Join-Path $srcDir "index.template.html"
-$targetIndex = Join-Path $rootDir "index.html"
-$targetMirror = Join-Path $rootDir "training_internal_plan.html"
-
-function Invoke-Assemble {
-    $sw = [System.Diagnostics.Stopwatch]::StartNew()
-    Write-Host "[TDS Build] Memulai assembly dari src/index.template.html..." -ForegroundColor Cyan
-
-    if (-not (Test-Path $templateFile)) {
-        Write-Error "File template tidak ditemukan: $templateFile"
-        return
-    }
-
-    $content = [System.IO.File]::ReadAllText($templateFile, [System.Text.Encoding]::UTF8)
-    $pattern = "<!--\s*@@include\(['""]([^'""]+)['""]\)\s*-->"
-    $regex = [regex]$pattern
-
-    $iterations = 0
-    $maxIterations = 20
-
-    while ($regex.IsMatch($content)) {
-        $iterations++
-        if ($iterations -gt $maxIterations) {
-            Write-Error "Terlalu banyak include rekursif. Kemungkinan ada circular include."
-            return
-        }
-
-        $matches = $regex.Matches($content)
-        foreach ($match in $matches) {
-            $includeRelPath = $match.Groups[1].Value.Replace("/", [System.IO.Path]::DirectorySeparatorChar)
-            $includeFullPath = Join-Path $srcDir $includeRelPath
-
-            if (-not (Test-Path $includeFullPath)) {
-                Write-Error "File partial tidak ditemukan: $includeFullPath (direferensikan di template)"
-                return
-            }
-
-            $partialContent = [System.IO.File]::ReadAllText($includeFullPath, [System.Text.Encoding]::UTF8)
-            $content = $content.Replace($match.Value, $partialContent)
+for ($i = 0; $i -lt 10; $i++) {
+    $matches = $includeRegex.Matches($content)
+    if ($matches.Count -eq 0) { break }
+    foreach ($m in $matches) {
+        $relPath = $m.Groups[1].Value.Replace('/', [System.IO.Path]::DirectorySeparatorChar)
+        $fullPath = [System.IO.Path]::Combine($srcDir, $relPath)
+        if (Test-Path $fullPath) {
+            $included = [System.IO.File]::ReadAllText($fullPath, [System.Text.Encoding]::UTF8)
+            $content = $content.Replace($m.Value, $included)
+        } else {
+            Write-Error "Included file not found: $fullPath"
         }
     }
-
-    # Tulis hasil kompilasi ke index.html dan training_internal_plan.html (UTF-8 No BOM)
-    $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
-    [System.IO.File]::WriteAllText($targetIndex, $content, $utf8NoBom)
-    [System.IO.File]::WriteAllText($targetMirror, $content, $utf8NoBom)
-
-    $sw.Stop()
-    $fileInfo = Get-Item $targetIndex
-    $sizeKb = [math]::Round($fileInfo.Length / 1024, 1)
-
-    Write-Host "[TDS Build] Berhasil dalam $($sw.ElapsedMilliseconds)ms!" -ForegroundColor Green
-    Write-Host "  -> index.html ($sizeKb KB)" -ForegroundColor DarkGray
-    Write-Host "  -> training_internal_plan.html (Mirrored)" -ForegroundColor DarkGray
 }
 
-if ($Watch) {
-    Invoke-Assemble
-    Write-Host "[TDS Build] Memantau perubahan di folder src/... Tekan Ctrl+C untuk berhenti." -ForegroundColor Yellow
+[System.IO.File]::WriteAllText($targetIndex, $content, [System.Text.Encoding]::UTF8)
+[System.IO.File]::WriteAllText($targetMirror, $content, [System.Text.Encoding]::UTF8)
 
-    $fsw = New-Object System.IO.FileSystemWatcher
-    $fsw.Path = $srcDir
-    $fsw.IncludeSubdirectories = $true
-    $fsw.EnableRaisingEvents = $true
-
-    $action = {
-        param($source, $eventArgs)
-        Write-Host "`n[TDS Build] Terdeteksi perubahan pada: $($eventArgs.Name). Merakit ulang..." -ForegroundColor Magenta
-        Invoke-Assemble
-    }
-
-    Register-ObjectEvent $fsw "Changed" -Action $action | Out-Null
-    Register-ObjectEvent $fsw "Created" -Action $action | Out-Null
-    Register-ObjectEvent $fsw "Deleted" -Action $action | Out-Null
-
-    try {
-        while ($true) { Start-Sleep -Seconds 1 }
-    } finally {
-        Unregister-Event -SourceIdentifier * -ErrorAction SilentlyContinue
-        $fsw.Dispose()
-    }
-} else {
-    Invoke-Assemble
-}
+Write-Host "[TDS Build] Successfully assembled index.html and training_internal_plan.html"
+Write-Host "  -> Output size: $([Math]::Round($content.Length / 1024, 1)) KB"

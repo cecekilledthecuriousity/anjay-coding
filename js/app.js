@@ -2807,6 +2807,8 @@ function goToPage(page) {
     renderVendorDirectoryPage();
   } else if (page === 'post-training') {
     populateTrampolineTrainingDropdowns();
+    const navGroup = document.getElementById('navGroupPostTraining');
+    if (navGroup) navGroup.classList.add('is-open');
   } else if (page === 'portal-approval') {
     const masterView = document.getElementById('masterView');
     if (masterView) masterView.style.display = '';
@@ -2852,6 +2854,7 @@ function handleHashNavigation() {
 // POST TRAINING TRAMPOLINE LOGIC
 // ==========================================
 function switchTrampolineTab(tabName) {
+  if (!tabName) tabName = 'evidence';
   const panelEvidence = document.getElementById('trampolinePanelEvidence');
   const panelPostTest = document.getElementById('trampolinePanelPostTest');
   const panelSharing = document.getElementById('trampolinePanelSharing');
@@ -2859,30 +2862,63 @@ function switchTrampolineTab(tabName) {
   const btnPostTest = document.getElementById('tabBtnPostTest');
   const btnSharing = document.getElementById('tabBtnSharing');
 
-  if (tabName === 'evidence') {
-    if (panelEvidence) panelEvidence.style.display = 'block';
-    if (panelPostTest) panelPostTest.style.display = 'none';
-    if (panelSharing) panelSharing.style.display = 'none';
-    if (btnEvidence) btnEvidence.classList.add('active');
-    if (btnPostTest) btnPostTest.classList.remove('active');
-    if (btnSharing) btnSharing.classList.remove('active');
-  } else if (tabName === 'sharing') {
-    if (panelEvidence) panelEvidence.style.display = 'none';
-    if (panelPostTest) panelPostTest.style.display = 'none';
-    if (panelSharing) panelSharing.style.display = 'block';
-    if (btnEvidence) btnEvidence.classList.remove('active');
-    if (btnPostTest) btnPostTest.classList.remove('active');
-    if (btnSharing) btnSharing.classList.add('active');
-  } else {
-    if (panelEvidence) panelEvidence.style.display = 'none';
-    if (panelPostTest) panelPostTest.style.display = 'block';
-    if (panelSharing) panelSharing.style.display = 'none';
-    if (btnEvidence) btnEvidence.classList.remove('active');
-    if (btnPostTest) btnPostTest.classList.add('active');
-    if (btnSharing) btnSharing.classList.remove('active');
+  if (panelEvidence) panelEvidence.style.display = (tabName === 'evidence') ? 'block' : 'none';
+  if (panelPostTest) panelPostTest.style.display = (tabName === 'posttest') ? 'block' : 'none';
+  if (panelSharing) panelSharing.style.display = (tabName === 'sharing') ? 'block' : 'none';
+
+  if (btnEvidence) btnEvidence.classList.toggle('active', tabName === 'evidence');
+  if (btnPostTest) btnPostTest.classList.toggle('active', tabName === 'posttest');
+  if (btnSharing) btnSharing.classList.toggle('active', tabName === 'sharing');
+
+  // Sync sidebar sub-item active state
+  document.querySelectorAll('.tds-nav-sub-item').forEach(item => {
+    const sub = item.getAttribute('data-sub');
+    item.classList.toggle('active', sub === tabName);
+  });
+
+  const navGroup = document.getElementById('navGroupPostTraining');
+  if (navGroup) {
+    navGroup.classList.add('is-open');
   }
 }
 window.switchTrampolineTab = switchTrampolineTab;
+
+function goToPostTrainingSub(subTab, event) {
+  if (event) {
+    event.stopPropagation();
+  }
+  goToPage('post-training');
+  switchTrampolineTab(subTab);
+}
+window.goToPostTrainingSub = goToPostTrainingSub;
+
+function handleNavParentClick(page, groupId, event) {
+  if (event) {
+    event.preventDefault();
+  }
+  const group = document.getElementById(groupId);
+  if (currentPage === page) {
+    if (group) group.classList.toggle('is-open');
+  } else {
+    goToPage(page);
+    if (group) group.classList.add('is-open');
+    const activeSub = group ? group.querySelector('.tds-nav-sub-item.active') : null;
+    const subName = activeSub ? activeSub.getAttribute('data-sub') : 'evidence';
+    switchTrampolineTab(subName);
+  }
+}
+window.handleNavParentClick = handleNavParentClick;
+
+function toggleNavGroup(groupId, event) {
+  if (event) {
+    event.stopPropagation();
+  }
+  const group = document.getElementById(groupId);
+  if (group) {
+    group.classList.toggle('is-open');
+  }
+}
+window.toggleNavGroup = toggleNavGroup;
 
 function populateTrampolineTrainingDropdowns() {
   const selEvidence = document.getElementById('evidenceTrainingSelect');

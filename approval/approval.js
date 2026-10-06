@@ -158,8 +158,12 @@ function initAuth() {
   if (initialDeepId) {
     showToast(`Memuat pengajuan ${initialDeepId}...`, 'info', 2500);
   }
-  // Langsung tampilkan seluruh portal approval secara lengkap (tanpa gerbang PIN)
-  showDashboard();
+  const isAuthenticated = sessionStorage.getItem(AUTH_TOKEN_KEY) === 'true';
+  if (isAuthenticated) {
+    showDashboard();
+  } else {
+    showLoginGate();
+  }
 }
 
 /**

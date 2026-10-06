@@ -187,7 +187,7 @@
 <body>
 
   <!-- ================= STATE 1: PIN LOGIN GATE (Fallback) ================= -->
-  <section id="loginGate" class="login-gate-wrap" style="display:none;">
+  <section id="loginGate" class="login-gate-wrap">
     <div class="login-card">
       <div class="login-icon-box">
         <img src="../favicon/logo.svg" alt="Logo" style="width:52px;height:52px;border-radius:14px;object-fit:contain;" onerror="this.src='../favicon/apple-touch-icon.png'">
@@ -231,11 +231,18 @@
         </svg>
         Buka Portal
       </button>
+
+      <div style="margin-top:16px;">
+        <a href="../index.html" style="font-size:12.5px;color:var(--ink-soft);text-decoration:none;display:inline-flex;align-items:center;gap:5px;transition:color 0.15s ease;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+          <span>Kembali ke Form Pengajuan</span>
+        </a>
+      </div>
     </div>
   </section>
 
   <!-- ================= STATE 2: TDS APPROVAL APP LAYOUT ================= -->
-  <div class="tds-layout" id="approvalAppLayout">
+  <div class="tds-layout" id="approvalAppLayout" style="display:none;">
 
     <!-- ================= TDS SIDEBAR ================= -->
     <aside class="tds-sidebar" id="tdsSidebar">
