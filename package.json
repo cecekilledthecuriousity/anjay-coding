@@ -5,6 +5,7 @@
   "description": "Training & Development System with Modular Static HTML Assembler",
   "scripts": {
     "build": "node scripts/build.js",
-    "watch": "node scripts/build.js --watch"
+    "watch": "node scripts/build.js --watch",
+    "test": "node --test \"tests/**/*.test.js\""
   }
 }
