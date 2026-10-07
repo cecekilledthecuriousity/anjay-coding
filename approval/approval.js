@@ -751,7 +751,7 @@ function renderUrgentPendingList() {
         </div>
       </div>
       <div style="display:flex;gap:8px;align-items:center;">
-        <button type="button" class="btn-primary" style="font-size:12.5px;padding:7px 14px;gap:5px;box-shadow:0 4px 12px rgba(0,23,143,0.25);" onclick="openReviewModal('${escapeHtml(item.id)}')">
+        <button type="button" class="btn-primary" style="font-size:12.5px;padding:7px 14px;gap:5px;box-shadow:0 4px 12px rgba(0,23,143,0.25);" onclick="openReviewModal(${jsArg(item.id)})">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
             <polyline points="14 2 14 8 20 8"></polyline>
@@ -924,7 +924,7 @@ function renderTable(items) {
   if (table) table.style.display = 'table';
 
   tbody.innerHTML = items.map(item => `
-    <tr onclick="handleRowClick(event, '${escapeHtml(item.id)}')">
+    <tr onclick="handleRowClick(event, ${jsArg(item.id)})">
       <td><strong>${escapeHtml(item.id)}</strong></td>
       <td style="font-size:12.5px;color:var(--ink-soft);white-space:nowrap;">${formatDateIndo(item.submittedAt)}</td>
       <td>
@@ -946,10 +946,10 @@ function renderTable(items) {
       </td>
       <td style="text-align:center;white-space:nowrap;">
         <div style="display:inline-flex;gap:6px;align-items:center;">
-          <button type="button" class="btn-secondary" style="padding:6px 12px;font-size:12px;white-space:nowrap;" onclick="openReviewModal('${escapeHtml(item.id)}')">
+          <button type="button" class="btn-secondary" style="padding:6px 12px;font-size:12px;white-space:nowrap;" onclick="openReviewModal(${jsArg(item.id)})">
             Tinjau
           </button>
-          <button type="button" class="btn-secondary" style="padding:6px 8px;font-size:12px;color:var(--danger);border-color:rgba(220,38,38,0.25);background:#FFF;" title="Hapus Pengajuan ${escapeHtml(item.id)}" onclick="deleteSubmission('${escapeHtml(item.id)}')">
+          <button type="button" class="btn-secondary" style="padding:6px 8px;font-size:12px;color:var(--danger);border-color:rgba(220,38,38,0.25);background:#FFF;" title="Hapus Pengajuan ${escapeHtml(item.id)}" onclick="deleteSubmission(${jsArg(item.id)})">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="3 6 5 6 21 6"></polyline>
               <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
@@ -2171,6 +2171,20 @@ function escapeHtml(str) {
     .replace(/'/g, '&#039;');
 }
 
+// Argumen string aman untuk inline handler onclick="fn(...)".
+// JSON.stringify membuat literal JS valid, escapeHtml membuatnya aman di dalam atribut.
+function jsArg(value) {
+  return escapeHtml(JSON.stringify(String(value === null || value === undefined ? '' : value)));
+}
+
+// Hanya izinkan sumber gambar yang aman (data URL gambar, https, blob).
+function safeImageSrc(value) {
+  const src = String(value || '').trim();
+  if (/^data:image\/(png|jpe?g|gif|webp);base64,[a-z0-9+/=\s]+$/i.test(src)) return escapeHtml(src);
+  if (/^(https:|blob:)/i.test(src)) return escapeHtml(src);
+  return '';
+}
+
 function formatDateIndo(dateStr) {
   if (!dateStr || dateStr === '-') return '-';
 
@@ -2540,21 +2554,21 @@ function applyEvidenceFilterAndRender() {
     let coverHtml = '';
     if (photos.length >= 3) {
       coverHtml = `
-        <div class="evidence-cover-collage" onclick="openEvidenceDetailModal('${escapeHtml(item.id)}')">
-          <img src="${photos[0].dataUrl}" alt="Bukti 1" class="evidence-cover-thumb" onerror="this.src='https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=400'">
-          <img src="${photos[1].dataUrl}" alt="Bukti 2" class="evidence-cover-thumb" onerror="this.src='https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=400'">
-          <img src="${photos[2].dataUrl}" alt="Bukti 3" class="evidence-cover-thumb" onerror="this.src='https://images.unsplash.com/photo-1531482615713-2afd69097998?w=400'">
+        <div class="evidence-cover-collage" onclick="openEvidenceDetailModal(${jsArg(item.id)})">
+          <img src="${safeImageSrc(photos[0].dataUrl)}" alt="Bukti 1" class="evidence-cover-thumb" onerror="this.src='https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=400'">
+          <img src="${safeImageSrc(photos[1].dataUrl)}" alt="Bukti 2" class="evidence-cover-thumb" onerror="this.src='https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=400'">
+          <img src="${safeImageSrc(photos[2].dataUrl)}" alt="Bukti 3" class="evidence-cover-thumb" onerror="this.src='https://images.unsplash.com/photo-1531482615713-2afd69097998?w=400'">
         </div>
       `;
     } else if (photos.length > 0) {
       coverHtml = `
-        <div style="width:100%;height:100%;cursor:pointer;" onclick="openEvidenceDetailModal('${escapeHtml(item.id)}')">
-          <img src="${photos[0].dataUrl}" alt="Cover Bukti" class="evidence-cover-thumb" style="width:100%;height:100%;object-fit:cover;">
+        <div style="width:100%;height:100%;cursor:pointer;" onclick="openEvidenceDetailModal(${jsArg(item.id)})">
+          <img src="${safeImageSrc(photos[0].dataUrl)}" alt="Cover Bukti" class="evidence-cover-thumb" style="width:100%;height:100%;object-fit:cover;">
         </div>
       `;
     } else {
       coverHtml = `
-        <div class="evidence-cover-fallback" onclick="openEvidenceDetailModal('${escapeHtml(item.id)}')">
+        <div class="evidence-cover-fallback" onclick="openEvidenceDetailModal(${jsArg(item.id)})">
           <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
             <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
             <circle cx="8.5" cy="8.5" r="1.5"></circle>
@@ -2617,7 +2631,7 @@ function applyEvidenceFilterAndRender() {
         </div>
 
         <div class="evidence-card-actions">
-          <button type="button" class="btn-primary" onclick="openEvidenceDetailModal('${escapeHtml(item.id)}')" style="flex:1;justify-content:center;padding:10px 16px;font-size:13px;font-weight:600;border-radius:9px;">
+          <button type="button" class="btn-primary" onclick="openEvidenceDetailModal(${jsArg(item.id)})" style="flex:1;justify-content:center;padding:10px 16px;font-size:13px;font-weight:600;border-radius:9px;">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
             <span>Lihat Galeri &amp; Bukti</span>
           </button>
@@ -2669,8 +2683,8 @@ function openEvidenceDetailModal(evidenceId) {
   if (galleryGrid) {
     if (photos.length > 0) {
       galleryGrid.innerHTML = photos.map((p, i) => `
-        <div class="evidence-gallery-item" onclick="openEvidenceLightbox('${escapeHtml(p.dataUrl || p.url)}', '${escapeHtml(p.name || `Foto ${i + 1}`)}')">
-          <img src="${escapeHtml(p.dataUrl || p.url)}" alt="${escapeHtml(p.name || 'Bukti')}" loading="lazy">
+        <div class="evidence-gallery-item" onclick="openEvidenceLightbox(${jsArg(safeImageSrc(p.dataUrl || p.url) ? (p.dataUrl || p.url) : '')}, ${jsArg(p.name || `Foto ${i + 1}`)})">
+          <img src="${safeImageSrc(p.dataUrl || p.url)}" alt="${escapeHtml(p.name || 'Bukti')}" loading="lazy">
           <div class="evidence-gallery-zoom-badge">
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>
           </div>
