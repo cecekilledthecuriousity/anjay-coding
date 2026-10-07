@@ -78,6 +78,7 @@ const HEADERS = [
   "Jumlah Peserta Terdaftar",
   "Daftar Peserta (Ringkasan)",
   "Modul & Sesi (Ringkasan)",
+  "Modul & Materi (File/Link)",
   "Training Goals",
   "Hasil yang Diharapkan",
   "Penerapan di Pekerjaan",
@@ -226,6 +227,53 @@ function doPost(e) {
     const reminderStatus = "Pending";
     const slaReminderStatus = "Pending";
 
+    // 4. Proses Berkas Modul & Silabus Proposal ke Google Drive jika ada
+    let proposalMaterialsSummary = meta["Link silabus materi"] || "-";
+    if (Array.isArray(data.materials) && data.materials.length > 0) {
+      try {
+        const rootFolder = getEvidenceRootFolder();
+        const propFolder = getOrCreateSubFolder(rootFolder, "📁 Proposal Modul Training");
+        const sessionFolder = getOrCreateSubFolder(propFolder, `${trainingId}`);
+        try {
+          sessionFolder.setSharing(DriveApp.Access.DOMAIN_WITH_LINK, DriveApp.Permission.VIEW);
+        } catch (eShare) {
+          try { sessionFolder.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); } catch (eLink) {}
+        }
+        const savedFiles = [];
+        data.materials.forEach((m, idx) => {
+          if (!m || !m.base64) return;
+          try {
+            let cleanBase64 = String(m.base64).trim();
+            if (cleanBase64.indexOf("base64,") !== -1) {
+              cleanBase64 = cleanBase64.substring(cleanBase64.indexOf("base64,") + 7);
+            }
+            cleanBase64 = cleanBase64.replace(/[\r\n\s]/g, "");
+            const decodedBytes = Utilities.base64Decode(cleanBase64);
+            const fileName = (m.name || `modul_${idx + 1}.pdf`).toString().trim();
+            const mimeType = resolveMaterialMimeType(fileName, m.type);
+            const blob = Utilities.newBlob(decodedBytes, mimeType, fileName);
+            const driveFile = sessionFolder.createFile(blob);
+            try {
+              driveFile.setSharing(DriveApp.Access.DOMAIN_WITH_LINK, DriveApp.Permission.VIEW);
+            } catch (efs) {
+              try { driveFile.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); } catch (efl) {}
+            }
+            savedFiles.push(`${fileName} (${driveFile.getUrl()})`);
+          } catch (fileErr) {
+            Logger.log("Gagal simpan berkas modul proposal: " + fileErr.toString());
+          }
+        });
+        if (savedFiles.length > 0) {
+          proposalMaterialsSummary = savedFiles.join("\n");
+          if (meta["Link silabus materi"]) {
+            proposalMaterialsSummary += `\nLink Cloud: ${meta["Link silabus materi"]}`;
+          }
+        }
+      } catch (propErr) {
+        Logger.log("Gagal buat folder proposal modul: " + propErr.toString());
+      }
+    }
+
     // Petakan data ke urutan header aktual sheet agar tidak terjadi pergeseran kolom
     const currentHeaders = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0].map(h => String(h).trim());
     const rowMap = {
@@ -252,6 +300,7 @@ function doPost(e) {
       "Jumlah Peserta Terdaftar": participants.filter(p => p.nama).length,
       "Daftar Peserta (Ringkasan)": participantsSummary || "-",
       "Modul & Sesi (Ringkasan)": modulesSummary || "-",
+      "Modul & Materi (File/Link)": proposalMaterialsSummary || meta["Link silabus materi"] || "-",
       "Training Goals": goals,
       "Hasil yang Diharapkan": hasilDiharapkan,
       "Penerapan di Pekerjaan": penerapanKerja,
@@ -3365,6 +3414,23 @@ function getOrCreateSubFolder(parentFolder, folderName) {
     return folders.next();
   }
   return parentFolder.createFolder(safeName);
+}
+
+/**
+ * Resolusi tipe MIME berkas modul & materi
+ */
+function resolveMaterialMimeType(fileName, fallbackType) {
+  const lower = String(fileName || "").toLowerCase();
+  if (lower.endsWith(".pdf")) return MimeType.PDF;
+  if (lower.endsWith(".ppt")) return "application/vnd.ms-powerpoint";
+  if (lower.endsWith(".pptx")) return "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+  if (lower.endsWith(".doc")) return "application/msword";
+  if (lower.endsWith(".docx")) return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+  if (lower.endsWith(".xls")) return "application/vnd.ms-excel";
+  if (lower.endsWith(".xlsx")) return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+  if (lower.endsWith(".zip")) return MimeType.ZIP;
+  if (lower.endsWith(".rar")) return "application/x-rar-compressed";
+  return fallbackType || "application/octet-stream";
 }
 
 /**

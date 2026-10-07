@@ -3406,6 +3406,144 @@ function clearAllMaterialFiles() {
 }
 window.clearAllMaterialFiles = clearAllMaterialFiles;
 
+// ==========================================
+// PROPOSAL MODULE / SILABUS UPLOAD (STEP 1)
+// ==========================================
+let selectedProposalFiles = []; // Array of { file, name, size, type, ext, base64 }
+
+function handleProposalFileSelect(e) {
+  const files = Array.from(e.target.files || []);
+  processProposalFiles(files);
+  e.target.value = '';
+}
+window.handleProposalFileSelect = handleProposalFileSelect;
+
+function handleProposalDragOver(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  document.getElementById('proposalDropzone')?.classList.add('dragover');
+}
+window.handleProposalDragOver = handleProposalDragOver;
+
+function handleProposalDragLeave(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  document.getElementById('proposalDropzone')?.classList.remove('dragover');
+}
+window.handleProposalDragLeave = handleProposalDragLeave;
+
+function handleProposalDrop(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  document.getElementById('proposalDropzone')?.classList.remove('dragover');
+  const files = Array.from(e.dataTransfer.files || []);
+  processProposalFiles(files);
+}
+window.handleProposalDrop = handleProposalDrop;
+
+function processProposalFiles(newFiles) {
+  if (!newFiles || newFiles.length === 0) return;
+
+  const maxFiles = 5;
+  const maxBytes = 25 * 1024 * 1024; // 25 MB
+  const allowedExts = ['pdf', 'ppt', 'pptx', 'doc', 'docx', 'xls', 'xlsx', 'zip', 'rar'];
+
+  for (let i = 0; i < newFiles.length; i++) {
+    const file = newFiles[i];
+
+    if (selectedProposalFiles.length >= maxFiles) {
+      showToast(`Maksimal hanya dapat melampirkan ${maxFiles} file modul & silabus pelatihan.`, 'warning');
+      break;
+    }
+
+    const ext = file.name.split('.').pop().toLowerCase();
+    if (!allowedExts.includes(ext)) {
+      showToast(`File "${file.name}" ditolak. Hanya format PDF, PPT, PPTX, DOC, DOCX, XLS, XLSX, ZIP, RAR yang diperbolehkan.`, 'error');
+      continue;
+    }
+
+    if (file.size > maxBytes) {
+      showToast(`File "${file.name}" melebihi batas ukuran 25 MB (${(file.size / (1024 * 1024)).toFixed(1)} MB).`, 'error');
+      continue;
+    }
+
+    const isDuplicate = selectedProposalFiles.some(f => f.name === file.name && f.size === file.size);
+    if (isDuplicate) {
+      continue;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const dataUrl = event.target.result;
+      const pureBase64 = dataUrl.indexOf('base64,') !== -1 ? dataUrl.substring(dataUrl.indexOf('base64,') + 7) : dataUrl;
+      selectedProposalFiles.push({
+        file: file,
+        name: file.name,
+        size: file.size,
+        type: file.type || 'application/octet-stream',
+        ext: ext,
+        base64: pureBase64
+      });
+      renderProposalPreview();
+    };
+    reader.onerror = () => {
+      showToast(`Gagal membaca file "${file.name}".`, 'error');
+    };
+    reader.readAsDataURL(file);
+  }
+}
+
+function renderProposalPreview() {
+  const section = document.getElementById('proposalPreviewSection');
+  const countEl = document.getElementById('proposalPreviewCount');
+  const list = document.getElementById('proposalPreviewList');
+  if (!section || !list) return;
+
+  if (selectedProposalFiles.length === 0) {
+    section.style.display = 'none';
+    list.innerHTML = '';
+    return;
+  }
+
+  section.style.display = 'block';
+  if (countEl) countEl.textContent = `${selectedProposalFiles.length} dari 5 File Terpilih`;
+
+  list.innerHTML = selectedProposalFiles.map((item, index) => {
+    const sizeKb = (item.size / 1024).toFixed(0);
+    const sizeStr = item.size > 1024 * 1024 ? (item.size / (1024 * 1024)).toFixed(1) + ' MB' : `${sizeKb} KB`;
+    let badgeClass = 'badge-file';
+    const ext = (item.ext || 'doc').toLowerCase();
+    if (ext === 'pdf') badgeClass = 'badge-pdf';
+    else if (ext.startsWith('ppt')) badgeClass = 'badge-ppt';
+    else if (ext.startsWith('doc')) badgeClass = 'badge-doc';
+    else if (ext.startsWith('xls')) badgeClass = 'badge-xls';
+    else if (ext === 'zip' || ext === 'rar') badgeClass = 'badge-zip';
+
+    return `
+      <div class="material-preview-item">
+        <div class="material-file-badge ${badgeClass}">${escapeHtml(ext.toUpperCase())}</div>
+        <div class="material-preview-meta">
+          <span class="material-preview-title" title="${escapeHtml(item.name)}">${escapeHtml(item.name)}</span>
+          <span class="material-preview-sub">${sizeStr}</span>
+        </div>
+        <button type="button" class="material-preview-remove" onclick="removeProposalFile(${index})" title="Hapus berkas ini">&times;</button>
+      </div>
+    `;
+  }).join('');
+}
+
+function removeProposalFile(index) {
+  selectedProposalFiles.splice(index, 1);
+  renderProposalPreview();
+}
+window.removeProposalFile = removeProposalFile;
+
+function clearAllProposalFiles() {
+  selectedProposalFiles = [];
+  renderProposalPreview();
+}
+window.clearAllProposalFiles = clearAllProposalFiles;
+
 async function submitEvidence(e) {
   e.preventDefault();
   const trainingSelect = document.getElementById('evidenceTrainingSelect');
@@ -4452,6 +4590,26 @@ function populateReviewSummary() {
       goalsWrap.style.display = 'none';
     }
   }
+
+  const matWrap = document.getElementById('revMaterialsWrapper');
+  const matEl = document.getElementById('revMaterials');
+  if (matWrap && matEl) {
+    const fileCount = (selectedProposalFiles || []).length;
+    const driveLink = (m['Link silabus materi'] || document.getElementById('linkSilabusDrive')?.value || '').trim();
+    const matSummary = [];
+    if (fileCount > 0) {
+      matSummary.push(`<strong>${fileCount} Berkas Terlampir:</strong> ${selectedProposalFiles.map(f => escapeHtml(f.name)).join(', ')}`);
+    }
+    if (driveLink) {
+      matSummary.push(`<strong>Tautan Cloud:</strong> <a href="${escapeHtml(driveLink)}" target="_blank" style="color:var(--accent);text-decoration:underline;word-break:break-all;">${escapeHtml(driveLink)}</a>`);
+    }
+    if (matSummary.length > 0) {
+      matEl.innerHTML = matSummary.join('<br>');
+      matWrap.style.display = 'block';
+    } else {
+      matWrap.style.display = 'none';
+    }
+  }
 }
 
 // ==========================================
@@ -4611,12 +4769,22 @@ function collectFormData() {
     });
   });
 
+  // Capture link silabus materi
+  meta['Link silabus materi'] = (document.getElementById('linkSilabusDrive')?.value || meta['Link silabus materi'] || '').trim();
+
   return {
     meta,
     vendors,
     participants,
     modules,
     approvals,
+    materials: (selectedProposalFiles || []).map(f => ({
+      name: f.name,
+      size: f.size,
+      type: f.type,
+      ext: f.ext,
+      base64: f.base64
+    })),
     status: 'Diajukan',
     statusClass: 'submitted'
   };
@@ -4904,6 +5072,7 @@ function resetForm() {
   currentStep = 1;
   updateStepperUI();
   pendingSubmitData = null;
+  clearAllProposalFiles();
 
   // 13. Remove any remaining error classes
   document.querySelectorAll('.error').forEach(el => el.classList.remove('error'));
@@ -5926,7 +6095,9 @@ function showDetail(entry, index) {
         ${m['Training goals'] ? `<div><strong>Training Goals:</strong> ${m['Training goals']}</div>` : ''}
         ${m['Training plan purpose'] && m['Training plan purpose'] !== m['Training goals'] ? `<div><strong>Purpose:</strong> ${m['Training plan purpose']}</div>` : ''}
         ${!m['Training goals'] && !m['Training plan purpose'] ? `<div><strong>Training Goals:</strong> -</div>` : ''}
-        ${m['Link silabus materi'] ? `<div><strong>Link Silabus:</strong> <a href="${m['Link silabus materi']}" target="_blank">${m['Link silabus materi']}</a></div>` : ''}
+        ${m['Link silabus materi'] ? `<div><strong>Link Silabus / Materi:</strong> <a href="${m['Link silabus materi']}" target="_blank" style="color:var(--accent);text-decoration:underline;word-break:break-all;">${m['Link silabus materi']}</a></div>` : ''}
+        ${m['Modul & Materi (File/Link)'] && m['Modul & Materi (File/Link)'] !== '-' && m['Modul & Materi (File/Link)'] !== m['Link silabus materi'] ? `<div><strong>Lampiran Modul:</strong> <div style="white-space:pre-line;color:var(--ink-soft);">${escapeHtml(m['Modul & Materi (File/Link)'])}</div></div>` : ''}
+        ${entry.materials && entry.materials.length > 0 ? `<div style="margin-top:4px;"><strong>Berkas Modul Dilampirkan:</strong> ${entry.materials.map(mat => `<span style="display:inline-block;padding:2px 8px;margin:2px 4px 2px 0;background:rgba(21,128,61,0.08);border:1px solid rgba(21,128,61,0.25);border-radius:6px;font-size:11.5px;color:#15803D;">📄 ${escapeHtml(mat.name)}</span>`).join('')}</div>` : ''}
       </div>
       <div style="font-weight:600;margin:14px 0 6px;">Evaluasi & Follow-up:</div>
       <div style="font-size:13px;line-height:1.6;margin-bottom:12px;">
