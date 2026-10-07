@@ -157,6 +157,45 @@ function safeUrl(value) {
   return esc(raw);
 }
 
+// Batas upload — HARUS sama dengan validasi frontend di js/app.js
+// (pemilihan foto evidence, materi post-training, dan berkas modul proposal)
+const UPLOAD_LIMITS = {
+  photo: {
+    maxBytes: 5 * 1024 * 1024,
+    extensions: ["jpg", "jpeg", "png"],
+    mimeTypes: ["image/jpeg", "image/png", "image/jpg"]
+  },
+  material: {
+    maxBytes: 25 * 1024 * 1024,
+    extensions: ["pdf", "ppt", "pptx", "doc", "docx", "xls", "xlsx", "zip", "rar"],
+    mimeTypes: []
+  }
+};
+
+function getFileExtension(fileName) {
+  const match = String(fileName || "").toLowerCase().match(/\.([a-z0-9]+)$/);
+  return match ? match[1] : "";
+}
+
+function sanitizeUploadFileName(fileName, fallback) {
+  const clean = String(fileName || "").trim().replace(/[\/\\:*?"<>|\u0000-\u001f]/g, "_").substring(0, 150);
+  return clean || fallback;
+}
+
+/**
+ * Mengembalikan "" jika file valid, atau alasan penolakan.
+ */
+function validateUploadFile(kind, fileName, mimeType, byteLength) {
+  const rule = UPLOAD_LIMITS[kind];
+  if (!rule) return "Jenis upload tidak dikenal";
+  const ext = getFileExtension(fileName);
+  const mime = String(mimeType || "").toLowerCase();
+  const typeOk = rule.extensions.indexOf(ext) !== -1 || rule.mimeTypes.indexOf(mime) !== -1;
+  if (!typeOk) return "Format file tidak diizinkan";
+  if (byteLength > rule.maxBytes) return "Ukuran file melebihi batas";
+  return "";
+}
+
 const LOCK_TIMEOUT_MS = 30000;
 
 /**
@@ -337,7 +376,12 @@ function doPost(e) {
             }
             cleanBase64 = cleanBase64.replace(/[\r\n\s]/g, "");
             const decodedBytes = Utilities.base64Decode(cleanBase64);
-            const fileName = (m.name || `modul_${idx + 1}.pdf`).toString().trim();
+            const fileName = sanitizeUploadFileName(m.name, `modul_${idx + 1}.pdf`);
+            const rejectReason = validateUploadFile("material", fileName, m.type, decodedBytes.length);
+            if (rejectReason) {
+              Logger.log("Berkas modul proposal ditolak (" + fileName + "): " + rejectReason);
+              return;
+            }
             const mimeType = resolveMaterialMimeType(fileName, m.type);
             const blob = Utilities.newBlob(decodedBytes, mimeType, fileName);
             const driveFile = sessionFolder.createFile(blob);
@@ -3621,8 +3665,14 @@ function handlePostTrainingEvidence(ss, data) {
           cleanBase64 = cleanBase64.replace(/[\r\n\s]/g, "");
 
           const decodedBytes = Utilities.base64Decode(cleanBase64);
-          const fileName = (f.name || `dokumentasi_${idx + 1}.jpg`).toString().trim();
-          const mimeType = f.type || (fileName.toLowerCase().endsWith(".png") ? "image/png" : "image/jpeg");
+          const fileName = sanitizeUploadFileName(f.name, `dokumentasi_${idx + 1}.jpg`);
+          const rejectReason = validateUploadFile("photo", fileName, f.type, decodedBytes.length);
+          if (rejectReason) {
+            Logger.log("File bukti ditolak (" + fileName + "): " + rejectReason);
+            return;
+          }
+          const allowedPhotoMime = UPLOAD_LIMITS.photo.mimeTypes.indexOf(String(f.type || "").toLowerCase()) !== -1;
+          const mimeType = allowedPhotoMime ? f.type : (fileName.toLowerCase().endsWith(".png") ? "image/png" : "image/jpeg");
           const blob = Utilities.newBlob(decodedBytes, mimeType, fileName);
           const driveFile = photoFolder.createFile(blob);
 
@@ -3666,7 +3716,12 @@ function handlePostTrainingEvidence(ss, data) {
           cleanBase64 = cleanBase64.replace(/[\r\n\s]/g, "");
 
           const decodedBytes = Utilities.base64Decode(cleanBase64);
-          const fileName = (m.name || `materi_${idx + 1}.pdf`).toString().trim();
+          const fileName = sanitizeUploadFileName(m.name, `materi_${idx + 1}.pdf`);
+          const rejectReason = validateUploadFile("material", fileName, m.type, decodedBytes.length);
+          if (rejectReason) {
+            Logger.log("File materi ditolak (" + fileName + "): " + rejectReason);
+            return;
+          }
           const mimeType = resolveMaterialMimeType(fileName, m.type);
           const blob = Utilities.newBlob(decodedBytes, mimeType, fileName);
           const driveFile = materialFolder.createFile(blob);
