@@ -133,6 +133,30 @@ function sanitizeRow(row) {
   return row.map(sanitizeCell);
 }
 
+/**
+ * Escape teks sebelum disisipkan ke HTML email.
+ */
+function esc(value) {
+  if (value === null || value === undefined) return "";
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+/**
+ * URL aman untuk atribut href/src: buang skema berbahaya, lalu escape.
+ * URL tanpa skema (mis. "meet.google.com/xyz") tetap dipertahankan seperti sebelumnya.
+ */
+function safeUrl(value) {
+  const raw = String(value === null || value === undefined ? "" : value).trim();
+  const probe = raw.replace(/[\u0000- ]/g, "").toLowerCase();
+  if (/^(javascript|data|vbscript|file):/.test(probe)) return "";
+  return esc(raw);
+}
+
 const LOCK_TIMEOUT_MS = 30000;
 
 /**
@@ -1141,15 +1165,15 @@ function sendRegistrationEmails(meta, participants, modules) {
   const trainer = meta["Trainer"] || "Tim TnD";
   const metode = meta["Metode training"] || "Onsite";
 
-  let lokasiOrLink = meta["Lokasi / venue"] || "-";
+  let lokasiOrLink = esc(meta["Lokasi / venue"] || "-");
   if (metode === "Online" || metode === "Hybrid") {
     const platform = meta["Platform online"] || "Online";
     const link = meta["Link meeting online"] || "";
-    lokasiOrLink = link ? `${platform} (<a href="${link}" target="_blank">${link}</a>)` : platform;
+    lokasiOrLink = link ? `${esc(platform)} (<a href="${safeUrl(link)}" target="_blank">${esc(link)}</a>)` : esc(platform);
   }
 
   const silabusLink = meta["Link silabus materi"]
-    ? `<a href="${meta["Link silabus materi"]}" target="_blank" style="color:#00178F;font-weight:600;text-decoration:underline;">Buka Silabus / Materi Pelatihan &rarr;</a>`
+    ? `<a href="${safeUrl(meta["Link silabus materi"])}" target="_blank" style="color:#00178F;font-weight:600;text-decoration:underline;">Buka Silabus / Materi Pelatihan &rarr;</a>`
     : "-";
 
   let sentCount = 0;
@@ -1166,7 +1190,7 @@ function sendRegistrationEmails(meta, participants, modules) {
           <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto 24px;">
             <tr>
               <td style="border-radius:100px;background:linear-gradient(180deg,#EAF1FF 0%,#BFDBFF 50%,#FFD3DE 100%);background-color:#FFD3DE;">
-                <a href="${meta["Link meeting online"]}" target="_blank" style="display:inline-block;padding:14px 30px;font-size:14.5px;font-weight:700;color:#00178F;text-decoration:none;border-radius:100px;">Masuk ke Link Meeting &nbsp;&#8594;</a>
+                <a href="${safeUrl(meta["Link meeting online"])}" target="_blank" style="display:inline-block;padding:14px 30px;font-size:14.5px;font-weight:700;color:#00178F;text-decoration:none;border-radius:100px;">Masuk ke Link Meeting &nbsp;&#8594;</a>
               </td>
             </tr>
           </table>`;
@@ -1175,7 +1199,7 @@ function sendRegistrationEmails(meta, participants, modules) {
           <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto 24px;">
             <tr>
               <td style="border-radius:100px;background:linear-gradient(180deg,#EAF1FF 0%,#BFDBFF 50%,#FFD3DE 100%);background-color:#FFD3DE;">
-                <a href="${meta["Link silabus materi"]}" target="_blank" style="display:inline-block;padding:14px 30px;font-size:14.5px;font-weight:700;color:#00178F;text-decoration:none;border-radius:100px;">Buka Silabus / Materi &nbsp;&#8594;</a>
+                <a href="${safeUrl(meta["Link silabus materi"])}" target="_blank" style="display:inline-block;padding:14px 30px;font-size:14.5px;font-weight:700;color:#00178F;text-decoration:none;border-radius:100px;">Buka Silabus / Materi &nbsp;&#8594;</a>
               </td>
             </tr>
           </table>`;
@@ -1195,7 +1219,7 @@ function sendRegistrationEmails(meta, participants, modules) {
       </tr>
       <tr>
         <td style="padding:32px 32px 12px;">
-          <p style="margin:0 0 16px;font-size:15px;color:#00178F;font-weight:600;">Halo ${recipientName},</p>
+          <p style="margin:0 0 16px;font-size:15px;color:#00178F;font-weight:600;">Halo ${esc(recipientName)},</p>
           <p style="margin:0 0 20px;font-size:14.5px;line-height:1.65;color:#4A4F8F;">
             Anda telah resmi didaftarkan untuk mengikuti program pelatihan internal berikut. Silahkan mencatat jadwal dan detail pelaksanaannya di bawah ini:
           </p>
@@ -1203,19 +1227,19 @@ function sendRegistrationEmails(meta, participants, modules) {
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F9FBFE;border-radius:12px;border:1px solid #E1E8F8;overflow:hidden;margin-bottom:22px;">
             <tr>
               <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:12px;font-weight:600;color:#8D93C2;width:130px;">ID Training</td>
-              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;font-weight:700;color:#00178F;">${trainingId}</td>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;font-weight:700;color:#00178F;">${esc(trainingId)}</td>
             </tr>
             <tr>
               <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:12px;font-weight:600;color:#8D93C2;">Topik Pelatihan</td>
-              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;font-weight:600;color:#00178F;">${trainingName}</td>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;font-weight:600;color:#00178F;">${esc(trainingName)}</td>
             </tr>
             <tr>
               <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:12px;font-weight:600;color:#8D93C2;">Jadwal</td>
-              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;font-weight:600;color:#00178F;">${jadwal}</td>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;font-weight:600;color:#00178F;">${esc(jadwal)}</td>
             </tr>
             <tr>
               <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:12px;font-weight:600;color:#8D93C2;">Metode</td>
-              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;color:#4A4F8F;">${metode}</td>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;color:#4A4F8F;">${esc(metode)}</td>
             </tr>
             <tr>
               <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:12px;font-weight:600;color:#8D93C2;">Lokasi / Link</td>
@@ -1223,7 +1247,7 @@ function sendRegistrationEmails(meta, participants, modules) {
             </tr>
             <tr>
               <td style="padding:11px 16px;font-size:12px;font-weight:600;color:#8D93C2;">Trainer</td>
-              <td style="padding:11px 16px;font-size:13.5px;color:#4A4F8F;">${trainer}</td>
+              <td style="padding:11px 16px;font-size:13.5px;color:#4A4F8F;">${esc(trainer)}</td>
             </tr>
             ${meta["Link silabus materi"] && String(meta["Link silabus materi"]).trim() !== "-" && String(meta["Link silabus materi"]).trim() !== "" ? `
             <tr>
@@ -1361,13 +1385,13 @@ function sendApprovalDecisionEmail(rowObj, status, approverName, notes) {
             <span style="font-size:26px;">${isApproved ? '&#9989;' : '&#10060;'}</span>
           </div>
           <p style="margin:0 0 6px;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#00178F;">Training Request System</p>
-          <h1 style="margin:0;font-size:22px;font-weight:700;color:#00178F;line-height:1.3;">Status Pengajuan: Training ${trainingId}</h1>
+          <h1 style="margin:0;font-size:22px;font-weight:700;color:#00178F;line-height:1.3;">Status Pengajuan: Training ${esc(trainingId)}</h1>
         </td>
       </tr>
 
       <tr>
         <td style="padding:32px 32px 12px;">
-          <p style="margin:0 0 16px;font-size:15px;color:#00178F;font-weight:600;">Halo ${recipientName},</p>
+          <p style="margin:0 0 16px;font-size:15px;color:#00178F;font-weight:600;">Halo ${esc(recipientName)},</p>
           <p style="margin:0 0 20px;font-size:14.5px;line-height:1.65;color:#4A4F8F;">
             Pengajuan program pelatihan karyawan berikut telah ditinjau dan diperbarui status persetujuannya:
           </p>
@@ -1378,7 +1402,7 @@ function sendApprovalDecisionEmail(rowObj, status, approverName, notes) {
               ${statusLabel}
             </span>
             <div style="font-size:13px;color:${statusTextColor};line-height:1.5;margin-top:6px;">
-              Ditinjau oleh: <strong>${approver}</strong> &bull; <span>${tanggalApproval}</span>
+              Ditinjau oleh: <strong>${esc(approver)}</strong> &bull; <span>${esc(tanggalApproval)}</span>
             </div>
           </div>
 
@@ -1386,41 +1410,41 @@ function sendApprovalDecisionEmail(rowObj, status, approverName, notes) {
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F9FBFE;border-radius:12px;border:1px solid #E1E8F8;overflow:hidden;margin-bottom:22px;">
             <tr>
               <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:12px;font-weight:600;color:#8D93C2;width:130px;">ID Training</td>
-              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;font-weight:700;color:#00178F;">${trainingId}</td>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;font-weight:700;color:#00178F;">${esc(trainingId)}</td>
             </tr>
             <tr>
               <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:12px;font-weight:600;color:#8D93C2;">Nama Training</td>
-              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;font-weight:600;color:#00178F;">${trainingName}</td>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;font-weight:600;color:#00178F;">${esc(trainingName)}</td>
             </tr>
             <tr>
               <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:12px;font-weight:600;color:#8D93C2;">Pengaju &amp; Divisi</td>
-              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;color:#4A4F8F;">${pengaju} (${departemen})</td>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;color:#4A4F8F;">${esc(pengaju)} (${esc(departemen)})</td>
             </tr>
             <tr>
               <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:12px;font-weight:600;color:#8D93C2;">Jadwal Pelaksanaan</td>
-              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;font-weight:600;color:#00178F;">${jadwal}</td>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;font-weight:600;color:#00178F;">${esc(jadwal)}</td>
             </tr>
             <tr>
               <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:12px;font-weight:600;color:#8D93C2;">Metode &amp; Lokasi</td>
-              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;color:#4A4F8F;">${metode} &bull; ${venue}</td>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;color:#4A4F8F;">${esc(metode)} &bull; ${esc(venue)}</td>
             </tr>
             <tr>
               <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:12px;font-weight:600;color:#8D93C2;">Trainer</td>
-              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;color:#4A4F8F;">${trainer}</td>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;color:#4A4F8F;">${esc(trainer)}</td>
             </tr>
             <tr>
               <td style="padding:11px 16px;font-size:12px;font-weight:600;color:#8D93C2;">Jenis Training</td>
-              <td style="padding:11px 16px;font-size:13.5px;font-weight:700;color:#00178F;">${rowObj["Jenis Training"] || "Training Internal"}</td>
+              <td style="padding:11px 16px;font-size:13.5px;font-weight:700;color:#00178F;">${esc(rowObj["Jenis Training"] || "Training Internal")}</td>
             </tr>
           </table>
 
           <!-- Approver Notes Box -->
           <div style="background:#FFFFFF;border:1px solid #E1E8F8;border-left:4px solid ${statusBadgeBg};padding:14px 18px;border-radius:8px;margin-bottom:22px;">
             <div style="font-size:12px;text-transform:uppercase;font-weight:700;color:${statusBadgeBg};margin-bottom:6px;letter-spacing:0.04em;">
-              Catatan dari Approver (${approver}):
+              Catatan dari Approver (${esc(approver)}):
             </div>
             <div style="font-size:13.5px;line-height:1.5;color:#00178F;font-style:${catatan !== '-' ? 'normal' : 'italic'};">
-              ${catatan !== '-' ? catatan : 'Tidak ada catatan khusus.'}
+              ${catatan !== '-' ? esc(catatan) : 'Tidak ada catatan khusus.'}
             </div>
           </div>
 
@@ -1512,27 +1536,27 @@ function sendApproverNotification(meta, participants, modules, trainingId) {
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F9FBFE;border-radius:12px;border:1px solid #E1E8F8;overflow:hidden;margin-bottom:22px;">
             <tr>
               <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:12px;font-weight:600;color:#8D93C2;width:130px;">ID Training</td>
-              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;font-weight:700;color:#00178F;">${idTrn}</td>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;font-weight:700;color:#00178F;">${esc(idTrn)}</td>
             </tr>
             <tr>
               <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:12px;font-weight:600;color:#8D93C2;">Nama Training</td>
-              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;font-weight:600;color:#00178F;">${trainingName}</td>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;font-weight:600;color:#00178F;">${esc(trainingName)}</td>
             </tr>
             <tr>
               <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:12px;font-weight:600;color:#8D93C2;">Pengaju / Leader</td>
-              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;color:#4A4F8F;">${pengaju} &bull; ${pengajuEmail} (${deptName || "-"})</td>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;color:#4A4F8F;">${esc(pengaju)} &bull; ${esc(pengajuEmail)} (${esc(deptName || "-")})</td>
             </tr>
             <tr>
               <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:12px;font-weight:600;color:#8D93C2;">Jadwal Pelaksanaan</td>
-              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;font-weight:600;color:#00178F;">${jadwal}</td>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;font-weight:600;color:#00178F;">${esc(jadwal)}</td>
             </tr>
             <tr>
               <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:12px;font-weight:600;color:#8D93C2;">Metode &amp; Lokasi</td>
-              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;color:#4A4F8F;">${metode} (${venue})</td>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;color:#4A4F8F;">${esc(metode)} (${esc(venue)})</td>
             </tr>
             <tr>
               <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:12px;font-weight:600;color:#8D93C2;">Trainer</td>
-              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;color:#4A4F8F;">${trainer}</td>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;color:#4A4F8F;">${esc(trainer)}</td>
             </tr>
             <tr>
               <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:12px;font-weight:600;color:#8D93C2;">Jumlah Peserta</td>
@@ -1540,7 +1564,7 @@ function sendApproverNotification(meta, participants, modules, trainingId) {
             </tr>
             <tr>
               <td style="padding:11px 16px;font-size:12px;font-weight:600;color:#8D93C2;">Jenis Training</td>
-              <td style="padding:11px 16px;font-size:13.5px;font-weight:700;color:#00178F;">${meta["Jenis training"] || "Training Internal"}</td>
+              <td style="padding:11px 16px;font-size:13.5px;font-weight:700;color:#00178F;">${esc(meta["Jenis training"] || "Training Internal")}</td>
             </tr>
           </table>
 
@@ -1548,13 +1572,13 @@ function sendApproverNotification(meta, participants, modules, trainingId) {
             <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto;">
               <tr>
                 <td align="center" style="border-radius:100px;background:#00178F;">
-                  <a href="${directApprovalLink}" target="_blank" style="display:inline-block;padding:15px 36px;font-size:15px;font-weight:700;color:#FFFFFF;text-decoration:none;border-radius:100px;background-color:#00178F;">Tinjau &amp; Berikan Keputusan &nbsp;&#8594;</a>
+                  <a href="${safeUrl(directApprovalLink)}" target="_blank" style="display:inline-block;padding:15px 36px;font-size:15px;font-weight:700;color:#FFFFFF;text-decoration:none;border-radius:100px;background-color:#00178F;">Tinjau &amp; Berikan Keputusan &nbsp;&#8594;</a>
                 </td>
               </tr>
             </table>
             <p style="margin:12px 0 0;font-size:12px;color:#8D93C2;">
               Jika tombol di atas tidak merespons, buka tautan langsung berikut:<br>
-              <a href="${directApprovalLink}" target="_blank" style="color:#00178F;word-break:break-all;font-weight:600;text-decoration:underline;">${directApprovalLink}</a>
+              <a href="${safeUrl(directApprovalLink)}" target="_blank" style="color:#00178F;word-break:break-all;font-weight:600;text-decoration:underline;">${esc(directApprovalLink)}</a>
             </p>
           </div>
 
@@ -1566,7 +1590,7 @@ function sendApproverNotification(meta, participants, modules, trainingId) {
       </tr>
       <tr>
         <td style="padding:18px 32px;background:#FAFAFD;border-top:1px solid #EDF1FE;" align="center">
-          <p style="margin:0;font-size:11px;color:#9AA3D6;">Email otomatis dari Training Request System &middot; Dokumen ID: ${idTrn}</p>
+          <p style="margin:0;font-size:11px;color:#9AA3D6;">Email otomatis dari Training Request System &middot; Dokumen ID: ${esc(idTrn)}</p>
         </td>
       </tr>
     </table>
@@ -1707,23 +1731,23 @@ function checkAndSendApprovalReminders() {
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F9FBFE;border-radius:12px;border:1px solid #E1E8F8;overflow:hidden;margin-bottom:22px;">
           <tr>
             <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:12px;font-weight:600;color:#8D93C2;width:130px;">ID Training</td>
-            <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;font-weight:700;color:#00178F;">${trainingId}</td>
+            <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;font-weight:700;color:#00178F;">${esc(trainingId)}</td>
           </tr>
           <tr>
             <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:12px;font-weight:600;color:#8D93C2;">Topik Pelatihan</td>
-            <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;font-weight:600;color:#00178F;">${trainingName}</td>
+            <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;font-weight:600;color:#00178F;">${esc(trainingName)}</td>
           </tr>
           <tr>
             <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:12px;font-weight:600;color:#8D93C2;">Pengaju</td>
-            <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;color:#4A4F8F;">${pengaju} (${deptName})</td>
+            <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;color:#4A4F8F;">${esc(pengaju)} (${esc(deptName)})</td>
           </tr>
           <tr>
             <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:12px;font-weight:600;color:#8D93C2;">Jadwal</td>
-            <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;font-weight:600;color:#00178F;">${jadwal}</td>
+            <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;font-weight:600;color:#00178F;">${esc(jadwal)}</td>
           </tr>
           <tr>
             <td style="padding:11px 16px;font-size:12px;font-weight:600;color:#8D93C2;">Jenis Training</td>
-            <td style="padding:11px 16px;font-size:13.5px;font-weight:700;color:#00178F;">${jenisTraining}</td>
+            <td style="padding:11px 16px;font-size:13.5px;font-weight:700;color:#00178F;">${esc(jenisTraining)}</td>
           </tr>
         </table>
 
@@ -1731,13 +1755,13 @@ function checkAndSendApprovalReminders() {
           <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto;">
             <tr>
               <td align="center" style="border-radius:100px;background:#00178F;">
-                <a href="${directApprovalLink}" target="_blank" style="display:inline-block;padding:15px 36px;font-size:15px;font-weight:700;color:#FFFFFF;text-decoration:none;border-radius:100px;background-color:#00178F;">Buka &amp; Selesaikan Approval &nbsp;&#8594;</a>
+                <a href="${safeUrl(directApprovalLink)}" target="_blank" style="display:inline-block;padding:15px 36px;font-size:15px;font-weight:700;color:#FFFFFF;text-decoration:none;border-radius:100px;background-color:#00178F;">Buka &amp; Selesaikan Approval &nbsp;&#8594;</a>
               </td>
             </tr>
           </table>
           <p style="margin:12px 0 0;font-size:12px;color:#8D93C2;">
             Jika tombol di atas tidak merespons, buka tautan langsung berikut:<br>
-            <a href="${directApprovalLink}" target="_blank" style="color:#00178F;word-break:break-all;font-weight:600;text-decoration:underline;">${directApprovalLink}</a>
+            <a href="${safeUrl(directApprovalLink)}" target="_blank" style="color:#00178F;word-break:break-all;font-weight:600;text-decoration:underline;">${esc(directApprovalLink)}</a>
           </p>
         </div>
 
@@ -1750,7 +1774,7 @@ function checkAndSendApprovalReminders() {
 
       <tr>
         <td style="padding:18px 32px;background:#FAFAFD;border-top:1px solid #EDF1FE;" align="center">
-          <p style="margin:0;font-size:11px;color:#9AA3D6;">Notifikasi eskalasi SLA otomatis untuk ID: ${trainingId} &middot; Jangan reply email ini</p>
+          <p style="margin:0;font-size:11px;color:#9AA3D6;">Notifikasi eskalasi SLA otomatis untuk ID: ${esc(trainingId)} &middot; Jangan reply email ini</p>
         </td>
       </tr>
     </table>
@@ -2449,15 +2473,15 @@ function sendReminderEmails(meta, participants, modules, executionDate) {
   const jadwal = meta["Tanggal & jam pelaksanaan"] || "-";
   const metode = meta["Metode training"] || "Onsite";
 
-  let lokasiOrLink = meta["Lokasi / venue"] || "-";
+  let lokasiOrLink = esc(meta["Lokasi / venue"] || "-");
   if (metode === "Online" || metode === "Hybrid") {
     const platform = meta["Platform online"] || "Online";
     const link = meta["Link meeting online"] || "";
-    lokasiOrLink = link ? `${platform} (<a href="${link}" target="_blank">${link}</a>)` : platform;
+    lokasiOrLink = link ? `${esc(platform)} (<a href="${safeUrl(link)}" target="_blank">${esc(link)}</a>)` : esc(platform);
   }
 
   const silabusLink = meta["Link silabus materi"]
-    ? `<a href="${meta["Link silabus materi"]}" target="_blank" style="color:#00178F;font-weight:600;text-decoration:underline;">Tautan Materi / Silabus &rarr;</a>`
+    ? `<a href="${safeUrl(meta["Link silabus materi"])}" target="_blank" style="color:#00178F;font-weight:600;text-decoration:underline;">Tautan Materi / Silabus &rarr;</a>`
     : "-";
 
   let count = 0;
@@ -2482,7 +2506,7 @@ function sendReminderEmails(meta, participants, modules, executionDate) {
       </tr>
       <tr>
         <td style="padding:32px 32px 12px;">
-          <p style="margin:0 0 16px;font-size:15px;color:#00178F;font-weight:600;">Halo ${recipientName},</p>
+          <p style="margin:0 0 16px;font-size:15px;color:#00178F;font-weight:600;">Halo ${esc(recipientName)},</p>
           <p style="margin:0 0 20px;font-size:14.5px;line-height:1.65;color:#4A4F8F;">
             Ini adalah pengingat bahwa Anda dijadwalkan untuk mengikuti pelatihan internal berikut yang akan diselenggarakan <strong>besok</strong>:
           </p>
@@ -2490,15 +2514,15 @@ function sendReminderEmails(meta, participants, modules, executionDate) {
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F9FBFE;border-radius:12px;border:1px solid #E1E8F8;overflow:hidden;margin-bottom:22px;">
             <tr>
               <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:12px;font-weight:600;color:#8D93C2;width:130px;">Topik Pelatihan</td>
-              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;font-weight:700;color:#00178F;">${trainingName}</td>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;font-weight:700;color:#00178F;">${esc(trainingName)}</td>
             </tr>
             <tr>
               <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:12px;font-weight:600;color:#8D93C2;">ID Training</td>
-              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;color:#4A4F8F;">${trainingId} &bull; Metode: ${metode}</td>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;color:#4A4F8F;">${esc(trainingId)} &bull; Metode: ${esc(metode)}</td>
             </tr>
             <tr>
               <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:12px;font-weight:600;color:#8D93C2;">Jadwal Waktu</td>
-              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;font-weight:600;color:#00178F;">${jadwal}</td>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;font-weight:600;color:#00178F;">${esc(jadwal)}</td>
             </tr>
             <tr>
               <td style="padding:11px 16px;font-size:12px;font-weight:600;color:#8D93C2;">Tempat / Tautan</td>
@@ -3372,7 +3396,7 @@ function sendTrainingCompletionEmail(participantName, participantEmail, evaluati
       </tr>
       <tr>
         <td style="padding:32px 32px 8px;">
-          <p style="margin:0 0 16px;font-size:15px;color:#00178F;font-weight:600;">Halo ${participantName},</p>
+          <p style="margin:0 0 16px;font-size:15px;color:#00178F;font-weight:600;">Halo ${esc(participantName)},</p>
           <p style="margin:0 0 14px;font-size:14.5px;line-height:1.65;color:#4A4F8F;">Terima kasih sudah mengikuti dan berpartisipasi aktif dalam sesi pelatihan.</p>
           <p style="margin:0 0 22px;font-size:14.5px;line-height:1.65;color:#4A4F8F;">Semoga ilmu dan keterampilan yang didapatkan dapat memberikan manfaat dan mendukung pekerjaan sehari-hari.</p>
           <p style="margin:0;font-size:14.5px;line-height:1.65;color:#4A4F8F;">Sebagai penutup, silahkan isi evaluasi trainer sekaligus post-test melalui tautan berikut:</p>
@@ -3383,7 +3407,7 @@ function sendTrainingCompletionEmail(participantName, participantEmail, evaluati
           <table role="presentation" cellpadding="0" cellspacing="0">
             <tr>
               <td style="border-radius:100px;background:linear-gradient(180deg,#EAF1FF 0%,#BFDBFF 50%,#FFD3DE 100%);background-color:#FFD3DE;">
-                <a href="${targetUrl}" style="display:inline-block;padding:14px 30px;font-size:14.5px;font-weight:700;color:#00178F;text-decoration:none;border-radius:100px;">Evaluasi Trainer &amp; Post-Test &nbsp;&#8594;</a>
+                <a href="${safeUrl(targetUrl)}" style="display:inline-block;padding:14px 30px;font-size:14.5px;font-weight:700;color:#00178F;text-decoration:none;border-radius:100px;">Evaluasi Trainer &amp; Post-Test &nbsp;&#8594;</a>
               </td>
             </tr>
           </table>
