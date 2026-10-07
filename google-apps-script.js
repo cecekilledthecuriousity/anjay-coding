@@ -117,6 +117,33 @@ function normalizeApprovalStatus(raw) {
   return map[key] || "";
 }
 
+const LOCK_TIMEOUT_MS = 30000;
+
+/**
+ * Menjalankan fn di dalam script lock agar request bersamaan (approval, hapus)
+ * tidak saling menimpa / menghapus baris yang salah.
+ */
+function withScriptLock(fn) {
+  const lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(LOCK_TIMEOUT_MS);
+  } catch (lockErr) {
+    Logger.log("Gagal mendapatkan lock: " + lockErr.toString());
+    return ContentService.createTextOutput(
+      JSON.stringify({
+        status: "error",
+        success: false,
+        message: "Server sedang sibuk memproses permintaan lain. Silakan coba lagi beberapa saat."
+      })
+    ).setMimeType(ContentService.MimeType.JSON);
+  }
+  try {
+    return fn();
+  } finally {
+    lock.releaseLock();
+  }
+}
+
 // ==============================================================================
 // 1. WEB APP POST HANDLER (FORM SUBMIT & APPROVAL ACTION)
 // ==============================================================================
@@ -149,12 +176,12 @@ function doPost(e) {
 
     // Aksi pembaruan status persetujuan dari portal approval (/approval)
     if (data.action === "update_approval") {
-      return handleUpdateApproval(sheet, data);
+      return withScriptLock(() => handleUpdateApproval(sheet, data));
     }
 
     // Aksi hapus pengajuan training dari portal approval
     if (data.action === "delete_submission" || data.action === "deleteSubmission") {
-      return handleDeleteSubmission(sheet, data);
+      return withScriptLock(() => handleDeleteSubmission(sheet, data));
     }
 
     // Aksi Unggah Evidence Post Training Trampoline (Google Drive & Sheets)
