@@ -177,8 +177,16 @@ function getFileExtension(fileName) {
   return match ? match[1] : "";
 }
 
+const MAX_UPLOAD_FILENAME_LENGTH = 150;
+
 function sanitizeUploadFileName(fileName, fallback) {
-  const clean = String(fileName || "").trim().replace(/[\/\\:*?"<>|\u0000-\u001f]/g, "_").substring(0, 150);
+  let clean = String(fileName || "").trim().replace(/[\/\\:*?"<>|\u0000-\u001f]/g, "_");
+  if (clean.length > MAX_UPLOAD_FILENAME_LENGTH) {
+    // Potong nama, tapi pertahankan ekstensi agar validasi format tetap lolos
+    const ext = getFileExtension(clean);
+    const suffix = ext ? "." + ext : "";
+    clean = clean.substring(0, MAX_UPLOAD_FILENAME_LENGTH - suffix.length) + suffix;
+  }
   return clean || fallback;
 }
 

@@ -74,3 +74,12 @@ test('submit baru: berkas modul proposal valid disimpan, file berbahaya di-skip'
   const headers = run('HEADERS');
   assert.match(String(sheet.appended[0][headers.indexOf('Modul & Materi (File/Link)')]), /silabus\.pdf/);
 });
+
+test('nama file panjang tetap mempertahankan ekstensi dan lolos validasi', () => {
+  const { ctx } = loadGas();
+  const longName = 'a'.repeat(160) + '.pdf';
+  const clean = ctx.sanitizeUploadFileName(longName, 'x.pdf');
+  assert.ok(clean.length <= 150);
+  assert.ok(clean.endsWith('.pdf'));
+  assert.strictEqual(ctx.validateUploadFile('material', clean, '', 10), '');
+});
