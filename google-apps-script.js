@@ -97,6 +97,27 @@ const HEADERS = [
 ];
 
 // ==============================================================================
+// 0. SECURITY HELPERS (validasi input, escaping, lock)
+// ==============================================================================
+
+/**
+ * Menormalkan status keputusan approval. Hanya nilai yang dikirim portal approval
+ * yang diterima; nilai lain dikembalikan "" agar request ditolak.
+ */
+function normalizeApprovalStatus(raw) {
+  const key = String(raw === null || raw === undefined ? "" : raw).trim().toLowerCase();
+  const map = {
+    "disetujui": "Disetujui",
+    "approved": "Disetujui",
+    "approve": "Disetujui",
+    "ditolak": "Ditolak",
+    "rejected": "Ditolak",
+    "reject": "Ditolak"
+  };
+  return map[key] || "";
+}
+
+// ==============================================================================
 // 1. WEB APP POST HANDLER (FORM SUBMIT & APPROVAL ACTION)
 // ==============================================================================
 function doPost(e) {
@@ -343,13 +364,19 @@ function doPost(e) {
 // ==============================================================================
 function handleUpdateApproval(sheet, data) {
   const trainingId = data.id || data.idTraining || data["ID Training"] || "";
-  const status = data.status || "Disetujui";
+  const status = normalizeApprovalStatus(data.status);
   const approverName = data.approverName || data.approver || "Approver";
   const notes = data.notes || data.catatan || "-";
 
   if (!trainingId) {
     return ContentService.createTextOutput(
       JSON.stringify({ success: false, message: "ID training tidak disertakan" })
+    ).setMimeType(ContentService.MimeType.JSON);
+  }
+
+  if (!status) {
+    return ContentService.createTextOutput(
+      JSON.stringify({ success: false, message: "Status approval tidak valid. Gunakan 'Disetujui' atau 'Ditolak'." })
     ).setMimeType(ContentService.MimeType.JSON);
   }
 
