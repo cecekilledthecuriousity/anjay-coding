@@ -117,6 +117,22 @@ function normalizeApprovalStatus(raw) {
   return map[key] || "";
 }
 
+/**
+ * Mencegah formula injection: teks dari pengguna yang diawali = + - @ (atau tab/CR)
+ * disimpan sebagai teks biasa dengan prefix apostrof. Angka & placeholder "-" tidak disentuh.
+ */
+function sanitizeCell(value) {
+  if (typeof value !== "string") return value;
+  if (value.length > 1 && /^[=+\-@\t\r]/.test(value) && !/^[-+]?\d+([.,]\d+)?$/.test(value)) {
+    return "'" + value;
+  }
+  return value;
+}
+
+function sanitizeRow(row) {
+  return row.map(sanitizeCell);
+}
+
 const LOCK_TIMEOUT_MS = 30000;
 
 /**
@@ -367,7 +383,7 @@ function doPost(e) {
     };
 
     const rowData = currentHeaders.map(h => (rowMap[h] !== undefined ? rowMap[h] : "-"));
-    sheet.appendRow(rowData);
+    sheet.appendRow(sanitizeRow(rowData));
 
     return ContentService.createTextOutput(
       JSON.stringify({
@@ -456,13 +472,13 @@ function handleUpdateApproval(sheet, data) {
     sheet.getRange(targetRowNum, colDocStatus + 1).setValue(status);
   }
   if (colApprover !== -1) {
-    sheet.getRange(targetRowNum, colApprover + 1).setValue(approverName);
+    sheet.getRange(targetRowNum, colApprover + 1).setValue(sanitizeCell(approverName));
   }
   if (colApprovalDate !== -1) {
     sheet.getRange(targetRowNum, colApprovalDate + 1).setValue(timestamp);
   }
   if (colApprovalNotes !== -1) {
-    sheet.getRange(targetRowNum, colApprovalNotes + 1).setValue(notes);
+    sheet.getRange(targetRowNum, colApprovalNotes + 1).setValue(sanitizeCell(notes));
   }
 
   // Bangun objek data row untuk keperluan notifikasi email & pemrosesan
@@ -3691,7 +3707,7 @@ function handlePostTrainingEvidence(ss, data) {
     const newRow = currentHeaders.map(header => {
       return rowMap[header] !== undefined ? rowMap[header] : "-";
     });
-    postSheet.appendRow(newRow);
+    postSheet.appendRow(sanitizeRow(newRow));
 
     return ContentService.createTextOutput(JSON.stringify({
       success: true,
@@ -3743,7 +3759,7 @@ function handlePostTestSubmission(ss, data) {
     const newRow = currentHeaders.map(header => {
       return rowMap[header] !== undefined ? rowMap[header] : "-";
     });
-    postSheet.appendRow(newRow);
+    postSheet.appendRow(sanitizeRow(newRow));
 
     return ContentService.createTextOutput(JSON.stringify({
       success: true,
@@ -3791,7 +3807,7 @@ function handleKnowledgeSharingSubmission(ss, data) {
     const newRow = currentHeaders.map(header => {
       return rowMap[header] !== undefined ? rowMap[header] : "-";
     });
-    postSheet.appendRow(newRow);
+    postSheet.appendRow(sanitizeRow(newRow));
 
     return ContentService.createTextOutput(JSON.stringify({
       success: true,
