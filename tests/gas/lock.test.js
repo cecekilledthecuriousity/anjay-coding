@@ -55,3 +55,19 @@ test('upload evidence tidak memakai lock', () => {
   postJson(ctx, { action: 'submitPostTrainingEvidence' });
   assert.strictEqual(lockState.acquired, 0);
 });
+
+test('approval melepas lock sebelum kirim email & booking kalender', () => {
+  const { ctx, lockState } = loadGas();
+  postJson(ctx, samplePayload());
+  const heldDuring = [];
+  const held = () => lockState.acquired - lockState.released;
+  ctx.bookMeetingRoom = () => { heldDuring.push(held()); return { booked: false }; };
+  ctx.createCalendarEvent = () => { heldDuring.push(held()); return 'EVT-1'; };
+  ctx.sendRegistrationEmails = () => { heldDuring.push(held()); return 'Terkirim (1/1)'; };
+  ctx.sendApprovalDecisionEmail = () => { heldDuring.push(held()); return 'Terkirim'; };
+  const res = postJson(ctx, { action: 'update_approval', id: 'TRN-20261006-WEB-HS', status: 'Disetujui', approverName: 'Bos', notes: '-' });
+  assert.strictEqual(res.success, true);
+  assert.ok(heldDuring.length >= 3, 'efek samping dipanggil');
+  assert.deepStrictEqual(heldDuring.filter(h => h !== 0), [], 'lock tidak boleh dipegang saat efek samping');
+  assert.strictEqual(lockState.released, lockState.acquired);
+});

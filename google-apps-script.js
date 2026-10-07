@@ -225,7 +225,10 @@ function withScriptLock(fn) {
     ).setMimeType(ContentService.MimeType.JSON);
   }
   try {
-    return fn();
+    const result = fn();
+    // Pastikan semua tulisan ke sheet tersimpan sebelum lock dilepas
+    SpreadsheetApp.flush();
+    return result;
   } finally {
     lock.releaseLock();
   }
@@ -263,7 +266,7 @@ function doPost(e) {
 
     // Aksi pembaruan status persetujuan dari portal approval (/approval)
     if (data.action === "update_approval") {
-      return withScriptLock(() => handleUpdateApproval(sheet, data));
+      return handleUpdateApproval(sheet, data);
     }
 
     // Aksi hapus pengajuan training dari portal approval
@@ -499,63 +502,72 @@ function handleUpdateApproval(sheet, data) {
     ).setMimeType(ContentService.MimeType.JSON);
   }
 
-  const values = sheet.getDataRange().getValues();
-  if (values.length < 2) {
-    return ContentService.createTextOutput(
-      JSON.stringify({ success: false, message: "Belum ada data pada spreadsheet" })
-    ).setMimeType(ContentService.MimeType.JSON);
-  }
-
-  const rawHeaders = values[0].map(h => String(h).trim());
-  const headersLower = rawHeaders.map(h => h.toLowerCase());
-
-  const colId = headersLower.indexOf("id training");
-  const colDocStatus = headersLower.indexOf("status dokumen");
-  const colApprover = headersLower.indexOf("approver");
-  const colApprovalDate = headersLower.indexOf("tanggal approval");
-  const colApprovalNotes = headersLower.indexOf("catatan approver");
-  const colCalEventId = headersLower.indexOf("id event google calendar");
-  const colEmailConfirm = headersLower.indexOf("status email konfirmasi");
-  const colRawJson = headersLower.indexOf("raw data json");
-
-  if (colId === -1) {
-    return ContentService.createTextOutput(
-      JSON.stringify({ success: false, message: "Kolom 'ID Training' tidak ditemukan pada sheet" })
-    ).setMimeType(ContentService.MimeType.JSON);
-  }
-
-  let foundRowIdx = -1;
-  const targetIdClean = String(trainingId).trim().toUpperCase();
-
-  for (let i = 1; i < values.length; i++) {
-    const rowId = String(values[i][colId]).trim().toUpperCase();
-    if (rowId === targetIdClean) {
-      foundRowIdx = i;
-      break;
+  // Lock hanya dipegang saat membaca baris & menulis status keputusan (cepat).
+  // Booking kalender & pengiriman email (lambat) dijalankan setelah lock dilepas,
+  // agar approval/hapus lain tidak menunggu hingga timeout.
+  let values, rawHeaders, colCalEventId, colEmailConfirm, colRawJson, foundRowIdx, targetRowNum, timestamp;
+  const claimError = withScriptLock(() => {
+    values = sheet.getDataRange().getValues();
+    if (values.length < 2) {
+      return ContentService.createTextOutput(
+        JSON.stringify({ success: false, message: "Belum ada data pada spreadsheet" })
+      ).setMimeType(ContentService.MimeType.JSON);
     }
-  }
 
-  if (foundRowIdx === -1) {
-    return ContentService.createTextOutput(
-      JSON.stringify({ success: false, message: `Training dengan ID '${trainingId}' tidak ditemukan` })
-    ).setMimeType(ContentService.MimeType.JSON);
-  }
+    rawHeaders = values[0].map(h => String(h).trim());
+    const headersLower = rawHeaders.map(h => h.toLowerCase());
 
-  const targetRowNum = foundRowIdx + 1;
-  const timestamp = Utilities.formatDate(new Date(), TIME_ZONE, "yyyy-MM-dd HH:mm");
+    const colId = headersLower.indexOf("id training");
+    const colDocStatus = headersLower.indexOf("status dokumen");
+    const colApprover = headersLower.indexOf("approver");
+    const colApprovalDate = headersLower.indexOf("tanggal approval");
+    const colApprovalNotes = headersLower.indexOf("catatan approver");
+    colCalEventId = headersLower.indexOf("id event google calendar");
+    colEmailConfirm = headersLower.indexOf("status email konfirmasi");
+    colRawJson = headersLower.indexOf("raw data json");
 
-  if (colDocStatus !== -1) {
-    sheet.getRange(targetRowNum, colDocStatus + 1).setValue(status);
-  }
-  if (colApprover !== -1) {
-    sheet.getRange(targetRowNum, colApprover + 1).setValue(sanitizeCell(approverName));
-  }
-  if (colApprovalDate !== -1) {
-    sheet.getRange(targetRowNum, colApprovalDate + 1).setValue(timestamp);
-  }
-  if (colApprovalNotes !== -1) {
-    sheet.getRange(targetRowNum, colApprovalNotes + 1).setValue(sanitizeCell(notes));
-  }
+    if (colId === -1) {
+      return ContentService.createTextOutput(
+        JSON.stringify({ success: false, message: "Kolom 'ID Training' tidak ditemukan pada sheet" })
+      ).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    foundRowIdx = -1;
+    const targetIdClean = String(trainingId).trim().toUpperCase();
+
+    for (let i = 1; i < values.length; i++) {
+      const rowId = String(values[i][colId]).trim().toUpperCase();
+      if (rowId === targetIdClean) {
+        foundRowIdx = i;
+        break;
+      }
+    }
+
+    if (foundRowIdx === -1) {
+      return ContentService.createTextOutput(
+        JSON.stringify({ success: false, message: `Training dengan ID '${trainingId}' tidak ditemukan` })
+      ).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    targetRowNum = foundRowIdx + 1;
+    timestamp = Utilities.formatDate(new Date(), TIME_ZONE, "yyyy-MM-dd HH:mm");
+
+    if (colDocStatus !== -1) {
+      sheet.getRange(targetRowNum, colDocStatus + 1).setValue(status);
+    }
+    if (colApprover !== -1) {
+      sheet.getRange(targetRowNum, colApprover + 1).setValue(sanitizeCell(approverName));
+    }
+    if (colApprovalDate !== -1) {
+      sheet.getRange(targetRowNum, colApprovalDate + 1).setValue(timestamp);
+    }
+    if (colApprovalNotes !== -1) {
+      sheet.getRange(targetRowNum, colApprovalNotes + 1).setValue(sanitizeCell(notes));
+    }
+
+    return null;
+  });
+  if (claimError) return claimError;
 
   // Bangun objek data row untuk keperluan notifikasi email & pemrosesan
   const rowObj = {};

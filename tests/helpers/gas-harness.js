@@ -117,7 +117,7 @@ function loadGas(overrides) {
   const postHeaders = run('POST_TRAINING_HEADERS');
   const postSheet = makeSheet('Post Training', [postHeaders.slice()]);
   const ss = makeSpreadsheet([sheet, postSheet]);
-  ctx.SpreadsheetApp = { getActiveSpreadsheet() { return ss; } };
+  ctx.SpreadsheetApp = { getActiveSpreadsheet() { return ss; }, flush() {} };
 
   // Default: tidak ada efek samping eksternal saat test
   ctx.getApproverListForSubmission = () => ['approver@example.com'];
