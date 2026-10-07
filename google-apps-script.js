@@ -2803,14 +2803,11 @@ function doGet(e) {
       return handleGetPostTrainingEvidence(ss);
     }
 
-    // Aksi 4: Reset / Reformat Sheet langsung via URL Web App (?action=resetSheet)
+    // Aksi reset/reformat sheet TIDAK lagi tersedia via URL publik (bisa dipanggil siapa saja).
+    // Gunakan menu Spreadsheet "Format / Reset Sheet" atau jalankan resetSheet() dari editor Apps Script.
     if (action === 'resetSheet' || action === 'resetSheetHeaders' || action === 'reformatSheet') {
-      resetSheetHeadersToPreview();
       return ContentService.createTextOutput(
-        JSON.stringify({
-          status: "success",
-          message: "Sheet berhasil di-reformat dan disinkronkan ke 38 kolom sesuai format preview pengajuan."
-        })
+        JSON.stringify({ error: "Aksi tidak dikenal" })
       ).setMimeType(ContentService.MimeType.JSON);
     }
 
