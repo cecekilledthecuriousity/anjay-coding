@@ -1,0 +1,278 @@
+      <section class="tds-page" id="page-absensi" style="display:none;">
+        <!-- ================= SUB-VIEW 1: TRAINER HUB & PROYEKTOR ================= -->
+        <div id="attendanceTrainerView">
+          <!-- Header Halaman Trainer -->
+          <header class="doc-header" style="margin-bottom:18px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+              <div style="display:flex;align-items:center;gap:14px;">
+                <div class="header-icon-box" style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg, #4B96FF, #00178F);display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 6px 16px -4px rgba(75,150,255,0.45);color:#fff;">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="7" height="7" rx="1.5"></rect>
+                    <rect x="14" y="3" width="7" height="7" rx="1.5"></rect>
+                    <rect x="14" y="14" width="7" height="7" rx="1.5"></rect>
+                    <rect x="3" y="14" width="7" height="7" rx="1.5"></rect>
+                  </svg>
+                </div>
+                <div>
+                  <p class="kicker">Real-Time Attendance Hub &amp; Projector</p>
+                  <h1 class="voice" style="font-size:24px;margin:0 0 2px;">Live Absensi Pelatihan</h1>
+                  <span class="helper-note" style="margin:0;font-size:13px;">Tampilkan QR Code di proyektor untuk presensi peserta mandiri &amp; pantau daftar kehadiran secara realtime.</span>
+                </div>
+              </div>
+
+              <!-- Header Action Buttons -->
+              <div style="display:flex;align-items:center;gap:8px;">
+                <button type="button" class="btn-secondary" onclick="refreshAttendanceHubData()" title="Segarkan Data Kehadiran" style="gap:6px;font-size:13px;padding:8px 12px;">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.3"/></svg>
+                  <span>Segarkan</span>
+                </button>
+                <button type="button" class="btn-primary" id="btnToggleProjector" onclick="toggleProjectorMode()" title="Mode Layar Penuh untuk Proyektor" style="gap:6px;font-size:13px;padding:8px 14px;">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>
+                  <span>Layar Proyektor</span>
+                </button>
+              </div>
+            </div>
+          </header>
+
+          <!-- Sesi Pelatihan Selector & Notice Box -->
+          <div class="form-card" style="margin-bottom:20px;">
+            <div class="field-row cols-2" style="margin-bottom:0;">
+              <div class="field">
+                <label for="attTrainingSelect" style="font-weight:600;">Pilih Pelatihan yang Anda Selenggarakan <span style="color:var(--danger)">*</span></label>
+                <select id="attTrainingSelect" onchange="handleAttendanceTrainingChange(this.value)">
+                  <option value="">-- Silakan Pilih Pelatihan yang Anda Selenggarakan --</option>
+                </select>
+                <span class="hint" id="attTrainingDateHint" style="font-size:11.5px;color:var(--ink-soft);margin-top:4px;display:block;">Pilih pelatihan sesuai agenda yang Anda pimpin / ajukan.</span>
+              </div>
+              <div class="field">
+                <label for="attModuleSelect" style="font-weight:600;">Pilih Sesi / Modul Pelatihan <span style="color:var(--danger)">*</span></label>
+                <select id="attModuleSelect" onchange="handleAttendanceModuleChange(this.value)">
+                  <option value="Sesi 1">Sesi 1 (Utama)</option>
+                </select>
+                <span class="hint" style="font-size:11.5px;color:var(--ink-soft);margin-top:4px;display:block;">Setiap sesi/hari modul memiliki catatan presensi tersendiri.</span>
+              </div>
+            </div>
+
+            <!-- Notice Banner: Pemberitahuan Rekomendasi Penggunaan Absensi QR -->
+            <div class="att-notice-banner" style="display:flex;align-items:flex-start;gap:12px;background:rgba(183,134,40,0.08);border:1px solid rgba(183,134,40,0.25);border-radius:10px;padding:12px 14px;margin-top:14px;">
+              <div style="color:var(--accent-gold);flex-shrink:0;margin-top:1px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="8" x2="12" y2="12"></line>
+                  <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+              </div>
+              <div style="font-size:12.5px;color:var(--ink);line-height:1.5;">
+                <strong>Pemberitahuan:</strong> Fitur <em>Live Absensi QR</em> ini dirancang khusus dan paling efektif untuk pelatihan yang memiliki <strong>jumlah peserta banyak</strong> guna mempercepat proses pendataan kehadiran di ruangan secara tertib dan otomatis. Untuk pelatihan dengan jumlah peserta sedikit (1–3 orang), Trainer/PIC juga dapat langsung menggunakan opsi centang manual pada daftar kehadiran tanpa wajib menyalakan proyektor.
+              </div>
+            </div>
+          </div>
+
+          <!-- Main Layout: QR Code Showcase & Live Attendance Board -->
+          <div class="att-layout-grid" id="attMainGrid">
+            <!-- KOLOM KIRI: QR CODE SHOWCASE -->
+            <div class="att-qr-showcase-card">
+              <div class="att-status-badge">
+                <span class="att-status-dot"></span>
+                <span>Sesi Presensi Aktif</span>
+              </div>
+
+              <div class="att-training-meta">
+                <h2 id="attDisplayTrainingTitle" style="font-size:19px;font-weight:700;margin:0 0 6px;color:var(--ink);line-height:1.35;">-</h2>
+                <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:12.5px;color:var(--ink-soft);">
+                  <span id="attDisplayTrainer" style="display:inline-flex;align-items:center;gap:4px;">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                    <span>Trainer: -</span>
+                  </span>
+                  <span>&bull;</span>
+                  <span id="attDisplayModule" style="font-weight:600;color:var(--accent-dark);">Sesi 1</span>
+                  <span>&bull;</span>
+                  <span id="attDisplayRoom">-</span>
+                </div>
+              </div>
+
+              <!-- Canvas / SVG QR Display Box -->
+              <div class="att-qr-box" id="attQrContainer">
+                <div id="attQrCanvasWrap" style="display:flex;justify-content:center;align-items:center;min-height:260px;">
+                  <span style="color:var(--ink-soft);font-size:13px;">Pilih pelatihan di atas untuk memunculkan QR Code</span>
+                </div>
+              </div>
+
+              <!-- Petunjuk Scan -->
+              <p class="att-scan-instruction">
+                <strong>Buka kamera smartphone</strong> dan arahkan ke QR Code di atas untuk konfirmasi kehadiran Anda.
+              </p>
+
+              <!-- Alternatif Link Langsung -->
+              <div class="att-url-box">
+                <input type="text" id="attDirectUrlInput" readonly value="" placeholder="Tautan check-in langsung...">
+                <button type="button" class="btn-secondary" onclick="copyAttendanceLink()" title="Salin Tautan Check-in" style="font-size:12px;padding:6px 10px;white-space:nowrap;flex-shrink:0;">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                  <span>Salin Link</span>
+                </button>
+                <a id="attDirectUrlOpenBtn" href="#" target="_blank" class="btn-secondary" title="Buka Link di Tab Baru (Uji Coba Tampilan Mobile)" style="font-size:12px;padding:6px 10px;white-space:nowrap;flex-shrink:0;text-decoration:none;display:inline-flex;align-items:center;gap:4px;">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                  <span>Buka Tab Baru</span>
+                </a>
+              </div>
+
+              <!-- Tambah Peserta Walk-in Trigger -->
+              <div style="margin-top:14px;display:flex;justify-content:center;">
+                <button type="button" class="btn-ghost" onclick="openWalkInModal()" style="font-size:12.5px;color:var(--accent-dark);gap:5px;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                  <span>+ Tambah Peserta Walk-in / Susulan</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- KOLOM KANAN: LIVE ATTENDANCE BOARD -->
+            <div class="att-board-card">
+              <div class="att-board-head">
+                <div>
+                  <h3 style="font-size:16px;font-weight:700;margin:0 0 2px;color:var(--ink);">Daftar Presensi Peserta</h3>
+                  <span style="font-size:12px;color:var(--ink-soft);">Status kehadiran realtime peserta terdaftar pada sesi ini</span>
+                </div>
+                <div class="att-metric-pill" id="attMetricPill">
+                  <span id="attCountPresent">0</span> / <span id="attCountTotal">0</span> Hadir (<span id="attPercent">0%</span>)
+                </div>
+              </div>
+
+              <!-- Progress Bar -->
+              <div class="att-progress-track">
+                <div class="att-progress-fill" id="attProgressFill" style="width:0%;"></div>
+              </div>
+
+              <!-- Filter Search Bar Peserta -->
+              <div style="margin-bottom:12px;">
+                <input type="text" id="attSearchParticipant" oninput="filterAttendanceList(this.value)" placeholder="Cari nama peserta atau departemen..." style="width:100%;font-size:12.5px;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--sand-panel);">
+              </div>
+
+              <!-- Daftar Peserta Checklist -->
+              <div class="att-participant-list" id="attParticipantList">
+                <div style="text-align:center;padding:30px;color:var(--ink-soft);font-size:13px;">
+                  Silakan pilih pelatihan untuk memuat daftar peserta.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ================= SUB-VIEW 2: MOBILE PARTICIPANT CHECK-IN (#view-checkin-mobile) ================= -->
+        <div id="attendanceMobileView" style="display:none;max-width:480px;margin:0 auto;padding:12px 4px;">
+          <div class="form-card" style="box-shadow:0 12px 32px -8px rgba(0,0,0,0.12);border-radius:16px;border:1px solid rgba(0,23,143,0.12);">
+            <!-- Card Head -->
+            <div style="text-align:center;padding-bottom:14px;border-bottom:1px solid var(--line);margin-bottom:16px;">
+              <div style="width:48px;height:48px;border-radius:14px;background:var(--accent-tint);border:1px solid rgba(75,150,255,0.25);display:inline-flex;align-items:center;justify-content:center;margin-bottom:8px;color:var(--accent-dark);">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline>
+                </svg>
+              </div>
+              <h2 style="font-size:19px;font-weight:700;margin:0 0 3px;color:var(--ink);">Konfirmasi Kehadiran</h2>
+              <span style="font-size:12.5px;color:var(--ink-soft);">Presensi Digital Pelatihan Karyawan</span>
+            </div>
+
+            <!-- Banner Info Pelatihan Terpilih -->
+            <div class="att-mobile-summary-box" style="background:var(--sand-panel);border-radius:10px;padding:12px 14px;margin-bottom:18px;border-left:4px solid var(--accent);">
+              <h4 id="mobDisplayTitle" style="font-size:14px;font-weight:700;margin:0 0 4px;color:var(--ink);">-</h4>
+              <div style="font-size:12px;color:var(--ink-soft);line-height:1.4;">
+                <div>Sesi Modul: <strong id="mobDisplayModule" style="color:var(--accent-dark);">Sesi 1</strong></div>
+                <div>Trainer: <span id="mobDisplayTrainer">-</span></div>
+                <div>Waktu: <span id="mobDisplayDate">-</span></div>
+              </div>
+            </div>
+
+            <!-- Formulir Check-In -->
+            <form id="mobileCheckInForm" onsubmit="submitMobileAttendance(event)">
+              <!-- Status Sukses Message (Hidden by default) -->
+              <div id="mobSuccessCard" style="display:none;text-align:center;padding:18px 12px;background:rgba(46,125,50,0.08);border-radius:12px;border:1px solid rgba(46,125,50,0.25);margin-bottom:16px;">
+                <div style="width:48px;height:48px;border-radius:50%;background:#2E7D32;color:#fff;display:inline-flex;align-items:center;justify-content:center;margin-bottom:10px;">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                </div>
+                <h3 style="font-size:16px;font-weight:700;margin:0 0 4px;color:#1B5E20;">Kehadiran Berhasil Dicatat!</h3>
+                <p id="mobSuccessDetail" style="font-size:12.5px;color:#2E7D32;margin:0 0 10px;line-height:1.4;">Terima kasih, presensi Anda telah resmi tercatat ke sistem.</p>
+                <span id="mobSuccessTimestamp" style="font-size:11.5px;background:rgba(0,0,0,0.05);padding:4px 10px;border-radius:20px;color:var(--ink);">Waktu: -</span>
+              </div>
+
+              <!-- Input Group (Hidden if already checked in) -->
+              <div id="mobFormInputs">
+                <div class="field" style="margin-bottom:14px;">
+                  <label for="mobParticipantSelect" style="font-weight:600;font-size:13px;">Pilih Nama Anda <span style="color:var(--danger)">*</span></label>
+                  <select id="mobParticipantSelect" required onchange="handleMobParticipantChange(this.value)" style="width:100%;padding:10px 12px;font-size:13.5px;border-radius:8px;border:1px solid var(--line);">
+                    <option value="">-- Silakan Pilih Nama Anda --</option>
+                  </select>
+                  <span class="hint" id="mobParticipantHint" style="font-size:11px;color:var(--ink-soft);margin-top:4px;display:block;">Pilih nama Anda yang terdaftar pada pelatihan ini.</span>
+                </div>
+
+                <!-- Kolom Input Khusus Jika Peserta Walk-in / Belum Terdaftar -->
+                <div id="mobWalkInFields" style="display:none;background:var(--sand-panel);border:1px dashed var(--line);border-radius:8px;padding:12px;margin-bottom:14px;">
+                  <div class="field" style="margin-bottom:10px;">
+                    <label for="mobCustomName" style="font-weight:600;font-size:12.5px;">Ketik Nama Lengkap Anda <span style="color:var(--danger)">*</span></label>
+                    <input type="text" id="mobCustomName" placeholder="Nama lengkap Anda..." style="width:100%;padding:8px 10px;font-size:13px;border-radius:6px;border:1px solid var(--line);">
+                  </div>
+                  <div class="field">
+                    <label for="mobCustomDept" style="font-weight:600;font-size:12.5px;">Departemen / Divisi <span style="color:var(--danger)">*</span></label>
+                    <input type="text" id="mobCustomDept" placeholder="misal: IT / HR / Marketing..." style="width:100%;padding:8px 10px;font-size:13px;border-radius:6px;border:1px solid var(--line);">
+                  </div>
+                </div>
+
+                <div class="field" style="margin-bottom:14px;">
+                  <label for="mobEmailVerify" style="font-weight:600;font-size:13px;">Email Kantor <span style="color:var(--danger)">*</span></label>
+                  <input type="email" id="mobEmailVerify" required placeholder="misal: nama.lengkap@perusahaan.com" style="width:100%;padding:10px 12px;font-size:13.5px;border-radius:8px;border:1px solid var(--line);">
+                  <span class="hint" id="mobEmailHint" style="font-size:11px;color:var(--ink-soft);margin-top:4px;display:block;">Verifikasi anti-joki: masukkan email kantor Anda yang terdaftar.</span>
+                </div>
+
+                <div class="field" id="mobDivisiReadonlyWrap" style="margin-bottom:18px;">
+                  <label for="mobDivisiReadonly" style="font-weight:600;font-size:13px;">Departemen / Divisi</label>
+                  <input type="text" id="mobDivisiReadonly" readonly placeholder="Otomatis terisi..." style="width:100%;padding:10px 12px;font-size:13px;background:var(--sand-panel);border-radius:8px;border:1px solid var(--line);color:var(--ink-soft);">
+                </div>
+
+                <button type="submit" id="btnSubmitMobAttendance" class="btn-primary" style="width:100%;padding:12px;font-size:14px;font-weight:600;justify-content:center;border-radius:8px;gap:8px;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  <span>Konfirmasi Kehadiran</span>
+                </button>
+              </div>
+
+              <!-- Link Kembali ke Dashboard -->
+              <div style="margin-top:16px;text-align:center;">
+                <a href="#ajukan" onclick="goToPage('ajukan')" style="font-size:12px;color:var(--accent-dark);text-decoration:none;">&larr; Kembali ke Beranda Formulir</a>
+              </div>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= MODAL TAMBAH PESERTA WALK-IN ================= -->
+      <div class="modal-overlay" id="modalWalkIn" style="display:none;" onclick="handleModalOverlayClick(event, 'modalWalkIn')">
+        <div class="modal-box" style="max-width:440px;" onclick="event.stopPropagation()">
+          <div class="modal-head">
+            <div>
+              <h3 style="font-size:16px;font-weight:700;margin:0 0 2px;">Tambah Peserta Walk-in</h3>
+              <span style="font-size:12px;color:var(--ink-soft);">Catat kehadiran peserta tambahan/susulan pada sesi ini</span>
+            </div>
+            <button type="button" class="modal-close" onclick="closeWalkInModal()">&times;</button>
+          </div>
+          <form id="formWalkIn" onsubmit="submitWalkInParticipant(event)">
+            <div class="modal-body" style="padding:16px 20px;">
+              <div class="field" style="margin-bottom:12px;">
+                <label for="walkInNama" style="font-weight:600;font-size:13px;">Nama Lengkap <span style="color:var(--danger)">*</span></label>
+                <input type="text" id="walkInNama" required placeholder="Masukkan nama peserta..." style="width:100%;">
+              </div>
+              <div class="field" style="margin-bottom:12px;">
+                <label for="walkInEmail" style="font-weight:600;font-size:13px;">Email Kantor <span style="color:var(--danger)">*</span></label>
+                <input type="email" id="walkInEmail" required placeholder="nama@perusahaan.com" style="width:100%;">
+              </div>
+              <div class="field" style="margin-bottom:12px;">
+                <label for="walkInDivisi" style="font-weight:600;font-size:13px;">Departemen / Divisi <span style="color:var(--danger)">*</span></label>
+                <input type="text" id="walkInDivisi" required placeholder="misal: IT / FINANCE / QA" style="width:100%;">
+              </div>
+            </div>
+            <div class="modal-foot" style="padding:12px 20px;display:flex;justify-content:flex-end;gap:8px;">
+              <button type="button" class="btn-secondary" onclick="closeWalkInModal()">Batal</button>
+              <button type="submit" class="btn-primary" style="gap:6px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Simpan &amp; Hadirkan</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>

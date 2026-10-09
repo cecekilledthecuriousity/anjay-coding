@@ -23,6 +23,7 @@
 
 const SHEET_NAME = "Training Submissions";
 const POST_TRAINING_SHEET_NAME = "Post Training";
+const ATTENDANCE_SHEET_NAME = "Training Attendance";
 
 // ID Folder Utama Google Drive untuk menyimpan bukti foto (evidence).
 // Kosongkan "" untuk menyimpan di My Drive utama akun pelaksana (training@cpssoft.com),
@@ -149,6 +150,11 @@ function doPost(e) {
     // Aksi Simpan Pelaporan Knowledge Sharing Post Training Trampoline
     if (data.action === "submitKnowledgeSharing" || data.action === "post_training_sharing") {
       return handleKnowledgeSharingSubmission(ss, data);
+    }
+
+    // Aksi Catat Presensi Kehadiran Pelatihan (Live QR Attendance Hub & Mobile Check-in)
+    if (data.action === "recordAttendance" || data.action === "record_attendance" || data.action === "manualAttendance") {
+      return handleRecordAttendance(ss, data);
     }
 
     const meta = data.meta || {};
@@ -2803,7 +2809,19 @@ function doGet(e) {
       return handleGetPostTrainingEvidence(ss);
     }
 
-    // Aksi 4: Reset / Reformat Sheet langsung via URL Web App (?action=resetSheet)
+    // Aksi 4: Pengambilan data kehadiran pelatihan (?action=getAttendanceLogs&trainingId=...)
+    if (action === 'getAttendanceLogs' || action === 'get_attendance' || action === 'attendance_logs') {
+      const ss = SpreadsheetApp.getActiveSpreadsheet();
+      return handleGetAttendanceLogs(ss, params);
+    }
+
+    // Aksi 5: Pengambilan detail sesi training & daftar peserta untuk Mobile QR Check-in (?action=getTrainingDetails&id=...)
+    if (action === 'getTrainingDetails' || action === 'getTrainingSession' || action === 'getTraining') {
+      const ss = SpreadsheetApp.getActiveSpreadsheet();
+      return handleGetTrainingDetails(ss, params);
+    }
+
+    // Aksi 6: Reset / Reformat Sheet langsung via URL Web App (?action=resetSheet)
     if (action === 'resetSheet' || action === 'resetSheetHeaders' || action === 'reformatSheet') {
       resetSheetHeadersToPreview();
       return ContentService.createTextOutput(
@@ -3883,5 +3901,241 @@ function grantDomainAccessToAllEvidenceFolders() {
   Logger.log("✅ Selesai memperbarui izin akses Domain / Link untuk seluruh folder & file bukti pelatihan!");
 }
 
+// ==============================================================================
+// 12. LIVE QR ATTENDANCE HUB (SISTEM PRESENSI PELATIHAN TERINTEGRASI)
+// ==============================================================================
 
+const ATTENDANCE_HEADERS = [
+  "Waktu Absen",
+  "ID Training",
+  "Nama Training",
+  "ID Sesi Modul",
+  "Tanggal Sesi",
+  "Nama Peserta",
+  "Email Peserta",
+  "Departemen / Divisi",
+  "Metode Absen",
+  "Status Kehadiran",
+  "Catatan"
+];
 
+/**
+ * Setup sheet "Training Attendance" dan sinkronisasi header kolom jika belum ada.
+ */
+function setupAttendanceSheet(sheet) {
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow(ATTENDANCE_HEADERS);
+    const headerRange = sheet.getRange(1, 1, 1, ATTENDANCE_HEADERS.length);
+    headerRange.setFontWeight("bold");
+    headerRange.setBackground("#3F5A44");
+    headerRange.setFontColor("#FFFFFF");
+    sheet.setFrozenRows(1);
+  } else {
+    const currentHeaders = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0].map(h => String(h).trim());
+    const currentHeadersLower = currentHeaders.map(h => h.toLowerCase());
+    const missingHeaders = ATTENDANCE_HEADERS.filter(h => !currentHeadersLower.includes(h.toLowerCase()));
+    if (missingHeaders.length > 0) {
+      const startCol = currentHeaders.length + 1;
+      sheet.getRange(1, startCol, 1, missingHeaders.length).setValues([missingHeaders]);
+      const headerRange = sheet.getRange(1, startCol, 1, missingHeaders.length);
+      headerRange.setFontWeight("bold");
+      headerRange.setBackground("#3F5A44");
+      headerRange.setFontColor("#FFFFFF");
+    }
+  }
+}
+
+/**
+ * Menyimpan data kehadiran peserta (baik via scan QR mandiri maupun manual checklist oleh trainer).
+ */
+function handleRecordAttendance(ss, data) {
+  try {
+    let attSheet = ss.getSheetByName(ATTENDANCE_SHEET_NAME);
+    if (!attSheet) {
+      attSheet = ss.insertSheet(ATTENDANCE_SHEET_NAME);
+    }
+    setupAttendanceSheet(attSheet);
+
+    const trainingId = String(data.trainingId || data["ID Training"] || data.id || "").trim();
+    const trainingTitle = String(data.trainingTitle || data["Nama Training"] || data.namaTraining || "").trim();
+    const moduleId = String(data.moduleId || data.modul || data.modulId || "Sesi 1").trim();
+    const sessionDate = String(data.sessionDate || data.tanggal || data.tanggalSesi || Utilities.formatDate(new Date(), TIME_ZONE, "yyyy-MM-dd")).trim();
+    const participantName = String(data.participantName || data.nama || data.namaPeserta || "").trim();
+    const participantEmail = String(data.participantEmail || data.email || data.emailPeserta || "").trim().toLowerCase();
+    const department = String(data.department || data.divisi || data.departemen || "-").trim();
+    const method = String(data.method || (data.action === "manualAttendance" ? "Manual by Trainer" : "QR Web (Self)")).trim();
+    const status = String(data.status || "Hadir").trim();
+    const note = String(data.note || (data.isWalkIn ? "Peserta Walk-in" : "Peserta Terdaftar")).trim();
+
+    if (!trainingId || !participantEmail) {
+      return ContentService.createTextOutput(JSON.stringify({
+        status: "error",
+        message: "ID Training dan Email Peserta wajib diisi."
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // Validasi pencegahan double-submit di sheet
+    const values = attSheet.getDataRange().getValues();
+    for (let i = 1; i < values.length; i++) {
+      const rowTrainingId = String(values[i][1] || "").trim();
+      const rowModuleId = String(values[i][3] || "").trim();
+      const rowEmail = String(values[i][6] || "").trim().toLowerCase();
+
+      if (rowTrainingId === trainingId && rowModuleId === moduleId && rowEmail === participantEmail) {
+        return ContentService.createTextOutput(JSON.stringify({
+          status: "exists",
+          message: "Peserta sudah tercatat hadir pada sesi modul ini.",
+          timestamp: String(values[i][0] || "")
+        })).setMimeType(ContentService.MimeType.JSON);
+      }
+    }
+
+    const timestamp = Utilities.formatDate(new Date(), TIME_ZONE, "yyyy-MM-dd HH:mm:ss") + " WIB";
+    attSheet.appendRow([
+      timestamp,
+      trainingId,
+      trainingTitle,
+      moduleId,
+      sessionDate,
+      participantName,
+      participantEmail,
+      department,
+      method,
+      status,
+      note
+    ]);
+
+    return ContentService.createTextOutput(JSON.stringify({
+      status: "success",
+      message: "Kehadiran berhasil dicatat!",
+      timestamp: timestamp,
+      participant: participantName
+    })).setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    Logger.log("Error handleRecordAttendance: " + err.toString());
+    return ContentService.createTextOutput(JSON.stringify({
+      status: "error",
+      message: err.toString()
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+/**
+ * Mengambil log kehadiran peserta untuk pelatihan tertentu (dan modul tertentu jika dispesifikasikan).
+ */
+function handleGetAttendanceLogs(ss, params) {
+  try {
+    let attSheet = ss.getSheetByName(ATTENDANCE_SHEET_NAME);
+    if (!attSheet) {
+      return ContentService.createTextOutput(JSON.stringify([])).setMimeType(ContentService.MimeType.JSON);
+    }
+    const values = attSheet.getDataRange().getValues();
+    if (values.length < 2) {
+      return ContentService.createTextOutput(JSON.stringify([])).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    const filterTrainingId = String(params.trainingId || params.id || "").trim();
+    const filterModuleId = String(params.moduleId || params.modul || "").trim();
+
+    const logs = [];
+    for (let i = 1; i < values.length; i++) {
+      const rowTrainingId = String(values[i][1] || "").trim();
+      const rowModuleId = String(values[i][3] || "").trim();
+
+      if (filterTrainingId && rowTrainingId !== filterTrainingId) continue;
+      if (filterModuleId && rowModuleId !== filterModuleId) continue;
+
+      logs.push({
+        timestamp: values[i][0],
+        trainingId: rowTrainingId,
+        trainingTitle: values[i][2],
+        moduleId: rowModuleId,
+        sessionDate: values[i][4],
+        participantName: values[i][5],
+        participantEmail: values[i][6],
+        department: values[i][7],
+        method: values[i][8],
+        status: values[i][9],
+        note: values[i][10]
+      });
+    }
+
+    return ContentService.createTextOutput(JSON.stringify(logs)).setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    Logger.log("Error handleGetAttendanceLogs: " + err.toString());
+    return ContentService.createTextOutput(JSON.stringify({ error: err.toString() })).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+/**
+ * Mengambil informasi sesi pelatihan & daftar peserta untuk form Mobile QR Check-in.
+ */
+function handleGetTrainingDetails(ss, params) {
+  try {
+    const sheet = ss.getSheetByName(SHEET_NAME);
+    if (!sheet) {
+      return ContentService.createTextOutput(JSON.stringify({ error: "Sheet not found" })).setMimeType(ContentService.MimeType.JSON);
+    }
+    const values = sheet.getDataRange().getValues();
+    if (values.length < 2) {
+      return ContentService.createTextOutput(JSON.stringify({ error: "No training data" })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    const targetId = String(params.id || params.trainingId || "").trim();
+    if (!targetId) {
+      return ContentService.createTextOutput(JSON.stringify({ error: "Missing training id parameter" })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    const headers = values[0].map(h => String(h).trim());
+    const idColIdx = headers.indexOf("ID Training");
+    const jsonColIdx = headers.indexOf("Raw Data JSON");
+    const titleColIdx = headers.indexOf("Nama Training");
+    const trainerColIdx = headers.indexOf("Trainer / Fasilitator");
+    const dateColIdx = headers.indexOf("Jadwal Pelaksanaan");
+    const deptColIdx = headers.indexOf("Departemen / Divisi");
+    const partsColIdx = headers.indexOf("Daftar Peserta (Ringkasan)");
+
+    for (let i = 1; i < values.length; i++) {
+      const row = values[i];
+      const rowId = String(idColIdx !== -1 ? row[idColIdx] : row[1] || "").trim();
+      if (rowId === targetId) {
+        let participants = [];
+        let modules = [];
+        if (jsonColIdx !== -1 && row[jsonColIdx]) {
+          try {
+            const raw = JSON.parse(row[jsonColIdx]);
+            if (raw.participants && Array.isArray(raw.participants)) participants = raw.participants;
+            if (raw.modules && Array.isArray(raw.modules)) modules = raw.modules;
+          } catch (e) {}
+        }
+
+        // Fallback jika participants kosong
+        if (participants.length === 0 && partsColIdx !== -1 && row[partsColIdx]) {
+          const partsStr = String(row[partsColIdx]);
+          partsStr.split(/\n|;/).forEach(pLine => {
+            const trimmed = pLine.trim();
+            if (trimmed) participants.push({ nama: trimmed, email: "", departemen: "" });
+          });
+        }
+
+        return ContentService.createTextOutput(JSON.stringify({
+          status: "success",
+          training: {
+            id: rowId,
+            namaTraining: String(titleColIdx !== -1 ? row[titleColIdx] : row[3] || ""),
+            trainer: String(trainerColIdx !== -1 ? row[trainerColIdx] : ""),
+            jadwal: String(dateColIdx !== -1 ? row[dateColIdx] : ""),
+            divisi: String(deptColIdx !== -1 ? row[deptColIdx] : ""),
+            modules: modules,
+            participants: participants
+          }
+        })).setMimeType(ContentService.MimeType.JSON);
+      }
+    }
+
+    return ContentService.createTextOutput(JSON.stringify({ error: "Training ID not found" })).setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    Logger.log("Error handleGetTrainingDetails: " + err.toString());
+    return ContentService.createTextOutput(JSON.stringify({ error: err.toString() })).setMimeType(ContentService.MimeType.JSON);
+  }
+}

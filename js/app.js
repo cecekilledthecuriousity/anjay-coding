@@ -167,15 +167,19 @@ function renderDatePicker(fieldId) {
 
   popover.innerHTML = `
     <div class="dp-header">
-      <button type="button" class="dp-nav-btn" onclick="shiftDatePickerMonth('${fieldId}', -1)" title="Bulan sebelumnya">&#8249;</button>
+      <button type="button" class="dp-nav-btn" onclick="shiftDatePickerMonth('${fieldId}', -1)" title="Bulan sebelumnya" aria-label="Bulan sebelumnya">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+      </button>
       <span class="dp-title">${monthNames[month]} ${year}</span>
-      <button type="button" class="dp-nav-btn" onclick="shiftDatePickerMonth('${fieldId}', 1)" title="Bulan berikutnya">&#8250;</button>
+      <button type="button" class="dp-nav-btn" onclick="shiftDatePickerMonth('${fieldId}', 1)" title="Bulan berikutnya" aria-label="Bulan berikutnya">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      </button>
     </div>
-    <div class="dp-weekdays"><span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span></div>
+    <div class="dp-weekdays"><span>Min</span><span>Sen</span><span>Sel</span><span>Rab</span><span>Kam</span><span>Jum</span><span>Sab</span></div>
     <div class="dp-days">${daysHtml}</div>
     <div class="dp-footer">
-      <button type="button" class="dp-footer-btn" onclick="clearDatePicker('${fieldId}')">Clear</button>
-      <button type="button" class="dp-footer-btn" onclick="selectToday('${fieldId}')">Hari Ini</button>
+      <button type="button" class="dp-footer-btn dp-btn-clear" onclick="clearDatePicker('${fieldId}')">Hapus</button>
+      <button type="button" class="dp-footer-btn dp-btn-today" onclick="selectToday('${fieldId}')">Hari Ini</button>
     </div>
   `;
 }
@@ -242,22 +246,284 @@ function clearDatePicker(fieldId) {
 }
 window.clearDatePicker = clearDatePicker;
 
-// Close popovers on click outside
+// ==========================================
+// Custom Time Picker Component (Antislop Popover Style)
+// ==========================================
+const timePickerState = {};
+
+const TIME_PRESETS = [
+  { t: '08:00', label: 'Pagi' },
+  { t: '09:00', label: 'Standar' },
+  { t: '10:00', label: 'Sesi 2' },
+  { t: '12:00', label: 'Ishoma' },
+  { t: '13:00', label: 'Siang' },
+  { t: '15:00', label: 'Sore 1' },
+  { t: '16:00', label: 'Sore 2' },
+  { t: '17:00', label: 'Selesai' }
+];
+
+const TIME_HOURS = ['07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21'];
+const TIME_MINUTES = ['00', '15', '30', '45', '10', '20', '40', '50'];
+
+function toggleTimePicker(targetInputOrId, event) {
+  if (event && typeof event.stopPropagation === 'function') {
+    event.stopPropagation();
+  }
+  let input = typeof targetInputOrId === 'string' ? document.getElementById(targetInputOrId) : targetInputOrId;
+  if (!input) return;
+
+  const fieldId = input.id || ('tp_' + Math.random().toString(36).substring(2, 9));
+  if (!input.id) input.id = fieldId;
+
+  // Tutup date picker yang sedang terbuka
+  document.querySelectorAll('.date-picker-popover').forEach(p => {
+    p.style.display = 'none';
+    p.closest('.date-picker-wrap')?.classList.remove('open');
+  });
+
+  // Ambil elemen popover atau buat jika belum ada
+  let popover = document.getElementById(fieldId + '_popover');
+  if (!popover) {
+    popover = document.createElement('div');
+    popover.id = fieldId + '_popover';
+    popover.className = 'time-picker-popover';
+    const wrap = input.closest('.datetime-field-wrap') || input.parentElement;
+    wrap.appendChild(popover);
+  }
+
+  const isCurrentlyOpen = popover.style.display === 'block';
+
+  // Tutup semua time picker popover
+  document.querySelectorAll('.time-picker-popover').forEach(p => {
+    p.style.display = 'none';
+    p.closest('.datetime-field-wrap')?.classList.remove('open');
+  });
+
+  // Jika sebelumnya terbuka, aksi toggle adalah menutupnya
+  if (isCurrentlyOpen) {
+    return;
+  }
+
+  const currentVal = input.value || '09:00';
+  let [hh, mm] = currentVal.split(':');
+  hh = hh ? hh.padStart(2, '0') : '09';
+  mm = mm ? mm.padStart(2, '0') : '00';
+  timePickerState[fieldId] = { hour: hh, minute: mm };
+
+  renderTimePicker(fieldId);
+  popover.style.display = 'block';
+  input.closest('.datetime-field-wrap')?.classList.add('open');
+
+  // Posisi cerdas jika di dalam tabel/card yang dapat di-scroll
+  if (popover.closest('table') || popover.closest('.tbl-wrap') || popover.closest('.session-card')) {
+    const rect = input.getBoundingClientRect();
+    popover.style.position = 'fixed';
+    popover.style.zIndex = '9999';
+    let top = rect.bottom + 6;
+    let left = rect.left;
+    if (top + 280 > window.innerHeight && rect.top > 290) {
+      top = rect.top - 280;
+    }
+    if (left + 290 > window.innerWidth) {
+      left = Math.max(10, window.innerWidth - 300);
+    }
+    popover.style.top = `${top}px`;
+    popover.style.left = `${left}px`;
+  } else {
+    popover.style.position = 'absolute';
+    popover.style.zIndex = '250';
+    popover.style.top = 'calc(100% + 6px)';
+    popover.style.left = '0';
+  }
+}
+window.toggleTimePicker = toggleTimePicker;
+
+function renderTimePicker(fieldId) {
+  const popover = document.getElementById(fieldId + '_popover');
+  if (!popover) return;
+  const state = timePickerState[fieldId] || { hour: '09', minute: '00' };
+  const currentVal = `${state.hour}:${state.minute}`;
+
+  let presetsHtml = '';
+  TIME_PRESETS.forEach(p => {
+    const isSel = p.t === currentVal;
+    presetsHtml += `
+      <button type="button" class="tp-preset-btn ${isSel ? 'selected' : ''}" onclick="selectTimeValue('${fieldId}', '${p.t}')">
+        <span class="tp-preset-time">${p.t}</span>
+        <span class="tp-preset-desc">${p.label}</span>
+      </button>
+    `;
+  });
+
+  let hoursHtml = '';
+  TIME_HOURS.forEach(h => {
+    const isSel = h === state.hour;
+    hoursHtml += `<button type="button" class="tp-chip-btn ${isSel ? 'selected' : ''}" onclick="selectTimeHour('${fieldId}', '${h}')">${h}</button>`;
+  });
+
+  let minsHtml = '';
+  TIME_MINUTES.forEach(m => {
+    const isSel = m === state.minute;
+    minsHtml += `<button type="button" class="tp-chip-btn ${isSel ? 'selected' : ''}" onclick="selectTimeMinute('${fieldId}', '${m}')">${m}</button>`;
+  });
+
+  popover.innerHTML = `
+    <div class="tp-header">
+      <div class="tp-preview-box">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        <span class="tp-preview-time" id="${fieldId}_preview">${currentVal}</span>
+        <span class="tp-preview-badge">WIB</span>
+      </div>
+      <button type="button" class="tp-close-btn" onclick="closeTimePicker('${fieldId}')" title="Selesai &amp; Tutup" aria-label="Tutup">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+
+    <div style="margin-bottom:12px;">
+      <div class="tp-section-label">Pilihan Cepat</div>
+      <div class="tp-presets-grid">${presetsHtml}</div>
+    </div>
+
+    <div>
+      <div class="tp-section-label">Kustom Waktu</div>
+      <div class="tp-custom-grid">
+        <div class="tp-hours-row" style="margin-bottom:6px;">
+          <span class="tp-sub-label">Jam</span>
+          <div class="tp-chips-scroll">${hoursHtml}</div>
+        </div>
+        <div class="tp-mins-row">
+          <span class="tp-sub-label">Menit</span>
+          <div class="tp-chips-scroll">${minsHtml}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dp-footer">
+      <button type="button" class="dp-footer-btn dp-btn-clear" onclick="selectTimeValue('${fieldId}', '09:00')">Reset (09:00)</button>
+      <button type="button" class="dp-footer-btn dp-btn-today" onclick="closeTimePicker('${fieldId}')">Terapkan</button>
+    </div>
+  `;
+}
+window.renderTimePicker = renderTimePicker;
+
+function selectTimeValue(fieldId, timeStr) {
+  const input = document.getElementById(fieldId);
+  if (!input) return;
+  const [hh, mm] = timeStr.split(':');
+  timePickerState[fieldId] = { hour: hh, minute: mm };
+  input.value = timeStr;
+  input.setAttribute('value', timeStr);
+  input.dispatchEvent(new Event('change', { bubbles: true }));
+  closeTimePicker(fieldId);
+}
+window.selectTimeValue = selectTimeValue;
+
+function selectTimeHour(fieldId, h) {
+  const input = document.getElementById(fieldId);
+  if (!input) return;
+  const state = timePickerState[fieldId] || { hour: '09', minute: '00' };
+  state.hour = h;
+  timePickerState[fieldId] = state;
+  const newVal = `${state.hour}:${state.minute}`;
+  input.value = newVal;
+  input.setAttribute('value', newVal);
+  input.dispatchEvent(new Event('change', { bubbles: true }));
+  renderTimePicker(fieldId);
+}
+window.selectTimeHour = selectTimeHour;
+
+function selectTimeMinute(fieldId, m) {
+  const input = document.getElementById(fieldId);
+  if (!input) return;
+  const state = timePickerState[fieldId] || { hour: '09', minute: '00' };
+  state.minute = m;
+  timePickerState[fieldId] = state;
+  const newVal = `${state.hour}:${state.minute}`;
+  input.value = newVal;
+  input.setAttribute('value', newVal);
+  input.dispatchEvent(new Event('change', { bubbles: true }));
+  renderTimePicker(fieldId);
+}
+window.selectTimeMinute = selectTimeMinute;
+
+function closeTimePicker(fieldId) {
+  const popover = document.getElementById(fieldId + '_popover');
+  if (popover) {
+    popover.style.display = 'none';
+    popover.closest('.datetime-field-wrap')?.classList.remove('open');
+  }
+}
+window.closeTimePicker = closeTimePicker;
+
+// Pengikatan listener klik langsung ke seluruh field waktu & ikon prefix
+function bindAllTimePickers() {
+  document.querySelectorAll('.datetime-field-wrap').forEach(wrap => {
+    const input = wrap.querySelector('input[type="time"], input[type="text"]');
+    if (input && !input.dataset.tpBound) {
+      input.dataset.tpBound = 'true';
+      input.addEventListener('click', function(e) {
+        toggleTimePicker(this, e);
+      });
+    }
+    const icon = wrap.querySelector('.datetime-prefix-icon');
+    if (icon && !icon.dataset.tpBound) {
+      icon.dataset.tpBound = 'true';
+      icon.addEventListener('click', function(e) {
+        const inp = this.closest('.datetime-field-wrap')?.querySelector('input');
+        if (inp) toggleTimePicker(inp, e);
+      });
+    }
+  });
+
+  // Untuk baris sesi dinamis
+  document.querySelectorAll('.session-edit-start, .session-edit-end').forEach(input => {
+    if (!input.dataset.tpBound) {
+      input.dataset.tpBound = 'true';
+      input.addEventListener('click', function(e) {
+        toggleTimePicker(this, e);
+      });
+    }
+  });
+}
+window.bindAllTimePickers = bindAllTimePickers;
+
+// Tutup popover jika pengguna mengklik di luar area picker
 document.addEventListener('click', function(e) {
-  if (!e.target.closest('.date-picker-wrap') && !e.target.closest('.date-picker-popover')) {
+  // Jangan tutup jika klik terjadi di dalam popover itu sendiri
+  if (e.target.closest('.date-picker-popover') || e.target.closest('.time-picker-popover')) {
+    return;
+  }
+
+  // Tutup Date Picker jika klik di luar
+  if (!e.target.closest('.date-picker-wrap')) {
     document.querySelectorAll('.date-picker-popover').forEach(p => {
       p.style.display = 'none';
       p.closest('.date-picker-wrap')?.classList.remove('open');
     });
   }
+
+  // Tutup Time Picker jika klik di luar
+  if (!e.target.closest('.datetime-field-wrap') && !e.target.closest('.session-time-inputs-wrap')) {
+    document.querySelectorAll('.time-picker-popover').forEach(p => {
+      p.style.display = 'none';
+      p.closest('.datetime-field-wrap')?.classList.remove('open');
+    });
+  }
 });
 
-// Close fixed table popovers on scroll to prevent detaching
+// Jalankan pengikatan awal saat dokumen siap
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', bindAllTimePickers);
+} else {
+  bindAllTimePickers();
+}
+
+// Tutup popover fixed saat scroll agar tidak lepas posisi
 window.addEventListener('scroll', function() {
-  document.querySelectorAll('.date-picker-popover').forEach(p => {
+  document.querySelectorAll('.date-picker-popover, .time-picker-popover').forEach(p => {
     if (p.style.display !== 'none' && p.style.position === 'fixed') {
       p.style.display = 'none';
-      p.closest('.date-picker-wrap')?.classList.remove('open');
+      p.closest('.date-picker-wrap, .datetime-field-wrap')?.classList.remove('open');
     }
   });
 }, true);
@@ -656,7 +922,7 @@ function selectChip(type, value, cardEl) {
   } else if (type === 'lokasi') {
     if (cardEl.classList.contains('chip-busy')) {
       const conflictMsg = cardEl.getAttribute('data-conflict') || 'ada kegiatan lain pada jam tersebut';
-      showToast(`⚠️ Ruangan ini terdeteksi sibuk (${conflictMsg}). Anda tetap dapat memilihnya atau memilih ruangan lain yang bertanda "Tersedia".`, 'warning');
+      showToast(`Ruangan ini terdeteksi sibuk (${conflictMsg}). Anda tetap dapat memilihnya atau memilih ruangan lain yang bertanda "Tersedia".`, 'warning');
     }
     document.querySelectorAll('#lokasiChipGrid .chip-card').forEach(c => c.classList.remove('selected'));
     cardEl.classList.add('selected');
@@ -722,7 +988,7 @@ function selectCustomRoom(roomValue) {
     const itemEl = document.querySelector(`#roomDropdownMenu .room-dropdown-item[data-room="${roomValue}"]`);
     if (itemEl && itemEl.classList.contains('room-busy')) {
       const conflictMsg = itemEl.getAttribute('data-conflict') || 'ada kegiatan lain pada jam tersebut';
-      showToast(`⚠️ Ruangan ${roomValue.replace('Ruangan Meeting ', '')} sedang terpakai (${conflictMsg}). Hanya ruangan yang bertanda "Tersedia" yang dapat dipilih.`, 'warning');
+      showToast(`Ruangan ${roomValue.replace('Ruangan Meeting ', '')} sedang terpakai (${conflictMsg}). Hanya ruangan yang bertanda "Tersedia" yang dapat dipilih.`, 'warning');
       return;
     }
   }
@@ -1247,7 +1513,7 @@ function renderRoomAvailability(rooms) {
     const activeItem = document.querySelector(`#roomDropdownMenu .room-dropdown-item[data-room="${currentSelected}"]`);
     if (activeItem && activeItem.classList.contains('room-busy')) {
       const conflictMsg = activeItem.getAttribute('data-conflict') || 'ada kegiatan lain pada jam tersebut';
-      showToast(`⚠️ Ruangan ${currentSelected.replace('Ruangan Meeting ', '')} terpakai pada jam ini (${conflictMsg}). Silakan pilih ruangan lain yang bertanda Tersedia.`, 'warning');
+      showToast(`Ruangan ${currentSelected.replace('Ruangan Meeting ', '')} terpakai pada jam ini (${conflictMsg}). Silakan pilih ruangan lain yang bertanda Tersedia.`, 'warning');
       selectCustomRoom('');
     } else if (activeItem) {
       const activeBadge = activeItem.querySelector('.room-avail-badge');
@@ -1271,7 +1537,7 @@ function renderRoomAvailability(rooms) {
     } else if (availableCount > 0) {
       infoEl.innerHTML = `<span style="color:var(--ink-soft);font-weight:600;"><span style="color:#2C7A4B;">${availableCount}</span> dari ${totalInternal} Ruangan Tersedia</span>`;
     } else {
-      infoEl.innerHTML = `<span style="color:#B3264E;font-weight:600;">⚠️ Semua Ruangan Terpakai pada jam ini</span>`;
+      infoEl.innerHTML = `<span style="color:#B3264E;font-weight:600;">Semua Ruangan Terpakai pada jam ini</span>`;
     }
   }
 }
@@ -1432,27 +1698,28 @@ function formatIsoDate(d) {
 }
 
 function setSchedulePattern(pattern) {
-  currentSchedulePattern = pattern;
+  const normPattern = pattern === 'multi' ? 'weekly' : pattern;
+  currentSchedulePattern = normPattern;
 
   // Update tabs
   const btnSingle = document.getElementById('patternSingleBtn');
   const btnWeekly = document.getElementById('patternWeeklyBtn');
   const btnConsec = document.getElementById('patternConsecutiveBtn');
-  if (btnSingle) btnSingle.classList.toggle('active', pattern === 'single');
-  if (btnWeekly) btnWeekly.classList.toggle('active', pattern === 'weekly');
-  if (btnConsec) btnConsec.classList.toggle('active', pattern === 'consecutive');
+  if (btnSingle) btnSingle.classList.toggle('active', normPattern === 'single');
+  if (btnWeekly) btnWeekly.classList.toggle('active', normPattern === 'weekly');
+  if (btnConsec) btnConsec.classList.toggle('active', normPattern === 'consecutive');
 
   // Update panels
   const panelSingle = document.getElementById('singleSchedulePanel');
   const panelWeekly = document.getElementById('weeklySchedulePanel');
   const panelConsec = document.getElementById('consecutiveSchedulePanel');
-  if (panelSingle) panelSingle.style.display = pattern === 'single' ? 'block' : 'none';
-  if (panelWeekly) panelWeekly.style.display = pattern === 'weekly' ? 'block' : 'none';
-  if (panelConsec) panelConsec.style.display = pattern === 'consecutive' ? 'block' : 'none';
+  if (panelSingle) panelSingle.style.display = normPattern === 'single' ? 'block' : 'none';
+  if (panelWeekly) panelWeekly.style.display = normPattern === 'weekly' ? 'block' : 'none';
+  if (panelConsec) panelConsec.style.display = normPattern === 'consecutive' ? 'block' : 'none';
 
-  if (pattern === 'weekly') {
+  if (normPattern === 'weekly') {
     initWeeklyPanelDefaults();
-  } else if (pattern === 'consecutive') {
+  } else if (normPattern === 'consecutive') {
     initConsecPanelDefaults();
   } else {
     handleMainScheduleChange();
@@ -1552,9 +1819,9 @@ function onWeeklyConfigChange() {
       const parts = startVal.split('-').map(Number);
       const startDate = new Date(parts[0], parts[1] - 1, parts[2]);
       const endDate = new Date(parts[0], parts[1] - 1, parts[2] + ((count - 1) * 7));
-      summaryEl.innerHTML = `<strong>Berulang Mingguan:</strong> Setiap hari <strong>${dayName}</strong> (${count} Sesi &bull; ${durStr}) &bull; ${formatDisplayDate(formatIsoDate(startDate))} s/d ${formatDisplayDate(formatIsoDate(endDate))} (${startJam} - ${endJam} WIB)`;
+      summaryEl.innerHTML = `<strong>Multi-Hari (On Going):</strong> Setiap hari <strong>${dayName}</strong> (${count} Sesi &bull; ${durStr}) &bull; ${formatDisplayDate(formatIsoDate(startDate))} s/d ${formatDisplayDate(formatIsoDate(endDate))} (${startJam} - ${endJam} WIB)`;
     } else {
-      summaryEl.innerHTML = `<strong>Berulang Mingguan:</strong> Setiap hari <strong>${dayName}</strong> (${count} Sesi &bull; ${startJam} - ${endJam} WIB) &bull; <em>Pilih tanggal mulai di atas</em>`;
+      summaryEl.innerHTML = `<strong>Multi-Hari (On Going):</strong> Setiap hari <strong>${dayName}</strong> (${count} Sesi &bull; ${startJam} - ${endJam} WIB) &bull; <em>Pilih tanggal mulai di atas</em>`;
     }
   }
 
@@ -1648,7 +1915,7 @@ function applyWeeklySchedule() {
   const jadwalField = document.getElementById('jadwal');
   if (jadwalField) jadwalField.value = scheduleText;
 
-  showToast(`✅ Berhasil membuat ${count} sesi pelatihan setiap hari ${dayName} (${startJam} - ${endJam} WIB). Ruangan akan ter-booked untuk seluruh sesi ini.`, 'success');
+  showToast(`Berhasil membuat ${count} sesi pelatihan setiap hari ${dayName} (${startJam} - ${endJam} WIB). Ruangan akan ter-booked untuk seluruh sesi ini.`, 'success');
 
   if (currentLoc && (document.getElementById('metode')?.value === 'Onsite' || document.getElementById('metode')?.value === 'Hybrid')) {
     scheduleRoomAvailabilityCheck();
@@ -1706,7 +1973,7 @@ function applyConsecutiveSchedule() {
   calculateScheduleAndDuration();
   syncLocationToModules();
 
-  showToast(`✅ Berhasil membuat ${count} hari pelatihan berturut-turut (${startJam} - ${endJam} WIB). Ruangan akan ter-booked untuk seluruh sesi ini.`, 'success');
+  showToast(`Berhasil membuat ${count} hari pelatihan berturut-turut (${startJam} - ${endJam} WIB). Ruangan akan ter-booked untuk seluruh sesi ini.`, 'success');
 
   if (currentLoc && (document.getElementById('metode')?.value === 'Onsite' || document.getElementById('metode')?.value === 'Hybrid')) {
     scheduleRoomAvailabilityCheck();
@@ -1722,6 +1989,260 @@ window.onConsecConfigChange = onConsecConfigChange;
 window.applyWeeklySchedule = applyWeeklySchedule;
 window.applyConsecutiveSchedule = applyConsecutiveSchedule;
 
+let singleDaySplitMode = 1;
+
+function getDayNameId(dateStr) {
+  if (!dateStr) return '';
+  const parts = dateStr.split('-').map(Number);
+  if (parts.length !== 3) return '';
+  const d = new Date(parts[0], parts[1] - 1, parts[2]);
+  const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+  return days[d.getDay()] || '';
+}
+window.getDayNameId = getDayNameId;
+
+function parseTimeToMinutes(timeStr) {
+  if (!timeStr) return 0;
+  const [h, m] = timeStr.split(':').map(Number);
+  if (isNaN(h)) return 0;
+  return h * 60 + (m || 0);
+}
+
+function formatMinutesToTime(totalMin) {
+  const normalized = ((totalMin % 1440) + 1440) % 1440;
+  const h = Math.floor(normalized / 60);
+  const m = normalized % 60;
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+}
+
+function updateModuleRowTimes(row, date, start, end) {
+  if (!row) return;
+  const dateInp = row.querySelector('.module-date, .session-edit-date');
+  const startInp = row.querySelector('.module-start, .session-edit-start');
+  const endInp = row.querySelector('.module-end, .session-edit-end');
+  const dayBadge = row.querySelector('.session-day-label');
+
+  if (date && dateInp) {
+    dateInp.value = date;
+    if (dayBadge) {
+      const dayName = getDayNameId(date);
+      dayBadge.textContent = dayName ? `(${dayName})` : '';
+    }
+  }
+  if (start && startInp) startInp.value = start;
+  if (end && endInp) endInp.value = end;
+
+  const diff = calculateMinutesBetween(start, end);
+  const durStr = diff > 0 ? formatMinutes(diff) : '-';
+  const durPill = row.querySelector('.session-dur-pill');
+  if (durPill) durPill.textContent = durStr;
+  const durHidden = row.querySelector('.module-duration');
+  if (durHidden) durHidden.value = durStr;
+}
+
+function setSingleDaySplit(count) {
+  singleDaySplitMode = count;
+  const btn1 = document.getElementById('singleSplitOneBtn');
+  const btn2 = document.getElementById('singleSplitTwoBtn');
+  const rowOne = document.getElementById('singleOneSessionRow');
+  const rowTwo = document.getElementById('singleTwoSessionRow');
+
+  if (btn1) btn1.classList.toggle('active', count === 1);
+  if (btn2) btn2.classList.toggle('active', count === 2);
+
+  if (rowOne) rowOne.style.display = count === 1 ? 'grid' : 'none';
+  if (rowTwo) rowTwo.style.display = count === 2 ? 'block' : 'none';
+
+  const tglInput = document.getElementById('tglPelaksanaan');
+  const tgl = tglInput ? tglInput.value : '';
+  const topTrainer = (document.getElementById('trainer')?.value || '').trim();
+  const topLokasi = (document.getElementById('lokasi')?.value || '').trim();
+
+  if (count === 1) {
+    const start = document.getElementById('jamMulai')?.value || '09:00';
+    const end = document.getElementById('jamSelesai')?.value || '15:00';
+    const moduleRows = document.querySelectorAll('#moduleBody .session-compact-item');
+    if (moduleRows.length === 2 && moduleRows[0].dataset.splitAuto === 'true' && moduleRows[1].dataset.splitAuto === 'true') {
+      moduleRows[1].remove();
+      moduleCounter = Math.max(0, moduleCounter - 1);
+    }
+    const firstRow = document.querySelector('#moduleBody .session-compact-item');
+    if (firstRow) {
+      delete firstRow.dataset.splitAuto;
+      updateModuleRowTimes(firstRow, tgl, start, end);
+      renumberSessions();
+    } else if (tgl) {
+      addModule(tgl, start, end, '', topTrainer, 'Workshop', topLokasi, '');
+    }
+  } else if (count === 2) {
+    const s1Start = document.getElementById('singleSplit1Mulai')?.value || '09:00';
+    const s1End = document.getElementById('singleSplit1Selesai')?.value || '12:00';
+    const s2Start = document.getElementById('singleSplit2Mulai')?.value || '13:00';
+    const s2End = document.getElementById('singleSplit2Selesai')?.value || '16:00';
+
+    const jamMulai = document.getElementById('jamMulai');
+    if (jamMulai) jamMulai.value = s1Start;
+    const jamSelesai = document.getElementById('jamSelesai');
+    if (jamSelesai) jamSelesai.value = s2End;
+
+    const moduleRows = document.querySelectorAll('#moduleBody .session-compact-item');
+    if (moduleRows.length <= 1) {
+      if (moduleRows.length === 1) {
+        const r1 = moduleRows[0];
+        r1.dataset.splitAuto = 'true';
+        updateModuleRowTimes(r1, tgl || (r1.querySelector('.module-date')?.value || ''), s1Start, s1End);
+        addModule(tgl || (r1.querySelector('.module-date')?.value || ''), s2Start, s2End, '', topTrainer, 'Workshop Hands-on', topLokasi, '');
+        const lastRow = document.querySelector('#moduleBody .session-compact-item:last-child');
+        if (lastRow) lastRow.dataset.splitAuto = 'true';
+      } else if (tgl) {
+        addModule(tgl, s1Start, s1End, '', topTrainer, 'Workshop Hands-on', topLokasi, '');
+        const r1 = document.querySelector('#moduleBody .session-compact-item:last-child');
+        if (r1) r1.dataset.splitAuto = 'true';
+        addModule(tgl, s2Start, s2End, '', topTrainer, 'Workshop Hands-on', topLokasi, '');
+        const r2 = document.querySelector('#moduleBody .session-compact-item:last-child');
+        if (r2) r2.dataset.splitAuto = 'true';
+      }
+    } else if (moduleRows.length === 2 && moduleRows[0].dataset.splitAuto === 'true' && moduleRows[1].dataset.splitAuto === 'true') {
+      updateModuleRowTimes(moduleRows[0], tgl, s1Start, s1End);
+      updateModuleRowTimes(moduleRows[1], tgl, s2Start, s2End);
+    }
+  }
+
+  handleMainScheduleChange();
+}
+
+function handleSingleSplitInputsChange() {
+  const s1Start = document.getElementById('singleSplit1Mulai')?.value || '09:00';
+  const s1End = document.getElementById('singleSplit1Selesai')?.value || '12:00';
+  const s2Start = document.getElementById('singleSplit2Mulai')?.value || '13:00';
+  const s2End = document.getElementById('singleSplit2Selesai')?.value || '16:00';
+
+  const jamMulai = document.getElementById('jamMulai');
+  if (jamMulai) jamMulai.value = s1Start;
+  const jamSelesai = document.getElementById('jamSelesai');
+  if (jamSelesai) jamSelesai.value = s2End;
+
+  const tgl = document.getElementById('tglPelaksanaan')?.value || '';
+  const moduleRows = document.querySelectorAll('#moduleBody .session-compact-item');
+  if (moduleRows.length >= 2 && moduleRows[0].dataset.splitAuto === 'true' && moduleRows[1].dataset.splitAuto === 'true') {
+    updateModuleRowTimes(moduleRows[0], tgl, s1Start, s1End);
+    updateModuleRowTimes(moduleRows[1], tgl, s2Start, s2End);
+  }
+
+  calculateScheduleAndDuration();
+}
+
+function addSessionSameDay() {
+  const moduleRows = document.querySelectorAll('#moduleBody .session-compact-item');
+  const topTrainer = (document.getElementById('trainer')?.value || '').trim();
+  const topLokasi = (document.getElementById('lokasi')?.value || '').trim();
+  const topDate = document.getElementById('tglPelaksanaan')?.value || '';
+
+  let targetDate = topDate || formatIsoDate(new Date());
+  let targetStart = '13:00';
+  let targetEnd = '16:00';
+
+  if (moduleRows.length > 0) {
+    const lastRow = moduleRows[moduleRows.length - 1];
+    const lastDate = lastRow.querySelector('.module-date, .session-edit-date')?.value;
+    const lastEnd = lastRow.querySelector('.module-end, .session-edit-end')?.value || '12:00';
+
+    if (lastDate) targetDate = lastDate;
+
+    // Hitung jam mulai berikutnya secara cerdas
+    const endMinutes = parseTimeToMinutes(lastEnd);
+    if (endMinutes <= 12 * 60) {
+      targetStart = '13:00';
+      targetEnd = '16:00';
+    } else if (endMinutes < 15 * 60) {
+      const startMin = endMinutes + 30;
+      const endMin = Math.min(21 * 60, startMin + 120);
+      targetStart = formatMinutesToTime(startMin);
+      targetEnd = formatMinutesToTime(endMin);
+    } else {
+      const startMin = endMinutes + 15;
+      const endMin = Math.min(22 * 60, startMin + 90);
+      targetStart = formatMinutesToTime(startMin);
+      targetEnd = formatMinutesToTime(endMin);
+    }
+  }
+
+  addModule(targetDate, targetStart, targetEnd, '', topTrainer, 'Workshop Hands-on', topLokasi, '');
+
+  const lastItem = document.querySelector('#moduleBody .session-compact-item:last-child');
+  if (lastItem) {
+    const startInp = lastItem.querySelector('.session-edit-start, .module-start');
+    if (startInp) {
+      startInp.focus();
+      startInp.classList.add('highlight-pulse');
+      setTimeout(() => startInp.classList.remove('highlight-pulse'), 1500);
+    }
+    lastItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  const dayName = getDayNameId(targetDate);
+  showToast(`Sesi tambahan dibuat: ${dayName ? dayName + ', ' : ''}${formatDisplayDate(targetDate)} (${targetStart} - ${targetEnd} WIB). Anda dapat langsung mengedit tanggal dan jamnya di baris sesi ini.`, 'success');
+}
+
+function addSessionDifferentDay() {
+  const moduleRows = document.querySelectorAll('#moduleBody .session-compact-item');
+  const topTrainer = (document.getElementById('trainer')?.value || '').trim();
+  const topLokasi = (document.getElementById('lokasi')?.value || '').trim();
+  const topDate = document.getElementById('tglPelaksanaan')?.value || '';
+  const topStart = document.getElementById('jamMulai')?.value || '09:00';
+  const topEnd = document.getElementById('jamSelesai')?.value || '15:00';
+
+  let baseDateStr = topDate || formatIsoDate(new Date());
+  let targetStart = topStart;
+  let targetEnd = topEnd;
+
+  if (moduleRows.length > 0) {
+    const lastRow = moduleRows[moduleRows.length - 1];
+    const lastDate = lastRow.querySelector('.module-date, .session-edit-date')?.value;
+    const lastStart = lastRow.querySelector('.module-start, .session-edit-start')?.value;
+    const lastEnd = lastRow.querySelector('.module-end, .session-edit-end')?.value;
+
+    if (lastDate) baseDateStr = lastDate;
+    if (lastStart) targetStart = lastStart;
+    if (lastEnd) targetEnd = lastEnd;
+  }
+
+  // Hitung tanggal berikutnya (+1 hari atau +7 hari jika weekly)
+  let nextDateStr = baseDateStr;
+  const parts = baseDateStr.split('-').map(Number);
+  if (parts.length === 3) {
+    const d = new Date(parts[0], parts[1] - 1, parts[2]);
+    if (currentSchedulePattern === 'weekly') {
+      d.setDate(d.getDate() + 7);
+    } else {
+      d.setDate(d.getDate() + 1);
+      if (d.getDay() === 0) d.setDate(d.getDate() + 1); // lewati hari Minggu
+    }
+    nextDateStr = formatIsoDate(d);
+  }
+
+  addModule(nextDateStr, targetStart, targetEnd, '', topTrainer, 'Workshop Hands-on', topLokasi, '');
+
+  const lastItem = document.querySelector('#moduleBody .session-compact-item:last-child');
+  if (lastItem) {
+    const dateInp = lastItem.querySelector('.session-edit-date, .module-date');
+    if (dateInp) {
+      dateInp.focus();
+      dateInp.classList.add('highlight-pulse');
+      setTimeout(() => dateInp.classList.remove('highlight-pulse'), 1500);
+    }
+    lastItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  const dayName = getDayNameId(nextDateStr);
+  showToast(`Sesi di hari berbeda dibuat: ${dayName ? dayName + ', ' : ''}${formatDisplayDate(nextDateStr)} (${targetStart} - ${targetEnd} WIB). Silakan ubah hari, tanggal, atau jamnya langsung di kotak yang tersedia.`, 'success');
+}
+
+window.setSingleDaySplit = setSingleDaySplit;
+window.handleSingleSplitInputsChange = handleSingleSplitInputsChange;
+window.addSessionSameDay = addSessionSameDay;
+window.addSessionDifferentDay = addSessionDifferentDay;
+
 function handleMainScheduleChange() {
   const tglInput = document.getElementById('tglPelaksanaan');
   const startInput = document.getElementById('jamMulai');
@@ -1731,37 +2252,50 @@ function handleMainScheduleChange() {
   const start = startInput ? startInput.value : '09:00';
   const end = endInput ? endInput.value : '15:00';
 
-  // Sinkronkan ke modul pertama jika hanya memiliki 1 sesi / modul
-  const moduleRows = document.querySelectorAll('#moduleBody .session-compact-item, #moduleBody tr');
-  if (moduleRows.length <= 1) {
-    if (moduleRows.length === 0) {
-      if (tgl) {
-        const topTrainer = (document.getElementById('trainer')?.value || '').trim();
-        const topLokasi = (document.getElementById('lokasi')?.value || '').trim();
-        addModule(tgl, start, end, '', topTrainer, 'Workshop', topLokasi, '');
-      }
-    } else {
-      const firstRow = moduleRows[0];
-      const dateInp = firstRow.querySelector('.module-date');
-      const startInp = firstRow.querySelector('.module-start');
-      const endInp = firstRow.querySelector('.module-end');
-      if (tgl && dateInp) {
-        dateInp.value = tgl;
-      }
-      if (start && startInp) startInp.value = start;
-      if (end && endInp) endInp.value = end;
+  if (currentSchedulePattern === 'single' && singleDaySplitMode === 2) {
+    const s1Start = document.getElementById('singleSplit1Mulai')?.value || '09:00';
+    const s1End = document.getElementById('singleSplit1Selesai')?.value || '12:00';
+    const s2Start = document.getElementById('singleSplit2Mulai')?.value || '13:00';
+    const s2End = document.getElementById('singleSplit2Selesai')?.value || '16:00';
 
-      // Update compact item display labels
-      const dateText = firstRow.querySelector('.session-date-text');
-      if (dateText && tgl) dateText.textContent = formatDateLongId(tgl);
-      const timeText = firstRow.querySelector('.session-time-text');
-      if (timeText && start && end) timeText.innerHTML = `<strong>${start} - ${end} WIB</strong>`;
-      const diff = calculateMinutesBetween(start, end);
-      const durStr = diff > 0 ? formatMinutes(diff) : '-';
-      const durPill = firstRow.querySelector('.session-dur-pill');
-      if (durPill) durPill.textContent = durStr;
-      const durHidden = firstRow.querySelector('.module-duration');
-      if (durHidden) durHidden.value = durStr;
+    if (startInput) startInput.value = s1Start;
+    if (endInput) endInput.value = s2End;
+
+    const moduleRows = document.querySelectorAll('#moduleBody .session-compact-item');
+    const topTrainer = (document.getElementById('trainer')?.value || '').trim();
+    const topLokasi = (document.getElementById('lokasi')?.value || '').trim();
+
+    if (moduleRows.length >= 2 && moduleRows[0].dataset.splitAuto === 'true' && moduleRows[1].dataset.splitAuto === 'true') {
+      updateModuleRowTimes(moduleRows[0], tgl, s1Start, s1End);
+      updateModuleRowTimes(moduleRows[1], tgl, s2Start, s2End);
+    } else if (moduleRows.length === 0 && tgl) {
+      addModule(tgl, s1Start, s1End, '', topTrainer, 'Workshop Hands-on', topLokasi, '');
+      const r1 = document.querySelector('#moduleBody .session-compact-item:last-child');
+      if (r1) r1.dataset.splitAuto = 'true';
+      addModule(tgl, s2Start, s2End, '', topTrainer, 'Workshop Hands-on', topLokasi, '');
+      const r2 = document.querySelector('#moduleBody .session-compact-item:last-child');
+      if (r2) r2.dataset.splitAuto = 'true';
+    } else if (moduleRows.length === 1) {
+      updateModuleRowTimes(moduleRows[0], tgl, s1Start, s1End);
+      moduleRows[0].dataset.splitAuto = 'true';
+      addModule(tgl, s2Start, s2End, '', topTrainer, 'Workshop Hands-on', topLokasi, '');
+      const r2 = document.querySelector('#moduleBody .session-compact-item:last-child');
+      if (r2) r2.dataset.splitAuto = 'true';
+    }
+  } else {
+    // Sinkronkan ke modul pertama jika hanya memiliki 1 sesi / modul
+    const moduleRows = document.querySelectorAll('#moduleBody .session-compact-item, #moduleBody tr');
+    if (moduleRows.length <= 1) {
+      if (moduleRows.length === 0) {
+        if (tgl) {
+          const topTrainer = (document.getElementById('trainer')?.value || '').trim();
+          const topLokasi = (document.getElementById('lokasi')?.value || '').trim();
+          addModule(tgl, start, end, '', topTrainer, 'Workshop', topLokasi, '');
+        }
+      } else {
+        const firstRow = moduleRows[0];
+        updateModuleRowTimes(firstRow, tgl, start, end);
+      }
     }
   }
 
@@ -2026,7 +2560,12 @@ function calculateScheduleAndDuration() {
     const trainerVal = (document.getElementById('trainer')?.value || '').trim();
     const trainerSnippet = trainerVal ? ` &bull; Fasilitator: <strong>${trainerVal}</strong>` : '';
     if (moduleRows.length > 1) {
-      liveSummaryTextEl.innerHTML = `<strong>${dateText || 'Multi-sesi'}</strong> &bull; <strong>${totalDurStr !== '-' ? totalDurStr : '6 Jam'} Pembelajaran</strong> (${moduleRows.length} Sesi Terjadwal)${trainerSnippet}`;
+      if (uniqueDates.length === 1 && uniqueDates[0]) {
+        const longDate = formatDateLongId(uniqueDates[0]);
+        liveSummaryTextEl.innerHTML = `<strong>${longDate}</strong> &bull; <strong>${moduleRows.length} Sesi di Hari yang Sama</strong> &bull; Total <strong>${totalDurStr !== '-' ? totalDurStr : '-'} Pembelajaran</strong>${trainerSnippet}`;
+      } else {
+        liveSummaryTextEl.innerHTML = `<strong>${dateText || 'Multi-sesi'}</strong> &bull; <strong>${totalDurStr !== '-' ? totalDurStr : '6 Jam'} Pembelajaran</strong> (${moduleRows.length} Sesi Terjadwal)${trainerSnippet}`;
+      }
     } else if (curTopDate) {
       const longDate = formatDateLongId(curTopDate);
       if (curStart && curEnd && curMinutes > 0) {
@@ -2262,7 +2801,7 @@ function downloadPesertaTemplate() {
   link.click();
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
-  showToast('📥 Template peserta (.CSV) berhasil diunduh! Buka di Excel atau Google Sheets.', 'success');
+  showToast('Template peserta (.CSV) berhasil diunduh! Buka di Excel atau Google Sheets.', 'success');
 }
 window.downloadPesertaTemplate = downloadPesertaTemplate;
 
@@ -2451,6 +2990,8 @@ function addModule(tanggal = '', jamMulai = '', jamSelesai = '', mod = '', pic =
   const formattedDate = defaultDate ? formatDateLongId(defaultDate) : 'Tanggal belum ditentukan';
   const displayTopic = mod ? mod : '';
   const currentCount = document.querySelectorAll('#moduleBody .session-compact-item').length + 1;
+  const dayName = defaultDate ? getDayNameId(defaultDate) : '';
+  const dayNameBadge = dayName ? `(${dayName})` : '';
 
   const item = document.createElement('div');
   item.className = 'session-compact-item';
@@ -2458,41 +2999,43 @@ function addModule(tanggal = '', jamMulai = '', jamSelesai = '', mod = '', pic =
   item.setAttribute('data-session-index', moduleCounter);
 
   item.innerHTML = `
-    <div class="session-compact-main">
-      <div class="session-compact-meta">
+    <div class="session-card-header">
+      <div class="session-header-left">
         <span class="session-badge-num">Sesi ${currentCount}</span>
-        <div class="session-info">
-          <div class="session-date-time">
-            <span class="session-date-text">${formattedDate}</span> &bull; 
-            <span class="session-time-text"><strong>${defaultStart} - ${defaultEnd} WIB</strong></span>
-            <span class="session-dur-pill">${rowDur}</span>
-            <button type="button" class="btn-edit-session-time" onclick="toggleSessionTimeEdit('${moduleCounter}')" title="Ubah tanggal atau jam sesi ini">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
-            </button>
+        <div class="session-venue-pill">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+          <span class="session-venue-name">${defaultLokasi || 'Sesuai Ruangan Utama'}</span>
+        </div>
+      </div>
+      <div class="session-header-right">
+        <span class="session-dur-pill">${rowDur}</span>
+        <button type="button" class="session-delete-btn" onclick="removeIntegratedSession(this)" title="Hapus sesi ini">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="session-card-controls">
+      <div class="session-time-group">
+        <div class="session-input-subgroup">
+          <label class="session-sublabel">Tanggal:</label>
+          <div class="session-date-field-wrap">
+            <input type="date" class="session-edit-date module-date" value="${defaultDate}" onchange="onSessionInlineChange('${moduleCounter}')" title="Ubah tanggal sesi ini">
+            <span class="session-day-label">${dayNameBadge}</span>
           </div>
-          <div class="session-venue-pill">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-            <span class="session-venue-name">${defaultLokasi || 'Sesuai Ruangan Utama'}</span>
+        </div>
+        <div class="session-input-subgroup">
+          <label class="session-sublabel">Jam Sesi:</label>
+          <div class="session-time-inputs-wrap">
+            <input type="time" class="session-edit-start module-start" value="${defaultStart}" onchange="onSessionInlineChange('${moduleCounter}')" title="Jam mulai">
+            <span class="session-time-sep">s/d</span>
+            <input type="time" class="session-edit-end module-end" value="${defaultEnd}" onchange="onSessionInlineChange('${moduleCounter}')" title="Jam selesai">
+            <span class="datetime-suffix-badge">WIB</span>
           </div>
         </div>
       </div>
-      <div class="session-compact-topic">
-        <input type="text" class="session-topic-input module-title" placeholder="Topik / Judul Materi (Opsional)" value="${escapeHtml(displayTopic)}">
-      </div>
-      <button type="button" class="session-delete-btn" onclick="removeIntegratedSession(this)" title="Hapus sesi ini">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-      </button>
-    </div>
-
-    <!-- Mini Inline Editor (Hidden by default, toggleable via pencil icon) -->
-    <div class="session-time-editor" id="sessionTimeEditor_${moduleCounter}" style="display:none;margin-top:8px;padding-top:8px;border-top:1px dashed var(--line-soft);">
-      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-        <span style="font-size:11.5px;font-weight:600;color:var(--ink-soft);">Sesuaikan Waktu:</span>
-        <input type="date" class="session-edit-date module-date" value="${defaultDate}" onchange="onSessionInlineChange('${moduleCounter}')" style="padding:4px 8px;font-size:12px;border:1px solid var(--line);border-radius:6px;">
-        <input type="time" class="session-edit-start module-start" value="${defaultStart}" onchange="onSessionInlineChange('${moduleCounter}')" style="padding:4px 8px;font-size:12px;border:1px solid var(--line);border-radius:6px;">
-        <span style="font-size:11px;color:var(--ink-faint);">s/d</span>
-        <input type="time" class="session-edit-end module-end" value="${defaultEnd}" onchange="onSessionInlineChange('${moduleCounter}')" style="padding:4px 8px;font-size:12px;border:1px solid var(--line);border-radius:6px;">
-        <button type="button" class="btn-text-action" onclick="toggleSessionTimeEdit('${moduleCounter}')" style="font-size:11px;padding:3px 8px;">Selesai</button>
+      <div class="session-topic-group">
+        <input type="text" class="session-topic-input module-title" placeholder="Topik / Judul Materi Sesi ${currentCount} (Opsional)" value="${escapeHtml(displayTopic)}">
       </div>
     </div>
 
@@ -2523,6 +3066,10 @@ function renumberSessions() {
     const num = idx + 1;
     const badge = item.querySelector('.session-badge-num');
     if (badge) badge.textContent = `Sesi ${num}`;
+    const topicInp = item.querySelector('.session-topic-input');
+    if (topicInp && topicInp.placeholder.startsWith('Topik / Judul Materi Sesi')) {
+      topicInp.placeholder = `Topik / Judul Materi Sesi ${num} (Opsional)`;
+    }
   });
 
   const sessionBadge = document.getElementById('moduleSessionBadge');
@@ -2534,35 +3081,37 @@ function renumberSessions() {
       sessionBadge.style.display = 'none';
     }
   }
+  bindAllTimePickers();
 }
 
 function toggleSessionTimeEdit(id) {
-  const editor = document.getElementById(`sessionTimeEditor_${id}`);
-  if (!editor) return;
-  editor.style.display = editor.style.display === 'none' ? 'block' : 'none';
+  const item = document.getElementById(`sessionItem_${id}`);
+  if (!item) return;
+  const dateInp = item.querySelector('.session-edit-date');
+  if (dateInp) dateInp.focus();
 }
 
 function onSessionInlineChange(id) {
   const item = document.getElementById(`sessionItem_${id}`);
   if (!item) return;
-  const dateInp = item.querySelector('.session-edit-date');
-  const startInp = item.querySelector('.session-edit-start');
-  const endInp = item.querySelector('.session-edit-end');
+  const dateInp = item.querySelector('.session-edit-date, .module-date');
+  const startInp = item.querySelector('.session-edit-start, .module-start');
+  const endInp = item.querySelector('.session-edit-end, .module-end');
   const durHidden = item.querySelector('.module-duration');
+  const dayBadge = item.querySelector('.session-day-label');
 
   const dateVal = dateInp ? dateInp.value : '';
   const startVal = startInp ? startInp.value : '09:00';
   const endVal = endInp ? endInp.value : '15:00';
 
+  if (dayBadge) {
+    const dayName = dateVal ? getDayNameId(dateVal) : '';
+    dayBadge.textContent = dayName ? `(${dayName})` : '';
+  }
+
   const diff = calculateMinutesBetween(startVal, endVal);
   const durStr = diff > 0 ? formatMinutes(diff) : '-';
   if (durHidden) durHidden.value = durStr;
-
-  const dateText = item.querySelector('.session-date-text');
-  if (dateText) dateText.textContent = dateVal ? formatDateLongId(dateVal) : 'Tanggal belum ditentukan';
-
-  const timeText = item.querySelector('.session-time-text');
-  if (timeText) timeText.innerHTML = `<strong>${startVal} - ${endVal} WIB</strong>`;
 
   const durPill = item.querySelector('.session-dur-pill');
   if (durPill) durPill.textContent = durStr;
@@ -2738,6 +3287,7 @@ function goToPage(page) {
   if (page === 'vendors' || page === 'directory') page = 'vendor';
   if (page === 'skill-matrix' || page === 'matrix' || page === 'skillmatrix' || page === 'skills') page = 'skill-matrix';
   if (page === 'post-training' || page === 'trampoline' || page === 'post-test' || page === 'evidence' || page === 'posttraining') page = 'post-training';
+  if (page === 'absensi' || page === 'absen' || page === 'presensi' || page === 'checkin' || page === 'live-absensi') page = 'absensi';
 
   // Gate for portal-approval (requires PIN unlock)
   if (page === 'portal-approval') {
@@ -2779,9 +3329,13 @@ function goToPage(page) {
   }
 
   // 5. URL Hash sync
-  const targetHash = `#${page}`;
-  if (window.location.hash !== targetHash) {
-    history.replaceState(null, null, targetHash);
+  if (page === 'absensi' && (window.location.hash.includes('?') || window.location.search.includes('id='))) {
+    // Preserve query parameters for mobile attendance check-in (e.g. ?id=...#absen or #absen?id=...)
+  } else {
+    const targetHash = `#${page}`;
+    if (window.location.hash !== targetHash) {
+      history.replaceState(null, null, targetHash);
+    }
   }
 
   // 6. Ensure freshest data from localStorage
@@ -2794,6 +3348,13 @@ function goToPage(page) {
     renderSkillMatrix();
   } else if (page === 'ai-studio') {
     initAiStudioPage();
+  } else if (page === 'absensi') {
+    const attParams = getAttendanceUrlParams();
+    if (attParams.id) {
+      setupMobileAttendanceView(attParams.id, attParams.sesi);
+    } else {
+      initAttendanceHub();
+    }
   } else if (page === 'kalender') {
     renderCalendar();
   } else if (page === 'training-saya') {
@@ -2825,7 +3386,51 @@ function switchPublicView(view) {
   else goToPage('ajukan');
 }
 
+const DEFAULT_HOSTING_URL = 'https://request-training-development.vercel.app';
+
+function getAttendanceBaseUrl() {
+  const origin = window.location.origin || '';
+  const protocol = window.location.protocol || '';
+  const hostname = window.location.hostname || '';
+
+  // Jika dibuka dari file lokal (file:///) atau localhost / IP privat tanpa domain publik
+  if (protocol === 'file:' || origin === 'null' || !origin || hostname === 'localhost' || hostname === '127.0.0.1' || hostname.startsWith('192.168.') || hostname.startsWith('10.')) {
+    return DEFAULT_HOSTING_URL;
+  }
+  // Jika sudah online di Vercel atau domain publik apapun
+  return `${origin}${window.location.pathname.replace(/\/+$/, '')}`;
+}
+
+function getAttendanceUrlParams() {
+  // 1. Ambil dari window.location.search (?id=...&sesi=...)
+  const searchParams = new URLSearchParams(window.location.search || '');
+  let id = searchParams.get('id');
+  let sesi = searchParams.get('sesi') || searchParams.get('modul');
+
+  // 2. Ambil dari window.location.hash (#absen?id=... atau #checkin?id=...)
+  const hash = window.location.hash || '';
+  const qIndex = hash.indexOf('?');
+  if (qIndex !== -1) {
+    const hashParams = new URLSearchParams(hash.substring(qIndex + 1));
+    if (!id) id = hashParams.get('id');
+    if (!sesi) sesi = hashParams.get('sesi') || hashParams.get('modul');
+  }
+
+  return {
+    id: (id || '').trim(),
+    sesi: (sesi || 'Sesi 1').trim()
+  };
+}
+
 function handleHashNavigation() {
+  // Prioritas Utama: Jika URL membawa parameter ID pelatihan dari scan QR presensi
+  const attParams = getAttendanceUrlParams();
+  if (attParams.id) {
+    goToPage('absensi');
+    setupMobileAttendanceView(attParams.id, attParams.sesi);
+    return;
+  }
+
   const rawHash = (window.location.hash || '').replace('#', '').toLowerCase();
   if (rawHash === 'approval-page' || rawHash === 'approver-portal') {
     requestApprovalAccess();
@@ -2843,6 +3448,8 @@ function handleHashNavigation() {
     goToPage('vendor');
   } else if (rawHash === 'post-training' || rawHash === 'trampoline' || rawHash === 'evidence' || rawHash === 'posttest') {
     goToPage('post-training');
+  } else if (rawHash.startsWith('absen') || rawHash.startsWith('absensi') || rawHash.startsWith('checkin') || rawHash.startsWith('presensi')) {
+    goToPage('absensi');
   } else if (rawHash === 'portal-approval' || rawHash === 'approval' || rawHash === 'approver' || rawHash === 'admin' || rawHash === 'master' || rawHash === 'data') {
     goToPage('portal-approval');
   } else {
@@ -3023,6 +3630,9 @@ window.toggleKnowledgeSharingDetails = toggleKnowledgeSharingDetails;
 function handleEvidenceTrainingChange(trainingName) {
   if (!window._trampolineTrainingsData) return;
   const data = window._trampolineTrainingsData.get(trainingName);
+  const statsBox = document.getElementById('evidenceAttendanceStats');
+  const statsText = document.getElementById('evidenceAttendanceText');
+
   if (data) {
     if (data.divisi) {
       const divisiSel = document.getElementById('evidenceDivisi');
@@ -3031,6 +3641,34 @@ function handleEvidenceTrainingChange(trainingName) {
     if (data.kategori) {
       selectEvidenceCategory(data.kategori);
     }
+
+    // Hitung tingkat kehadiran aktual dari presensi terdaftar
+    if (statsBox && statsText) {
+      const trnId = String(data.id || '').trim();
+      const logs = (typeof getStoredAttendanceLogs === 'function') ? getStoredAttendanceLogs() : [];
+      const trnLogs = logs.filter(l => String(l.trainingId).trim() === trnId);
+      const uniquePresentEmails = new Set(trnLogs.map(l => String(l.participantEmail).toLowerCase().trim()));
+
+      loadCalendarEntries();
+      const submissions = (typeof cachedEntries !== 'undefined' && Array.isArray(cachedEntries)) ? cachedEntries : [];
+      const foundSub = submissions.find(s => {
+        const sId = (s.meta && s.meta['ID training']) || s.id || '';
+        return sId.trim() === trnId;
+      });
+
+      const totalParticipants = (foundSub && foundSub.participants && foundSub.participants.length) || uniquePresentEmails.size || 0;
+      const presentCount = uniquePresentEmails.size;
+      const pct = totalParticipants > 0 ? Math.round((presentCount / totalParticipants) * 100) : 0;
+
+      if (totalParticipants > 0 || presentCount > 0) {
+        statsBox.style.display = 'flex';
+        statsText.innerHTML = `<strong>Tingkat Kehadiran:</strong> ${presentCount} / ${totalParticipants} Peserta Hadir (${pct}%)`;
+      } else {
+        statsBox.style.display = 'none';
+      }
+    }
+  } else if (statsBox) {
+    statsBox.style.display = 'none';
   }
 }
 window.handleEvidenceTrainingChange = handleEvidenceTrainingChange;
@@ -4423,9 +5061,9 @@ function renderKanbanBoard(filteredItems, containerId) {
             </div>
             <div class="kanban-card-title">${escapeHtml(m['Nama training'] || '-')}</div>
             <div class="kanban-card-meta">
-              <div>👤 <strong>Pengaju:</strong> ${escapeHtml(m['Nama pengaju'] || m['Leader pengaju'] || '-')} (${escapeHtml(m['Departemen / divisi'] || '-')})</div>
-              <div>📅 <strong>Jadwal:</strong> ${escapeHtml(m['Tanggal & jam pelaksanaan'] || '-')}</div>
-              <div>👥 <strong>Peserta:</strong> ${pCount} orang &bull; 💰 ${escapeHtml(m['Budget diajukan'] || m['Estimasi biaya'] || 'Rp 0')}</div>
+              <div><strong>Pengaju:</strong> ${escapeHtml(m['Nama pengaju'] || m['Leader pengaju'] || '-')} (${escapeHtml(m['Departemen / divisi'] || '-')})</div>
+              <div><strong>Jadwal:</strong> ${escapeHtml(m['Tanggal & jam pelaksanaan'] || '-')}</div>
+              <div><strong>Peserta:</strong> ${pCount} orang &bull; <strong>Budget:</strong> ${escapeHtml(m['Budget diajukan'] || m['Estimasi biaya'] || 'Rp 0')}</div>
             </div>
             <div class="kanban-card-footer">
               <span class="mini-pill ${item.entry.statusClass || 'draft'}"><span class="dot"></span>${item.entry.status || 'Diajukan'}</span>
@@ -5976,8 +6614,8 @@ function renderUpcomingSessions(entries) {
       </div>
       <div class="session-item-modul">${s.modulName}</div>
       <div class="session-item-meta">
-        <span>⏰ ${s.time}</span>
-        <span>📍 ${s.lokasi}</span>
+        <span>${s.time}</span>
+        <span>${s.lokasi}</span>
       </div>
     `;
     item.title = 'Klik untuk melihat detail lengkap submission';
@@ -6097,7 +6735,7 @@ function showDetail(entry, index) {
         ${!m['Training goals'] && !m['Training plan purpose'] ? `<div><strong>Training Goals:</strong> -</div>` : ''}
         ${m['Link silabus materi'] ? `<div><strong>Link Silabus / Materi:</strong> <a href="${m['Link silabus materi']}" target="_blank" style="color:var(--accent);text-decoration:underline;word-break:break-all;">${m['Link silabus materi']}</a></div>` : ''}
         ${m['Modul & Materi (File/Link)'] && m['Modul & Materi (File/Link)'] !== '-' && m['Modul & Materi (File/Link)'] !== m['Link silabus materi'] ? `<div><strong>Lampiran Modul:</strong> <div style="white-space:pre-line;color:var(--ink-soft);">${escapeHtml(m['Modul & Materi (File/Link)'])}</div></div>` : ''}
-        ${entry.materials && entry.materials.length > 0 ? `<div style="margin-top:4px;"><strong>Berkas Modul Dilampirkan:</strong> ${entry.materials.map(mat => `<span style="display:inline-block;padding:2px 8px;margin:2px 4px 2px 0;background:rgba(21,128,61,0.08);border:1px solid rgba(21,128,61,0.25);border-radius:6px;font-size:11.5px;color:#15803D;">📄 ${escapeHtml(mat.name)}</span>`).join('')}</div>` : ''}
+        ${entry.materials && entry.materials.length > 0 ? `<div style="margin-top:4px;"><strong>Berkas Modul Dilampirkan:</strong> ${entry.materials.map(mat => `<span style="display:inline-block;padding:2px 8px;margin:2px 4px 2px 0;background:rgba(21,128,61,0.08);border:1px solid rgba(21,128,61,0.25);border-radius:6px;font-size:11.5px;color:#15803D;">${escapeHtml(mat.name)}</span>`).join('')}</div>` : ''}
       </div>
       <div style="font-weight:600;margin:14px 0 6px;">Evaluasi & Follow-up:</div>
       <div style="font-size:13px;line-height:1.6;margin-bottom:12px;">
@@ -6855,7 +7493,7 @@ function applyAiPlanToForm() {
   if (typeof updateTrainingId === 'function') updateTrainingId();
 
   closeModal('modalAiAssistant');
-  showToast('✨ Rancangan kurikulum pelatihan berhasil diterapkan ke formulir!', 'success');
+  showToast('Rancangan kurikulum pelatihan berhasil diterapkan ke formulir!', 'success');
 }
 
 /// ===================================================
@@ -7043,7 +7681,7 @@ async function runStudioEngine() {
     }
 
     switchStudioDocTab('overview');
-    showToast('✨ Cetak biru L&D berhasil dianalisis dan disusun!', 'success');
+    showToast('Cetak biru L&D berhasil dianalisis dan disusun!', 'success');
   } catch (err) {
     console.error('Error running AI Studio engine:', err);
     showToast('Gagal memproses analisis. Silahkan coba kembali.', 'error');
@@ -7416,8 +8054,8 @@ function renderStudioExecutiveBlueprint(data) {
         ${escapeHtml(m.deskripsi)}
       </div>
       <div style="display:flex;gap:12px;font-size:11.5px;color:var(--ink-faint);flex-wrap:wrap;border-top:1px dashed var(--line-soft);padding-top:6px;margin-top:6px;">
-        <span>🎯 <strong>Output:</strong> Aplikasi Praktik &amp; Pemahaman Mandiri</span>
-        <span>👨‍🏫 <strong>Fasilitator:</strong> Subject Matter Expert (SME) Terakreditasi</span>
+        <span><strong>Output:</strong> Aplikasi Praktik &amp; Pemahaman Mandiri</span>
+        <span><strong>Fasilitator:</strong> Subject Matter Expert (SME) Terakreditasi</span>
       </div>
     </div>
   `).join('');
@@ -7436,13 +8074,13 @@ function renderStudioExecutiveBlueprint(data) {
 
     <div class="ai-doc-card">
       <div class="ai-doc-card-title">
-        <span>🎯 Sasaran Pembelajaran &amp; Hasil Strategis (SMART Goals)</span>
+        <span>Sasaran Pembelajaran &amp; Hasil Strategis (SMART Goals)</span>
       </div>
       <p style="font-size:13px;color:var(--ink);line-height:1.65;margin:0;">${escapeHtml(data.summary)}</p>
     </div>
 
     <div style="margin-top:20px;">
-      <h4 style="margin:0 0 12px 0;font-size:14px;color:var(--ink);font-weight:700;">📋 Rundown &amp; Silabus Pembelajaran Per Sesi</h4>
+      <h4 style="margin:0 0 12px 0;font-size:14px;color:var(--ink);font-weight:700;">Rundown &amp; Silabus Pembelajaran Per Sesi</h4>
       <div>${sessionsHtml}</div>
     </div>
   `;
@@ -7529,7 +8167,7 @@ function renderStudioExecutiveBlueprint(data) {
     </div>
 
     <div class="ai-doc-card" style="background:var(--panel);">
-      <div class="ai-doc-card-title"><span>📊 Simulasi Dampak &amp; Pengembalian Investasi (ROI)</span></div>
+      <div class="ai-doc-card-title"><span>Simulasi Dampak &amp; Pengembalian Investasi (ROI)</span></div>
       <div class="dashboard-kpi-grid" style="margin-top:10px;">
         <div class="kpi-card" style="background:#FFFFFF;">
           <div class="kpi-card-title">Jam Kerja Dihemat</div>
@@ -7626,7 +8264,7 @@ function copyActiveDocContent() {
 
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(text).then(() => {
-      showToast('📋 Seluruh dokumen blueprint berhasil disalin!', 'success');
+      showToast('Seluruh dokumen blueprint berhasil disalin!', 'success');
     }).catch(() => fallbackCopyText(text));
   } else {
     fallbackCopyText(text);
@@ -7642,7 +8280,7 @@ function fallbackCopyText(text, successMsg) {
   ta.select();
   try {
     document.execCommand('copy');
-    showToast(successMsg || '📋 Berhasil disalin ke clipboard!', 'success');
+    showToast(successMsg || 'Berhasil disalin ke clipboard!', 'success');
   } catch (e) {
     showToast('Gagal menyalin teks secara otomatis.', 'error');
   }
@@ -7657,7 +8295,7 @@ function applyStudioPlanAndGoToForm() {
   currentAiPlan = studioGeneratedData.formPlan;
   goToPage('ajukan');
   applyAiPlanToForm();
-  showToast('🚀 Cetak biru kurikulum berhasil ditransfer ke formulir pengajuan!', 'success');
+  showToast('Cetak biru kurikulum berhasil ditransfer ke formulir pengajuan!', 'success');
 }
 
 // Window Exposures for AI Assistant & Studio
@@ -9023,18 +9661,18 @@ function generateAiSkillSummaryForActiveEmp() {
       }
     };
 
-    currentAiSkillSummaryMarkdown = `# 📋 AI TRAINING NEEDS ANALYSIS (TNA) SUMMARY\n` +
+    currentAiSkillSummaryMarkdown = `# AI TRAINING NEEDS ANALYSIS (TNA) SUMMARY\n` +
       `**Karyawan**: ${emp.nama}\n` +
       `**Jabatan**: ${emp.jabatan || 'Team Member'}\n` +
       `**Divisi**: ${dept}\n` +
       `**Status**: Seluruh kompetensi memenuhi/melampaui standar (Rata-rata GAP: ${stats.avgGap})\n\n` +
-      `### 🌟 Rekomendasi Program Pengayaan Tingkat Mahir (Advanced Enrichment):\n` +
+      `### Rekomendasi Program Pengayaan Tingkat Mahir (Advanced Enrichment):\n` +
       `**Program**: ${blueprint.title}\n` +
       `**Target Level**: ${blueprint.level} | **Format**: ${blueprint.durationText}\n` +
       `**Tujuan**: ${blueprint.goals}\n\n` +
-      `### 📚 Rencana Modul:\n` +
+      `### Rencana Modul:\n` +
       blueprint.modules.map(m => `- ${m.modul} (${m.jamMulai} - ${m.jamSelesai}): ${m.deskripsi}`).join('\n') + `\n\n` +
-      `### 🎯 Indikator Keberhasilan:\n${blueprint.indikatorKeberhasilan}`;
+      `### Indikator Keberhasilan:\n${blueprint.indikatorKeberhasilan}`;
 
     bodyEl.innerHTML = `
       <!-- Employee Profile Bar -->
@@ -9055,7 +9693,7 @@ function generateAiSkillSummaryForActiveEmp() {
 
       <!-- Optimal Callout -->
       <div style="background:#FAF9F5;border:1px solid var(--line-soft);border-radius:10px;padding:12px 14px;margin-bottom:16px;font-size:12.5px;color:var(--ink-soft);line-height:1.5;">
-        <strong style="color:var(--ink);">🌟 AI Performance Diagnostic:</strong> Luar biasa! Seluruh parameter kompetensi kerja ${escapeHtml(emp.nama)} telah memenuhi standar operasional. Tidak ditemukan kesenjangan kompetensi defisit. AI merekomendasikan program akselerasi kapabilitas tingkat mahir (Advanced Leadership & Mentoring).
+        <strong style="color:var(--ink);">AI Performance Diagnostic:</strong> Luar biasa! Seluruh parameter kompetensi kerja ${escapeHtml(emp.nama)} telah memenuhi standar operasional. Tidak ditemukan kesenjangan kompetensi defisit. AI merekomendasikan program akselerasi kapabilitas tingkat mahir (Advanced Leadership & Mentoring).
       </div>
 
       <!-- Recommendation Card -->
@@ -9086,22 +9724,22 @@ function generateAiSkillSummaryForActiveEmp() {
     }
   };
 
-  currentAiSkillSummaryMarkdown = `# 📋 AI TRAINING NEEDS ANALYSIS (TNA) SUMMARY\n` +
+  currentAiSkillSummaryMarkdown = `# AI TRAINING NEEDS ANALYSIS (TNA) SUMMARY\n` +
     `**Karyawan**: ${emp.nama}\n` +
     `**Jabatan**: ${emp.jabatan || 'Team Member'}\n` +
     `**Divisi**: ${dept}\n` +
     `**Rata-rata GAP**: ${stats.avgGap}\n\n` +
-    `### 🔍 Temuan Kesenjangan Kompetensi (Skill GAP):\n` +
+    `### Temuan Kesenjangan Kompetensi (Skill GAP):\n` +
     sortedGaps.map(g => `- ${g.comp.nama}: Aktual ${g.score} / Ideal ${g.standar} (GAP ${g.gap > 0 ? '+' : ''}${g.gap}) ${g.gap <= -2 ? '[KRITIS]' : '[PERLU PENINGKATAN]'}`).join('\n') + `\n\n` +
-    `### 🎯 Rekomendasi Program Pelatihan Utama AI:\n` +
+    `### Rekomendasi Program Pelatihan Utama AI:\n` +
     `**Program**: ${blueprint.title}\n` +
     `**Tingkat Urgensi**: ${blueprint.urgency} | **Target Level**: ${blueprint.level}\n` +
     `**Format Rekomendasi**: ${blueprint.durationText}\n` +
     `**Tujuan Pelatihan (SMART)**: ${blueprint.goals}\n\n` +
-    `### 📚 Rencana Modul Pelatihan Terstruktur:\n` +
+    `### Rencana Modul Pelatihan Terstruktur:\n` +
     blueprint.modules.map(m => `- ${m.modul} (${m.jamMulai} - ${m.jamSelesai} WIB, ${m.metode}):\n  ${m.deskripsi}`).join('\n') + `\n\n` +
-    `### 💼 Hasil & Penerapan di Pekerjaan:\n${blueprint.hasilDiharapkan}\n${blueprint.penerapanPekerjaan}\n\n` +
-    `### 📊 Indikator Keberhasilan (KPI):\n${blueprint.indikatorKeberhasilan}`;
+    `### Hasil & Penerapan di Pekerjaan:\n${blueprint.hasilDiharapkan}\n${blueprint.penerapanPekerjaan}\n\n` +
+    `### Indikator Keberhasilan (KPI):\n${blueprint.indikatorKeberhasilan}`;
 
   // Build HTML table for GAP details
   let gapRowsHtml = '';
@@ -9110,7 +9748,7 @@ function generateAiSkillSummaryForActiveEmp() {
     const isCrit = g.gap <= -2;
     const badgeBg = isCrit ? '#FEE2E2' : '#FEF3C7';
     const badgeColor = isCrit ? '#B91C1C' : '#B45309';
-    const priorityText = isTop ? (isCrit ? '🚨 Prioritas 1 (Kritis)' : '⚡ Prioritas Utama') : '⚠️ Perlu Penguatan';
+    const priorityText = isTop ? (isCrit ? 'Prioritas 1 (Kritis)' : 'Prioritas Utama') : 'Perlu Penguatan';
 
     gapRowsHtml += `
       <tr style="border-bottom:1px solid var(--line-soft);font-size:12px;">
@@ -9300,22 +9938,22 @@ function generateAiSkillSummaryForDivision() {
     }))
   };
 
-  currentAiSkillSummaryMarkdown = `# 📋 EXECUTIVE TNA SUMMARY — ${dept.toUpperCase()}\n` +
+  currentAiSkillSummaryMarkdown = `# EXECUTIVE TNA SUMMARY — ${dept.toUpperCase()}\n` +
     `**Divisi**: ${dept}\n` +
     `**Total Karyawan Terdaftar**: ${deptEmployees.length}\n` +
     `**Karyawan Sudah Dinilai**: ${totalScoredEmp}\n` +
     `**Area Bottleneck Utama**: ${topBottleneck.name} (${topBottleneck.count} Karyawan Mengalami GAP Defisit)\n\n` +
-    `### 🔍 Peta Kesenjangan Kompetensi Divisi:\n` +
+    `### Peta Kesenjangan Kompetensi Divisi:\n` +
     rankedComps.map((c, i) => `${i + 1}. ${c.name}: ${c.count} Karyawan (Total Defisit GAP: -${c.sumDeficit})`).join('\n') + `\n\n` +
-    `### 👥 Karyawan yang Membutuhkan Pelatihan '${topBottleneck.name}':\n` +
+    `### Karyawan yang Membutuhkan Pelatihan '${topBottleneck.name}':\n` +
     topBottleneck.employees.map(e => `- ${e.nama} (${e.jabatan || 'Team Member'}) - Skor ${e.score} (GAP ${e.gap})`).join('\n') + `\n\n` +
-    `### 🎯 Rekomendasi Program Pelatihan Kolektif:\n` +
+    `### Rekomendasi Program Pelatihan Kolektif:\n` +
     `**Program**: ${blueprint.title}\n` +
     `**Format**: 1 Hari Workshop Kolektif (6 Jam)\n` +
     `**Tujuan**: ${blueprint.goals}\n\n` +
-    `### 📚 Rencana Modul:\n` +
+    `### Rencana Modul:\n` +
     blueprint.modules.map(m => `- ${m.modul}: ${m.deskripsi}`).join('\n') + `\n\n` +
-    `### 📊 Indikator Keberhasilan:\n${currentAiSkillSummaryPlan.indikatorKeberhasilan}`;
+    `### Indikator Keberhasilan:\n${currentAiSkillSummaryPlan.indikatorKeberhasilan}`;
 
   // Build ranking rows
   let bottleneckRowsHtml = '';
@@ -9324,7 +9962,7 @@ function generateAiSkillSummaryForDivision() {
     bottleneckRowsHtml += `
       <tr style="border-bottom:1px solid var(--line-soft);font-size:12px;background:${isTop ? '#FEF2F2' : '#fff'};">
         <td style="padding:8px 10px;font-weight:600;color:var(--ink);">
-          ${isTop ? '🏆 ' : ''}${escapeHtml(c.name)}
+          ${escapeHtml(c.name)}
         </td>
         <td style="padding:8px 10px;text-align:center;">
           <span style="font-weight:700;color:${isTop ? '#B91C1C' : '#B45309'};">${c.count} Karyawan</span>
@@ -9336,7 +9974,7 @@ function generateAiSkillSummaryForDivision() {
         </td>
         <td style="padding:8px 10px;text-align:left;">
           <span style="font-size:11px;font-weight:600;color:${isTop ? '#B91C1C' : '#64748B'};">
-            ${isTop ? '🚨 Prioritas Pelatihan Divisi #1' : 'Peningkatan Bertahap'}
+            ${isTop ? 'Prioritas Pelatihan Divisi #1' : 'Peningkatan Bertahap'}
           </span>
         </td>
       </tr>
@@ -9457,7 +10095,7 @@ function applyAiSkillSummaryToForm() {
     }
   }
 
-  showToast('✨ Rekomendasi training AI & peserta berhasil diterapkan ke formulir!', 'success');
+  showToast('Rekomendasi training AI & peserta berhasil diterapkan ke formulir!', 'success');
 }
 
 function openActiveAiSkillInStudio() {
@@ -9550,5 +10188,1360 @@ window.generateAiSkillSummaryForDivision = generateAiSkillSummaryForDivision;
 window.applyAiSkillSummaryToForm = applyAiSkillSummaryToForm;
 window.openActiveAiSkillInStudio = openActiveAiSkillInStudio;
 window.copyAiSkillSummary = copyAiSkillSummary;
+
+// ==============================================================================
+// 13. LIVE QR ATTENDANCE HUB & MOBILE CHECK-IN ENGINE
+// ==============================================================================
+
+const ATTENDANCE_STORAGE_KEY = 'training_attendance_master_logs';
+
+// Standalone Pure Vanilla QR Generator (Zero-Dependency SVG Generator)
+const QRCodeEngine = (function() {
+  const MODE_8BIT_BYTE = 4;
+  const QRErrorCorrectLevel = { L: 1, M: 0, Q: 3, H: 2 };
+
+  const QRMath = {
+    glog: function(n) {
+      if (n < 1) throw new Error("glog(" + n + ")");
+      return QRMath.LOG_TABLE[n];
+    },
+    gexp: function(n) {
+      while (n < 0) n += 255;
+      while (n >= 255) n -= 255;
+      return QRMath.EXP_TABLE[n];
+    },
+    EXP_TABLE: new Array(256),
+    LOG_TABLE: new Array(256)
+  };
+
+  for (let i = 0; i < 8; i++) QRMath.EXP_TABLE[i] = 1 << i;
+  for (let i = 8; i < 256; i++) QRMath.EXP_TABLE[i] = QRMath.EXP_TABLE[i - 4] ^ QRMath.EXP_TABLE[i - 5] ^ QRMath.EXP_TABLE[i - 6] ^ QRMath.EXP_TABLE[i - 8];
+  for (let i = 0; i < 255; i++) QRMath.LOG_TABLE[QRMath.EXP_TABLE[i]] = i;
+
+  function QRPolynomial(num, shift) {
+    if (num.length === undefined) throw new Error(num.length + "/" + shift);
+    let offset = 0;
+    while (offset < num.length && num[offset] === 0) offset++;
+    this.num = new Array(num.length - offset + shift);
+    for (let i = 0; i < num.length - offset; i++) this.num[i] = num[i + offset];
+    for (let i = 0; i < shift; i++) this.num[this.num.length - shift + i] = 0;
+  }
+
+  QRPolynomial.prototype = {
+    get: function(index) { return this.num[index]; },
+    getLength: function() { return this.num.length; },
+    multiply: function(e) {
+      const num = new Array(this.getLength() + e.getLength() - 1);
+      for (let i = 0; i < this.getLength(); i++) {
+        for (let j = 0; j < e.getLength(); j++) {
+          num[i + j] ^= QRMath.gexp(QRMath.glog(this.get(i)) + QRMath.glog(e.get(j)));
+        }
+      }
+      return new QRPolynomial(num, 0);
+    },
+    mod: function(e) {
+      if (this.getLength() - e.getLength() < 0) return this;
+      const ratio = QRMath.glog(this.get(0)) - QRMath.glog(e.get(0));
+      const num = new Array(this.getLength());
+      for (let i = 0; i < this.getLength(); i++) num[i] = this.get(i);
+      for (let i = 0; i < e.getLength(); i++) num[i] ^= QRMath.gexp(QRMath.glog(e.get(i)) + ratio);
+      return new QRPolynomial(num, 0).mod(e);
+    }
+  };
+
+  const QRRSBlock = {
+    RS_BLOCK_TABLE: [
+      [1, 26, 19], [1, 26, 16], [1, 26, 13], [1, 26, 9],
+      [1, 44, 34], [1, 44, 28], [1, 44, 22], [1, 44, 16],
+      [1, 70, 55], [1, 70, 44], [2, 35, 17], [2, 35, 13],
+      [1, 100, 80], [2, 50, 32], [2, 50, 24], [4, 25, 9],
+      [1, 134, 108], [2, 67, 43], [2, 33, 15, 2, 34, 16], [2, 33, 11, 2, 34, 12],
+      [2, 86, 68], [4, 43, 27], [4, 43, 19], [4, 43, 15],
+      [2, 98, 78], [4, 49, 31], [2, 32, 14, 4, 33, 15], [4, 39, 13, 1, 40, 14],
+      [2, 121, 97], [2, 60, 38, 2, 61, 39], [4, 40, 18, 2, 41, 19], [4, 40, 14, 2, 41, 15],
+      [2, 146, 116], [3, 58, 36, 2, 59, 37], [4, 36, 16, 4, 37, 17], [4, 36, 12, 4, 37, 13],
+      [2, 86, 68, 2, 87, 69], [4, 69, 43, 1, 70, 44], [6, 43, 19, 2, 44, 20], [6, 43, 15, 2, 44, 16]
+    ],
+    getRSBlocks: function(typeNumber, errorCorrectLevel) {
+      const rsBlock = QRRSBlock.getRsBlockTable(typeNumber, errorCorrectLevel);
+      if (rsBlock === undefined) throw new Error("bad rs block @ typeNumber:" + typeNumber);
+      const length = rsBlock.length / 3;
+      const list = [];
+      for (let i = 0; i < length; i++) {
+        const count = rsBlock[i * 3 + 0];
+        const totalCount = rsBlock[i * 3 + 1];
+        const dataCount = rsBlock[i * 3 + 2];
+        for (let j = 0; j < count; j++) list.push({ totalCount: totalCount, dataCount: dataCount });
+      }
+      return list;
+    },
+    getRsBlockTable: function(typeNumber, errorCorrectLevel) {
+      switch (errorCorrectLevel) {
+        case QRErrorCorrectLevel.L: return QRRSBlock.RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 0];
+        case QRErrorCorrectLevel.M: return QRRSBlock.RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 1];
+        case QRErrorCorrectLevel.Q: return QRRSBlock.RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 2];
+        case QRErrorCorrectLevel.H: return QRRSBlock.RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 3];
+        default: return undefined;
+      }
+    }
+  };
+
+  const QRBitBuffer = function() {
+    this.buffer = [];
+    this.length = 0;
+  };
+  QRBitBuffer.prototype = {
+    get: function(index) { return ((this.buffer[Math.floor(index / 8)] >>> (7 - index % 8)) & 1) === 1; },
+    put: function(num, length) {
+      for (let i = 0; i < length; i++) this.putBit(((num >>> (length - i - 1)) & 1) === 1);
+    },
+    putBit: function(bit) {
+      const bufIndex = Math.floor(this.length / 8);
+      if (this.buffer.length <= bufIndex) this.buffer.push(0);
+      if (bit) this.buffer[bufIndex] |= (0x80 >>> (this.length % 8));
+      this.length++;
+    }
+  };
+
+  function QR8bitByte(data) {
+    this.mode = MODE_8BIT_BYTE;
+    this.data = data;
+    this.parsedData = [];
+    for (let i = 0; i < data.length; i++) {
+      const code = data.charCodeAt(i);
+      if (code < 0x80) {
+        this.parsedData.push(code);
+      } else if (code < 0x800) {
+        this.parsedData.push(0xc0 | (code >> 6));
+        this.parsedData.push(0x80 | (code & 0x3f));
+      } else if (code < 0xd800 || code >= 0xe000) {
+        this.parsedData.push(0xe0 | (code >> 12));
+        this.parsedData.push(0x80 | ((code >> 6) & 0x3f));
+        this.parsedData.push(0x80 | (code & 0x3f));
+      } else {
+        i++;
+        const code2 = 0x10000 + (((code & 0x3ff) << 10) | (data.charCodeAt(i) & 0x3ff));
+        this.parsedData.push(0xf0 | (code2 >> 18));
+        this.parsedData.push(0x80 | ((code2 >> 12) & 0x3f));
+        this.parsedData.push(0x80 | ((code2 >> 6) & 0x3f));
+        this.parsedData.push(0x80 | (code2 & 0x3f));
+      }
+    }
+  }
+
+  QR8bitByte.prototype = {
+    getLength: function() { return this.parsedData.length; },
+    write: function(buffer) {
+      for (let i = 0; i < this.parsedData.length; i++) buffer.put(this.parsedData[i], 8);
+    }
+  };
+
+  const QRUtil = {
+    PATTERN_POSITION_TABLE: [
+      [], [6, 18], [6, 22], [6, 26], [6, 30], [6, 34],
+      [6, 22, 38], [6, 24, 42], [6, 26, 46], [6, 28, 50], [6, 30, 54]
+    ],
+    G15: (1 << 10) | (1 << 8) | (1 << 5) | (1 << 4) | (1 << 2) | (1 << 1) | (1 << 0),
+    G18: (1 << 12) | (1 << 11) | (1 << 10) | (1 << 9) | (1 << 8) | (1 << 5) | (1 << 2) | (1 << 0),
+    G15_MASK: (1 << 14) | (1 << 12) | (1 << 10) | (1 << 4) | (1 << 1),
+    getBCHTypeInfo: function(data) {
+      let d = data << 10;
+      while (QRUtil.getBCHDigit(d) - QRUtil.getBCHDigit(QRUtil.G15) >= 0) {
+        d ^= (QRUtil.G15 << (QRUtil.getBCHDigit(d) - QRUtil.getBCHDigit(QRUtil.G15)));
+      }
+      return ((data << 10) | d) ^ QRUtil.G15_MASK;
+    },
+    getBCHDigit: function(data) {
+      let digit = 0;
+      while (data !== 0) { digit++; data >>>= 1; }
+      return digit;
+    },
+    getPatternPosition: function(typeNumber) {
+      return QRUtil.PATTERN_POSITION_TABLE[typeNumber - 1];
+    },
+    getMask: function(maskPattern, i, j) {
+      switch (maskPattern) {
+        case 0: return (i + j) % 2 === 0;
+        case 1: return i % 2 === 0;
+        case 2: return j % 3 === 0;
+        case 3: return (i + j) % 3 === 0;
+        case 4: return (Math.floor(i / 2) + Math.floor(j / 3)) % 2 === 0;
+        case 5: return ((i * j) % 2) + ((i * j) % 3) === 0;
+        case 6: return (((i * j) % 2) + ((i * j) % 3)) % 2 === 0;
+        case 7: return (((i * j) % 3) + ((i + j) % 2)) % 2 === 0;
+        default: throw new Error("bad maskPattern:" + maskPattern);
+      }
+    },
+    getErrorCorrectPolynomial: function(errorCorrectLength) {
+      let a = new QRPolynomial([1], 0);
+      for (let i = 0; i < errorCorrectLength; i++) {
+        a = a.multiply(new QRPolynomial([1, QRMath.gexp(i)], 0));
+      }
+      return a;
+    },
+    getLengthInBits: function(mode, type) {
+      if (1 <= type && type < 10) return 8;
+      return 16;
+    },
+    getLostPoint: function(qrCode) {
+      const moduleCount = qrCode.getModuleCount();
+      let lostPoint = 0;
+      for (let row = 0; row < moduleCount; row++) {
+        for (let col = 0; col < moduleCount; col++) {
+          let sameCount = 0;
+          const dark = qrCode.isDark(row, col);
+          for (let r = -1; r <= 1; r++) {
+            if (row + r < 0 || moduleCount <= row + r) continue;
+            for (let c = -1; c <= 1; c++) {
+              if (col + c < 0 || moduleCount <= col + c) continue;
+              if (r === 0 && c === 0) continue;
+              if (dark === qrCode.isDark(row + r, col + c)) sameCount++;
+            }
+          }
+          if (sameCount > 5) lostPoint += (3 + sameCount - 5);
+        }
+      }
+      return lostPoint;
+    }
+  };
+
+  function QRCodeModel(typeNumber, errorCorrectLevel) {
+    this.typeNumber = typeNumber;
+    this.errorCorrectLevel = errorCorrectLevel;
+    this.modules = null;
+    this.moduleCount = 0;
+    this.dataCache = null;
+    this.dataList = [];
+  }
+
+  QRCodeModel.prototype = {
+    addData: function(data) {
+      this.dataList.push(new QR8bitByte(data));
+      this.dataCache = null;
+    },
+    isDark: function(row, col) {
+      if (row < 0 || this.moduleCount <= row || col < 0 || this.moduleCount <= col) {
+        throw new Error(row + "," + col);
+      }
+      return this.modules[row][col];
+    },
+    getModuleCount: function() { return this.moduleCount; },
+    make: function() {
+      if (this.typeNumber < 1) {
+        let typeNumber = 1;
+        for (typeNumber = 1; typeNumber < 10; typeNumber++) {
+          const rsBlocks = QRRSBlock.getRSBlocks(typeNumber, this.errorCorrectLevel);
+          let totalDataCount = 0;
+          for (let i = 0; i < rsBlocks.length; i++) totalDataCount += rsBlocks[i].dataCount;
+          let totalBytes = 0;
+          for (let i = 0; i < this.dataList.length; i++) totalBytes += this.dataList[i].getLength();
+          if (totalBytes + 3 <= totalDataCount) break;
+        }
+        this.typeNumber = Math.min(10, typeNumber);
+      }
+      this.makeImpl(false, this.getBestMaskPattern());
+    },
+    makeImpl: function(test, maskPattern) {
+      this.moduleCount = this.typeNumber * 4 + 17;
+      this.modules = new Array(this.moduleCount);
+      for (let row = 0; row < this.moduleCount; row++) {
+        this.modules[row] = new Array(this.moduleCount);
+        for (let col = 0; col < this.moduleCount; col++) this.modules[row][col] = null;
+      }
+      this.setupPositionProbePattern(0, 0);
+      this.setupPositionProbePattern(this.moduleCount - 7, 0);
+      this.setupPositionProbePattern(0, this.moduleCount - 7);
+      this.setupPositionAdjustPattern();
+      this.setupTimingPattern();
+      this.setupTypeInfo(test, maskPattern);
+      this.mapData(this.createData(this.typeNumber, this.errorCorrectLevel, this.dataList), maskPattern);
+    },
+    setupPositionProbePattern: function(row, col) {
+      for (let r = -1; r <= 7; r++) {
+        if (row + r <= -1 || this.moduleCount <= row + r) continue;
+        for (let c = -1; c <= 7; c++) {
+          if (col + c <= -1 || this.moduleCount <= col + c) continue;
+          if ((0 <= r && r <= 6 && (c === 0 || c === 6)) ||
+              (0 <= c && c <= 6 && (r === 0 || r === 6)) ||
+              (2 <= r && r <= 4 && 2 <= c && c <= 4)) {
+            this.modules[row + r][col + c] = true;
+          } else {
+            this.modules[row + r][col + c] = false;
+          }
+        }
+      }
+    },
+    getBestMaskPattern: function() {
+      let minLostPoint = 0;
+      let pattern = 0;
+      for (let i = 0; i < 8; i++) {
+        this.makeImpl(true, i);
+        const lostPoint = QRUtil.getLostPoint(this);
+        if (i === 0 || minLostPoint > lostPoint) {
+          minLostPoint = lostPoint;
+          pattern = i;
+        }
+      }
+      return pattern;
+    },
+    setupTimingPattern: function() {
+      for (let r = 8; r < this.moduleCount - 8; r++) {
+        if (this.modules[r][6] !== null) continue;
+        this.modules[r][6] = (r % 2 === 0);
+      }
+      for (let c = 8; c < this.moduleCount - 8; c++) {
+        if (this.modules[6][c] !== null) continue;
+        this.modules[6][c] = (c % 2 === 0);
+      }
+    },
+    setupPositionAdjustPattern: function() {
+      const pos = QRUtil.getPatternPosition(this.typeNumber);
+      for (let i = 0; i < pos.length; i++) {
+        for (let j = 0; j < pos.length; j++) {
+          const row = pos[i];
+          const col = pos[j];
+          if (this.modules[row][col] !== null) continue;
+          for (let r = -2; r <= 2; r++) {
+            for (let c = -2; c <= 2; c++) {
+              if (r === -2 || r === 2 || c === -2 || c === 2 || (r === 0 && c === 0)) {
+                this.modules[row + r][col + c] = true;
+              } else {
+                this.modules[row + r][col + c] = false;
+              }
+            }
+          }
+        }
+      }
+    },
+    setupTypeInfo: function(test, maskPattern) {
+      const data = (this.errorCorrectLevel << 3) | maskPattern;
+      const bits = QRUtil.getBCHTypeInfo(data);
+      for (let i = 0; i < 15; i++) {
+        const mod = (!test && ((bits >> i) & 1) === 1);
+        if (i < 6) this.modules[i][8] = mod;
+        else if (i < 8) this.modules[i + 1][8] = mod;
+        else this.modules[this.moduleCount - 15 + i][8] = mod;
+      }
+      for (let i = 0; i < 15; i++) {
+        const mod = (!test && ((bits >> i) & 1) === 1);
+        if (i < 8) this.modules[8][this.moduleCount - i - 1] = mod;
+        else if (i < 9) this.modules[8][15 - i - 1 + 1] = mod;
+        else this.modules[8][15 - i - 1] = mod;
+      }
+      this.modules[this.moduleCount - 8][8] = !test;
+    },
+    mapData: function(data, maskPattern) {
+      let inc = -1;
+      let row = this.moduleCount - 1;
+      let bitIndex = 7;
+      let byteIndex = 0;
+      for (let col = this.moduleCount - 1; col > 0; col -= 2) {
+        if (col === 6) col--;
+        while (true) {
+          for (let c = 0; c < 2; c++) {
+            if (this.modules[row][col - c] === null) {
+              let dark = false;
+              if (byteIndex < data.length) dark = (((data[byteIndex] >>> bitIndex) & 1) === 1);
+              const mask = QRUtil.getMask(maskPattern, row, col - c);
+              if (mask) dark = !dark;
+              this.modules[row][col - c] = dark;
+              bitIndex--;
+              if (bitIndex === -1) { byteIndex++; bitIndex = 7; }
+            }
+          }
+          row += inc;
+          if (row < 0 || this.moduleCount <= row) {
+            row -= inc;
+            inc = -inc;
+            break;
+          }
+        }
+      }
+    },
+    createData: function(typeNumber, errorCorrectLevel, dataList) {
+      const rsBlocks = QRRSBlock.getRSBlocks(typeNumber, errorCorrectLevel);
+      const buffer = new QRBitBuffer();
+      for (let i = 0; i < dataList.length; i++) {
+        const data = dataList[i];
+        buffer.put(data.mode, 4);
+        buffer.put(data.getLength(), QRUtil.getLengthInBits(data.mode, typeNumber));
+        data.write(buffer);
+      }
+      let totalDataCount = 0;
+      for (let i = 0; i < rsBlocks.length; i++) totalDataCount += rsBlocks[i].dataCount;
+      if (buffer.length + 4 <= totalDataCount * 8) buffer.put(0, 4);
+      while (buffer.length % 8 !== 0) buffer.putBit(false);
+      while (true) {
+        if (buffer.length >= totalDataCount * 8) break;
+        buffer.put(0xec, 8);
+        if (buffer.length >= totalDataCount * 8) break;
+        buffer.put(0x11, 8);
+      }
+      return this.createBytes(buffer, rsBlocks);
+    },
+    createBytes: function(buffer, rsBlocks) {
+      let offset = 0;
+      let maxDcCount = 0;
+      let maxEcCount = 0;
+      const dcdata = new Array(rsBlocks.length);
+      const ecdata = new Array(rsBlocks.length);
+      for (let r = 0; r < rsBlocks.length; r++) {
+        const dcCount = rsBlocks[r].dataCount;
+        const ecCount = rsBlocks[r].totalCount - dcCount;
+        maxDcCount = Math.max(maxDcCount, dcCount);
+        maxEcCount = Math.max(maxEcCount, ecCount);
+        dcdata[r] = new Array(dcCount);
+        for (let i = 0; i < dcdata[r].length; i++) dcdata[r][i] = 0xff & buffer.buffer[i + offset];
+        offset += dcCount;
+        const rsPoly = QRUtil.getErrorCorrectPolynomial(ecCount);
+        const rawPoly = new QRPolynomial(dcdata[r], rsPoly.getLength() - 1);
+        const modPoly = rawPoly.mod(rsPoly);
+        ecdata[r] = new Array(rsPoly.getLength() - 1);
+        for (let i = 0; i < ecdata[r].length; i++) {
+          const modIndex = i + modPoly.getLength() - ecdata[r].length;
+          ecdata[r][i] = (modIndex >= 0) ? modPoly.get(modIndex) : 0;
+        }
+      }
+      let totalCodeCount = 0;
+      for (let i = 0; i < rsBlocks.length; i++) totalCodeCount += rsBlocks[i].totalCount;
+      const data = new Array(totalCodeCount);
+      let index = 0;
+      for (let i = 0; i < maxDcCount; i++) {
+        for (let r = 0; r < rsBlocks.length; r++) {
+          if (i < dcdata[r].length) data[index++] = dcdata[r][i];
+        }
+      }
+      for (let i = 0; i < maxEcCount; i++) {
+        for (let r = 0; r < rsBlocks.length; r++) {
+          if (i < ecdata[r].length) data[index++] = ecdata[r][i];
+        }
+      }
+      return data;
+    }
+  };
+
+  return {
+    generateSVG: function(text, size = 260, darkColor = "#1F2421", lightColor = "#FFFFFF") {
+      const qr = new QRCodeModel(0, QRErrorCorrectLevel.M);
+      qr.addData(text);
+      qr.make();
+      const count = qr.getModuleCount();
+      const margin = 3;
+      const fullCount = count + (margin * 2);
+      let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${fullCount} ${fullCount}" width="${size}" height="${size}" shape-rendering="crispEdges">`;
+      svg += `<rect width="100%" height="100%" fill="${lightColor}"/>`;
+      for (let r = 0; r < count; r++) {
+        for (let c = 0; c < count; c++) {
+          if (qr.isDark(r, c)) {
+            svg += `<rect x="${c + margin}" y="${r + margin}" width="1" height="1" fill="${darkColor}"/>`;
+          }
+        }
+      }
+      svg += `</svg>`;
+      return svg;
+    }
+  };
+})();
+
+// State Variables for Attendance
+let activeAttendanceTraining = null;
+let activeAttendanceModule = 'Sesi 1';
+let activeAttendanceParticipants = [];
+let activeAttendanceLogs = [];
+
+function getTodayIsoDate() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function getStoredAttendanceLogs() {
+  try {
+    const raw = localStorage.getItem(ATTENDANCE_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function saveStoredAttendanceLogs(logs) {
+  try {
+    localStorage.setItem(ATTENDANCE_STORAGE_KEY, JSON.stringify(logs));
+  } catch (e) {}
+}
+
+/**
+ * Inisialisasi Halaman Live Absensi & Pemilihan Sesi Aktif
+ */
+function initAttendanceHub(preselectedTrainingId = '') {
+  // Cek apakah mode mobile check-in aktif dari URL
+  const attParams = getAttendanceUrlParams();
+  if (attParams.id) {
+    setupMobileAttendanceView(attParams.id, attParams.sesi);
+    return;
+  }
+
+  // Tampilkan Trainer Hub View
+  const trainerView = document.getElementById('attendanceTrainerView');
+  const mobileView = document.getElementById('attendanceMobileView');
+  if (trainerView) trainerView.style.display = 'block';
+  if (mobileView) mobileView.style.display = 'none';
+
+  loadCalendarEntries();
+  const submissions = (typeof cachedEntries !== 'undefined' && Array.isArray(cachedEntries)) ? cachedEntries : [];
+  const selTraining = document.getElementById('attTrainingSelect');
+  if (!selTraining) return;
+
+  selTraining.innerHTML = '';
+  if (submissions.length === 0) {
+    selTraining.innerHTML = '<option value="">-- Belum ada riwayat training tersimpan --</option>';
+    handleAttendanceTrainingChange('');
+    return;
+  }
+
+  const todayIso = getTodayIsoDate();
+  const todayCompact = todayIso.replace(/-/g, '');
+  let foundToday = false;
+
+  // Placeholder Default (Tidak langsung auto-select agar tidak mengecohkan jika ada jadwal bersamaan)
+  const defaultOpt = document.createElement('option');
+  defaultOpt.value = '';
+  defaultOpt.textContent = '-- Silakan Pilih Pelatihan yang Anda Selenggarakan --';
+  selTraining.appendChild(defaultOpt);
+
+  // Urutkan: training hari ini di paling atas
+  const sorted = [...submissions].sort((a, b) => {
+    const aMeta = a.meta || {};
+    const bMeta = b.meta || {};
+    const aId = String(aMeta['ID training'] || a.id || '');
+    const bId = String(bMeta['ID training'] || b.id || '');
+    const aIsToday = aId.includes(todayCompact) || JSON.stringify(a).includes(todayIso);
+    const bIsToday = bId.includes(todayCompact) || JSON.stringify(b).includes(todayIso);
+    if (aIsToday && !bIsToday) return -1;
+    if (!aIsToday && bIsToday) return 1;
+    return 0;
+  });
+
+  sorted.forEach(sub => {
+    const meta = sub.meta || {};
+    const id = (meta['ID training'] || sub.id || '').trim();
+    const title = (meta['Nama training'] || sub.namaTraining || 'Training Tanpa Judul').trim();
+    const leader = (meta['Leader pengaju'] || sub.leader || '').trim();
+    const trainer = (meta['Trainer'] || sub.trainer || '').trim();
+    const dept = (meta['Departemen / divisi'] || sub.divisi || '').trim();
+    const isToday = id.includes(todayCompact) || JSON.stringify(sub).includes(todayIso);
+    if (isToday) foundToday = true;
+
+    const opt = document.createElement('option');
+    opt.value = id;
+
+    let label = '';
+    if (isToday) label += '🔥 [HARI INI] ';
+    label += title;
+    if (leader) label += ` — Pengaju: ${leader}`;
+    if (dept) label += ` (${dept})`;
+    if (trainer) label += ` | Trainer: ${trainer}`;
+
+    opt.textContent = label;
+    selTraining.appendChild(opt);
+  });
+
+  const dateHint = document.getElementById('attTrainingDateHint');
+  if (dateHint) {
+    dateHint.innerHTML = foundToday 
+      ? `💡 <strong>Terdapat agenda pelatihan hari ini.</strong> Silakan pilih pelatihan yang sesuai dengan agenda Anda.`
+      : `Pilih pelatihan sesuai agenda yang Anda selenggarakan untuk mengaktifkan QR Code dan presensi.`;
+  }
+
+  // Jika dibuka dengan preselected ID (misal dari shortcut kalender)
+  if (preselectedTrainingId) {
+    selTraining.value = preselectedTrainingId;
+    handleAttendanceTrainingChange(preselectedTrainingId);
+  } else {
+    selTraining.value = '';
+    handleAttendanceTrainingChange('');
+  }
+}
+
+/**
+ * Handle perubahan pilihan training pada hub trainer
+ */
+function handleAttendanceTrainingChange(trainingId) {
+  if (!trainingId) {
+    activeAttendanceTraining = null;
+    activeAttendanceParticipants = [];
+    activeAttendanceModule = 'Sesi 1';
+
+    const elTitle = document.getElementById('attDisplayTrainingTitle');
+    const elTrainer = document.getElementById('attDisplayTrainer');
+    const elRoom = document.getElementById('attDisplayRoom');
+    const elModule = document.getElementById('attDisplayModule');
+    if (elTitle) elTitle.textContent = 'Belum Ada Pelatihan Dipilih';
+    if (elTrainer) elTrainer.innerHTML = `<span>Trainer: -</span>`;
+    if (elRoom) elRoom.textContent = '-';
+    if (elModule) elModule.textContent = '-';
+
+    const selModule = document.getElementById('attModuleSelect');
+    if (selModule) selModule.innerHTML = '<option value="">-- Sesi Modul --</option>';
+
+    const directInput = document.getElementById('attDirectUrlInput');
+    if (directInput) directInput.value = '';
+
+    const canvasWrap = document.getElementById('attQrCanvasWrap');
+    if (canvasWrap) {
+      canvasWrap.innerHTML = `
+        <div style="text-align:center;padding:28px 16px;color:var(--ink-soft);">
+          <div style="width:48px;height:48px;border-radius:12px;background:var(--accent-tint);border:1px solid rgba(75,150,255,0.25);display:inline-flex;align-items:center;justify-content:center;margin-bottom:8px;color:var(--accent-dark);">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+          </div>
+          <p style="margin:0 0 4px;font-size:13.5px;font-weight:600;color:var(--ink);">Pilih Pelatihan yang Anda Selenggarakan</p>
+          <span style="font-size:12px;">Pilih agenda pelatihan pada dropdown di atas untuk mengaktifkan QR Code presensi dan memuat daftar peserta.</span>
+        </div>`;
+    }
+
+    const container = document.getElementById('attParticipantList');
+    if (container) {
+      container.innerHTML = `<div style="text-align:center;padding:36px 16px;color:var(--ink-soft);font-size:13px;">Silakan pilih pelatihan di atas untuk memuat daftar peserta.</div>`;
+    }
+
+    const elPresent = document.getElementById('attCountPresent');
+    const elTotal = document.getElementById('attCountTotal');
+    const elPercent = document.getElementById('attPercent');
+    const elFill = document.getElementById('attProgressFill');
+    if (elPresent) elPresent.textContent = '0';
+    if (elTotal) elTotal.textContent = '0';
+    if (elPercent) elPercent.textContent = '0%';
+    if (elFill) elFill.style.width = '0%';
+    return;
+  }
+
+  loadCalendarEntries();
+  const submissions = (typeof cachedEntries !== 'undefined' && Array.isArray(cachedEntries)) ? cachedEntries : [];
+  const found = submissions.find(s => {
+    const id = (s.meta && s.meta['ID training']) || s.id || '';
+    return id.trim() === String(trainingId).trim();
+  });
+
+  if (!found) return;
+  activeAttendanceTraining = found;
+
+  const meta = found.meta || {};
+  const title = (meta['Nama training'] || found.namaTraining || '-').trim();
+  const trainer = (meta['Trainer'] || found.trainer || '-').trim();
+  const room = (meta['Lokasi / venue'] || meta['Platform online'] || found.lokasi || '-').trim();
+
+  // Update Metadata Text
+  const elTitle = document.getElementById('attDisplayTrainingTitle');
+  const elTrainer = document.getElementById('attDisplayTrainer');
+  const elRoom = document.getElementById('attDisplayRoom');
+  if (elTitle) elTitle.textContent = title;
+  if (elTrainer) elTrainer.innerHTML = `<span>Trainer: ${trainer}</span>`;
+  if (elRoom) elRoom.textContent = room;
+
+  // Extract Modules
+  const selModule = document.getElementById('attModuleSelect');
+  if (selModule) {
+    selModule.innerHTML = '';
+    const rawModules = found.modules || [];
+    if (rawModules.length > 0) {
+      rawModules.forEach((m, idx) => {
+        const modName = (m.modul || `Sesi ${idx + 1}`).trim();
+        const opt = document.createElement('option');
+        opt.value = modName;
+        opt.textContent = `${modName} (${m.tanggal || ''} ${m.jamMulai || ''})`;
+        selModule.appendChild(opt);
+      });
+      activeAttendanceModule = rawModules[0].modul || 'Sesi 1';
+      selModule.value = activeAttendanceModule;
+    } else {
+      const opt = document.createElement('option');
+      opt.value = 'Sesi 1';
+      opt.textContent = 'Sesi 1 (Utama)';
+      selModule.appendChild(opt);
+      activeAttendanceModule = 'Sesi 1';
+    }
+  }
+
+  // Extract Registered Participants
+  activeAttendanceParticipants = [];
+  const rawParts = found.participants || [];
+  rawParts.forEach(p => {
+    activeAttendanceParticipants.push({
+      nama: (p.nama || p.namaPeserta || '').trim(),
+      email: (p.email || p.emailPeserta || '').trim(),
+      departemen: (p.departemen || p.divisi || '-').trim()
+    });
+  });
+
+  // Render QR & Board
+  renderAttendanceSessionQR();
+  syncAttendanceHubLogs();
+}
+
+/**
+ * Handle perubahan modul sesi
+ */
+function handleAttendanceModuleChange(moduleId) {
+  activeAttendanceModule = moduleId || 'Sesi 1';
+  const elMod = document.getElementById('attDisplayModule');
+  if (elMod) elMod.textContent = activeAttendanceModule;
+
+  renderAttendanceSessionQR();
+  renderAttendanceParticipantBoard();
+}
+
+/**
+ * Generate QR Code Sesi dan tautan langsung
+ */
+function renderAttendanceSessionQR() {
+  if (!activeAttendanceTraining) return;
+  const meta = activeAttendanceTraining.meta || {};
+  const trnId = (meta['ID training'] || activeAttendanceTraining.id || '').trim();
+  const modId = activeAttendanceModule || 'Sesi 1';
+
+  // Construct Direct Mobile Check-In URL publik yang kompatibel 100% di semua smartphone
+  const baseUrl = getAttendanceBaseUrl();
+  const cleanUrl = `${baseUrl.replace(/\/+$/, '')}/?id=${encodeURIComponent(trnId)}&sesi=${encodeURIComponent(modId)}#absen`;
+
+  const directInput = document.getElementById('attDirectUrlInput');
+  if (directInput) directInput.value = cleanUrl;
+
+  const openBtn = document.getElementById('attDirectUrlOpenBtn');
+  if (openBtn) openBtn.href = cleanUrl;
+
+  const canvasWrap = document.getElementById('attQrCanvasWrap');
+  if (canvasWrap) {
+    try {
+      const svg = QRCodeEngine.generateSVG(cleanUrl, 260);
+      canvasWrap.innerHTML = svg;
+    } catch (err) {
+      canvasWrap.innerHTML = `<span style="color:var(--danger);font-size:12px;">Gagal merender QR: ${err.message}</span>`;
+    }
+  }
+}
+
+/**
+ * Render Papan Kehadiran Peserta (Live Checklist)
+ */
+function renderAttendanceParticipantBoard(searchQuery = '') {
+  const container = document.getElementById('attParticipantList');
+  if (!container) return;
+
+  const logs = getStoredAttendanceLogs();
+  const trnId = (activeAttendanceTraining && ((activeAttendanceTraining.meta && activeAttendanceTraining.meta['ID training']) || activeAttendanceTraining.id || '')).trim();
+  const modId = activeAttendanceModule || 'Sesi 1';
+
+  // Filter logs for this training and session
+  const sessionLogs = logs.filter(l => {
+    return String(l.trainingId).trim() === trnId && String(l.moduleId).trim() === modId;
+  });
+
+  const presentEmailMap = new Map();
+  sessionLogs.forEach(l => {
+    presentEmailMap.set(String(l.participantEmail).toLowerCase().trim(), l);
+  });
+
+  // Gabungkan peserta terdaftar + peserta walk-in yang hadir
+  const combinedList = [...activeAttendanceParticipants];
+  sessionLogs.forEach(l => {
+    const exists = combinedList.some(p => p.email.toLowerCase().trim() === l.participantEmail.toLowerCase().trim());
+    if (!exists) {
+      combinedList.push({
+        nama: l.participantName,
+        email: l.participantEmail,
+        departemen: l.department || '-',
+        isWalkIn: true
+      });
+    }
+  });
+
+  const q = searchQuery.toLowerCase().trim();
+  const filtered = combinedList.filter(p => {
+    if (!q) return true;
+    return p.nama.toLowerCase().includes(q) || p.email.toLowerCase().includes(q) || p.departemen.toLowerCase().includes(q);
+  });
+
+  let presentCount = 0;
+  container.innerHTML = '';
+
+  if (filtered.length === 0) {
+    container.innerHTML = `<div style="text-align:center;padding:24px;color:var(--ink-soft);font-size:12.5px;">Tidak ada peserta yang cocok dengan pencarian.</div>`;
+  } else {
+    filtered.forEach(p => {
+      const emailKey = p.email.toLowerCase().trim();
+      const log = presentEmailMap.get(emailKey);
+      const isPresent = !!log;
+      if (isPresent) presentCount++;
+
+      const item = document.createElement('div');
+      item.className = `att-participant-item ${isPresent ? 'present' : ''}`;
+
+      let badgeHtml = '';
+      if (isPresent) {
+        const timeStr = log.timestamp ? log.timestamp.split(' ')[1] : '';
+        badgeHtml = `<span class="att-badge-present">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          Hadir ${timeStr ? '(' + timeStr + ')' : ''}
+        </span>`;
+      } else {
+        badgeHtml = `
+          <button type="button" class="btn-secondary" onclick="manualCheckInParticipant('${p.email}')" title="Centang Hadir Manual" style="font-size:11.5px;padding:4px 8px;gap:4px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <span>Hadirkan</span>
+          </button>
+        `;
+      }
+
+      item.innerHTML = `
+        <div class="att-item-meta">
+          <span class="att-item-name">${p.nama} ${p.isWalkIn ? '<span style="font-size:10.5px;padding:1px 6px;border-radius:10px;background:rgba(183,134,40,0.15);color:var(--accent-gold);margin-left:4px;">Walk-in</span>' : ''}</span>
+          <span class="att-item-sub">${p.departemen} &bull; ${p.email}</span>
+        </div>
+        <div class="att-item-actions">
+          ${badgeHtml}
+        </div>
+      `;
+      container.appendChild(item);
+    });
+  }
+
+  // Update Counters & Progress Bar
+  const totalCount = combinedList.length;
+  const percent = totalCount > 0 ? Math.round((presentCount / totalCount) * 100) : 0;
+
+  const elPresent = document.getElementById('attCountPresent');
+  const elTotal = document.getElementById('attCountTotal');
+  const elPercent = document.getElementById('attPercent');
+  const elFill = document.getElementById('attProgressFill');
+
+  if (elPresent) elPresent.textContent = presentCount;
+  if (elTotal) elTotal.textContent = totalCount;
+  if (elPercent) elPercent.textContent = `${percent}%`;
+  if (elFill) elFill.style.width = `${percent}%`;
+}
+
+function filterAttendanceList(query) {
+  renderAttendanceParticipantBoard(query);
+}
+
+/**
+ * Centang Hadir Manual oleh Trainer
+ */
+async function manualCheckInParticipant(email) {
+  if (!activeAttendanceTraining) return;
+  const found = activeAttendanceParticipants.find(p => p.email.toLowerCase().trim() === email.toLowerCase().trim());
+  if (!found) return;
+
+  const meta = activeAttendanceTraining.meta || {};
+  const trnId = (meta['ID training'] || activeAttendanceTraining.id || '').trim();
+  const title = (meta['Nama training'] || activeAttendanceTraining.namaTraining || '').trim();
+  const modId = activeAttendanceModule || 'Sesi 1';
+  const now = new Date();
+  const timestamp = `${getTodayIsoDate()} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')} WIB`;
+
+  const newLog = {
+    timestamp: timestamp,
+    trainingId: trnId,
+    trainingTitle: title,
+    moduleId: modId,
+    sessionDate: getTodayIsoDate(),
+    participantName: found.nama,
+    participantEmail: found.email,
+    department: found.departemen,
+    method: 'Manual by Trainer',
+    status: 'Hadir',
+    note: 'Centang Manual Trainer'
+  };
+
+  // Simpan ke local logs
+  const logs = getStoredAttendanceLogs();
+  logs.push(newLog);
+  saveStoredAttendanceLogs(logs);
+  renderAttendanceParticipantBoard();
+  showToast(`Presensi ${found.nama} berhasil dicatat!`, 'success');
+
+  // Kirim background sync ke Google Apps Script
+  try {
+    fetch(GOOGLE_SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ action: 'recordAttendance', ...newLog })
+    }).catch(() => {});
+  } catch (err) {}
+}
+
+/**
+ * Modal Walk-in Participant Handlers
+ */
+function openWalkInModal() {
+  const modal = document.getElementById('modalWalkIn');
+  if (modal) modal.style.display = 'flex';
+}
+
+function closeWalkInModal() {
+  const modal = document.getElementById('modalWalkIn');
+  if (modal) modal.style.display = 'none';
+  const form = document.getElementById('formWalkIn');
+  if (form) form.reset();
+}
+
+async function submitWalkInParticipant(event) {
+  event.preventDefault();
+  if (!activeAttendanceTraining) return;
+
+  const nama = (document.getElementById('walkInNama')?.value || '').trim();
+  const email = (document.getElementById('walkInEmail')?.value || '').trim().toLowerCase();
+  const divisi = (document.getElementById('walkInDivisi')?.value || '').trim();
+
+  if (!nama || !email) {
+    showToast('Nama dan email wajib diisi.', 'warning');
+    return;
+  }
+
+  const meta = activeAttendanceTraining.meta || {};
+  const trnId = (meta['ID training'] || activeAttendanceTraining.id || '').trim();
+  const title = (meta['Nama training'] || activeAttendanceTraining.namaTraining || '').trim();
+  const modId = activeAttendanceModule || 'Sesi 1';
+  const now = new Date();
+  const timestamp = `${getTodayIsoDate()} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')} WIB`;
+
+  const newLog = {
+    timestamp: timestamp,
+    trainingId: trnId,
+    trainingTitle: title,
+    moduleId: modId,
+    sessionDate: getTodayIsoDate(),
+    participantName: nama,
+    participantEmail: email,
+    department: divisi || '-',
+    method: 'QR Web (Walk-in)',
+    status: 'Hadir',
+    note: 'Peserta Walk-in'
+  };
+
+  const logs = getStoredAttendanceLogs();
+  logs.push(newLog);
+  saveStoredAttendanceLogs(logs);
+
+  closeWalkInModal();
+  renderAttendanceParticipantBoard();
+  showToast(`Peserta walk-in ${nama} berhasil ditambahkan dan dicatat hadir!`, 'success');
+
+  try {
+    fetch(GOOGLE_SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ action: 'recordAttendance', isWalkIn: true, ...newLog })
+    }).catch(() => {});
+  } catch (err) {}
+}
+
+/**
+ * Salin Tautan Check-In
+ */
+function copyAttendanceLink() {
+  const input = document.getElementById('attDirectUrlInput');
+  if (!input || !input.value) return;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(input.value).then(() => {
+      showToast('Tautan presensi berhasil disalin!', 'success');
+    }).catch(() => {
+      input.select();
+      document.execCommand('copy');
+      showToast('Tautan presensi berhasil disalin!', 'success');
+    });
+  } else {
+    input.select();
+    document.execCommand('copy');
+    showToast('Tautan presensi berhasil disalin!', 'success');
+  }
+}
+
+/**
+ * Toggle Projector Fullscreen Mode
+ */
+function toggleProjectorMode() {
+  if (!activeAttendanceTraining) {
+    showToast('Silakan pilih pelatihan yang Anda selenggarakan terlebih dahulu sebelum membuka Mode Layar Proyektor.', 'warning');
+    return;
+  }
+  const isProj = document.body.classList.toggle('projector-mode');
+  const btn = document.getElementById('btnToggleProjector');
+  if (isProj) {
+    if (btn) btn.innerHTML = `<span>Tutup Layar Penuh (ESC)</span>`;
+    showToast('Mode Layar Proyektor Aktif. Tekan ESC untuk keluar.', 'info');
+  } else {
+    if (btn) btn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg><span>Layar Proyektor</span>`;
+  }
+}
+
+// Event listener untuk tombol ESC keluar dari Projector Mode
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && document.body.classList.contains('projector-mode')) {
+    toggleProjectorMode();
+  }
+});
+
+/**
+ * Sinkronisasi Data Kehadiran dari Google Apps Script
+ */
+async function syncAttendanceHubLogs() {
+  renderAttendanceParticipantBoard();
+  if (!activeAttendanceTraining) return;
+
+  const meta = activeAttendanceTraining.meta || {};
+  const trnId = (meta['ID training'] || activeAttendanceTraining.id || '').trim();
+  if (!trnId) return;
+
+  try {
+    const url = `${GOOGLE_SCRIPT_URL}?action=getAttendanceLogs&trainingId=${encodeURIComponent(trnId)}&_ts=${Date.now()}`;
+    const resp = await fetch(url);
+    if (resp.ok) {
+      const serverLogs = await resp.json();
+      if (Array.isArray(serverLogs) && serverLogs.length > 0) {
+        const localLogs = getStoredAttendanceLogs();
+        // Merge without duplicate (trainingId + moduleId + participantEmail)
+        const merged = [...localLogs];
+        serverLogs.forEach(sLog => {
+          const exists = merged.some(m => {
+            return String(m.trainingId).trim() === String(sLog.trainingId).trim() &&
+                   String(m.moduleId).trim() === String(sLog.moduleId).trim() &&
+                   String(m.participantEmail).toLowerCase().trim() === String(sLog.participantEmail).toLowerCase().trim();
+          });
+          if (!exists) merged.push(sLog);
+        });
+        saveStoredAttendanceLogs(merged);
+        renderAttendanceParticipantBoard();
+      }
+    }
+  } catch (err) {
+    // Offline fallback: rely on local logs
+  }
+}
+
+function refreshAttendanceHubData() {
+  syncAttendanceHubLogs();
+  showToast('Memperbarui data kehadiran...', 'info');
+}
+
+// ==========================================
+// MOBILE PARTICIPANT CHECK-IN CONTROLLER
+// ==========================================
+
+let mobileActiveTraining = null;
+let mobileActiveModule = 'Sesi 1';
+let mobileParticipantsList = [];
+
+async function setupMobileAttendanceView(trainingId, moduleId) {
+  const trainerView = document.getElementById('attendanceTrainerView');
+  const mobileView = document.getElementById('attendanceMobileView');
+  if (trainerView) trainerView.style.display = 'none';
+  if (mobileView) mobileView.style.display = 'block';
+
+  const targetTrnId = String(trainingId || '').trim();
+  mobileActiveModule = String(moduleId || 'Sesi 1').trim();
+
+  const elTitle = document.getElementById('mobDisplayTitle');
+  const elModule = document.getElementById('mobDisplayModule');
+  const elTrainer = document.getElementById('mobDisplayTrainer');
+  const elDate = document.getElementById('mobDisplayDate');
+  const selParticipant = document.getElementById('mobParticipantSelect');
+  const formInputs = document.getElementById('mobFormInputs');
+  const successCard = document.getElementById('mobSuccessCard');
+
+  if (elTitle) elTitle.textContent = `Memuat Info Pelatihan (${targetTrnId})...`;
+  if (elModule) elModule.textContent = mobileActiveModule;
+  if (elTrainer) elTrainer.textContent = 'Memuat trainer...';
+  if (elDate) elDate.textContent = 'Memuat jadwal...';
+
+  if (selParticipant) {
+    selParticipant.disabled = true;
+    selParticipant.innerHTML = '<option value="">⏳ Mengambil daftar peserta dari server...</option>';
+  }
+
+  // 1. Cek apakah perangkat ini sudah absen pada modul ini
+  const doneKey = `att_done_${targetTrnId}_${mobileActiveModule}`;
+  const savedDone = localStorage.getItem(doneKey);
+  if (savedDone) {
+    try {
+      const info = JSON.parse(savedDone);
+      if (successCard) successCard.style.display = 'block';
+      if (formInputs) formInputs.style.display = 'none';
+      const det = document.getElementById('mobSuccessDetail');
+      const ts = document.getElementById('mobSuccessTimestamp');
+      if (det) det.textContent = `Terima kasih, ${info.name || 'Anda'} telah resmi tercatat hadir pada ${mobileActiveModule}.`;
+      if (ts) ts.textContent = `Waktu: ${info.timestamp || '-'}`;
+    } catch (e) {}
+  } else {
+    if (successCard) successCard.style.display = 'none';
+    if (formInputs) formInputs.style.display = 'block';
+  }
+
+  // 2. Ambil data training (dari local cache jika ada, atau fetch dari Google Apps Script jika di HP peserta)
+  let found = null;
+  loadCalendarEntries();
+  const submissions = (typeof cachedEntries !== 'undefined' && Array.isArray(cachedEntries)) ? cachedEntries : [];
+  found = submissions.find(s => {
+    const id = (s.meta && s.meta['ID training']) || s.id || '';
+    return id.trim().toUpperCase() === targetTrnId.toUpperCase();
+  });
+
+  // Jika tidak ditemukan di penyimpanan lokal laptop (kasus umum smartphone peserta), fetch dari Google Apps Script
+  if (!found || !found.participants || found.participants.length === 0) {
+    try {
+      const gasUrl = `${GOOGLE_SCRIPT_URL}?action=getTrainingDetails&id=${encodeURIComponent(targetTrnId)}`;
+      const res = await fetch(gasUrl);
+      const json = await res.json();
+      if (json && json.status === 'success' && json.training) {
+        found = json.training;
+      }
+    } catch (err) {
+      console.warn('Gagal memuat detail pelatihan dari Apps Script:', err);
+    }
+  }
+
+  mobileActiveTraining = found || {
+    id: targetTrnId,
+    namaTraining: `Pelatihan ${targetTrnId}`,
+    trainer: 'Fasilitator Pelatihan',
+    jadwal: getTodayIsoDate(),
+    participants: []
+  };
+
+  const meta = mobileActiveTraining.meta || {};
+  const title = (mobileActiveTraining.namaTraining || meta['Nama training'] || targetTrnId).trim();
+  const trainer = (mobileActiveTraining.trainer || meta['Trainer'] || '-').trim();
+  const schedule = (mobileActiveTraining.jadwal || meta['Tanggal & jam pelaksanaan'] || getTodayIsoDate()).trim();
+
+  if (elTitle) elTitle.textContent = title;
+  if (elModule) elModule.textContent = mobileActiveModule;
+  if (elTrainer) elTrainer.textContent = trainer;
+  if (elDate) elDate.textContent = schedule;
+
+  // 3. Render daftar nama peserta terdaftar
+  mobileParticipantsList = [];
+  const rawParts = mobileActiveTraining.participants || [];
+  if (selParticipant) {
+    selParticipant.disabled = false;
+    selParticipant.innerHTML = '';
+
+    const optDefault = document.createElement('option');
+    optDefault.value = '';
+    optDefault.textContent = '-- Silakan Pilih Nama Anda --';
+    selParticipant.appendChild(optDefault);
+
+    rawParts.forEach(p => {
+      const nama = (p.nama || p.namaPeserta || '').trim();
+      const email = (p.email || p.emailPeserta || '').trim();
+      const dept = (p.departemen || p.divisi || '-').trim();
+      if (nama) {
+        mobileParticipantsList.push({ nama, email, departemen: dept });
+        const opt = document.createElement('option');
+        opt.value = nama;
+        opt.textContent = `${nama} (${dept})`;
+        selParticipant.appendChild(opt);
+      }
+    });
+
+    // Opsi tambahan Walk-in / Peserta Baru
+    const optWalkIn = document.createElement('option');
+    optWalkIn.value = '__walkin__';
+    optWalkIn.textContent = '➕ Nama saya belum ada di daftar (Peserta Baru / Walk-in)';
+    selParticipant.appendChild(optWalkIn);
+  }
+
+  // Reset tampilan form walk-in
+  handleMobParticipantChange('');
+}
+
+function handleMobParticipantChange(selectedName) {
+  const walkInWrap = document.getElementById('mobWalkInFields');
+  const customNameInp = document.getElementById('mobCustomName');
+  const customDeptInp = document.getElementById('mobCustomDept');
+  const readonlyWrap = document.getElementById('mobDivisiReadonlyWrap');
+  const divField = document.getElementById('mobDivisiReadonly');
+  const emailField = document.getElementById('mobEmailVerify');
+  const hintEl = document.getElementById('mobEmailHint');
+
+  if (selectedName === '__walkin__') {
+    if (walkInWrap) walkInWrap.style.display = 'block';
+    if (customNameInp) { customNameInp.required = true; customNameInp.focus(); }
+    if (customDeptInp) { customDeptInp.required = true; }
+    if (readonlyWrap) readonlyWrap.style.display = 'none';
+    if (emailField) {
+      emailField.value = '';
+      emailField.placeholder = 'email.kantor@perusahaan.com';
+    }
+    if (hintEl) hintEl.textContent = 'Masukkan email kantor Anda untuk pencatatan presensi walk-in.';
+  } else {
+    if (walkInWrap) walkInWrap.style.display = 'none';
+    if (customNameInp) { customNameInp.required = false; customNameInp.value = ''; }
+    if (customDeptInp) { customDeptInp.required = false; customDeptInp.value = ''; }
+    if (readonlyWrap) readonlyWrap.style.display = 'block';
+
+    const found = mobileParticipantsList.find(p => p.nama === selectedName);
+    if (found) {
+      if (divField) divField.value = found.departemen;
+      if (emailField) {
+        emailField.placeholder = found.email ? `Ketikkan email: ${found.email.replace(/(.{2})(.*)(@.*)/, '$1***$3')}` : 'nama.lengkap@perusahaan.com';
+      }
+      if (hintEl) hintEl.textContent = 'Verifikasi anti-joki: masukkan email kantor Anda yang terdaftar.';
+    } else {
+      if (divField) divField.value = '';
+      if (emailField) emailField.placeholder = 'misal: nama.lengkap@perusahaan.com';
+      if (hintEl) hintEl.textContent = 'Pilih nama Anda di atas untuk verifikasi.';
+    }
+  }
+}
+
+async function submitMobileAttendance(event) {
+  event.preventDefault();
+  if (!mobileActiveTraining) return;
+
+  const selName = (document.getElementById('mobParticipantSelect')?.value || '').trim();
+  const inputEmail = (document.getElementById('mobEmailVerify')?.value || '').trim().toLowerCase();
+
+  if (!selName) {
+    showToast('Silakan pilih nama Anda terlebih dahulu.', 'warning');
+    return;
+  }
+
+  let finalName = '';
+  let finalDept = '';
+  let isWalkIn = false;
+
+  if (selName === '__walkin__') {
+    isWalkIn = true;
+    finalName = (document.getElementById('mobCustomName')?.value || '').trim();
+    finalDept = (document.getElementById('mobCustomDept')?.value || '').trim() || '-';
+    if (!finalName) {
+      showToast('Ketikkan nama lengkap Anda.', 'warning');
+      document.getElementById('mobCustomName')?.focus();
+      return;
+    }
+  } else {
+    const found = mobileParticipantsList.find(p => p.nama === selName);
+    if (!found) {
+      showToast('Nama peserta tidak valid.', 'error');
+      return;
+    }
+    finalName = found.nama;
+    finalDept = found.departemen || '-';
+
+    // Anti-Joki Verification: Compare email jika peserta terdaftar memiliki email
+    const targetEmail = (found.email || '').toLowerCase().trim();
+    if (targetEmail && inputEmail !== targetEmail) {
+      showToast('Alamat email kantor tidak cocok dengan nama peserta yang dipilih!', 'error');
+      document.getElementById('mobEmailVerify')?.focus();
+      return;
+    }
+  }
+
+  if (!inputEmail) {
+    showToast('Alamat email kantor wajib diisi!', 'warning');
+    document.getElementById('mobEmailVerify')?.focus();
+    return;
+  }
+
+  const btnSubmit = document.getElementById('btnSubmitMobAttendance');
+  if (btnSubmit) {
+    btnSubmit.disabled = true;
+    btnSubmit.innerHTML = `<span class="btn-spinner"></span> <span>Memproses Presensi...</span>`;
+  }
+
+  const meta = mobileActiveTraining.meta || {};
+  const trnId = (meta['ID training'] || mobileActiveTraining.id || '').trim();
+  const title = (mobileActiveTraining.namaTraining || meta['Nama training'] || trnId).trim();
+  const now = new Date();
+  const timestamp = `${getTodayIsoDate()} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')} WIB`;
+
+  const payload = {
+    action: 'recordAttendance',
+    trainingId: trnId,
+    trainingTitle: title,
+    moduleId: mobileActiveModule || 'Sesi 1',
+    sessionDate: getTodayIsoDate(),
+    participantName: finalName,
+    participantEmail: inputEmail,
+    department: finalDept,
+    method: isWalkIn ? 'QR Web (Walk-in)' : 'QR Web (Self)',
+    status: 'Hadir',
+    note: isWalkIn ? 'Presensi Mandiri QR (Walk-in)' : 'Presensi Mandiri QR'
+  };
+
+  // Simpan ke local log (jika perangkat dapat menyimpan)
+  const logs = getStoredAttendanceLogs();
+  logs.push(payload);
+  saveStoredAttendanceLogs(logs);
+
+  // Kunci form di localStorage perangkat peserta agar tidak absen berulang kali
+  const doneKey = `att_done_${trnId}_${mobileActiveModule}`;
+  try {
+    localStorage.setItem(doneKey, JSON.stringify({
+      timestamp: timestamp,
+      name: finalName,
+      email: inputEmail
+    }));
+  } catch (e) {}
+
+  // Kirim POST ke Apps Script backend
+  try {
+    await fetch(GOOGLE_SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(payload)
+    });
+  } catch (err) {
+    console.warn('Sync ke Apps Script backend tertunda:', err);
+  }
+
+  // Update Tampilan Sukses
+  const successCard = document.getElementById('mobSuccessCard');
+  const formInputs = document.getElementById('mobFormInputs');
+  if (successCard) successCard.style.display = 'block';
+  if (formInputs) formInputs.style.display = 'none';
+  const det = document.getElementById('mobSuccessDetail');
+  const ts = document.getElementById('mobSuccessTimestamp');
+  if (det) det.textContent = `Terima kasih, ${finalName} telah resmi tercatat hadir pada ${mobileActiveModule}.`;
+  if (ts) ts.textContent = `Waktu: ${timestamp}`;
+
+  showToast('Presensi Anda berhasil dicatat!', 'success');
+}
+
+function openAttendanceFromCalendar() {
+  const trnId = (document.getElementById('calDetailId')?.textContent || '').trim();
+  closeModal('modalTrainingEventDetail');
+  goToPage('absensi');
+  if (trnId) {
+    setTimeout(() => {
+      const selTraining = document.getElementById('attTrainingSelect');
+      if (selTraining) {
+        selTraining.value = trnId;
+        handleAttendanceTrainingChange(trnId);
+      }
+    }, 150);
+  }
+}
+
+// Window Exposures for Live QR Attendance Hub
+window.initAttendanceHub = initAttendanceHub;
+window.handleAttendanceTrainingChange = handleAttendanceTrainingChange;
+window.handleAttendanceModuleChange = handleAttendanceModuleChange;
+window.renderAttendanceSessionQR = renderAttendanceSessionQR;
+window.renderAttendanceParticipantBoard = renderAttendanceParticipantBoard;
+window.filterAttendanceList = filterAttendanceList;
+window.manualCheckInParticipant = manualCheckInParticipant;
+window.openWalkInModal = openWalkInModal;
+window.closeWalkInModal = closeWalkInModal;
+window.submitWalkInParticipant = submitWalkInParticipant;
+window.copyAttendanceLink = copyAttendanceLink;
+window.toggleProjectorMode = toggleProjectorMode;
+window.refreshAttendanceHubData = refreshAttendanceHubData;
+window.handleMobParticipantChange = handleMobParticipantChange;
+window.submitMobileAttendance = submitMobileAttendance;
+window.openAttendanceFromCalendar = openAttendanceFromCalendar;
+
 
 

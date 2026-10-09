@@ -18,6 +18,24 @@
           </div>
         </header>
 
+        <!-- Tab Switcher (Post Test, Unggah Bukti & Knowledge Sharing) -->
+        <div class="trampoline-tabs-bar" style="margin-bottom:18px;">
+          <div class="trampoline-tabs">
+            <button type="button" class="trampoline-tab-btn active" id="tabBtnEvidence" onclick="switchTrampolineTab('evidence')">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+              <span>Unggah Bukti</span>
+            </button>
+            <button type="button" class="trampoline-tab-btn" id="tabBtnPostTest" onclick="switchTrampolineTab('posttest')">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+              <span>Post Test</span>
+            </button>
+            <button type="button" class="trampoline-tab-btn" id="tabBtnSharing" onclick="switchTrampolineTab('sharing')">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+              <span>Knowledge Sharing</span>
+            </button>
+          </div>
+        </div>
+
         <!-- ================= PANEL 1: UNGGAH BUKTI ================= -->
         <div class="trampoline-tab-panel active" id="trampolinePanelEvidence">
           <div class="form-card" style="margin-bottom:20px;">
@@ -36,6 +54,10 @@
                   <select id="evidenceTrainingSelect" required onchange="handleEvidenceTrainingChange(this.value)">
                     <option value="">-- Silahkan Pilih Training --</option>
                   </select>
+                  <div id="evidenceAttendanceStats" style="display:none;margin-top:8px;padding:6px 12px;background:var(--accent-tint);border-radius:8px;border:1px solid rgba(75,150,255,0.25);font-size:12px;color:var(--accent-dark);align-items:center;gap:6px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <span id="evidenceAttendanceText">Tingkat Kehadiran: -</span>
+                  </div>
                 </div>
                 <div class="field">
                   <label for="evidenceNamaPeserta">Nama Peserta / PIC Dokumentasi <span style="color:var(--danger)">*</span></label>
@@ -95,7 +117,7 @@
                 <!-- Zone 1: Foto Dokumentasi -->
                 <div class="field">
                   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-                    <label style="margin-bottom:0;">📸 1. Foto Dokumentasi Kegiatan</label>
+                    <label style="margin-bottom:0;">1. Foto Dokumentasi Kegiatan</label>
                     <span class="hint" style="color:var(--ink-soft);font-size:11.5px;">(Maks 5 Foto, JPG/PNG)</span>
                   </div>
                   <div class="evidence-dropzone" id="evidenceDropzone" onclick="document.getElementById('evidenceFileInput').click()" ondragover="handleEvidenceDragOver(event)" ondragleave="handleEvidenceDragLeave(event)" ondrop="handleEvidenceDrop(event)">
@@ -124,7 +146,7 @@
                 <!-- Zone 2: Modul & Materi Pelatihan -->
                 <div class="field">
                   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-                    <label style="margin-bottom:0;">📚 2. Modul &amp; Materi Pelatihan</label>
+                    <label style="margin-bottom:0;">2. Modul &amp; Materi Pelatihan</label>
                     <span class="hint" style="color:var(--ink-soft);font-size:11.5px;">(Maks 5 File, PDF/PPT/DOC/ZIP)</span>
                   </div>
                   <div class="evidence-dropzone material-dropzone" id="materialDropzone" onclick="document.getElementById('materialFileInput').click()" ondragover="handleMaterialDragOver(event)" ondragleave="handleMaterialDragLeave(event)" ondrop="handleMaterialDrop(event)">
@@ -158,7 +180,7 @@
               <!-- Note Drive Structure -->
               <div class="post-training-info-tip" style="margin-bottom:16px;background:rgba(0,23,143,0.04);border:1px dashed rgba(0,23,143,0.25);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--ink-soft);display:flex;align-items:center;gap:10px;">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00178F" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-                <span><strong>Struktur Otomatis Google Drive:</strong> Berkas akan otomatis dikelompokkan ke dalam 1 folder sesi training terpadu dengan sub-folder <code>📁 Dokumentasi Foto</code> dan <code>📁 Modul &amp; Materi</code>. Anda dapat mengunggah salah satu atau keduanya sekaligus.</span>
+                <span><strong>Struktur Otomatis Google Drive:</strong> Berkas akan otomatis dikelompokkan ke dalam 1 folder sesi training terpadu dengan sub-folder <code>Dokumentasi Foto</code> dan <code>Modul &amp; Materi</code>. Anda dapat mengunggah salah satu atau keduanya sekaligus.</span>
               </div>
 
               <!-- Submit Feedback Alert / Status Banner -->
