@@ -60,39 +60,6 @@
                   </div>
                 </div>
                 <div class="field">
-                  <label for="evidenceNamaPeserta">Nama Peserta / PIC Dokumentasi <span style="color:var(--danger)">*</span></label>
-                  <input type="text" id="evidenceNamaPeserta" placeholder="Silahkan masukkan nama lengkap" required>
-                </div>
-              </div>
-
-              <div class="field-row cols-2">
-                <div class="field">
-                  <label for="evidenceDivisi">Divisi / Departemen <span style="color:var(--danger)">*</span></label>
-                  <select id="evidenceDivisi" required>
-                    <option value="">-- Silahkan Pilih Divisi --</option>
-                    <option value="HR">HR</option>
-                    <option value="GA">GA</option>
-                    <option value="LEGAL">LEGAL</option>
-                    <option value="FINANCE">FINANCE</option>
-                    <option value="ACCOUNTING">ACCOUNTING</option>
-                    <option value="TAX">TAX</option>
-                    <option value="MARKETING">MARKETING</option>
-                    <option value="SALES OPS">SALES OPS</option>
-                    <option value="SALES ENABLEMENT">SALES ENABLEMENT</option>
-                    <option value="TELEMARKETING">TELEMARKETING</option>
-                    <option value="PEC">PEC</option>
-                    <option value="CUSTOMER EXPERIENCE">CUSTOMER EXPERIENCE</option>
-                    <option value="QA">QA</option>
-                    <option value="WEB DEVELOPER">WEB DEVELOPER</option>
-                    <option value="INTEGRATION">INTEGRATION</option>
-                    <option value="MOBILE DEVELOPER">MOBILE DEVELOPER</option>
-                    <option value="UI/UX DESIGNER">UI/UX DESIGNER</option>
-                    <option value="AI">AI</option>
-                    <option value="BUSINESS ANALYST">BUSINESS ANALYST</option>
-                    <option value="IT INFRASTRUCTURE">IT INFRASTRUCTURE</option>
-                  </select>
-                </div>
-                <div class="field">
                   <label>Kategori Training <span style="color:var(--danger)">*</span></label>
                   <div class="chip-grid" style="grid-template-columns: repeat(2, 1fr); margin-top:2px;">
                     <div class="chip-card selected" id="chipCatSoft" onclick="selectEvidenceCategory('Soft skill')">
@@ -208,43 +175,11 @@
             </div>
 
             <form id="postTestForm" onsubmit="submitPostTest(event)">
-              <div class="field-row cols-3">
-                <div class="field">
-                  <label for="postTestTrainingSelect">Pilih Training Terdaftar <span style="color:var(--danger)">*</span></label>
-                  <select id="postTestTrainingSelect" required onchange="handlePostTestTrainingChange(this.value)">
-                    <option value="">-- Silahkan Pilih Training --</option>
-                  </select>
-                </div>
-                <div class="field">
-                  <label for="postTestNamaPeserta">Nama Peserta <span style="color:var(--danger)">*</span></label>
-                  <input type="text" id="postTestNamaPeserta" placeholder="Silahkan masukkan nama peserta" required>
-                </div>
-                <div class="field">
-                  <label for="postTestDivisi">Divisi / Departemen <span style="color:var(--danger)">*</span></label>
-                  <select id="postTestDivisi" required>
-                    <option value="">-- Silahkan Pilih Divisi --</option>
-                    <option value="HR">HR</option>
-                    <option value="GA">GA</option>
-                    <option value="LEGAL">LEGAL</option>
-                    <option value="FINANCE">FINANCE</option>
-                    <option value="ACCOUNTING">ACCOUNTING</option>
-                    <option value="TAX">TAX</option>
-                    <option value="MARKETING">MARKETING</option>
-                    <option value="SALES OPS">SALES OPS</option>
-                    <option value="SALES ENABLEMENT">SALES ENABLEMENT</option>
-                    <option value="TELEMARKETING">TELEMARKETING</option>
-                    <option value="PEC">PEC</option>
-                    <option value="CUSTOMER EXPERIENCE">CUSTOMER EXPERIENCE</option>
-                    <option value="QA">QA</option>
-                    <option value="WEB DEVELOPER">WEB DEVELOPER</option>
-                    <option value="INTEGRATION">INTEGRATION</option>
-                    <option value="MOBILE DEVELOPER">MOBILE DEVELOPER</option>
-                    <option value="UI/UX DESIGNER">UI/UX DESIGNER</option>
-                    <option value="AI">AI</option>
-                    <option value="BUSINESS ANALYST">BUSINESS ANALYST</option>
-                    <option value="IT INFRASTRUCTURE">IT INFRASTRUCTURE</option>
-                  </select>
-                </div>
+              <div class="field" style="margin-bottom:18px;">
+                <label for="postTestTrainingSelect">Pilih Training Terdaftar <span style="color:var(--danger)">*</span></label>
+                <select id="postTestTrainingSelect" required onchange="handlePostTestTrainingChange(this.value)">
+                  <option value="">-- Silahkan Pilih Training --</option>
+                </select>
               </div>
 
               <!-- ========================================================================= -->

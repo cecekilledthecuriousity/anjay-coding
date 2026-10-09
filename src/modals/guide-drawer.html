@@ -1,0 +1,298 @@
+<!-- ================= SLIDE-OVER DRAWER: PANDUAN PENGISIAN FORMULIR ================= -->
+<div class="guide-drawer-overlay" id="guideDrawerOverlay" style="display:none;" onclick="handleGuideDrawerOverlayClick(event)">
+  <aside class="guide-drawer-panel" id="guideDrawerPanel" role="dialog" aria-modal="true" aria-labelledby="guideDrawerTitle" onclick="event.stopPropagation()">
+    <!-- Header Drawer -->
+    <div class="guide-drawer-head">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div class="guide-head-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+          </svg>
+        </div>
+        <div>
+          <h2 id="guideDrawerTitle" style="font-size:18px;font-weight:700;margin:0 0 3px;color:var(--ink);">Buku Saku Panduan Formulir</h2>
+          <span style="font-size:13px;color:var(--ink-soft);">Tips, standar isian &amp; FAQ pengajuan training karyawan</span>
+        </div>
+      </div>
+      <button type="button" class="guide-close-btn" onclick="closeGuideDrawer()" aria-label="Tutup Panduan">&times;</button>
+    </div>
+
+    <!-- Tab Selector Navigasi 2 Langkah + FAQ -->
+    <nav class="guide-tabs" aria-label="Pilihan langkah panduan">
+      <button type="button" class="guide-tab-btn active" id="guideTabBtn1" onclick="switchGuideTab('step1')">
+        <span class="guide-tab-badge">01</span>
+        <span>Profil &amp; Sasaran</span>
+      </button>
+      <button type="button" class="guide-tab-btn" id="guideTabBtn2" onclick="switchGuideTab('step2')">
+        <span class="guide-tab-badge">02</span>
+        <span>Pelaksanaan &amp; Evaluasi</span>
+      </button>
+      <button type="button" class="guide-tab-btn" id="guideTabBtnFaq" onclick="switchGuideTab('faq')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-1px;margin-right:3px;"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+        <span>FAQ &amp; Bantuan</span>
+      </button>
+    </nav>
+
+    <!-- Content Body Scrollable -->
+    <div class="guide-drawer-body">
+      
+      <!-- ================= PANEL LANGKAH 1 ================= -->
+      <div class="guide-panel active" id="guidePanelStep1">
+        <div class="guide-section-intro">
+          <strong>Langkah 01: Profil &amp; Sasaran Pelatihan</strong>
+          <p>Langkah ini menetapkan fondasi pengajuan: identitas program, relevansi kompetensi, dan hasil konkret yang diharapkan bagi organisasi.</p>
+        </div>
+
+        <!-- 1. Identitas Training & Nama Pengaju -->
+        <div class="guide-card">
+          <div class="guide-card-title">
+            <span class="guide-num">1</span>
+            <h4>Identitas Pelatihan &amp; Pengaju</h4>
+          </div>
+          <ul class="guide-checklist">
+            <li>
+              <strong>Nama Pelatihan:</strong> Tulis judul yang spesifik, padat, dan berorientasi hasil. 
+              <div class="guide-example-pill good">Contoh baik: "Workshop Golang High-Concurrency &amp; Clean Architecture"</div>
+              <div class="guide-example-pill bad">Kurang spesifik: "Belajar Backend"</div>
+            </li>
+            <li>
+              <strong>Nama Pengaju (Wajib Nama Lengkap):</strong> Selalu ketik <em>nama lengkap resmi</em> sesuai data HRD (bukan nama panggilan / inisial). Hal ini diperlukan untuk validasi otorisasi dokumen approval dan penerbitan sertifikat resmi.
+            </li>
+            <li>
+              <strong>Departemen / Divisi:</strong> Pilih divisi pengaju. Jika divisi Anda belum terdaftar di opsi, pilih <em>"Lainnya / Ketik Manual"</em>.
+            </li>
+          </ul>
+        </div>
+
+        <!-- 2. Jenis Training & Kebutuhan -->
+        <div class="guide-card">
+          <div class="guide-card-title">
+            <span class="guide-num">2</span>
+            <h4>Jenis &amp; Kategori Kebutuhan Training</h4>
+          </div>
+          <div class="guide-grid-2">
+            <div class="guide-type-box">
+              <span class="guide-tag internal">Training Internal</span>
+              <p>Fasilitator dari rekan kerja/internal perusahaan. Bebas biaya fee lembaga eksternal, fokus pada <em>knowledge sharing</em> antar divisi.</p>
+            </div>
+            <div class="guide-type-box">
+              <span class="guide-tag external">Training Eksternal</span>
+              <p>Mengundang trainer/vendor profesional dari luar perusahaan. Sediakan opsi calon vendor dan perkiraan estimasi biaya.</p>
+            </div>
+          </div>
+
+          <div style="margin-top:12px;">
+            <strong style="font-size:13px;color:var(--ink);">Kategori Kebutuhan Kompetensi:</strong>
+            <ul class="guide-sublist">
+              <li><strong>Upskilling:</strong> Memperdalam keahlian pada tugas/posisi kerja saat ini.</li>
+              <li><strong>Reskilling:</strong> Mempelajari keterampilan baru untuk peran atau alur teknologi baru.</li>
+              <li><strong>Onboarding:</strong> Pembekalan kompetensi esensial bagi anggota tim baru.</li>
+              <li><strong>Compliance:</strong> Standar sertifikasi resmi atau kepatuhan regulasi industri.</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- 3. Sasaran Pelatihan (Formula SMART) -->
+        <div class="guide-card">
+          <div class="guide-card-title">
+            <span class="guide-num">3</span>
+            <h4>Sasaran Pelatihan (Formula SMART)</h4>
+          </div>
+          <p class="guide-lead-text">
+            Approver menilai urgensi pelatihan berdasarkan sasaran yang terukur. Gunakan rumus: <em>[Kompetensi yang dipelajari] + [Tolak ukur pencapaian] + [Dampak ke pekerjaan]</em>.
+          </p>
+
+          <div class="guide-comparison">
+            <div class="guide-box-compare good">
+              <span class="guide-badge-status good">&#10003; Contoh Sasaran Efektif</span>
+              <p>"Peserta menguasai optimasi query PostgreSQL dan arsitektur Redis caching, sehingga waktu respon API backend berkurang minimal 30% dan siap menampung lonjakan traffic kuartal depan."</p>
+            </div>
+            <div class="guide-box-compare bad">
+              <span class="guide-badge-status bad">&#10007; Contoh Sasaran Kurang Tepat</span>
+              <p>"Karyawan belajar PostgreSQL agar tahu cara pakai database dan tidak error lagi saat bekerja."</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. Modul & Silabus Materi -->
+        <div class="guide-card">
+          <div class="guide-card-title">
+            <span class="guide-num">4</span>
+            <h4>Modul &amp; Tautan Silabus (Drive)</h4>
+          </div>
+          <p class="guide-lead-text">
+            Sertakan outline silabus, slide presentasi, atau proposal vendor dalam format berkas PDF/Word/PPTX, atau tautan Google Drive.
+          </p>
+          <div class="guide-tip-note">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+            <div><strong>Penting:</strong> Jika menggunakan Link Google Drive, pastikan izin sharing telah diatur menjadi <em>"Anyone with the link can view"</em> (Siapa saja yang memiliki link dapat melihat) agar Approver dapat langsung meninjau materi tanpa terhalang <em>request access</em>.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= PANEL LANGKAH 2 ================= -->
+      <div class="guide-panel" id="guidePanelStep2" style="display:none;">
+        <div class="guide-section-intro">
+          <strong>Langkah 02: Pelaksanaan, Peserta &amp; Evaluasi</strong>
+          <p>Langkah ini mengatur logistik, penjadwalan, ketersediaan ruangan meeting, daftar peserta terdaftar, dan metrik evaluasi pasca-training.</p>
+        </div>
+
+        <!-- 1. Format & Pola Jadwal -->
+        <div class="guide-card">
+          <div class="guide-card-title">
+            <span class="guide-num">1</span>
+            <h4>Metode &amp; Pola Jadwal Pembelajaran</h4>
+          </div>
+          <ul class="guide-checklist">
+            <li>
+              <strong>Metode Onsite:</strong> Pelatihan tatap muka langsung di kantor. Sistem akan menghubungkan Anda dengan pilihan ruangan meeting internal.
+            </li>
+            <li>
+              <strong>Metode Online:</strong> Pelatihan virtual. Sistem otomatis menghasilkan tautan <em>Google Meet</em> resmi yang akan terlampir di kalender peserta.
+            </li>
+            <li>
+              <strong>Metode Hybrid:</strong> Gabungan ruang meeting kantor dan tautan online interaktif.
+            </li>
+          </ul>
+
+          <div style="margin-top:12px;">
+            <strong style="font-size:13px;color:var(--ink);">Pilihan Pola Jadwal Fleksibel:</strong>
+            <ul class="guide-sublist">
+              <li><strong>1 Hari Saja:</strong> Rampung dalam 1 hari (1 sesi penuh atau dibagi Pagi &amp; Siang).</li>
+              <li><strong>Beberapa Hari / Berkala:</strong> Diadakan dalam beberapa pertemuan di tanggal berbeda (bisa mingguan atau tanggal fleksibel).</li>
+              <li><strong>Hari Berurutan:</strong> Pelatihan intensif beberapa hari berturut-turut tanpa jeda (misal 3 hari maraton Senin s/d Rabu).</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- 2. Booking Ruangan & Deteksi Bentrok -->
+        <div class="guide-card">
+          <div class="guide-card-title">
+            <span class="guide-num">2</span>
+            <h4>Ketersediaan Ruangan Meeting Internal</h4>
+          </div>
+          <p class="guide-lead-text">
+            Sistem secara realtime terintegrasi dengan Google Calendar resource untuk 4 ruangan kantor:
+          </p>
+          <div class="guide-room-grid">
+            <div class="guide-room-tag">🪐 Saturnus (20-30 org)</div>
+            <div class="guide-room-tag">🌊 Neptunus (10-15 org)</div>
+            <div class="guide-room-tag">🔴 Mars (6-8 org)</div>
+            <div class="guide-room-tag">☀️ Merkurius (4-6 org)</div>
+          </div>
+          <div class="guide-tip-note" style="margin-top:10px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+            <div>Perhatikan badge status ruangan saat memilih jam. Ruangan bertanda hijau <em>"Tersedia"</em> bebas digunakan, sedangkan tanda merah <em>"Terpakai"</em> mengindikasikan ada agenda lain pada jam tersebut.</div>
+          </div>
+        </div>
+
+        <!-- 3. Peserta & Fitur Quick Paste Excel -->
+        <div class="guide-card">
+          <div class="guide-card-title">
+            <span class="guide-num">3</span>
+            <h4>Daftar Peserta &amp; Quick Paste Excel</h4>
+          </div>
+          <p class="guide-lead-text">
+            Anda tidak perlu mengetik nama peserta satu per satu. Manfaatkan fitur <strong>Quick Paste</strong>:
+          </p>
+          <div class="guide-steps-flow">
+            <div class="guide-flow-step">
+              <span class="guide-step-dot">1</span>
+              <span>Buka spreadsheet Excel / Google Sheets berisi daftar peserta.</span>
+            </div>
+            <div class="guide-flow-step">
+              <span class="guide-step-dot">2</span>
+              <span>Pilih &amp; copy (Ctrl+C) 3 kolom: <strong>Nama [Tab] Email Kantor [Tab] Departemen</strong>.</span>
+            </div>
+            <div class="guide-flow-step">
+              <span class="guide-step-dot">3</span>
+              <span>Klik tombol <em>"Import / Quick Paste"</em> di atas tabel peserta, lalu tempel (Ctrl+V). Seluruh peserta akan langsung terpetakan rapi!</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. Evaluasi & Otorisasi Approver -->
+        <div class="guide-card">
+          <div class="guide-card-title">
+            <span class="guide-num">4</span>
+            <h4>Evaluasi, Target &amp; Approver</h4>
+          </div>
+          <ul class="guide-checklist">
+            <li>
+              <strong>PIC &amp; Waktu Evaluasi:</strong> Tentukan siapa yang memonitor hasil belajar karyawan (misal: Leader / HR) dan kapan dievaluasi (umumnya 1 bulan atau 3 bulan pasca-training).
+            </li>
+            <li>
+              <strong>Approver Otorisasi:</strong> Pilih atasan langsung (Direct Supervisor) dan Dept Head/HR. Notifikasi email persetujuan akan otomatis dikirimkan ke kotak masuk approver.
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- ================= PANEL FAQ & TIPS ================= -->
+      <div class="guide-panel" id="guidePanelFaq" style="display:none;">
+        <div class="guide-section-intro">
+          <strong>Pertanyaan Umum (FAQ) &amp; Bantuan Teknis</strong>
+          <p>Jawaban cepat atas hal-hal yang sering ditanyakan seputar pengajuan dan pelaksanaan training.</p>
+        </div>
+
+        <div class="guide-faq-item">
+          <details>
+            <summary>Kapan sebaiknya pengajuan training dikirimkan?</summary>
+            <div class="guide-faq-ans">
+              Idealnya diajukan minimal <strong>H-14 hari kerja</strong> sebelum jadwal dimulai. Ini memberikan waktu yang cukup bagi approver meninjau proposal, memastikan ketersediaan ruangan, dan menyiapkan materi.
+            </div>
+          </details>
+        </div>
+
+        <div class="guide-faq-item">
+          <details>
+            <summary>Bagaimana jika ada peserta susulan / pengganti di hari H?</summary>
+            <div class="guide-faq-ans">
+              Jangan khawatir! Pada menu <strong>Live Absensi</strong>, peserta pengganti dapat langsung memindai QR Code di layar dan memilih opsi <em>"➕ Nama saya belum ada di daftar (Peserta Baru / Walk-in)"</em>. Mereka akan otomatis tercatat hadir ke spreadsheet.
+            </div>
+          </details>
+        </div>
+
+        <div class="guide-faq-item">
+          <details>
+            <summary>Kapan email undangan kalender dikirimkan ke peserta?</summary>
+            <div class="guide-faq-ans">
+              Email konfirmasi pendaftaran dan jadwal kalender Google Workspace dikirimkan otomatis setelah pengajuan disetujui penuh oleh Approver.
+            </div>
+          </details>
+        </div>
+
+        <div class="guide-faq-item">
+          <details>
+            <summary>Apakah saya bisa meminta bantuan AI untuk merumuskan silabus?</summary>
+            <div class="guide-faq-ans">
+              Tentu! Di pojok kanan bawah atau menu <strong>AI Studio</strong>, Anda dapat menggunakan AI Training Architect untuk menghasilkan rekomendasi modul, silabus, dan indikator sasaran SMART dalam hitungan detik.
+            </div>
+          </details>
+        </div>
+
+        <div class="guide-faq-item">
+          <details>
+            <summary>Bagaimana cara mengecek status persetujuan pengajuan saya?</summary>
+            <div class="guide-faq-ans">
+              Buka menu <strong>Training Saya</strong> di sidebar. Anda dapat melacak status dokumen (<em>Pending, Approved, Rejected</em>) secara realtime.
+            </div>
+          </details>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Footer Drawer -->
+    <div class="guide-drawer-foot">
+      <button type="button" class="btn-secondary" onclick="closeGuideDrawer()" style="flex:1;justify-content:center;font-size:14px;font-weight:600;padding:11px 16px;">
+        <span>Tutup Panduan</span>
+      </button>
+      <button type="button" class="btn-primary" onclick="closeGuideDrawer()" style="flex:1;justify-content:center;font-size:14px;font-weight:600;padding:11px 16px;gap:8px;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        <span>Lanjut Mengisi Form</span>
+      </button>
+    </div>
+  </aside>
+</div>

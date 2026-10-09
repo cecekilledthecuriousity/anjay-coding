@@ -75,7 +75,11 @@ $deprecatedDashboardIds = @(
     "dashKpiJenis",
     "dashKpiJenisSub",
     "dashUpcomingList",
-    "postTestSkor"
+    "postTestSkor",
+    "postTestNamaPeserta",
+    "postTestDivisi",
+    "evidenceNamaPeserta",
+    "evidenceDivisi"
 )
 
 $missingIds = @()

@@ -1,6 +1,6 @@
       <section class="tds-page active" id="page-ajukan">
         <!-- Main Top Header -->
-        <header class="doc-header" style="margin-bottom:14px;">
+        <header class="doc-header" style="margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
           <div style="display:flex;align-items:center;gap:14px;">
             <div class="header-icon-box" style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg, #6E62F0, #372FB0);display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 14px rgba(55, 47, 176, 0.25);">
               <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -13,6 +13,15 @@
               <p class="kicker">Employee Development Program</p>
               <h1 class="voice">Request Training &amp; Development</h1>
             </div>
+          </div>
+          <div class="doc-header-actions" style="display:flex;align-items:center;gap:8px;">
+            <button type="button" class="btn-guide-trigger" onclick="openGuideDrawer()" title="Buka Buku Saku &amp; Panduan Pengisian">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+              </svg>
+              <span>Panduan Pengisian</span>
+            </button>
           </div>
         </header>
 
@@ -365,15 +374,15 @@
             <div class="schedule-pattern-tabs" role="tablist">
               <button type="button" class="pattern-tab-btn active" id="patternSingleBtn" onclick="setSchedulePattern('single')">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line></svg>
-                <span>Sesi Tunggal (1 Hari)</span>
+                <span>1 Hari Saja</span>
               </button>
               <button type="button" class="pattern-tab-btn" id="patternConsecutiveBtn" onclick="setSchedulePattern('consecutive')">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
-                <span>Hari Berturut-turut</span>
+                <span>Hari Berurutan</span>
               </button>
               <button type="button" class="pattern-tab-btn" id="patternWeeklyBtn" onclick="setSchedulePattern('weekly')">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><circle cx="12" cy="14" r="2.5"></circle><polyline points="12 12.5 12 14 13.5 14"></polyline></svg>
-                <span>Multi-Hari / Tanggal Berbeda (On Going)</span>
+                <span>Beberapa Hari / Berkala</span>
               </button>
             </div>
           </div>
@@ -386,8 +395,8 @@
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
               </div>
               <div class="schedule-detail-body">
-                <div class="schedule-detail-title">Karakteristik Sesi Tunggal (1 Hari)</div>
-                <div class="schedule-detail-desc">Pelatihan tuntas dalam <strong>1 hari pertemuan</strong> (contoh: seminar, evaluasi reguler, atau workshop kilat). Begitu tanggal pelaksanaan ini selesai, seluruh rangkaian training dianggap tuntas.</div>
+                <div class="schedule-detail-title">Karakteristik Pelatihan 1 Hari</div>
+                <div class="schedule-detail-desc">Pelatihan rampung dalam <strong>1 hari pertemuan</strong> (contoh: seminar, workshop kilat, atau evaluasi). Format sesi dapat berupa 1 sesi penuh atau dibagi pagi dan siang.</div>
               </div>
             </div>
 
@@ -429,7 +438,7 @@
                 </label>
                 <div class="quick-count-chips session-split-chips">
                   <button type="button" class="quick-count-btn active" id="singleSplitOneBtn" onclick="setSingleDaySplit(1)">
-                    1 Sesi Penuh (Full Day)
+                    1 Sesi Penuh
                   </button>
                   <button type="button" class="quick-count-btn" id="singleSplitTwoBtn" onclick="setSingleDaySplit(2)">
                     2 Sesi (Pagi &amp; Siang)
@@ -541,8 +550,8 @@
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
               </div>
               <div class="schedule-detail-body">
-                <div class="schedule-detail-title">Karakteristik Multi-Hari / Tanggal Berbeda (On Going)</div>
-                <div class="schedule-detail-desc">Pelatihan bertahap yang berlangsung di <strong>hari-hari berbeda dengan jeda waktu</strong> (contoh: Sesi 1 minggu ini, Sesi 2 dua minggu lagi, atau pola mingguan terjadwal). Selama rentang tanggal tersebut, status pelatihan tercatat aktif berjalan (<em>On-Going</em>) sampai sesi terakhir selesai. Anda dapat mengatur pengulangan hari mingguan di sini atau menyesuaikan tanggal masing-masing sesi di tabel bawah.</div>
+                <div class="schedule-detail-title">Karakteristik Pelatihan Beberapa Hari (Berkala)</div>
+                <div class="schedule-detail-desc">Pelatihan yang diadakan dalam beberapa sesi pertemuan di <strong>hari atau tanggal yang berbeda</strong> (misal: seminggu sekali, atau selang beberapa hari). Anda dapat membuat jadwal awal otomatis di sini, lalu tanggal dan jam tiap sesi bisa disesuaikan bebas langsung pada tabel di bawah.</div>
               </div>
             </div>
 
@@ -581,7 +590,7 @@
               <div class="field">
                 <label>
                   <span>Jumlah Pertemuan / Sesi</span>
-                  <span class="hint" style="color:var(--moss);">Otomatis dihitung per minggu</span>
+                  <span class="hint" style="color:var(--moss);">Perkiraan jadwal (bisa disesuaikan di tabel)</span>
                 </label>
                 <div class="session-count-input-group">
                   <div class="quick-count-chips">
@@ -627,7 +636,7 @@
             <div class="recurring-action-footer">
               <button type="button" class="btn-generate-sessions" onclick="applyWeeklySchedule()">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
-                <span>Terapkan &amp; Buat Jadwal Sesi ke Tabel</span>
+                <span>Buat Jadwal Sesi ke Tabel</span>
               </button>
               <span class="recurring-note-hint">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
@@ -644,8 +653,8 @@
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
               </div>
               <div class="schedule-detail-body">
-                <div class="schedule-detail-title">Karakteristik Hari Berturut-turut</div>
-                <div class="schedule-detail-desc">Pelatihan harian intensif yang berjalan <strong>berurutan tanpa jeda hari kerja</strong> (contoh: 3 hari maraton, Senin s/d Rabu). Ruangan dan jadwal Google Calendar akan otomatis dibooking berurutan sesuai jumlah hari yang dipilih.</div>
+                <div class="schedule-detail-title">Karakteristik Pelatihan Hari Berurutan</div>
+                <div class="schedule-detail-desc">Pelatihan intensif yang berjalan <strong>berurutan dari hari ke hari</strong> (contoh: 3 hari tanpa jeda, Senin s/d Rabu). Jadwal sesi akan otomatis dibuatkan berurutan sesuai jumlah hari yang dipilih.</div>
               </div>
             </div>
 
@@ -668,7 +677,7 @@
               <div class="field">
                 <label>
                   <span>Durasi Pelatihan (Hari)</span>
-                  <span class="hint" style="color:var(--moss);">Hari berturut-turut</span>
+                  <span class="hint" style="color:var(--moss);">Jumlah hari berurutan</span>
                 </label>
                 <div class="session-count-input-group">
                   <div class="quick-count-chips">
@@ -714,7 +723,7 @@
             <div class="recurring-action-footer">
               <button type="button" class="btn-generate-sessions" onclick="applyConsecutiveSchedule()">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
-                <span>Terapkan &amp; Buat Jadwal Sesi ke Tabel</span>
+                <span>Buat Jadwal Sesi ke Tabel</span>
               </button>
               <span class="recurring-note-hint">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>

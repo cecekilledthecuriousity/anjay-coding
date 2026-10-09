@@ -1819,9 +1819,9 @@ function onWeeklyConfigChange() {
       const parts = startVal.split('-').map(Number);
       const startDate = new Date(parts[0], parts[1] - 1, parts[2]);
       const endDate = new Date(parts[0], parts[1] - 1, parts[2] + ((count - 1) * 7));
-      summaryEl.innerHTML = `<strong>Multi-Hari (On Going):</strong> Setiap hari <strong>${dayName}</strong> (${count} Sesi &bull; ${durStr}) &bull; ${formatDisplayDate(formatIsoDate(startDate))} s/d ${formatDisplayDate(formatIsoDate(endDate))} (${startJam} - ${endJam} WIB)`;
+      summaryEl.innerHTML = `<strong>Pelatihan Berkala:</strong> Setiap hari <strong>${dayName}</strong> (${count} Sesi &bull; ${durStr}) &bull; ${formatDisplayDate(formatIsoDate(startDate))} s/d ${formatDisplayDate(formatIsoDate(endDate))} (${startJam} - ${endJam} WIB)`;
     } else {
-      summaryEl.innerHTML = `<strong>Multi-Hari (On Going):</strong> Setiap hari <strong>${dayName}</strong> (${count} Sesi &bull; ${startJam} - ${endJam} WIB) &bull; <em>Pilih tanggal mulai di atas</em>`;
+      summaryEl.innerHTML = `<strong>Pelatihan Berkala:</strong> Setiap hari <strong>${dayName}</strong> (${count} Sesi &bull; ${startJam} - ${endJam} WIB) &bull; <em>Pilih tanggal mulai di atas</em>`;
     }
   }
 
@@ -1845,9 +1845,9 @@ function onConsecConfigChange() {
       const parts = startVal.split('-').map(Number);
       const startDate = new Date(parts[0], parts[1] - 1, parts[2]);
       const endDate = new Date(parts[0], parts[1] - 1, parts[2] + (count - 1));
-      summaryEl.innerHTML = `<strong>Hari Berturut-turut:</strong> ${count} Hari (${durStr}) &bull; ${formatDisplayDate(formatIsoDate(startDate))} s/d ${formatDisplayDate(formatIsoDate(endDate))} (${startJam} - ${endJam} WIB)`;
+      summaryEl.innerHTML = `<strong>Hari Berurutan:</strong> ${count} Hari (${durStr}) &bull; ${formatDisplayDate(formatIsoDate(startDate))} s/d ${formatDisplayDate(formatIsoDate(endDate))} (${startJam} - ${endJam} WIB)`;
     } else {
-      summaryEl.innerHTML = `<strong>Hari Berturut-turut:</strong> ${count} Hari (${startJam} - ${endJam} WIB) &bull; <em>Pilih tanggal mulai di atas</em>`;
+      summaryEl.innerHTML = `<strong>Hari Berurutan:</strong> ${count} Hari (${startJam} - ${endJam} WIB) &bull; <em>Pilih tanggal mulai di atas</em>`;
     }
   }
 
@@ -3634,10 +3634,6 @@ function handleEvidenceTrainingChange(trainingName) {
   const statsText = document.getElementById('evidenceAttendanceText');
 
   if (data) {
-    if (data.divisi) {
-      const divisiSel = document.getElementById('evidenceDivisi');
-      if (divisiSel) divisiSel.value = data.divisi;
-    }
     if (data.kategori) {
       selectEvidenceCategory(data.kategori);
     }
@@ -3675,13 +3671,7 @@ window.handleEvidenceTrainingChange = handleEvidenceTrainingChange;
 
 function handlePostTestTrainingChange(trainingName) {
   if (!window._trampolineTrainingsData) return;
-  const data = window._trampolineTrainingsData.get(trainingName);
-  if (data) {
-    if (data.divisi) {
-      const divisiSel = document.getElementById('postTestDivisi');
-      if (divisiSel) divisiSel.value = data.divisi;
-    }
-  }
+  // Metadata training tersimpan di window._trampolineTrainingsData jika dibutuhkan
 }
 window.handlePostTestTrainingChange = handlePostTestTrainingChange;
 
@@ -4185,8 +4175,6 @@ window.clearAllProposalFiles = clearAllProposalFiles;
 async function submitEvidence(e) {
   e.preventDefault();
   const trainingSelect = document.getElementById('evidenceTrainingSelect');
-  const namaInput = document.getElementById('evidenceNamaPeserta');
-  const divisiSelect = document.getElementById('evidenceDivisi');
   const kategoriHidden = document.getElementById('evidenceKategori');
   const statusBanner = document.getElementById('evidenceStatusBanner');
   const btn = document.getElementById('btnSubmitEvidence');
@@ -4195,16 +4183,6 @@ async function submitEvidence(e) {
   if (!trainingSelect?.value) {
     showToast('Silahkan pilih training terlebih dahulu.', 'warning');
     trainingSelect?.focus();
-    return;
-  }
-  if (!namaInput?.value.trim()) {
-    showToast('Silahkan masukkan nama peserta / pengunggah.', 'warning');
-    namaInput?.focus();
-    return;
-  }
-  if (!divisiSelect?.value) {
-    showToast('Silahkan pilih divisi / departemen.', 'warning');
-    divisiSelect?.focus();
     return;
   }
   if (selectedEvidenceFiles.length === 0 && selectedMaterialFiles.length === 0) {
@@ -4233,11 +4211,14 @@ async function submitEvidence(e) {
     `;
   }
 
+  const trainingData = window._trampolineTrainingsData?.get(trainingSelect.value);
+  const trainingDivisi = trainingData?.divisi || '-';
+
   const payload = {
     action: "submitPostTrainingEvidence",
     namaTraining: trainingSelect.value,
-    namaPeserta: namaInput.value.trim(),
-    divisi: divisiSelect.value,
+    namaPeserta: "-",
+    divisi: trainingDivisi,
     kategori: kategoriHidden?.value || 'Soft skill',
     tanggal: new Date().toISOString().split('T')[0],
     files: selectedEvidenceFiles.map(f => {
@@ -4285,7 +4266,7 @@ async function submitEvidence(e) {
         statusBanner.innerHTML = `
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
           <div>
-            <strong>Berhasil Diunggah!</strong> Sebanyak ${totalCount} berkas (${uploadedSummaryText}) telah tersimpan rapi di Google Drive dan dicatat ke sheet "Post Training".
+            <strong>Berhasil Diunggah!</strong> Sebanyak ${totalCount} berkas (${uploadedSummaryText}) untuk pelatihan <strong>${escapeHtml(trainingSelect.value)}</strong> telah tersimpan rapi di Google Drive dan dicatat ke sheet "Post Training".
             ${data.folderUrl ? `<br><a href="${data.folderUrl}" target="_blank" rel="noopener">Buka Folder Sesi Pelatihan di Google Drive &rarr;</a>` : ''}
           </div>
         `;
@@ -4315,8 +4296,8 @@ async function submitEvidence(e) {
           waktuSubmit: new Date().toLocaleString('id-ID'),
           tipeAktivitas: 'Unggah Bukti & Materi',
           namaTraining: trainingSelect.value,
-          namaPeserta: namaInput.value.trim(),
-          divisi: divisiSelect.value,
+          namaPeserta: '-',
+          divisi: trainingDivisi,
           kategori: kategoriHidden?.value || 'Soft skill',
           jumlahFile: totalCount,
           folderUrl: data.folderUrl || '',
@@ -4337,7 +4318,6 @@ async function submitEvidence(e) {
 
       clearAllEvidenceFiles();
       clearAllMaterialFiles();
-      namaInput.value = '';
     } else {
       throw new Error(data?.message || 'Gagal menyimpan berkas ke Google Drive.');
     }
@@ -4361,8 +4341,6 @@ window.submitEvidence = submitEvidence;
 async function submitPostTest(e) {
   e.preventDefault();
   const trainingSelect = document.getElementById('postTestTrainingSelect');
-  const namaInput = document.getElementById('postTestNamaPeserta');
-  const divisiSelect = document.getElementById('postTestDivisi');
   const catatanInput = document.getElementById('postTestCatatan');
   const statusBanner = document.getElementById('postTestStatusBanner');
   const btn = document.getElementById('btnSubmitPostTest');
@@ -4371,16 +4349,6 @@ async function submitPostTest(e) {
   if (!trainingSelect?.value) {
     showToast('Silahkan pilih training terlebih dahulu.', 'warning');
     trainingSelect?.focus();
-    return;
-  }
-  if (!namaInput?.value.trim()) {
-    showToast('Silahkan masukkan nama peserta.', 'warning');
-    namaInput?.focus();
-    return;
-  }
-  if (!divisiSelect?.value) {
-    showToast('Silahkan pilih divisi / departemen.', 'warning');
-    divisiSelect?.focus();
     return;
   }
 
@@ -4398,11 +4366,14 @@ async function submitPostTest(e) {
     `;
   }
 
+  const trainingData = window._trampolineTrainingsData?.get(trainingSelect.value);
+  const trainingDivisi = trainingData?.divisi || '-';
+
   const payload = {
     action: "submitPostTest",
     namaTraining: trainingSelect.value,
-    namaPeserta: namaInput.value.trim(),
-    divisi: divisiSelect.value,
+    namaPeserta: "-",
+    divisi: trainingDivisi,
     skor: "-",
     jawaban: catatanInput?.value.trim() || '-',
     tanggal: new Date().toISOString().split('T')[0]
@@ -4423,7 +4394,7 @@ async function submitPostTest(e) {
         statusBanner.style.display = 'flex';
         statusBanner.innerHTML = `
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-          <div><strong>Tersimpan!</strong> Konfirmasi evaluasi post-test atas nama <strong>${escapeHtml(namaInput.value.trim())}</strong> telah berhasil dicatat ke sheet "Post Training".</div>
+          <div><strong>Tersimpan!</strong> Konfirmasi evaluasi post-test untuk pelatihan <strong>${escapeHtml(trainingSelect.value)}</strong> telah berhasil dicatat ke sheet "Post Training".</div>
         `;
       }
 
@@ -4446,9 +4417,9 @@ async function submitPostTest(e) {
               waktuSubmit: new Date().toLocaleString('id-ID'),
               tipeAktivitas: 'Post Test',
               namaTraining: trainingSelect.value,
-              namaPeserta: namaInput.value.trim(),
-              divisi: divisiSelect.value,
-              kategori: 'Soft skill',
+              namaPeserta: '-',
+              divisi: trainingDivisi,
+              kategori: trainingData?.kategori || 'Soft skill',
               jumlahFile: 0,
               folderUrl: '',
               detailFile: '-',
@@ -4465,7 +4436,6 @@ async function submitPostTest(e) {
         console.warn('Gagal update cache lokal post-test:', eStore);
       }
 
-      namaInput.value = '';
       if (catatanInput) catatanInput.value = '';
     } else {
       throw new Error(data?.message || 'Gagal mencatat hasil post-test ke Google Sheets.');
@@ -6822,6 +6792,10 @@ document.addEventListener('click', (e) => {
 
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
+    const guideOverlay = document.getElementById('guideDrawerOverlay');
+    if (guideOverlay && (guideOverlay.classList.contains('active') || guideOverlay.style.display !== 'none')) {
+      closeGuideDrawer();
+    }
     const adminModal = document.getElementById('modalAdminPin');
     const wasPinActive = adminModal && adminModal.classList.contains('active');
     const approvalModal = document.getElementById('modalApprovalPin');
@@ -6835,6 +6809,70 @@ document.addEventListener('keydown', (e) => {
     }
   }
 });
+
+// ==========================================
+// Interactive Form Guide Drawer Helpers
+// ==========================================
+function openGuideDrawer(targetStep) {
+  const overlay = document.getElementById('guideDrawerOverlay');
+  if (!overlay) return;
+
+  // Smart Sync: deteksi langkah yang sedang dibuka di form wizard jika targetStep tidak diberikan
+  let stepToOpen = targetStep;
+  if (!stepToOpen) {
+    stepToOpen = (typeof currentStep !== 'undefined' && currentStep === 2) ? 'step2' : 'step1';
+  } else if (typeof stepToOpen === 'number') {
+    stepToOpen = (stepToOpen === 2) ? 'step2' : 'step1';
+  }
+
+  switchGuideTab(stepToOpen);
+
+  overlay.style.display = 'flex';
+  requestAnimationFrame(() => {
+    overlay.classList.add('active');
+  });
+  document.body.style.overflow = 'hidden';
+}
+
+function closeGuideDrawer() {
+  const overlay = document.getElementById('guideDrawerOverlay');
+  if (!overlay) return;
+
+  overlay.classList.remove('active');
+  document.body.style.overflow = '';
+  setTimeout(() => {
+    if (!overlay.classList.contains('active')) {
+      overlay.style.display = 'none';
+    }
+  }, 280);
+}
+
+function handleGuideDrawerOverlayClick(event) {
+  if (event.target && event.target.id === 'guideDrawerOverlay') {
+    closeGuideDrawer();
+  }
+}
+
+function switchGuideTab(tabKey) {
+  const btn1 = document.getElementById('guideTabBtn1');
+  const btn2 = document.getElementById('guideTabBtn2');
+  const btnFaq = document.getElementById('guideTabBtnFaq');
+
+  const panel1 = document.getElementById('guidePanelStep1');
+  const panel2 = document.getElementById('guidePanelStep2');
+  const panelFaq = document.getElementById('guidePanelFaq');
+
+  if (btn1) btn1.classList.toggle('active', tabKey === 'step1');
+  if (btn2) btn2.classList.toggle('active', tabKey === 'step2');
+  if (btnFaq) btnFaq.classList.toggle('active', tabKey === 'faq');
+
+  if (panel1) panel1.style.display = (tabKey === 'step1') ? 'block' : 'none';
+  if (panel2) panel2.style.display = (tabKey === 'step2') ? 'block' : 'none';
+  if (panelFaq) panelFaq.style.display = (tabKey === 'faq') ? 'block' : 'none';
+
+  const body = document.querySelector('.guide-drawer-body');
+  if (body) body.scrollTop = 0;
+}
 
 // ==========================================
 // Toast Notification System
@@ -11542,6 +11580,12 @@ window.refreshAttendanceHubData = refreshAttendanceHubData;
 window.handleMobParticipantChange = handleMobParticipantChange;
 window.submitMobileAttendance = submitMobileAttendance;
 window.openAttendanceFromCalendar = openAttendanceFromCalendar;
+
+// Window Exposures for Form Guide Drawer
+window.openGuideDrawer = openGuideDrawer;
+window.closeGuideDrawer = closeGuideDrawer;
+window.handleGuideDrawerOverlayClick = handleGuideDrawerOverlayClick;
+window.switchGuideTab = switchGuideTab;
 
 
 
