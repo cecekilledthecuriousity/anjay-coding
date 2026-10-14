@@ -790,8 +790,10 @@ function validateStep(step) {
     const nameVal = (document.getElementById('trainingName')?.value || '').trim();
     const leaderVal = (document.getElementById('leaderName')?.value || '').trim();
     const deptVal = (document.getElementById('deptName')?.value || '').trim();
+    const alasanVal = (document.getElementById('alasanPrioritas')?.value || '').trim();
+    const goalsVal = (document.getElementById('goals')?.value || '').trim();
 
-    if (!nameVal || !leaderVal || !deptVal) {
+    if (!nameVal || !leaderVal || !deptVal || !alasanVal || !goalsVal) {
       if (!nameVal) {
         showToast('Mohon lengkapi Nama Training / Topik Pelatihan.', 'error');
         document.getElementById('trainingName')?.focus();
@@ -801,6 +803,12 @@ function validateStep(step) {
       } else if (!deptVal) {
         showToast('Mohon pilih Departemen / Divisi pengaju.', 'error');
         document.getElementById('deptName')?.focus();
+      } else if (!alasanVal) {
+        showToast('Mohon isi Alasan Penentuan Prioritas pelatihan.', 'error');
+        document.getElementById('alasanPrioritas')?.focus();
+      } else if (!goalsVal) {
+        showToast('Mohon lengkapi Training Goals (Tujuan & Hasil yang diharapkan).', 'error');
+        document.getElementById('goals')?.focus();
       }
       return false;
     }
@@ -856,7 +864,25 @@ function validateStep(step) {
 // Chip Selection (Level & Method)
 // ==========================================
 function selectChip(type, value, cardEl) {
-  if (type === 'level') {
+  if (type === 'sasaran') {
+    document.querySelectorAll('#sasaranChipGrid .chip-card').forEach(c => c.classList.remove('selected'));
+    cardEl.classList.add('selected');
+    const input = document.getElementById('sasaranPengembangan');
+    if (input) input.value = value;
+    const hintText = document.getElementById('sasaranHintText');
+    if (hintText) {
+      if (value === 'Individu') {
+        hintText.textContent = 'Fokus pengembangan kompetensi 1 karyawan utama. Pada Langkah 2, cukup daftarkan 1 peserta.';
+      } else {
+        hintText.textContent = 'Pelatihan kolektif untuk tim/divisi. Pada Langkah 2, daftarkan seluruh peserta atau gunakan tombol Quick Paste dari Excel / Sheets.';
+      }
+    }
+  } else if (type === 'prioritas') {
+    document.querySelectorAll('#prioritasChipGrid .chip-card').forEach(c => c.classList.remove('selected'));
+    cardEl.classList.add('selected');
+    const input = document.getElementById('tingkatPrioritas');
+    if (input) input.value = value;
+  } else if (type === 'level') {
     document.querySelectorAll('#levelChipGrid .chip-card').forEach(c => c.classList.remove('selected'));
     cardEl.classList.add('selected');
     const input = document.getElementById('levelKemahiran');
@@ -1546,6 +1572,43 @@ function renderRoomAvailability(rooms) {
 // Automation Helpers: Auto-generated Training ID
 // ==========================================
 const DEPT_CODE_MAP = {
+  // 34 Divisi / Departemen Standar
+  'ARTIFICIAL INTELLIGENCE': 'AI',
+  'BUSINESS ANALYST': 'BA',
+  'CX - DATA MANAGEMENT': 'CXDM',
+  'CX - ONBOARDING': 'CXON',
+  'CX - RETENTION': 'CXRT',
+  'CX - SERVICE DEVELOPMENT': 'CXSD',
+  'FAT - ACCOUNTING': 'ACC',
+  'FAT - FINANCE': 'FIN',
+  'FAT - TAX': 'TAX',
+  'HRGA LEGAL - GA': 'GA',
+  'HRGA LEGAL - HR': 'HR',
+  'HRGA LEGAL - LEGAL': 'LEG',
+  'IT INFRASTRUCTURE': 'ITI',
+  'MARKETING - BRAND & CONTENT': 'MBC',
+  'MARKETING - DESIGN GRAPHIC': 'MDG',
+  'MARKETING - EVENT & COLLABORATION': 'MEC',
+  'MARKETING - GROWTH MARKETING': 'MGM',
+  'MARKETING - MULTIMEDIA': 'MMM',
+  'MOBILE DEVELOPER': 'MOB',
+  'PARTNER GROWTH': 'PG',
+  'PEC - AOL ONBOARDING': 'PECO',
+  'PEC - AOL SUPPORTING': 'PECS',
+  'PEC - APOS BLISS ONBOARDING': 'PECB',
+  'PRODUCT MANAGER': 'PM',
+  'QUALITY ASSURANCE AUTOMATION': 'QAA',
+  'QUALITY ASSURANCE MANUAL': 'QAM',
+  'SALES OPS, ENABLE, TELESALES - SALES ENABLEMENT': 'SEN',
+  'SALES OPS, ENABLE, TELESALES - SALES OPERATION': 'SOP',
+  'SALES OPS, ENABLE, TELESALES - TELESALES': 'TLS',
+  'UI/UX DESIGNER': 'UXD',
+  'WEB DEVELOPER': 'WEB',
+  'REGIONAL BUSINESS MANAGER': 'RBM',
+  'AREA BUSINESS MANAGER': 'ABM',
+  'BUSINESS ACQUISITION EXECUTIVE': 'BAE',
+
+  // Alias / Legacy Compatibility
   'HR': 'HR',
   'GA': 'GA',
   'LEGAL': 'LEG',
@@ -1559,13 +1622,9 @@ const DEPT_CODE_MAP = {
   'PEC': 'PEC',
   'CUSTOMER EXPERIENCE': 'CX',
   'QA': 'QA',
-  'WEB DEVELOPER': 'WEB',
   'INTEGRATION': 'INT',
-  'MOBILE DEVELOPER': 'MOB',
-  'UI/UX DESIGNER': 'UXD',
-  'AI': 'AI',
-  'BUSINESS ANALYST': 'BA',
-  'IT INFRASTRUCTURE': 'ITI'
+  'UI/UX DESIGN': 'UXD',
+  'AI': 'AI'
 };
 
 const CATEGORY_CODE_MAP = {
@@ -2598,26 +2657,40 @@ function calculateScheduleAndDuration() {
 }
 
 const DEPT_OPTIONS = [
-  'HR',
-  'GA',
-  'LEGAL',
-  'FINANCE',
-  'ACCOUNTING',
-  'TAX',
-  'MARKETING',
-  'SALES OPS',
-  'SALES ENABLEMENT',
-  'TELEMARKETING',
-  'PEC',
-  'CUSTOMER EXPERIENCE',
-  'QA',
-  'WEB DEVELOPER',
-  'INTEGRATION',
-  'MOBILE DEVELOPER',
-  'UI/UX DESIGNER',
-  'AI',
+  'ARTIFICIAL INTELLIGENCE',
   'BUSINESS ANALYST',
-  'IT INFRASTRUCTURE'
+  'CX - DATA MANAGEMENT',
+  'CX - ONBOARDING',
+  'CX - RETENTION',
+  'CX - SERVICE DEVELOPMENT',
+  'FAT - ACCOUNTING',
+  'FAT - FINANCE',
+  'FAT - TAX',
+  'HRGA LEGAL - GA',
+  'HRGA LEGAL - HR',
+  'HRGA LEGAL - LEGAL',
+  'IT INFRASTRUCTURE',
+  'MARKETING - BRAND & CONTENT',
+  'MARKETING - DESIGN GRAPHIC',
+  'MARKETING - EVENT & COLLABORATION',
+  'MARKETING - GROWTH MARKETING',
+  'MARKETING - MULTIMEDIA',
+  'MOBILE DEVELOPER',
+  'PARTNER GROWTH',
+  'PEC - AOL ONBOARDING',
+  'PEC - AOL SUPPORTING',
+  'PEC - APOS BLISS ONBOARDING',
+  'PRODUCT MANAGER',
+  'QUALITY ASSURANCE AUTOMATION',
+  'QUALITY ASSURANCE MANUAL',
+  'SALES OPS, ENABLE, TELESALES - SALES ENABLEMENT',
+  'SALES OPS, ENABLE, TELESALES - SALES OPERATION',
+  'SALES OPS, ENABLE, TELESALES - TELESALES',
+  'UI/UX DESIGNER',
+  'WEB DEVELOPER',
+  'REGIONAL BUSINESS MANAGER',
+  'AREA BUSINESS MANAGER',
+  'BUSINESS ACQUISITION EXECUTIVE'
 ];
 
 // ==========================================
@@ -2790,10 +2863,10 @@ function parseParticipantLine(line, fallbackDept = '') {
 function downloadPesertaTemplate() {
   const csvContent = "Nama Lengkap,Email,Departemen\n" +
     "Budi Santoso,budi@cpssoft.com,WEB DEVELOPER\n" +
-    "Siti Rahmawati,siti@cpssoft.com,QA\n" +
-    "Ahmad Fauzi,ahmad@cpssoft.com,FINANCE\n" +
-    "Dewi Lestari,dewi@cpssoft.com,MARKETING\n" +
-    "Rian Pratama,rian@cpssoft.com,CUSTOMER EXPERIENCE";
+    "Siti Rahmawati,siti@cpssoft.com,QUALITY ASSURANCE MANUAL\n" +
+    "Ahmad Fauzi,ahmad@cpssoft.com,FAT - FINANCE\n" +
+    "Dewi Lestari,dewi@cpssoft.com,MARKETING - BRAND & CONTENT\n" +
+    "Rian Pratama,rian@cpssoft.com,CX - ONBOARDING";
 
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
@@ -5348,6 +5421,32 @@ function populateReviewSummary() {
   setRev('revLeader', leaderDisplay);
   setRev('revDept', m['Departemen / divisi']);
   setRev('revCategory', `${m['Kategori training'] || '-'} (${m['Target level kemahiran'] || 'All Level'})`);
+  setRev('revAudience', m['Sasaran pengembangan'] || 'Individu');
+
+  const prioVal = m['Tingkat prioritas'] || 'Sedang';
+  let prioBadge = prioVal;
+  if (prioVal === 'Tinggi') {
+    prioBadge = '<span style="color:#DC2626;font-weight:700;">● Tinggi</span>';
+  } else if (prioVal === 'Sedang') {
+    prioBadge = '<span style="color:var(--accent-gold);font-weight:700;">● Sedang</span>';
+  } else if (prioVal === 'Rendah') {
+    prioBadge = '<span style="color:var(--moss);font-weight:700;">● Rendah</span>';
+  }
+  const revPrioEl = document.getElementById('revPriority');
+  if (revPrioEl) revPrioEl.innerHTML = prioBadge;
+
+  const prioReason = m['Alasan penentuan prioritas'] || m['Alasan prioritas'] || '';
+  const prioWrap = document.getElementById('revPriorityReasonWrapper');
+  const prioEl = document.getElementById('revPriorityReason');
+  if (prioWrap && prioEl) {
+    if (prioReason) {
+      prioEl.textContent = prioReason;
+      prioWrap.style.display = 'block';
+    } else {
+      prioWrap.style.display = 'none';
+    }
+  }
+
   setRev('revNeed', m['Kategori kebutuhan training'] || '-');
   setRev('revSchedule', m['Tanggal & jam pelaksanaan']);
 
@@ -5780,7 +5879,28 @@ function resetForm() {
     roomAvailabilityCache.clear();
   }
 
-  // 5. Reset Level Chips (Basic)
+  // 5. Reset Sasaran & Prioritas Chips
+  const sasaranChips = document.querySelectorAll('#sasaranChipGrid .chip-card');
+  sasaranChips.forEach((c, idx) => {
+    if (idx === 0) c.classList.add('selected');
+    else c.classList.remove('selected');
+  });
+  const sasaranInput = document.getElementById('sasaranPengembangan');
+  if (sasaranInput) sasaranInput.value = 'Individu';
+  const hintText = document.getElementById('sasaranHintText');
+  if (hintText) hintText.textContent = 'Fokus pengembangan kompetensi 1 karyawan utama. Pada Langkah 2, cukup daftarkan 1 peserta.';
+
+  const prioritasChips = document.querySelectorAll('#prioritasChipGrid .chip-card');
+  prioritasChips.forEach((c, idx) => {
+    if (idx === 1) c.classList.add('selected');
+    else c.classList.remove('selected');
+  });
+  const prioritasInput = document.getElementById('tingkatPrioritas');
+  if (prioritasInput) prioritasInput.value = 'Sedang';
+  const alasanInput = document.getElementById('alasanPrioritas');
+  if (alasanInput) alasanInput.value = '';
+
+  // 5b. Reset Level Chips (Basic)
   const levelChips = document.querySelectorAll('#levelChipGrid .chip-card');
   levelChips.forEach((c, idx) => {
     if (idx === 0) c.classList.add('selected');

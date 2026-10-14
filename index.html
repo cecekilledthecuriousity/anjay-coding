@@ -236,26 +236,40 @@
             <label>Departemen / Divisi <span style="color:var(--danger)">*</span></label>
             <select id="deptName" data-field="Departemen / divisi" onchange="handleDeptChange(this); updateTrainingId();" required>
               <option value="">Pilih departemen</option>
-              <option value="HR">HR</option>
-              <option value="GA">GA</option>
-              <option value="LEGAL">LEGAL</option>
-              <option value="FINANCE">FINANCE</option>
-              <option value="ACCOUNTING">ACCOUNTING</option>
-              <option value="TAX">TAX</option>
-              <option value="MARKETING">MARKETING</option>
-              <option value="SALES OPS">SALES OPS</option>
-              <option value="SALES ENABLEMENT">SALES ENABLEMENT</option>
-              <option value="TELEMARKETING">TELEMARKETING</option>
-              <option value="PEC">PEC</option>
-              <option value="CUSTOMER EXPERIENCE">CUSTOMER EXPERIENCE</option>
-              <option value="QA">QA</option>
-              <option value="WEB DEVELOPER">WEB DEVELOPER</option>
-              <option value="INTEGRATION">INTEGRATION</option>
-              <option value="MOBILE DEVELOPER">MOBILE DEVELOPER</option>
-              <option value="UI/UX DESIGNER">UI/UX DESIGNER</option>
-              <option value="AI">AI</option>
+              <option value="ARTIFICIAL INTELLIGENCE">ARTIFICIAL INTELLIGENCE</option>
               <option value="BUSINESS ANALYST">BUSINESS ANALYST</option>
+              <option value="CX - DATA MANAGEMENT">CX - DATA MANAGEMENT</option>
+              <option value="CX - ONBOARDING">CX - ONBOARDING</option>
+              <option value="CX - RETENTION">CX - RETENTION</option>
+              <option value="CX - SERVICE DEVELOPMENT">CX - SERVICE DEVELOPMENT</option>
+              <option value="FAT - ACCOUNTING">FAT - ACCOUNTING</option>
+              <option value="FAT - FINANCE">FAT - FINANCE</option>
+              <option value="FAT - TAX">FAT - TAX</option>
+              <option value="HRGA LEGAL - GA">HRGA LEGAL - GA</option>
+              <option value="HRGA LEGAL - HR">HRGA LEGAL - HR</option>
+              <option value="HRGA LEGAL - LEGAL">HRGA LEGAL - LEGAL</option>
               <option value="IT INFRASTRUCTURE">IT INFRASTRUCTURE</option>
+              <option value="MARKETING - BRAND &amp; CONTENT">MARKETING - BRAND &amp; CONTENT</option>
+              <option value="MARKETING - DESIGN GRAPHIC">MARKETING - DESIGN GRAPHIC</option>
+              <option value="MARKETING - EVENT &amp; COLLABORATION">MARKETING - EVENT &amp; COLLABORATION</option>
+              <option value="MARKETING - GROWTH MARKETING">MARKETING - GROWTH MARKETING</option>
+              <option value="MARKETING - MULTIMEDIA">MARKETING - MULTIMEDIA</option>
+              <option value="MOBILE DEVELOPER">MOBILE DEVELOPER</option>
+              <option value="PARTNER GROWTH">PARTNER GROWTH</option>
+              <option value="PEC - AOL ONBOARDING">PEC - AOL ONBOARDING</option>
+              <option value="PEC - AOL SUPPORTING">PEC - AOL SUPPORTING</option>
+              <option value="PEC - APOS BLISS ONBOARDING">PEC - APOS BLISS ONBOARDING</option>
+              <option value="PRODUCT MANAGER">PRODUCT MANAGER</option>
+              <option value="QUALITY ASSURANCE AUTOMATION">QUALITY ASSURANCE AUTOMATION</option>
+              <option value="QUALITY ASSURANCE MANUAL">QUALITY ASSURANCE MANUAL</option>
+              <option value="SALES OPS, ENABLE, TELESALES - SALES ENABLEMENT">SALES OPS, ENABLE, TELESALES - SALES ENABLEMENT</option>
+              <option value="SALES OPS, ENABLE, TELESALES - SALES OPERATION">SALES OPS, ENABLE, TELESALES - SALES OPERATION</option>
+              <option value="SALES OPS, ENABLE, TELESALES - TELESALES">SALES OPS, ENABLE, TELESALES - TELESALES</option>
+              <option value="UI/UX DESIGNER">UI/UX DESIGNER</option>
+              <option value="WEB DEVELOPER">WEB DEVELOPER</option>
+              <option value="REGIONAL BUSINESS MANAGER">REGIONAL BUSINESS MANAGER</option>
+              <option value="AREA BUSINESS MANAGER">AREA BUSINESS MANAGER</option>
+              <option value="BUSINESS ACQUISITION EXECUTIVE">BUSINESS ACQUISITION EXECUTIVE</option>
               <option value="custom">Lainnya (Ketik manual)...</option>
             </select>
             <input type="text" id="customDeptInput" placeholder="Ketik nama divisi..." style="display:none;margin-top:6px;" oninput="updateTrainingId()">
@@ -368,10 +382,52 @@
           <div class="card-icon-wrap">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
           </div>
-          <h2>Sasaran Pelatihan</h2>
-          <span class="card-sub">Tujuan dan target kompetensi</span>
+          <h2>Sasaran &amp; Prioritas Pelatihan</h2>
+          <span class="card-sub">Lingkup target peserta, urgensi kebutuhan, dan kompetensi</span>
         </div>
 
+        <!-- 1. Sasaran Pengembangan (Individu vs Departemen / Lintas Divisi) -->
+        <div class="field" style="margin-bottom:16px;">
+          <label style="display:flex;align-items:center;justify-content:space-between;width:100%;">
+            <span>Sasaran Pengembangan <span style="color:var(--danger)">*</span></span>
+            <span class="hint" style="color:var(--ink-soft);font-size:11.5px;">(Pilih salah satu)</span>
+          </label>
+          <div class="chip-grid" id="sasaranChipGrid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
+            <div class="chip-card selected" onclick="selectChip('sasaran', 'Individu', this)">
+              <div class="chip-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:2px;">
+                <span style="font-weight:600;font-size:13.5px;">Individu</span>
+                <span style="font-size:11.5px;color:var(--ink-soft);font-weight:400;">1 orang peserta spesifik</span>
+              </div>
+            </div>
+            <div class="chip-card" onclick="selectChip('sasaran', 'Departemen / Divisi & Lintas Divisi', this)">
+              <div class="chip-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="9" cy="7" r="4"></circle>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:2px;">
+                <span style="font-weight:600;font-size:13.5px;">Departemen / Divisi &amp; Lintas Divisi</span>
+                <span style="font-size:11.5px;color:var(--ink-soft);font-weight:400;">Kolektif tim / Cross-Functional</span>
+              </div>
+            </div>
+          </div>
+          <input type="hidden" id="sasaranPengembangan" data-field="Sasaran pengembangan" value="Individu">
+          <div id="sasaranHintNote" style="font-size:12px;color:var(--ink-soft);margin-top:6px;line-height:1.45;background:rgba(63,90,68,0.06);border:1px solid rgba(63,90,68,0.18);border-radius:8px;padding:7px 11px;display:flex;align-items:flex-start;gap:7px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--moss);flex-shrink:0;margin-top:2px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+            <span id="sasaranHintText">Fokus pengembangan kompetensi 1 karyawan utama. Pada Langkah 2, cukup daftarkan 1 peserta.</span>
+          </div>
+        </div>
+
+        <!-- 2. Target Level Kemahiran Peserta -->
         <div class="field" style="margin-bottom:16px;">
           <label>Target Level Kemahiran Peserta</label>
           <div class="chip-grid" id="levelChipGrid">
@@ -397,9 +453,56 @@
           <input type="hidden" id="levelKemahiran" data-field="Target level kemahiran" value="Basic">
         </div>
 
+        <!-- 3. Tingkat Prioritas & Alasan Penentuan Prioritas -->
+        <div class="field" style="margin-bottom:14px;">
+          <label style="display:flex;align-items:center;justify-content:space-between;width:100%;">
+            <span>Tingkat Prioritas <span style="color:var(--danger)">*</span></span>
+            <span class="hint" style="color:var(--ink-soft);font-size:11.5px;">(Urgensi peninjauan &amp; pelaksanaan)</span>
+          </label>
+          <div class="chip-grid" id="prioritasChipGrid" style="grid-template-columns: repeat(3, 1fr);">
+            <div class="chip-card chip-priority-high" onclick="selectChip('prioritas', 'Tinggi', this)">
+              <div class="chip-icon" style="color:#DC2626;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                </svg>
+              </div>
+              <span style="font-weight:600;">Tinggi</span>
+            </div>
+            <div class="chip-card chip-priority-medium selected" onclick="selectChip('prioritas', 'Sedang', this)">
+              <div class="chip-icon" style="color:var(--accent-gold);">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="8" x2="12" y2="12"></line>
+                </svg>
+              </div>
+              <span style="font-weight:600;">Sedang</span>
+            </div>
+            <div class="chip-card chip-priority-low" onclick="selectChip('prioritas', 'Rendah', this)">
+              <div class="chip-icon" style="color:var(--moss);">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+              </div>
+              <span style="font-weight:600;">Rendah</span>
+            </div>
+          </div>
+          <input type="hidden" id="tingkatPrioritas" data-field="Tingkat prioritas" value="Sedang">
+        </div>
+
+        <div class="field" style="margin-bottom:16px;">
+          <label>
+            <span>Alasan Penentuan Prioritas <span style="color:var(--danger)">*</span></span>
+            <span class="hint">(Penjelasan singkat latar belakang urgensi)</span>
+          </label>
+          <input type="text" placeholder="Misal: Dibutuhkan segera untuk kesiapan migrasi sistem Q4..." id="alasanPrioritas" data-field="Alasan penentuan prioritas" required>
+        </div>
+
         <div class="field">
-          <label>Training Goals <span class="hint">(Tujuan &amp; hasil yang diharapkan)</span></label>
-          <textarea placeholder="Jelaskan kebutuhan yang ingin dijawab dan hasil yang diharapkan setelah training." id="goals" data-field="Training goals" rows="3"></textarea>
+          <label>
+            <span>Training Goals <span style="color:var(--danger)">*</span></span>
+            <span class="hint">(Tujuan &amp; hasil yang diharapkan)</span>
+          </label>
+          <textarea placeholder="Jelaskan kebutuhan yang ingin dijawab dan hasil yang diharapkan setelah training." id="goals" data-field="Training goals" rows="3" required></textarea>
         </div>
       </section>
 
@@ -1079,6 +1182,7 @@
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
             Panduan Pengisian Peserta Pelatihan
           </div>
+          <div>• <strong>Kesesuaian Sasaran:</strong> Jika di Langkah 1 memilih <em>"Individu"</em>, daftarkan 1 peserta utama. Jika memilih <em>"Departemen / Divisi &amp; Lintas Divisi"</em>, Anda dapat mendaftarkan seluruh anggota tim secara kolektif menggunakan tombol <strong>Quick Paste dari Excel / Sheets</strong> di bawah.</div>
           <div>• Masukkan nama karyawan yang wajib hadir sebagai peserta pelatihan (Trainer / Pengajar tidak perlu dimasukkan di tabel ini).</div>
           <div>• Pastikan email aktif &amp; benar untuk pengiriman undangan <strong>Google Calendar</strong>, link absensi QR, dan reminder H-1 otomatis.</div>
         </div>
