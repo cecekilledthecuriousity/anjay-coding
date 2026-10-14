@@ -1,0 +1,529 @@
+      <section class="tds-page" id="page-guide-center" style="display:none;">
+        <!-- Header Halaman Guide Center -->
+        <header class="doc-header">
+          <div class="doc-header-main">
+            <div class="header-icon-box">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+              </svg>
+            </div>
+            <div class="doc-header-text">
+              <p class="kicker">System Documentation &amp; Walkthrough</p>
+              <h1 class="voice">Guide Center</h1>
+              <span class="helper-note">Panduan komprehensif langkah-demi-langkah mulai dari pengajuan, persetujuan, pelaksanaan, hingga evaluasi pasca-training TDS.</span>
+            </div>
+          </div>
+        </header>
+
+        <!-- Navigasi Tab Guide Center -->
+        <div class="gc-tab-nav" role="tablist" aria-label="Navigasi Panduan TDS">
+          <button type="button" class="gc-tab-btn active" id="gcTabBtnOverview" onclick="switchGuideCenterTab('overview')" role="tab" aria-selected="true">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg>
+            <span>Alur Lengkap (Overview)</span>
+          </button>
+          <button type="button" class="gc-tab-btn" id="gcTabBtnRequest" onclick="switchGuideCenterTab('request')" role="tab" aria-selected="false">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+            <span>Pengajuan Training</span>
+          </button>
+          <button type="button" class="gc-tab-btn" id="gcTabBtnAbsensi" onclick="switchGuideCenterTab('absensi')" role="tab" aria-selected="false">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+            <span>Live Absensi</span>
+          </button>
+          <button type="button" class="gc-tab-btn" id="gcTabBtnPost" onclick="switchGuideCenterTab('post')" role="tab" aria-selected="false">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+            <span>Pasca Pelatihan</span>
+          </button>
+          <button type="button" class="gc-tab-btn" id="gcTabBtnPassport" onclick="switchGuideCenterTab('passport')" role="tab" aria-selected="false">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"></rect><circle cx="12" cy="10" r="3"></circle><path d="M7 17a5 5 0 0 1 10 0"></path></svg>
+            <span>Learning Passport</span>
+          </button>
+        </div>
+
+        <!-- ================= TAB 1: ALUR LENGKAP (OVERVIEW) ================= -->
+        <div class="gc-panel active" id="gcPanelOverview">
+          <!-- Banner Pengenalan Siklus TDS -->
+          <div class="gc-hero-card">
+            <div class="gc-hero-icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>
+            </div>
+            <div class="gc-hero-content">
+              <h3>Siklus End-to-End Pelatihan Terintegrasi TDS</h3>
+              <p>
+                Platform Training &amp; Development System dirancang untuk mengotomatisasi seluruh perjalanan peningkatan kompetensi karyawan: mulai dari perumusan kebutuhan training, booking sarana, sinkronisasi kalender kerja, presensi berbasis QR code, hingga pencatatan jam belajar di Learning Passport.
+              </p>
+            </div>
+          </div>
+
+          <!-- Roadmap 5 Tahapan Utama -->
+          <div class="form-card" style="margin-bottom:24px;">
+            <div class="card-head">
+              <div class="card-icon-wrap">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+              </div>
+              <h2>5 Fase Perjalanan Pelatihan</h2>
+              <span class="card-sub">Pahami alur proses dari usulan awal hingga apresiasi pencapaian belajar</span>
+            </div>
+
+            <div class="gc-roadmap-grid">
+              <!-- Fase 1 -->
+              <div class="gc-roadmap-card">
+                <div class="gc-roadmap-badge">Fase 01</div>
+                <h4>Pengajuan (Request)</h4>
+                <p>Leader merumuskan sasaran, memilih jadwal, mendaftarkan peserta (Quick Paste Excel), dan menyusun estimasi biaya.</p>
+                <div class="gc-roadmap-actor">Pelaku: Leader / HR Pengaju</div>
+              </div>
+
+              <!-- Fase 2 -->
+              <div class="gc-roadmap-card">
+                <div class="gc-roadmap-badge">Fase 02</div>
+                <h4>Persetujuan (Approval)</h4>
+                <p>Otorisasi bertingkat oleh Supervisor &amp; HR Manager. Sistem mengirim email verifikasi dan reminder otomatis H+3 jika pending.</p>
+                <div class="gc-roadmap-actor">Pelaku: Approver &amp; HRD</div>
+              </div>
+
+              <!-- Fase 3 -->
+              <div class="gc-roadmap-card">
+                <div class="gc-roadmap-badge">Fase 03</div>
+                <h4>Pelaksanaan &amp; Presensi</h4>
+                <p>Peserta menerima auto-invite Google Calendar &amp; reminder H-1. Presensi real-time via QR Code di kelas atau opsi walk-in.</p>
+                <div class="gc-roadmap-actor">Pelaku: Trainer &amp; Peserta</div>
+              </div>
+
+              <!-- Fase 4 -->
+              <div class="gc-roadmap-card">
+                <div class="gc-roadmap-badge">Fase 04</div>
+                <h4>Evaluasi &amp; Evidence</h4>
+                <p>Pengisian formulir evaluasi instruktur, evaluasi dampak kinerja oleh atasan, unggah sertifikat, dan sharing knowledge tim.</p>
+                <div class="gc-roadmap-actor">Pelaku: Peserta &amp; Atasan</div>
+              </div>
+
+              <!-- Fase 5 -->
+              <div class="gc-roadmap-card">
+                <div class="gc-roadmap-badge">Fase 05</div>
+                <h4>Learning Passport</h4>
+                <p>Data jam belajar otomatis terakumulasi ke profil karyawan, penerbitan cap kelulusan resmi, dan update Skill Matrix organisasi.</p>
+                <div class="gc-roadmap-actor">Pelaku: Karyawan &amp; Organisasi</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Peran & Tanggung Jawab (Quick Role Guide) -->
+          <div class="gc-roles-grid">
+            <div class="gc-role-box">
+              <div class="gc-role-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+              </div>
+              <h4>Untuk Pengaju (Leader / Divisi)</h4>
+              <ul>
+                <li>Identifikasi kebutuhan training tim (Hard Skill / Soft Skill).</li>
+                <li>Ajukan form minimal 7 hari kerja sebelum jadwal pelaksanaan.</li>
+                <li>Pastikan email peserta valid agar auto-invite kalender masuk.</li>
+              </ul>
+              <button type="button" class="btn-primary" onclick="goToPage('ajukan')" style="width:100%;justify-content:center;margin-top:14px;font-size:12.5px;">
+                <span>Buka Formulir Pengajuan</span>
+              </button>
+            </div>
+
+            <div class="gc-role-box">
+              <div class="gc-role-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+              </div>
+              <h4>Untuk Karyawan Peserta</h4>
+              <ul>
+                <li>Cek jadwal masuk di Google Calendar &amp; email pribadi kantor.</li>
+                <li>Pindai QR Code saat tiba di kelas pelatihan untuk presensi.</li>
+                <li>Unggah bukti sertifikat dan cek perolehan jam belajar di paspor.</li>
+              </ul>
+              <button type="button" class="btn-secondary" onclick="goToPage('learning-passport')" style="width:100%;justify-content:center;margin-top:14px;font-size:12.5px;">
+                <span>Lihat Learning Passport</span>
+              </button>
+            </div>
+
+            <div class="gc-role-box">
+              <div class="gc-role-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+              </div>
+              <h4>Untuk Atasan &amp; Tim HRD</h4>
+              <ul>
+                <li>Verifikasi relevansi materi dan kesesuaian anggaran pengajuan.</li>
+                <li>Isi evaluasi dampak penerapan kerja (Kirkpatrick L3) pasca-sesi.</li>
+                <li>Monitor akumulasi jam belajar dan progres pelatihan per karyawan.</li>
+              </ul>
+              <button type="button" class="btn-secondary" onclick="goToPage('post-training')" style="width:100%;justify-content:center;margin-top:14px;font-size:12.5px;">
+                <span>Buka Pasca Pelatihan</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ================= TAB 2: PENGAJUAN TRAINING ================= -->
+        <div class="gc-panel" id="gcPanelRequest" style="display:none;">
+          <div class="gc-section-header">
+            <h3>Panduan Langkah Pengisian Formulir Pengajuan (Wizard 4 Langkah)</h3>
+            <p>Ikuti panduan berikut agar pengajuan training Anda lengkap, jelas, dan cepat disetujui oleh atasan &amp; manajemen.</p>
+          </div>
+
+          <div class="gc-steps-container">
+            <!-- Langkah 1 -->
+            <div class="gc-step-card">
+              <div class="gc-step-header">
+                <span class="gc-step-number">01</span>
+                <div>
+                  <h4>Langkah 1: Profil &amp; Sasaran Pelatihan</h4>
+                  <span class="gc-step-tag">Identitas &amp; Target Kompetensi</span>
+                </div>
+              </div>
+              <div class="gc-step-body">
+                <div class="gc-step-item">
+                  <strong>Nama Pelatihan:</strong> Tulis judul yang spesifik, padat, dan mencerminkan substansi materi.
+                  <div class="gc-example-box good">Contoh Baik: "Workshop Golang High-Concurrency &amp; Clean Architecture"</div>
+                  <div class="gc-example-box bad">Kurang Spesifik: "Belajar Backend"</div>
+                </div>
+                <div class="gc-step-item">
+                  <strong>Leader Pengaju:</strong> Tulis nama lengkap resmi penanggung jawab pengajuan (bukan nama panggilan) untuk validasi dokumen otorisasi.
+                </div>
+                <div class="gc-step-item">
+                  <strong>Target Level Kemahiran:</strong> Pilih chip tingkat kedalaman materi:
+                  <ul class="gc-sublist">
+                    <li><em>Basic (Fondasi):</em> Pengenalan konsep dasar bagi pemula.</li>
+                    <li><em>Intermediate (Penerapan):</em> Pendalaman studi kasus kerja sehari-hari.</li>
+                    <li><em>Advanced (Spesialisasi):</em> Optimasi tingkat tinggi dan arsitektur kompleks.</li>
+                  </ul>
+                </div>
+                <div class="gc-step-item">
+                  <strong>Tujuan (Purpose) &amp; Sasaran (Goals):</strong> Jelaskan masalah bisnis/pekerjaan apa yang ingin diatasi dan indikator kemampuan yang akan dikuasai tim setelah lulus.
+                </div>
+              </div>
+            </div>
+
+            <!-- Langkah 2 -->
+            <div class="gc-step-card">
+              <div class="gc-step-header">
+                <span class="gc-step-number">02</span>
+                <div>
+                  <h4>Langkah 2: Pelaksanaan &amp; Peserta</h4>
+                  <span class="gc-step-tag">Logistik, Ruangan &amp; Data Peserta</span>
+                </div>
+              </div>
+              <div class="gc-step-body">
+                <div class="gc-step-item">
+                  <strong>Metode Pelaksanaan:</strong>
+                  <ul class="gc-sublist">
+                    <li><em>Onsite:</em> Tatap muka fisik. Pilih ruang training internal (Saturnus, Neptunus, Mars, Merkurius) yang otomatis diperiksa jadwal bentroknya.</li>
+                    <li><em>Online:</em> Pilih platform (Google Meet / Zoom) dan cantumkan tautan meeting aktif.</li>
+                    <li><em>Hybrid:</em> Menggabungkan kehadiran di ruangan fisik dan akses link meeting.</li>
+                  </ul>
+                </div>
+                <div class="gc-step-item">
+                  <strong>Fitur Quick Paste dari Excel (Sangat Praktis):</strong>
+                  Anda tidak perlu mengetik nama peserta satu per satu. Cukup copy tabel dari spreadsheet (Excel/Google Sheets) dengan format 3 kolom:
+                  <div class="gc-format-box"><code>Nama Peserta [TAB] Email Peserta [TAB] Departemen / Divisi</code></div>
+                  Kemudian klik tombol <strong>"Quick Paste dari Excel"</strong> dan paste teks tersebut. Sistem akan memetakan dan memvalidasi alamat email secara instan.
+                </div>
+                <div class="gc-step-item">
+                  <strong>Tabel Modul &amp; Durasi Otomatis:</strong> Setiap baris sesi modul yang diisi jam mulai dan jam selesainya akan dihitung akumulasi total jam belajarnya secara otomatis.
+                </div>
+              </div>
+            </div>
+
+            <!-- Langkah 3 -->
+            <div class="gc-step-card">
+              <div class="gc-step-header">
+                <span class="gc-step-number">03</span>
+                <div>
+                  <h4>Langkah 3: Biaya &amp; Evaluasi</h4>
+                  <span class="gc-step-tag">Rincian Anggaran &amp; Waktu Evaluasi</span>
+                </div>
+              </div>
+              <div class="gc-step-body">
+                <div class="gc-step-item">
+                  <strong>Breakdown Anggaran:</strong> Masukkan estimasi biaya (Fee Trainer, Konsumsi, Materi, Venue) dengan format angka (sistem otomatis memformat ke mata uang Rupiah).
+                </div>
+                <div class="gc-step-item">
+                  <strong>Waktu Evaluasi:</strong>
+                  <ul class="gc-sublist">
+                    <li><em>Langsung Selesai Pelatihan (Hari H):</em> Digunakan untuk evaluasi reaksi, penyampaian trainer, dan post-test pemahaman materi.</li>
+                    <li><em>H+7 Setelah Pelatihan:</em> Digunakan untuk evaluasi penerapan awal hasil keterampilan di pekerjaan oleh atasan langsung.</li>
+                  </ul>
+                </div>
+                <div class="gc-step-item">
+                  <strong>Komitmen Knowledge Sharing:</strong> Aktifkan sakelar komitmen sharing jika peserta wajib mengadakan sesi sharing ke rekan tim internal pasca-training.
+                </div>
+              </div>
+            </div>
+
+            <!-- Langkah 4 -->
+            <div class="gc-step-card">
+              <div class="gc-step-header">
+                <span class="gc-step-number">04</span>
+                <div>
+                  <h4>Langkah 4: Review &amp; Otorisasi</h4>
+                  <span class="gc-step-tag">Verifikasi Ringkasan &amp; Submit</span>
+                </div>
+              </div>
+              <div class="gc-step-body">
+                <div class="gc-step-item">
+                  <strong>Executive Summary Card:</strong> Tinjau kembali seluruh data yang telah diinput pada kartu ringkasan eksekutif sebelum diajukan.
+                </div>
+                <div class="gc-step-item">
+                  <strong>Approval Hierarchy:</strong> Tentukan approver (Direct Supervisor &amp; HR Manager). Setelah tombol submit diklik:
+                  <ul class="gc-sublist">
+                    <li>Data otomatis tercatat di Google Sheets master.</li>
+                    <li>Undangan kalender Google Calendar terkirim ke seluruh email peserta.</li>
+                    <li>Email konfirmasi registrasi masuk ke inbox masing-masing peserta.</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="gc-cta-wrap">
+            <button type="button" class="btn-primary" onclick="goToPage('ajukan')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
+              <span>Mulai Buat Pengajuan Training Baru</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- ================= TAB 3: LIVE ABSENSI ================= -->
+        <div class="gc-panel" id="gcPanelAbsensi" style="display:none;">
+          <div class="gc-section-header">
+            <h3>Panduan Penggunaan Live Absensi (Hari-H Pelatihan)</h3>
+            <p>Fitur presensi digital interaktif untuk mencatat kehadiran peserta secara real-time dan transparan.</p>
+          </div>
+
+          <div class="gc-steps-container">
+            <div class="gc-step-card">
+              <div class="gc-step-header">
+                <span class="gc-step-number">01</span>
+                <div>
+                  <h4>Untuk Instruktur / Panitia (Display Mode)</h4>
+                  <span class="gc-step-tag">Buka di Layar Proyektor / Laptop Panitia</span>
+                </div>
+              </div>
+              <div class="gc-step-body">
+                <ol class="gc-numbered-list">
+                  <li>Buka menu <strong>Live Absensi</strong> di sidebar TDS.</li>
+                  <li>Pilih judul pelatihan yang sedang berlangsung dari dropdown daftar pelatihan aktif.</li>
+                  <li>Tampilkan layar ke proyektor kelas atau bagikan tampilan pada sesi webinar online.</li>
+                  <li>Layar akan menampilkan <strong>QR Code Presensi Unik</strong> serta live counter jumlah peserta yang sudah check-in.</li>
+                </ol>
+              </div>
+            </div>
+
+            <div class="gc-step-card">
+              <div class="gc-step-header">
+                <span class="gc-step-number">02</span>
+                <div>
+                  <h4>Untuk Peserta (Self Check-in Mode)</h4>
+                  <span class="gc-step-tag">Melalui Smartphone Masing-Masing</span>
+                </div>
+              </div>
+              <div class="gc-step-body">
+                <ol class="gc-numbered-list">
+                  <li>Pindai (scan) QR Code yang tampil di layar proyektor menggunakan kamera HP.</li>
+                  <li>Tautan akan langsung membuka formulir presensi dengan nama pelatihan yang sesuai.</li>
+                  <li>Pilih nama Anda dari daftar peserta terdaftar, lalu klik <strong>"Konfirmasi Kehadiran"</strong>.</li>
+                  <li>Status kehadiran Anda akan langsung terupdate detik itu juga di layar proyektor dan spreadsheet.</li>
+                </ol>
+              </div>
+            </div>
+
+            <div class="gc-step-card">
+              <div class="gc-step-header">
+                <span class="gc-step-number">03</span>
+                <div>
+                  <h4>Penanganan Peserta Pengganti / Walk-In</h4>
+                  <span class="gc-step-tag">Fleksibilitas Peserta Dadakan</span>
+                </div>
+              </div>
+              <div class="gc-step-body">
+                <p>
+                  Jika ada karyawan yang menggantikan rekan satu timnya atau didelegasikan mendadak:
+                </p>
+                <div class="gc-example-box good">
+                  Peserta cukup memilih opsi <strong>"Nama saya belum ada di daftar (Peserta Baru / Walk-in)"</strong>, lalu mengetikkan nama lengkap, email kantor, dan divisinya. Sistem akan otomatis mendaftarkannya sebagai peserta resmi dan mencatat kehadirannya.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="gc-cta-wrap">
+            <button type="button" class="btn-primary" onclick="goToPage('absensi')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+              <span>Buka Menu Live Absensi</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- ================= TAB 4: PASCA PELATIHAN ================= -->
+        <div class="gc-panel" id="gcPanelPost" style="display:none;">
+          <div class="gc-section-header">
+            <h3>Panduan Pasca Pelatihan (Post-Training Hub)</h3>
+            <p>Memastikan investasi pembelajaran memberikan dampak nyata bagi kinerja individu dan tim melalui evaluasi, bukti sertifikasi, serta knowledge sharing.</p>
+          </div>
+
+          <div class="gc-steps-container">
+            <!-- 1. Evaluasi Trainee -->
+            <div class="gc-step-card">
+              <div class="gc-step-header">
+                <span class="gc-step-number">01</span>
+                <div>
+                  <h4>Evaluasi Trainee (oleh Atasan Langsung)</h4>
+                  <span class="gc-step-tag">Penilaian Implementasi Kinerja (Kirkpatrick Level 3)</span>
+                </div>
+              </div>
+              <div class="gc-step-body">
+                <p>
+                  Atasan langsung mengisi formulir evaluasi ini (biasanya H+7 setelah training) untuk menilai:
+                </p>
+                <ul class="gc-sublist">
+                  <li>Sejauh mana keterampilan baru diterapkan dalam pekerjaan sehari-hari.</li>
+                  <li>Peningkatan kualitas kerja, kecepatan tugas, atau penyelesaian kendala kerja.</li>
+                  <li>Rekomendasi tindak lanjut pengembangan kompetensi berikutnya.</li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- 2. Evaluasi Trainer -->
+            <div class="gc-step-card">
+              <div class="gc-step-header">
+                <span class="gc-step-number">02</span>
+                <div>
+                  <h4>Evaluasi Trainer &amp; Materi (oleh Peserta)</h4>
+                  <span class="gc-step-tag">Umpan Balik Kualitas Sesi (Kirkpatrick Level 1 &amp; 2)</span>
+                </div>
+              </div>
+              <div class="gc-step-body">
+                <p>
+                  Peserta memberikan ulasan jujur mengenai:
+                </p>
+                <ul class="gc-sublist">
+                  <li>Kejelasan instruktur dalam menyampaikan materi &amp; studi kasus.</li>
+                  <li>Relevansi silabus terhadap tantangan pekerjaan riil.</li>
+                  <li>Kelayakan fasilitas ruangan, konsumsi, atau konektivitas virtual.</li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- 3. Upload Evidence -->
+            <div class="gc-step-card">
+              <div class="gc-step-header">
+                <span class="gc-step-number">03</span>
+                <div>
+                  <h4>Unggah Bukti Pelatihan (Evidence Upload)</h4>
+                  <span class="gc-step-tag">Verifikasi Portofolio Karyawan</span>
+                </div>
+              </div>
+              <div class="gc-step-body">
+                <p>
+                  Peserta wajib mengunggah salah satu atau beberapa bukti berikut:
+                </p>
+                <ul class="gc-sublist">
+                  <li><strong>Sertifikat Resmi:</strong> Format PDF atau file gambar hasil kelulusan.</li>
+                  <li><strong>Foto Dokumentasi:</strong> Dokumentasi saat mengikuti pelatihan onsite/online.</li>
+                  <li><strong>Slide / Catatan Materi:</strong> Ringkasan materi yang dipelajari.</li>
+                </ul>
+                <div class="gc-format-box">Batas ukuran file: Maksimal 10MB per berkas (JPG, PNG, PDF).</div>
+              </div>
+            </div>
+
+            <!-- 4. Knowledge Sharing -->
+            <div class="gc-step-card">
+              <div class="gc-step-header">
+                <span class="gc-step-number">04</span>
+                <div>
+                  <h4>Sesi Knowledge Sharing Internal</h4>
+                  <span class="gc-step-tag">Transfer Pengetahuan ke Rekan Sejawat</span>
+                </div>
+              </div>
+              <div class="gc-step-body">
+                <p>
+                  Karyawan yang telah mengikuti training mengadakan sesi presentasi mini (30-60 menit) kepada rekan satu tim untuk menyebarkan wawasan baru sehingga seluruh divisi turut merasakan manfaat pelatihan.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="gc-cta-wrap">
+            <button type="button" class="btn-primary" onclick="goToPage('post-training')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+              <span>Buka Halaman Pasca Pelatihan</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- ================= TAB 5: LEARNING PASSPORT ================= -->
+        <div class="gc-panel" id="gcPanelPassport" style="display:none;">
+          <div class="gc-section-header">
+            <h3>Panduan Learning Passport (Transkrip Belajar Digital)</h3>
+            <p>Portofolio rekam jejak personal setiap karyawan yang mencatat jam belajar resmi dan cap rekognisi kompetensi terverifikasi.</p>
+          </div>
+
+          <div class="gc-steps-container">
+            <div class="gc-step-card">
+              <div class="gc-step-header">
+                <span class="gc-step-number">01</span>
+                <div>
+                  <h4>Cara Membuka &amp; Mencari Paspor</h4>
+                  <span class="gc-step-tag">Pencarian Fleksibel</span>
+                </div>
+              </div>
+              <div class="gc-step-body">
+                <ol class="gc-numbered-list">
+                  <li>Buka menu <strong>Learning Passport</strong> di sidebar.</li>
+                  <li>Ketik nama lengkap atau alamat email kantor Anda pada bilah pencarian.</li>
+                  <li>Tekan <strong>"Cari Paspor"</strong> atau Enter.</li>
+                  <li>Sistem akan menampilkan transkrip lengkap, avatar profil, akumulasi jam belajar, dan progres pengisian paspor pelatihan.</li>
+                </ol>
+              </div>
+            </div>
+
+            <div class="gc-step-card">
+              <div class="gc-step-header">
+                <span class="gc-step-number">02</span>
+                <div>
+                  <h4>Progres Jam Belajar</h4>
+                  <span class="gc-step-tag">Pencatatan Jam Pembelajaran</span>
+                </div>
+              </div>
+              <div class="gc-step-body">
+                <p>
+                  Jam pelatihan yang telah diselesaikan akan tercatat otomatis. Progress bar di Learning Passport akan terisi seiring penyelesaian program pelatihan.
+                </p>
+              </div>
+            </div>
+
+            <div class="gc-step-card">
+              <div class="gc-step-header">
+                <span class="gc-step-number">03</span>
+                <div>
+                  <h4>Jejak Perjalanan Belajar</h4>
+                  <span class="gc-step-tag">Stempel Verifikasi Pelatihan</span>
+                </div>
+              </div>
+              <div class="gc-step-body">
+                <p>
+                  Setiap pelatihan yang telah diselesaikan akan tercatat sebagai jejak resmi dengan stempel kelulusan dan durasi jam belajar, yang terdiri dari 5 tingkatan rekognisi:
+                </p>
+                <ul class="gc-sublist">
+                  <li><strong>Completed (Moss Green):</strong> Tanda kelulusan program pelatihan reguler.</li>
+                  <li><strong>Verified (Blue Ink):</strong> Program pelatihan dengan kurikulum terverifikasi resmi.</li>
+                  <li><strong>Hours Record (Classic Gold):</strong> Pengakuan pemenuhan akumulasi jam belajar intensif.</li>
+                  <li><strong>Achievement (Royal Purple):</strong> Pencapaian kompetensi tingkat lanjut (Advanced).</li>
+                  <li><strong>Mastery (Deep Ink):</strong> Program penguasaan keahlian strategis organisasi.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div class="gc-cta-wrap">
+            <button type="button" class="btn-primary" onclick="goToPage('learning-passport')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"></rect><circle cx="12" cy="10" r="3"></circle><path d="M7 17a5 5 0 0 1 10 0"></path></svg>
+              <span>Buka Learning Passport Saya</span>
+            </button>
+          </div>
+        </div>
+
+      </section>

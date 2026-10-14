@@ -7,14 +7,14 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=20261005_v3">
+  <link rel="stylesheet" href="css/style.css?v=20261013_v2">
   <link rel="icon" type="image/x-icon" href="favicon/favicon.ico">
   <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16.png">
   <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png">
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.15/locales/id.global.min.js"></script>
-  <script src="js/app.js?v=20261005_v3" defer></script>
+  <script src="js/app.js?v=20261013_v2" defer></script>
 </head>
 <body>
 
@@ -43,6 +43,14 @@
       <button type="button" class="tds-nav-item active" data-page="ajukan" data-tooltip="Training Request" title="Training Request" onclick="goToPage('ajukan')">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
         <span>Training Request</span>
+      </button>
+
+      <button type="button" class="tds-nav-item" data-page="guide-center" data-tooltip="Guide Center" title="Guide Center" onclick="goToPage('guide-center')">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+          <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+        </svg>
+        <span>Guide Center</span>
       </button>
 
       <!-- Menu Baru: Live Absensi Pelatihan -->
@@ -120,21 +128,23 @@
       <!-- ================= PAGE: AJUKAN TRAINING (#page-ajukan) ================= -->
             <section class="tds-page active" id="page-ajukan">
         <!-- Main Top Header -->
-        <header class="doc-header" style="margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
-          <div style="display:flex;align-items:center;gap:14px;">
-            <div class="header-icon-box" style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg, #6E62F0, #372FB0);display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 14px rgba(55, 47, 176, 0.25);">
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
-                <path d="M2 17l10 5 10-5"></path>
-                <path d="M2 12l10 5 10-5"></path>
+        <header class="doc-header">
+          <div class="doc-header-main">
+            <div class="header-icon-box">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="12" y1="18" x2="12" y2="12"></line>
+                <line x1="9" y1="15" x2="15" y2="15"></line>
               </svg>
             </div>
-            <div>
+            <div class="doc-header-text">
               <p class="kicker">Employee Development Program</p>
               <h1 class="voice">Request Training &amp; Development</h1>
+              <span class="helper-note">Rencanakan program pelatihan internal dengan alur terpadu dan persetujuan bertingkat.</span>
             </div>
           </div>
-          <div class="doc-header-actions" style="display:flex;align-items:center;gap:8px;">
+          <div class="doc-header-actions">
             <button type="button" class="btn-guide-trigger" onclick="openGuideDrawer()" title="Buka Buku Saku &amp; Panduan Pengisian">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
@@ -516,7 +526,7 @@
               </div>
               <div class="schedule-detail-body">
                 <div class="schedule-detail-title">Karakteristik Pelatihan 1 Hari</div>
-                <div class="schedule-detail-desc">Pelatihan rampung dalam <strong>1 hari pertemuan</strong> (contoh: seminar, workshop kilat, atau evaluasi). Format sesi dapat berupa 1 sesi penuh atau dibagi pagi dan siang.</div>
+                <div class="schedule-detail-desc">Pelatihan rampung dalam <strong>1 hari pertemuan</strong>. Format sesi dapat berupa 1 sesi penuh atau dibagi pagi dan siang.</div>
               </div>
             </div>
 
@@ -1063,27 +1073,32 @@
           <span class="card-sub" id="participantCount">0 peserta</span>
         </div>
 
-        <!-- 2 Opsi Pengisian Peserta: Manual vs Impor Spreadsheet -->
-        <div class="participant-methods-banner" style="background:#FAFBFD;border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
-          <div style="display:flex;align-items:center;gap:10px;">
-            <div style="width:34px;height:34px;border-radius:8px;background:rgba(0,23,143,0.08);color:#00178F;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-            </div>
-            <div>
-              <div style="font-size:12.5px;font-weight:700;color:var(--ink);">Metode Pengisian Peserta:</div>
-              <div style="font-size:11.5px;color:var(--ink-soft);">Input manual di tabel bawah untuk 1-3 orang, atau gunakan template spreadsheet untuk banyak peserta.</div>
-            </div>
+        <!-- Panduan Pengisian & Tujuan Email Peserta -->
+        <div style="background:var(--sand-panel);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:12px;color:var(--ink-soft);line-height:1.5;">
+          <div style="font-weight:600;color:var(--ink);margin-bottom:3px;display:flex;align-items:center;gap:6px;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+            Panduan Pengisian Peserta Pelatihan
           </div>
-          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-            <button type="button" class="btn-table-action" onclick="downloadPesertaTemplate()" style="padding:6px 12px;font-size:12px;display:inline-flex;align-items:center;gap:6px;" title="Unduh template Excel / CSV resmi">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-              <span>Unduh Template</span>
+          <div>• Masukkan nama karyawan yang wajib hadir sebagai peserta pelatihan (Trainer / Pengajar tidak perlu dimasukkan di tabel ini).</div>
+          <div>• Pastikan email aktif &amp; benar untuk pengiriman undangan <strong>Google Calendar</strong>, link absensi QR, dan reminder H-1 otomatis.</div>
+        </div>
+
+        <!-- Toolbar Aksi Peserta -->
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px;">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button type="button" class="btn-table-action" onclick="addParticipant()" style="font-size:12px;padding:7px 13px;display:inline-flex;align-items:center;gap:6px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+              <span>+ Tambah Peserta Manual</span>
             </button>
-            <button type="button" class="btn-table-action" onclick="openModal('modalQuickPasteExcel')" style="padding:6px 12px;font-size:12px;display:inline-flex;align-items:center;gap:6px;background:rgba(0,23,143,0.06);border-color:rgba(0,23,143,0.25);color:#00178F;" title="Impor dari Google Sheets / Excel">
+            <button type="button" class="btn-table-action" onclick="openModal('modalQuickPasteExcel')" style="font-size:12px;padding:7px 13px;display:inline-flex;align-items:center;gap:6px;background:rgba(0,23,143,0.06);border-color:rgba(0,23,143,0.25);color:#00178F;" title="Salin dari Excel atau Google Sheets">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
-              <span>Impor Spreadsheet</span>
+              <span>Quick Paste dari Excel / Sheets</span>
             </button>
           </div>
+          <button type="button" class="btn-table-action" onclick="downloadPesertaTemplate()" style="font-size:12px;padding:7px 13px;display:inline-flex;align-items:center;gap:6px;" title="Unduh template Excel / CSV resmi">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            <span>Unduh Template CSV</span>
+          </button>
         </div>
 
         <div class="tbl-wrap">
@@ -1092,7 +1107,7 @@
               <tr>
                 <th style="width:36px">No</th>
                 <th style="min-width:180px">Nama Karyawan</th>
-                <th style="width:190px">Email</th>
+                <th style="width:200px">Email (Untuk Invite Kalender)</th>
                 <th style="width:200px">Departemen / Divisi</th>
                 <th style="width:40px"></th>
               </tr>
@@ -1101,14 +1116,10 @@
           </table>
         </div>
 
-        <div class="table-toolbar">
+        <div class="table-toolbar" style="margin-top:10px;">
           <button type="button" class="btn-table-action" onclick="addParticipant()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-            Tambah Peserta Manual
-          </button>
-          <button type="button" class="btn-table-action" onclick="openModal('modalQuickPasteExcel')">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
-            Quick Paste dari Excel / Google Sheets
+            + Tambah Baris Peserta
           </button>
         </div>
       </section>
@@ -1120,7 +1131,7 @@
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
           </div>
           <h2>Evaluasi &amp; Output Pelatihan</h2>
-          <span class="card-sub">Tolok ukur keberhasilan &amp; komitmen transfer knowledge ke tim</span>
+          <span class="card-sub">Tolak ukur keberhasilan &amp; komitmen transfer knowledge ke tim</span>
         </div>
 
         <div class="field-row cols-2">
@@ -1146,9 +1157,8 @@
           <div class="field">
             <label>Waktu Evaluasi</label>
             <select id="waktuEvaluasi" data-field="Waktu evaluasi">
-              <option value="Setelah training" selected>Langsung Pasca Training (Default)</option>
-              <option value="H+7 Pelaksanaan">Maksimal H+7 Setelah Training</option>
-              <option value="Sesuai Jadwal Sesi">Sesuai Jadwal Sesi Pelatihan</option>
+              <option value="Langsung Selesai Pelatihan" selected>Langsung Selesai Pelatihan (Hari H)</option>
+              <option value="H+7 Setelah Pelatihan">H+7 Setelah Pelatihan</option>
             </select>
           </div>
           <div class="field">
@@ -1201,50 +1211,48 @@
         <!-- ================= SUB-VIEW 1: TRAINER HUB & PROYEKTOR ================= -->
         <div id="attendanceTrainerView">
           <!-- Header Halaman Trainer -->
-          <header class="doc-header" style="margin-bottom:18px;">
-            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
-              <div style="display:flex;align-items:center;gap:14px;">
-                <div class="header-icon-box" style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg, #4B96FF, #00178F);display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 6px 16px -4px rgba(75,150,255,0.45);color:#fff;">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="3" y="3" width="7" height="7" rx="1.5"></rect>
-                    <rect x="14" y="3" width="7" height="7" rx="1.5"></rect>
-                    <rect x="14" y="14" width="7" height="7" rx="1.5"></rect>
-                    <rect x="3" y="14" width="7" height="7" rx="1.5"></rect>
-                  </svg>
-                </div>
-                <div>
-                  <p class="kicker">Real-Time Attendance Hub &amp; Projector</p>
-                  <h1 class="voice" style="font-size:24px;margin:0 0 2px;">Live Absensi Pelatihan</h1>
-                  <span class="helper-note" style="margin:0;font-size:13px;">Tampilkan QR Code di proyektor untuk presensi peserta mandiri &amp; pantau daftar kehadiran secara realtime.</span>
-                </div>
+          <header class="doc-header">
+            <div class="doc-header-main">
+              <div class="header-icon-box">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="3" width="7" height="7" rx="1.5"></rect>
+                  <rect x="14" y="3" width="7" height="7" rx="1.5"></rect>
+                  <rect x="14" y="14" width="7" height="7" rx="1.5"></rect>
+                  <rect x="3" y="14" width="7" height="7" rx="1.5"></rect>
+                </svg>
               </div>
+              <div class="doc-header-text">
+                <p class="kicker">Presensi Real-Time</p>
+                <h1 class="voice">Live Absensi Pelatihan</h1>
+                <span class="helper-note">Tampilkan QR Code di proyektor untuk presensi mandiri atau catat kehadiran peserta secara langsung.</span>
+              </div>
+            </div>
 
-              <!-- Header Action Buttons -->
-              <div style="display:flex;align-items:center;gap:8px;">
-                <button type="button" class="btn-secondary" onclick="refreshAttendanceHubData()" title="Segarkan Data Kehadiran" style="gap:6px;font-size:13px;padding:8px 12px;">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.3"/></svg>
-                  <span>Segarkan</span>
-                </button>
-                <button type="button" class="btn-primary" id="btnToggleProjector" onclick="toggleProjectorMode()" title="Mode Layar Penuh untuk Proyektor" style="gap:6px;font-size:13px;padding:8px 14px;">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>
-                  <span>Layar Proyektor</span>
-                </button>
-              </div>
+            <!-- Header Action Buttons -->
+            <div class="doc-header-actions">
+              <button type="button" class="btn-secondary" onclick="refreshAttendanceHubData()" title="Segarkan Data Kehadiran" style="gap:6px;font-size:13px;padding:8px 14px;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.3"/></svg>
+                <span>Segarkan</span>
+              </button>
+              <button type="button" class="btn-primary" id="btnToggleProjector" onclick="toggleProjectorMode()" title="Mode Layar Penuh untuk Proyektor" style="gap:6px;font-size:13px;padding:8px 16px;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>
+                <span>Layar Proyektor</span>
+              </button>
             </div>
           </header>
 
           <!-- Sesi Pelatihan Selector & Notice Box -->
-          <div class="form-card" style="margin-bottom:20px;">
-            <div class="field-row cols-2" style="margin-bottom:0;">
+          <div class="form-card" style="margin-bottom:20px;padding:20px 22px;">
+            <div class="field-row cols-2" style="margin-bottom:14px;gap:18px;">
               <div class="field">
-                <label for="attTrainingSelect" style="font-weight:600;">Pilih Pelatihan yang Anda Selenggarakan <span style="color:var(--danger)">*</span></label>
+                <label for="attTrainingSelect" style="font-weight:600;font-size:13px;color:var(--ink);">Pilih Pelatihan yang Anda Selenggarakan <span style="color:var(--danger)">*</span></label>
                 <select id="attTrainingSelect" onchange="handleAttendanceTrainingChange(this.value)">
                   <option value="">-- Silakan Pilih Pelatihan yang Anda Selenggarakan --</option>
                 </select>
-                <span class="hint" id="attTrainingDateHint" style="font-size:11.5px;color:var(--ink-soft);margin-top:4px;display:block;">Pilih pelatihan sesuai agenda yang Anda pimpin / ajukan.</span>
+                <span class="hint" id="attTrainingDateHint" style="font-size:11.5px;color:var(--ink-soft);margin-top:4px;display:block;">Pilih pelatihan sesuai agenda yang Anda pimpin atau ajukan.</span>
               </div>
               <div class="field">
-                <label for="attModuleSelect" style="font-weight:600;">Pilih Sesi / Modul Pelatihan <span style="color:var(--danger)">*</span></label>
+                <label for="attModuleSelect" style="font-weight:600;font-size:13px;color:var(--ink);">Pilih Sesi / Modul Pelatihan <span style="color:var(--danger)">*</span></label>
                 <select id="attModuleSelect" onchange="handleAttendanceModuleChange(this.value)">
                   <option value="Sesi 1">Sesi 1 (Utama)</option>
                 </select>
@@ -1252,17 +1260,17 @@
               </div>
             </div>
 
-            <!-- Notice Banner: Pemberitahuan Rekomendasi Penggunaan Absensi QR -->
-            <div class="att-notice-banner" style="display:flex;align-items:flex-start;gap:12px;background:rgba(183,134,40,0.08);border:1px solid rgba(183,134,40,0.25);border-radius:10px;padding:12px 14px;margin-top:14px;">
-              <div style="color:var(--accent-gold);flex-shrink:0;margin-top:1px;">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <!-- Context Info Strip: Panduan Penggunaan Kelas vs Mandiri -->
+            <div class="att-guide-strip">
+              <div class="att-guide-icon">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                   <circle cx="12" cy="12" r="10"></circle>
-                  <line x1="12" y1="8" x2="12" y2="12"></line>
-                  <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                  <line x1="12" y1="16" x2="12" y2="12"></line>
+                  <line x1="12" y1="8" x2="12.01" y2="8"></line>
                 </svg>
               </div>
-              <div style="font-size:12.5px;color:var(--ink);line-height:1.5;">
-                <strong>Pemberitahuan:</strong> Fitur <em>Live Absensi QR</em> ini dirancang khusus dan paling efektif untuk pelatihan yang memiliki <strong>jumlah peserta banyak</strong> guna mempercepat proses pendataan kehadiran di ruangan secara tertib dan otomatis. Untuk pelatihan dengan jumlah peserta sedikit (1–3 orang), Trainer/PIC juga dapat langsung menggunakan opsi centang manual pada daftar kehadiran tanpa wajib menyalakan proyektor.
+              <div class="att-guide-text" id="attGuideText">
+                <strong>Panduan Fleksibel Presensi:</strong> Tampilkan QR Code di proyektor untuk presensi kelas tatap muka, atau bagikan tautan langsung bagi peserta training mandiri dan sesi online. Trainer juga dapat mencatat kehadiran secara manual pada daftar peserta di samping.
               </div>
             </div>
           </div>
@@ -1271,90 +1279,207 @@
           <div class="att-layout-grid" id="attMainGrid">
             <!-- KOLOM KIRI: QR CODE SHOWCASE -->
             <div class="att-qr-showcase-card">
-              <div class="att-status-badge">
-                <span class="att-status-dot"></span>
-                <span>Sesi Presensi Aktif</span>
-              </div>
-
-              <div class="att-training-meta">
-                <h2 id="attDisplayTrainingTitle" style="font-size:19px;font-weight:700;margin:0 0 6px;color:var(--ink);line-height:1.35;">-</h2>
-                <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:12.5px;color:var(--ink-soft);">
-                  <span id="attDisplayTrainer" style="display:inline-flex;align-items:center;gap:4px;">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                    <span>Trainer: -</span>
-                  </span>
-                  <span>&bull;</span>
-                  <span id="attDisplayModule" style="font-weight:600;color:var(--accent-dark);">Sesi 1</span>
-                  <span>&bull;</span>
-                  <span id="attDisplayRoom">-</span>
+              <div class="att-qr-card-header">
+                <div class="att-status-badge" id="attStatusBadge">
+                  <span class="att-status-dot"></span>
+                  <span id="attStatusBadgeText">Sesi Presensi Aktif</span>
+                </div>
+                <div class="att-training-meta">
+                  <h2 id="attDisplayTrainingTitle" class="att-meta-title">-</h2>
+                  <div class="att-meta-details">
+                    <span id="attDisplayTrainer" class="att-meta-trainer">Trainer: -</span>
+                    <span class="att-meta-sep">&bull;</span>
+                    <span id="attDisplayModule" class="att-meta-module">Sesi 1</span>
+                    <span class="att-meta-sep">&bull;</span>
+                    <span id="attDisplayRoom" class="att-meta-room">-</span>
+                  </div>
                 </div>
               </div>
 
               <!-- Canvas / SVG QR Display Box -->
               <div class="att-qr-box" id="attQrContainer">
-                <div id="attQrCanvasWrap" style="display:flex;justify-content:center;align-items:center;min-height:260px;">
-                  <span style="color:var(--ink-soft);font-size:13px;">Pilih pelatihan di atas untuk memunculkan QR Code</span>
+                <div id="attQrCanvasWrap" class="att-qr-canvas-wrap">
+                  <span class="att-qr-placeholder">Pilih pelatihan di atas untuk memunculkan QR Code</span>
                 </div>
               </div>
 
               <!-- Petunjuk Scan -->
               <p class="att-scan-instruction">
-                <strong>Buka kamera smartphone</strong> dan arahkan ke QR Code di atas untuk konfirmasi kehadiran Anda.
+                Arahkan kamera smartphone ke kode QR di atas untuk konfirmasi kehadiran mandiri.
               </p>
 
-              <!-- Alternatif Link Langsung -->
-              <div class="att-url-box">
-                <input type="text" id="attDirectUrlInput" readonly value="" placeholder="Tautan check-in langsung...">
-                <button type="button" class="btn-secondary" onclick="copyAttendanceLink()" title="Salin Tautan Check-in" style="font-size:12px;padding:6px 10px;white-space:nowrap;flex-shrink:0;">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                  <span>Salin Link</span>
-                </button>
-                <a id="attDirectUrlOpenBtn" href="#" target="_blank" class="btn-secondary" title="Buka Link di Tab Baru (Uji Coba Tampilan Mobile)" style="font-size:12px;padding:6px 10px;white-space:nowrap;flex-shrink:0;text-decoration:none;display:inline-flex;align-items:center;gap:4px;">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
-                  <span>Buka Tab Baru</span>
-                </a>
-              </div>
+              <!-- Section Tautan Alternatif & Aksi Cepat -->
+              <div class="att-share-section">
+                <label for="attDirectUrlInput" class="att-share-label">Tautan Alternatif (Jika Kamera HP Terkendala)</label>
+                <div class="att-url-field">
+                  <input type="text" id="attDirectUrlInput" readonly value="" placeholder="Tautan check-in mandiri...">
+                  <button type="button" class="btn-copy-link" onclick="copyAttendanceLink()" title="Salin Tautan Presensi">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                    </svg>
+                    <span>Salin</span>
+                  </button>
+                </div>
 
-              <!-- Tambah Peserta Walk-in Trigger -->
-              <div style="margin-top:14px;display:flex;justify-content:center;">
-                <button type="button" class="btn-ghost" onclick="openWalkInModal()" style="font-size:12.5px;color:var(--accent-dark);gap:5px;">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                  <span>+ Tambah Peserta Walk-in / Susulan</span>
-                </button>
+                <!-- Action Links Row -->
+                <div class="att-actions-row">
+                  <a id="attDirectUrlOpenBtn" href="#" onclick="openDirectAttendanceTab(event)" class="att-action-link" title="Buka Form Presensi di Tab Baru">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                    <span>Buka Form Presensi</span>
+                  </a>
+                  <button type="button" class="att-action-link" onclick="openWalkInModal()" title="Tambah Peserta Susulan">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    <span>+ Peserta Susulan (Walk-in)</span>
+                  </button>
+                </div>
               </div>
             </div>
 
-            <!-- KOLOM KANAN: LIVE ATTENDANCE BOARD -->
-            <div class="att-board-card">
-              <div class="att-board-head">
-                <div>
-                  <h3 style="font-size:16px;font-weight:700;margin:0 0 2px;color:var(--ink);">Daftar Presensi Peserta</h3>
-                  <span style="font-size:12px;color:var(--ink-soft);">Status kehadiran realtime peserta terdaftar pada sesi ini</span>
-                </div>
-                <div class="att-metric-pill" id="attMetricPill">
-                  <span id="attCountPresent">0</span> / <span id="attCountTotal">0</span> Hadir (<span id="attPercent">0%</span>)
+            <!-- KOLOM KANAN: LIVE ATTENDANCE BOARD DENGAN 2 TAB & PANDUAN -->
+            <div class="att-right-column">
+              <div class="att-board-card">
+              <!-- Header 2 Tab Navigasi -->
+              <div class="att-tabs-header">
+                <div class="att-tab-nav" role="tablist" aria-label="Navigasi Presensi">
+                  <button type="button" class="att-tab-btn active" id="tabBtnSession" onclick="switchAttendanceTab('session')" role="tab" aria-selected="true">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                      <line x1="16" y1="2" x2="16" y2="6"></line>
+                      <line x1="8" y1="2" x2="8" y2="6"></line>
+                      <line x1="3" y1="10" x2="21" y2="10"></line>
+                    </svg>
+                    <span>Sesi Ini</span>
+                  </button>
+                  <button type="button" class="att-tab-btn" id="tabBtnRekap" onclick="switchAttendanceTab('rekap')" role="tab" aria-selected="false">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                      <circle cx="9" cy="7" r="4"></circle>
+                      <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                      <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                    <span>Rekap per Individu</span>
+                  </button>
                 </div>
               </div>
 
-              <!-- Progress Bar -->
-              <div class="att-progress-track">
-                <div class="att-progress-fill" id="attProgressFill" style="width:0%;"></div>
-              </div>
+              <!-- ================= TAB CONTENT 1: SESI INI ================= -->
+              <div id="attTabContentSession" class="att-tab-pane">
+                <div class="att-board-head">
+                  <div>
+                    <h3 class="att-board-title">Daftar Presensi Peserta</h3>
+                    <span class="att-board-sub">Status kehadiran realtime peserta terdaftar pada sesi ini</span>
+                  </div>
+                  <div class="att-metric-pill" id="attMetricPill">
+                    <span id="attCountPresent">0</span> / <span id="attCountTotal">0</span> Hadir (<span id="attPercent">0%</span>)
+                  </div>
+                </div>
 
-              <!-- Filter Search Bar Peserta -->
-              <div style="margin-bottom:12px;">
-                <input type="text" id="attSearchParticipant" oninput="filterAttendanceList(this.value)" placeholder="Cari nama peserta atau departemen..." style="width:100%;font-size:12.5px;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--sand-panel);">
-              </div>
+                <!-- Progress Bar -->
+                <div class="att-progress-track">
+                  <div class="att-progress-fill" id="attProgressFill" style="width:0%;"></div>
+                </div>
 
-              <!-- Daftar Peserta Checklist -->
-              <div class="att-participant-list" id="attParticipantList">
-                <div style="text-align:center;padding:30px;color:var(--ink-soft);font-size:13px;">
-                  Silakan pilih pelatihan untuk memuat daftar peserta.
+                <!-- Filter Search Bar Peserta -->
+                <div class="att-search-wrap">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="att-search-icon">
+                    <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                  </svg>
+                  <input type="text" id="attSearchParticipant" oninput="filterAttendanceList(this.value)" placeholder="Cari nama peserta atau departemen..." class="att-search-input">
+                </div>
+
+                <!-- Daftar Peserta Checklist -->
+                <div class="att-participant-list" id="attParticipantList">
+                  <div class="att-empty-state">
+                    Silakan pilih pelatihan untuk memuat daftar peserta.
+                  </div>
                 </div>
               </div>
+
+              <!-- ================= TAB CONTENT 2: REKAP PER INDIVIDU ================= -->
+              <div id="attTabContentRekap" class="att-tab-pane" style="display:none;">
+                <!-- 2 Kartu Ringkasan -->
+                <div class="att-rekap-summary-grid">
+                  <div class="att-rekap-summary-card">
+                    <div class="att-rekap-summary-icon">
+                      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
+                    </div>
+                    <div class="att-rekap-summary-body">
+                      <span class="att-rekap-summary-label">Rata-rata Kehadiran</span>
+                      <strong id="attSummaryAvgPercent" class="att-rekap-summary-val">0%</strong>
+                    </div>
+                  </div>
+                  <div class="att-rekap-summary-card warn" id="attSummaryLowCard">
+                    <div class="att-rekap-summary-icon warn">
+                      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                    </div>
+                    <div class="att-rekap-summary-body">
+                      <span class="att-rekap-summary-label">Di Bawah 75%</span>
+                      <strong id="attSummaryLowCount" class="att-rekap-summary-val">0 Peserta</strong>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Toolbar: Search Bar (nama atau departemen) & Filter "Di bawah 75%" -->
+                <div class="att-rekap-toolbar">
+                  <div class="att-rekap-search-wrap">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="att-search-icon">
+                      <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <input type="text" id="attIndivSearchInput" oninput="handleIndividualAttendanceFilterChange()" placeholder="Cari nama atau departemen..." class="att-search-input">
+                  </div>
+                  <button type="button" class="att-filter-toggle-btn" id="btnFilterIndivLow" onclick="toggleIndividualAttendanceLowFilter()" title="Filter peserta dengan kehadiran &lt; 75%">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                    <span>Di Bawah 75% (<span id="btnFilterIndivLowBadge">0</span>)</span>
+                  </button>
+                </div>
+
+                <!-- Tabel Rekapitulasi Kehadiran Per Individu -->
+                <div class="tbl-wrap att-table-wrap">
+                  <table class="data-table att-table" id="attIndividualTable">
+                    <thead>
+                      <tr>
+                        <th style="min-width:160px;">Peserta</th>
+                        <th style="text-align:center;width:110px;">Hadir / Total</th>
+                        <th style="min-width:150px;">Persentase</th>
+                        <th style="text-align:center;width:120px;">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody id="attIndividualTableBody">
+                      <tr>
+                        <td colspan="4" class="att-table-empty">
+                          Silakan pilih pelatihan di atas untuk memuat data rekap per individu.
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <!-- Panduan Mini Footnote -->
+                <div class="att-policy-footnote">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="att-policy-icon">
+                    <circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line>
+                  </svg>
+                  <span>Batas minimal kelulusan presensi adalah <strong>75%</strong> dari total sesi yang diikuti. Peserta bertanda <em>Follow-up</em> memerlukan konfirmasi kehadiran atau modul susulan.</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Panduan & Ketentuan Presensi -->
+            <div class="att-guidelines-box">
+              <div class="att-guidelines-header">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                <span>Panduan &amp; Ketentuan Presensi</span>
+              </div>
+              <ul class="att-guidelines-list">
+                <li><strong>Training Kelas (Grup):</strong> Peserta scan barcode di layar/proyektor. Kehadiran dihitung berdasarkan persentase peserta hadir.</li>
+                <li><strong>Training Mandiri / Individual (1 Peserta):</strong> Cukup scan barcode sekali per sesi. Begitu sukses, kehadiran langsung terhitung <strong>100%</strong> dengan timestamp resmi.</li>
+                <li><strong>Batas Kelulusan:</strong> Standar minimal kehadiran pelatihan adalah <strong>75%</strong> untuk memenuhi syarat evaluasi dan sertifikat.</li>
+              </ul>
             </div>
           </div>
         </div>
+      </div>
 
         <!-- ================= SUB-VIEW 2: MOBILE PARTICIPANT CHECK-IN (#view-checkin-mobile) ================= -->
         <div id="attendanceMobileView" style="display:none;max-width:480px;margin:0 auto;padding:12px 4px;">
@@ -1383,13 +1508,13 @@
             <!-- Formulir Check-In -->
             <form id="mobileCheckInForm" onsubmit="submitMobileAttendance(event)">
               <!-- Status Sukses Message (Hidden by default) -->
-              <div id="mobSuccessCard" style="display:none;text-align:center;padding:18px 12px;background:rgba(46,125,50,0.08);border-radius:12px;border:1px solid rgba(46,125,50,0.25);margin-bottom:16px;">
-                <div style="width:48px;height:48px;border-radius:50%;background:#2E7D32;color:#fff;display:inline-flex;align-items:center;justify-content:center;margin-bottom:10px;">
+              <div id="mobSuccessCard" style="display:none;text-align:center;padding:18px 12px;background:var(--accent-tint, rgba(75,150,255,0.10));border-radius:12px;border:1px solid rgba(75,150,255,0.25);margin-bottom:16px;">
+                <div style="width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg, var(--accent, #4B96FF), var(--accent-dark, #00178F));color:#fff;display:inline-flex;align-items:center;justify-content:center;margin-bottom:10px;box-shadow:0 4px 12px rgba(0,23,143,0.2);">
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                 </div>
-                <h3 style="font-size:16px;font-weight:700;margin:0 0 4px;color:#1B5E20;">Kehadiran Berhasil Dicatat!</h3>
-                <p id="mobSuccessDetail" style="font-size:12.5px;color:#2E7D32;margin:0 0 10px;line-height:1.4;">Terima kasih, presensi Anda telah resmi tercatat ke sistem.</p>
-                <span id="mobSuccessTimestamp" style="font-size:11.5px;background:rgba(0,0,0,0.05);padding:4px 10px;border-radius:20px;color:var(--ink);">Waktu: -</span>
+                <h3 style="font-size:16px;font-weight:700;margin:0 0 4px;color:var(--accent-dark, #00178F);">Kehadiran Berhasil Dicatat!</h3>
+                <p id="mobSuccessDetail" style="font-size:12.5px;color:var(--ink-soft);margin:0 0 10px;line-height:1.4;">Terima kasih, presensi Anda telah resmi tercatat ke sistem.</p>
+                <span id="mobSuccessTimestamp" style="font-size:11.5px;background:rgba(0,23,143,0.06);padding:4px 10px;border-radius:20px;color:var(--ink);">Waktu: -</span>
               </div>
 
               <!-- Input Group (Hidden if already checked in) -->
@@ -1480,22 +1605,20 @@
       <!-- ================= 3. PAGE: AI TRAINING STUDIO (#page-ai-studio) ================= -->
             <section class="tds-page" id="page-ai-studio">
         <!-- Studio Header -->
-        <div class="ai-studio-header-wrap">
-          <div class="ai-studio-header-inner">
-            <div style="display:flex;align-items:center;gap:16px;">
-              <div class="header-icon-box" style="width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg, #4F46E5, #372FB0);display:flex;align-items:center;justify-content:center;color:#fff;box-shadow:0 8px 20px -6px rgba(79, 70, 229, 0.5);flex-shrink:0;">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path>
-                </svg>
-              </div>
-              <div>
-                <p class="kicker" style="color:var(--accent);margin:0 0 2px 0;">TDS INTELLIGENCE LAB</p>
-                <h1 class="voice" style="margin:0 0 4px;font-size:22px;">AI Learning &amp; Development Studio</h1>
-                <p style="margin:0;font-size:13px;color:var(--ink-soft);">Platform cerdas untuk perancangan silabus enterprise, diagnosa kesenjangan kompetensi tim, kalkulasi ROI, dan penyusunan instrumen tes.</p>
-              </div>
+        <header class="doc-header">
+          <div class="doc-header-main">
+            <div class="header-icon-box">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path>
+              </svg>
+            </div>
+            <div class="doc-header-text">
+              <p class="kicker">TDS Intelligence Lab</p>
+              <h1 class="voice">AI Learning &amp; Development Studio</h1>
+              <span class="helper-note">Platform cerdas untuk perancangan silabus enterprise, diagnosa kesenjangan kompetensi tim, kalkulasi ROI, dan penyusunan instrumen tes.</span>
             </div>
           </div>
-        </div>
+        </header>
 
         <!-- 4 Specialized Studio Mode Tabs -->
         <div class="ai-mode-tabs" role="tablist">
@@ -1639,7 +1762,7 @@
               </div>
 
               <div class="field" style="margin-bottom:18px;">
-                <label>Fokus Tolok Ukur yang Ditargetkan</label>
+                <label>Fokus Tolak Ukur yang Ditargetkan</label>
                 <select id="roiMetricFocus" style="padding:10px 10px;border:1px solid var(--line);border-radius:8px;width:100%;font-size:13px;">
                   <option value="time_saved">Penghematan Jam Kerja &amp; Efisiensi Waktu</option>
                   <option value="error_reduction">Penurunan Tingkat Kesalahan / Defect Rate</option>
@@ -1744,24 +1867,22 @@
       <!-- ================= PAGE: SKILL MATRIX (#page-skill-matrix) ================= -->
             <section class="tds-page" id="page-skill-matrix" style="display:none;">
         <!-- Header Halaman Skill Matrix -->
-        <div class="doc-header" style="margin-bottom:8px;">
-          <div style="display:flex;align-items:center;gap:14px;">
-            <div class="icon-box" style="width:52px;height:52px;border-radius:16px;background:linear-gradient(135deg,#4B96FF,#7CB8F0);display:flex;align-items:center;justify-content:center;box-shadow:0 6px 14px -4px rgba(75,150,255,0.45);flex-shrink:0;">
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><!-- icon grid/matrix 4 kotak --><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect><rect x="14" y="14" width="7" height="7" rx="1"></rect></svg>
+        <header class="doc-header">
+          <div class="doc-header-main">
+            <div class="header-icon-box">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 20V10"></path>
+                <path d="M18 20V4"></path>
+                <path d="M6 20v-4"></path>
+              </svg>
             </div>
-            <div>
+            <div class="doc-header-text">
               <p class="kicker">Employee Development Program</p>
-              <h1 class="voice">Skill Matrix</h1>
+              <h1 class="voice">Skill Matrix Karyawan</h1>
+              <span class="helper-note">Pemetaan level kompetensi karyawan terhadap standar jabatan untuk analisis gap dan kebutuhan training terukur.</span>
             </div>
           </div>
-        </div>
-
-        <!-- Penjelasan singkat di atas halaman -->
-        <div style="margin:10px 0 20px;padding:12px 18px;background:rgba(255,255,255,0.7);border:1px solid var(--line-soft);border-radius:10px;">
-          <p style="font-size:13px;color:var(--ink-soft);line-height:1.6;margin:0;">
-            Skill Matrix memetakan level kompetensi tiap karyawan dibandingkan standar jabatannya, sehingga gap kompetensi dan kebutuhan training dapat ditentukan secara objektif dan terukur.
-          </p>
-        </div>
+        </header>
 
         <!-- STATE 1: Empty Selection Prompt (No department chosen yet) -->
         <div id="skillMatrixEmptyPrompt" class="form-card" style="text-align:center;padding:50px 24px;margin-bottom:24px;background:linear-gradient(180deg, #FFFFFF 0%, #FAF9F5 100%);border:1.5px dashed var(--line-soft);border-radius:14px;">
@@ -2111,16 +2232,30 @@
 
       <!-- ================= 4. PAGE: KALENDER TRAINING (#page-kalender) ================= -->
             <section class="tds-page" id="page-kalender">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px;">
-          <div>
-            <h2 class="voice" style="font-size:22px;margin:0 0 4px;color:var(--ink);">Kalender Jadwal Training</h2>
-            <span class="helper-note" style="margin:0;font-size:13px;">Linimasa visual jadwal pelatihan karyawan per ruangan meeting dan departemen.</span>
+        <!-- Calendar Header -->
+        <header class="doc-header">
+          <div class="doc-header-main">
+            <div class="header-icon-box">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+            </div>
+            <div class="doc-header-text">
+              <p class="kicker">Jadwal &amp; Agenda Pelatihan</p>
+              <h1 class="voice">Kalender Jadwal Training</h1>
+              <span class="helper-note">Linimasa visual jadwal pelatihan karyawan per ruangan meeting dan departemen.</span>
+            </div>
           </div>
-          <button type="button" class="btn-primary" onclick="goToPage('ajukan')" style="gap:6px;font-size:13px;padding:8px 14px;">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-            Ajukan Training Baru
-          </button>
-        </div>
+          <div class="doc-header-actions">
+            <button type="button" class="btn-primary" onclick="goToPage('ajukan')" style="gap:6px;font-size:13px;padding:8px 14px;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+              <span>Ajukan Training Baru</span>
+            </button>
+          </div>
+        </header>
 
         <div class="calendar-app-layout">
           <!-- Tombol Filter Mobile -->
@@ -2305,14 +2440,563 @@
       </section>
 
 
-      <!-- ================= 5. PAGE: VENDOR DIRECTORY (#page-vendor) ================= -->
-            <section class="tds-page" id="page-vendor">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px;">
-          <div>
-            <h2 class="voice" style="font-size:22px;margin:0 0 4px;color:var(--ink);">Vendor Directory</h2>
-            <span class="helper-note" style="margin:0;font-size:13px;">Daftar vendor penyedia training eksternal yang pernah digunakan beserta PIC dan kontaknya.</span>
+
+      <!-- ================= PAGE: GUIDE CENTER (#page-guide-center) ================= -->
+            <section class="tds-page" id="page-guide-center" style="display:none;">
+        <!-- Header Halaman Guide Center -->
+        <header class="doc-header">
+          <div class="doc-header-main">
+            <div class="header-icon-box">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+              </svg>
+            </div>
+            <div class="doc-header-text">
+              <p class="kicker">System Documentation &amp; Walkthrough</p>
+              <h1 class="voice">Guide Center</h1>
+              <span class="helper-note">Panduan komprehensif langkah-demi-langkah mulai dari pengajuan, persetujuan, pelaksanaan, hingga evaluasi pasca-training TDS.</span>
+            </div>
+          </div>
+        </header>
+
+        <!-- Navigasi Tab Guide Center -->
+        <div class="gc-tab-nav" role="tablist" aria-label="Navigasi Panduan TDS">
+          <button type="button" class="gc-tab-btn active" id="gcTabBtnOverview" onclick="switchGuideCenterTab('overview')" role="tab" aria-selected="true">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg>
+            <span>Alur Lengkap (Overview)</span>
+          </button>
+          <button type="button" class="gc-tab-btn" id="gcTabBtnRequest" onclick="switchGuideCenterTab('request')" role="tab" aria-selected="false">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+            <span>Pengajuan Training</span>
+          </button>
+          <button type="button" class="gc-tab-btn" id="gcTabBtnAbsensi" onclick="switchGuideCenterTab('absensi')" role="tab" aria-selected="false">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+            <span>Live Absensi</span>
+          </button>
+          <button type="button" class="gc-tab-btn" id="gcTabBtnPost" onclick="switchGuideCenterTab('post')" role="tab" aria-selected="false">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+            <span>Pasca Pelatihan</span>
+          </button>
+          <button type="button" class="gc-tab-btn" id="gcTabBtnPassport" onclick="switchGuideCenterTab('passport')" role="tab" aria-selected="false">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"></rect><circle cx="12" cy="10" r="3"></circle><path d="M7 17a5 5 0 0 1 10 0"></path></svg>
+            <span>Learning Passport</span>
+          </button>
+        </div>
+
+        <!-- ================= TAB 1: ALUR LENGKAP (OVERVIEW) ================= -->
+        <div class="gc-panel active" id="gcPanelOverview">
+          <!-- Banner Pengenalan Siklus TDS -->
+          <div class="gc-hero-card">
+            <div class="gc-hero-icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>
+            </div>
+            <div class="gc-hero-content">
+              <h3>Siklus End-to-End Pelatihan Terintegrasi TDS</h3>
+              <p>
+                Platform Training &amp; Development System dirancang untuk mengotomatisasi seluruh perjalanan peningkatan kompetensi karyawan: mulai dari perumusan kebutuhan training, booking sarana, sinkronisasi kalender kerja, presensi berbasis QR code, hingga pencatatan jam belajar di Learning Passport.
+              </p>
+            </div>
+          </div>
+
+          <!-- Roadmap 5 Tahapan Utama -->
+          <div class="form-card" style="margin-bottom:24px;">
+            <div class="card-head">
+              <div class="card-icon-wrap">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+              </div>
+              <h2>5 Fase Perjalanan Pelatihan</h2>
+              <span class="card-sub">Pahami alur proses dari usulan awal hingga apresiasi pencapaian belajar</span>
+            </div>
+
+            <div class="gc-roadmap-grid">
+              <!-- Fase 1 -->
+              <div class="gc-roadmap-card">
+                <div class="gc-roadmap-badge">Fase 01</div>
+                <h4>Pengajuan (Request)</h4>
+                <p>Leader merumuskan sasaran, memilih jadwal, mendaftarkan peserta (Quick Paste Excel), dan menyusun estimasi biaya.</p>
+                <div class="gc-roadmap-actor">Pelaku: Leader / HR Pengaju</div>
+              </div>
+
+              <!-- Fase 2 -->
+              <div class="gc-roadmap-card">
+                <div class="gc-roadmap-badge">Fase 02</div>
+                <h4>Persetujuan (Approval)</h4>
+                <p>Otorisasi bertingkat oleh Supervisor &amp; HR Manager. Sistem mengirim email verifikasi dan reminder otomatis H+3 jika pending.</p>
+                <div class="gc-roadmap-actor">Pelaku: Approver &amp; HRD</div>
+              </div>
+
+              <!-- Fase 3 -->
+              <div class="gc-roadmap-card">
+                <div class="gc-roadmap-badge">Fase 03</div>
+                <h4>Pelaksanaan &amp; Presensi</h4>
+                <p>Peserta menerima auto-invite Google Calendar &amp; reminder H-1. Presensi real-time via QR Code di kelas atau opsi walk-in.</p>
+                <div class="gc-roadmap-actor">Pelaku: Trainer &amp; Peserta</div>
+              </div>
+
+              <!-- Fase 4 -->
+              <div class="gc-roadmap-card">
+                <div class="gc-roadmap-badge">Fase 04</div>
+                <h4>Evaluasi &amp; Evidence</h4>
+                <p>Pengisian formulir evaluasi instruktur, evaluasi dampak kinerja oleh atasan, unggah sertifikat, dan sharing knowledge tim.</p>
+                <div class="gc-roadmap-actor">Pelaku: Peserta &amp; Atasan</div>
+              </div>
+
+              <!-- Fase 5 -->
+              <div class="gc-roadmap-card">
+                <div class="gc-roadmap-badge">Fase 05</div>
+                <h4>Learning Passport</h4>
+                <p>Data jam belajar otomatis terakumulasi ke profil karyawan, penerbitan cap kelulusan resmi, dan update Skill Matrix organisasi.</p>
+                <div class="gc-roadmap-actor">Pelaku: Karyawan &amp; Organisasi</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Peran & Tanggung Jawab (Quick Role Guide) -->
+          <div class="gc-roles-grid">
+            <div class="gc-role-box">
+              <div class="gc-role-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+              </div>
+              <h4>Untuk Pengaju (Leader / Divisi)</h4>
+              <ul>
+                <li>Identifikasi kebutuhan training tim (Hard Skill / Soft Skill).</li>
+                <li>Ajukan form minimal 7 hari kerja sebelum jadwal pelaksanaan.</li>
+                <li>Pastikan email peserta valid agar auto-invite kalender masuk.</li>
+              </ul>
+              <button type="button" class="btn-primary" onclick="goToPage('ajukan')" style="width:100%;justify-content:center;margin-top:14px;font-size:12.5px;">
+                <span>Buka Formulir Pengajuan</span>
+              </button>
+            </div>
+
+            <div class="gc-role-box">
+              <div class="gc-role-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+              </div>
+              <h4>Untuk Karyawan Peserta</h4>
+              <ul>
+                <li>Cek jadwal masuk di Google Calendar &amp; email pribadi kantor.</li>
+                <li>Pindai QR Code saat tiba di kelas pelatihan untuk presensi.</li>
+                <li>Unggah bukti sertifikat dan cek perolehan jam belajar di paspor.</li>
+              </ul>
+              <button type="button" class="btn-secondary" onclick="goToPage('learning-passport')" style="width:100%;justify-content:center;margin-top:14px;font-size:12.5px;">
+                <span>Lihat Learning Passport</span>
+              </button>
+            </div>
+
+            <div class="gc-role-box">
+              <div class="gc-role-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+              </div>
+              <h4>Untuk Atasan &amp; Tim HRD</h4>
+              <ul>
+                <li>Verifikasi relevansi materi dan kesesuaian anggaran pengajuan.</li>
+                <li>Isi evaluasi dampak penerapan kerja (Kirkpatrick L3) pasca-sesi.</li>
+                <li>Monitor akumulasi jam belajar dan progres pelatihan per karyawan.</li>
+              </ul>
+              <button type="button" class="btn-secondary" onclick="goToPage('post-training')" style="width:100%;justify-content:center;margin-top:14px;font-size:12.5px;">
+                <span>Buka Pasca Pelatihan</span>
+              </button>
+            </div>
           </div>
         </div>
+
+        <!-- ================= TAB 2: PENGAJUAN TRAINING ================= -->
+        <div class="gc-panel" id="gcPanelRequest" style="display:none;">
+          <div class="gc-section-header">
+            <h3>Panduan Langkah Pengisian Formulir Pengajuan (Wizard 4 Langkah)</h3>
+            <p>Ikuti panduan berikut agar pengajuan training Anda lengkap, jelas, dan cepat disetujui oleh atasan &amp; manajemen.</p>
+          </div>
+
+          <div class="gc-steps-container">
+            <!-- Langkah 1 -->
+            <div class="gc-step-card">
+              <div class="gc-step-header">
+                <span class="gc-step-number">01</span>
+                <div>
+                  <h4>Langkah 1: Profil &amp; Sasaran Pelatihan</h4>
+                  <span class="gc-step-tag">Identitas &amp; Target Kompetensi</span>
+                </div>
+              </div>
+              <div class="gc-step-body">
+                <div class="gc-step-item">
+                  <strong>Nama Pelatihan:</strong> Tulis judul yang spesifik, padat, dan mencerminkan substansi materi.
+                  <div class="gc-example-box good">Contoh Baik: "Workshop Golang High-Concurrency &amp; Clean Architecture"</div>
+                  <div class="gc-example-box bad">Kurang Spesifik: "Belajar Backend"</div>
+                </div>
+                <div class="gc-step-item">
+                  <strong>Leader Pengaju:</strong> Tulis nama lengkap resmi penanggung jawab pengajuan (bukan nama panggilan) untuk validasi dokumen otorisasi.
+                </div>
+                <div class="gc-step-item">
+                  <strong>Target Level Kemahiran:</strong> Pilih chip tingkat kedalaman materi:
+                  <ul class="gc-sublist">
+                    <li><em>Basic (Fondasi):</em> Pengenalan konsep dasar bagi pemula.</li>
+                    <li><em>Intermediate (Penerapan):</em> Pendalaman studi kasus kerja sehari-hari.</li>
+                    <li><em>Advanced (Spesialisasi):</em> Optimasi tingkat tinggi dan arsitektur kompleks.</li>
+                  </ul>
+                </div>
+                <div class="gc-step-item">
+                  <strong>Tujuan (Purpose) &amp; Sasaran (Goals):</strong> Jelaskan masalah bisnis/pekerjaan apa yang ingin diatasi dan indikator kemampuan yang akan dikuasai tim setelah lulus.
+                </div>
+              </div>
+            </div>
+
+            <!-- Langkah 2 -->
+            <div class="gc-step-card">
+              <div class="gc-step-header">
+                <span class="gc-step-number">02</span>
+                <div>
+                  <h4>Langkah 2: Pelaksanaan &amp; Peserta</h4>
+                  <span class="gc-step-tag">Logistik, Ruangan &amp; Data Peserta</span>
+                </div>
+              </div>
+              <div class="gc-step-body">
+                <div class="gc-step-item">
+                  <strong>Metode Pelaksanaan:</strong>
+                  <ul class="gc-sublist">
+                    <li><em>Onsite:</em> Tatap muka fisik. Pilih ruang training internal (Saturnus, Neptunus, Mars, Merkurius) yang otomatis diperiksa jadwal bentroknya.</li>
+                    <li><em>Online:</em> Pilih platform (Google Meet / Zoom) dan cantumkan tautan meeting aktif.</li>
+                    <li><em>Hybrid:</em> Menggabungkan kehadiran di ruangan fisik dan akses link meeting.</li>
+                  </ul>
+                </div>
+                <div class="gc-step-item">
+                  <strong>Fitur Quick Paste dari Excel (Sangat Praktis):</strong>
+                  Anda tidak perlu mengetik nama peserta satu per satu. Cukup copy tabel dari spreadsheet (Excel/Google Sheets) dengan format 3 kolom:
+                  <div class="gc-format-box"><code>Nama Peserta [TAB] Email Peserta [TAB] Departemen / Divisi</code></div>
+                  Kemudian klik tombol <strong>"Quick Paste dari Excel"</strong> dan paste teks tersebut. Sistem akan memetakan dan memvalidasi alamat email secara instan.
+                </div>
+                <div class="gc-step-item">
+                  <strong>Tabel Modul &amp; Durasi Otomatis:</strong> Setiap baris sesi modul yang diisi jam mulai dan jam selesainya akan dihitung akumulasi total jam belajarnya secara otomatis.
+                </div>
+              </div>
+            </div>
+
+            <!-- Langkah 3 -->
+            <div class="gc-step-card">
+              <div class="gc-step-header">
+                <span class="gc-step-number">03</span>
+                <div>
+                  <h4>Langkah 3: Biaya &amp; Evaluasi</h4>
+                  <span class="gc-step-tag">Rincian Anggaran &amp; Waktu Evaluasi</span>
+                </div>
+              </div>
+              <div class="gc-step-body">
+                <div class="gc-step-item">
+                  <strong>Breakdown Anggaran:</strong> Masukkan estimasi biaya (Fee Trainer, Konsumsi, Materi, Venue) dengan format angka (sistem otomatis memformat ke mata uang Rupiah).
+                </div>
+                <div class="gc-step-item">
+                  <strong>Waktu Evaluasi:</strong>
+                  <ul class="gc-sublist">
+                    <li><em>Langsung Selesai Pelatihan (Hari H):</em> Digunakan untuk evaluasi reaksi, penyampaian trainer, dan post-test pemahaman materi.</li>
+                    <li><em>H+7 Setelah Pelatihan:</em> Digunakan untuk evaluasi penerapan awal hasil keterampilan di pekerjaan oleh atasan langsung.</li>
+                  </ul>
+                </div>
+                <div class="gc-step-item">
+                  <strong>Komitmen Knowledge Sharing:</strong> Aktifkan sakelar komitmen sharing jika peserta wajib mengadakan sesi sharing ke rekan tim internal pasca-training.
+                </div>
+              </div>
+            </div>
+
+            <!-- Langkah 4 -->
+            <div class="gc-step-card">
+              <div class="gc-step-header">
+                <span class="gc-step-number">04</span>
+                <div>
+                  <h4>Langkah 4: Review &amp; Otorisasi</h4>
+                  <span class="gc-step-tag">Verifikasi Ringkasan &amp; Submit</span>
+                </div>
+              </div>
+              <div class="gc-step-body">
+                <div class="gc-step-item">
+                  <strong>Executive Summary Card:</strong> Tinjau kembali seluruh data yang telah diinput pada kartu ringkasan eksekutif sebelum diajukan.
+                </div>
+                <div class="gc-step-item">
+                  <strong>Approval Hierarchy:</strong> Tentukan approver (Direct Supervisor &amp; HR Manager). Setelah tombol submit diklik:
+                  <ul class="gc-sublist">
+                    <li>Data otomatis tercatat di Google Sheets master.</li>
+                    <li>Undangan kalender Google Calendar terkirim ke seluruh email peserta.</li>
+                    <li>Email konfirmasi registrasi masuk ke inbox masing-masing peserta.</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="gc-cta-wrap">
+            <button type="button" class="btn-primary" onclick="goToPage('ajukan')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
+              <span>Mulai Buat Pengajuan Training Baru</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- ================= TAB 3: LIVE ABSENSI ================= -->
+        <div class="gc-panel" id="gcPanelAbsensi" style="display:none;">
+          <div class="gc-section-header">
+            <h3>Panduan Penggunaan Live Absensi (Hari-H Pelatihan)</h3>
+            <p>Fitur presensi digital interaktif untuk mencatat kehadiran peserta secara real-time dan transparan.</p>
+          </div>
+
+          <div class="gc-steps-container">
+            <div class="gc-step-card">
+              <div class="gc-step-header">
+                <span class="gc-step-number">01</span>
+                <div>
+                  <h4>Untuk Instruktur / Panitia (Display Mode)</h4>
+                  <span class="gc-step-tag">Buka di Layar Proyektor / Laptop Panitia</span>
+                </div>
+              </div>
+              <div class="gc-step-body">
+                <ol class="gc-numbered-list">
+                  <li>Buka menu <strong>Live Absensi</strong> di sidebar TDS.</li>
+                  <li>Pilih judul pelatihan yang sedang berlangsung dari dropdown daftar pelatihan aktif.</li>
+                  <li>Tampilkan layar ke proyektor kelas atau bagikan tampilan pada sesi webinar online.</li>
+                  <li>Layar akan menampilkan <strong>QR Code Presensi Unik</strong> serta live counter jumlah peserta yang sudah check-in.</li>
+                </ol>
+              </div>
+            </div>
+
+            <div class="gc-step-card">
+              <div class="gc-step-header">
+                <span class="gc-step-number">02</span>
+                <div>
+                  <h4>Untuk Peserta (Self Check-in Mode)</h4>
+                  <span class="gc-step-tag">Melalui Smartphone Masing-Masing</span>
+                </div>
+              </div>
+              <div class="gc-step-body">
+                <ol class="gc-numbered-list">
+                  <li>Pindai (scan) QR Code yang tampil di layar proyektor menggunakan kamera HP.</li>
+                  <li>Tautan akan langsung membuka formulir presensi dengan nama pelatihan yang sesuai.</li>
+                  <li>Pilih nama Anda dari daftar peserta terdaftar, lalu klik <strong>"Konfirmasi Kehadiran"</strong>.</li>
+                  <li>Status kehadiran Anda akan langsung terupdate detik itu juga di layar proyektor dan spreadsheet.</li>
+                </ol>
+              </div>
+            </div>
+
+            <div class="gc-step-card">
+              <div class="gc-step-header">
+                <span class="gc-step-number">03</span>
+                <div>
+                  <h4>Penanganan Peserta Pengganti / Walk-In</h4>
+                  <span class="gc-step-tag">Fleksibilitas Peserta Dadakan</span>
+                </div>
+              </div>
+              <div class="gc-step-body">
+                <p>
+                  Jika ada karyawan yang menggantikan rekan satu timnya atau didelegasikan mendadak:
+                </p>
+                <div class="gc-example-box good">
+                  Peserta cukup memilih opsi <strong>"Nama saya belum ada di daftar (Peserta Baru / Walk-in)"</strong>, lalu mengetikkan nama lengkap, email kantor, dan divisinya. Sistem akan otomatis mendaftarkannya sebagai peserta resmi dan mencatat kehadirannya.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="gc-cta-wrap">
+            <button type="button" class="btn-primary" onclick="goToPage('absensi')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+              <span>Buka Menu Live Absensi</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- ================= TAB 4: PASCA PELATIHAN ================= -->
+        <div class="gc-panel" id="gcPanelPost" style="display:none;">
+          <div class="gc-section-header">
+            <h3>Panduan Pasca Pelatihan (Post-Training Hub)</h3>
+            <p>Memastikan investasi pembelajaran memberikan dampak nyata bagi kinerja individu dan tim melalui evaluasi, bukti sertifikasi, serta knowledge sharing.</p>
+          </div>
+
+          <div class="gc-steps-container">
+            <!-- 1. Evaluasi Trainee -->
+            <div class="gc-step-card">
+              <div class="gc-step-header">
+                <span class="gc-step-number">01</span>
+                <div>
+                  <h4>Evaluasi Trainee (oleh Atasan Langsung)</h4>
+                  <span class="gc-step-tag">Penilaian Implementasi Kinerja (Kirkpatrick Level 3)</span>
+                </div>
+              </div>
+              <div class="gc-step-body">
+                <p>
+                  Atasan langsung mengisi formulir evaluasi ini (biasanya H+7 setelah training) untuk menilai:
+                </p>
+                <ul class="gc-sublist">
+                  <li>Sejauh mana keterampilan baru diterapkan dalam pekerjaan sehari-hari.</li>
+                  <li>Peningkatan kualitas kerja, kecepatan tugas, atau penyelesaian kendala kerja.</li>
+                  <li>Rekomendasi tindak lanjut pengembangan kompetensi berikutnya.</li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- 2. Evaluasi Trainer -->
+            <div class="gc-step-card">
+              <div class="gc-step-header">
+                <span class="gc-step-number">02</span>
+                <div>
+                  <h4>Evaluasi Trainer &amp; Materi (oleh Peserta)</h4>
+                  <span class="gc-step-tag">Umpan Balik Kualitas Sesi (Kirkpatrick Level 1 &amp; 2)</span>
+                </div>
+              </div>
+              <div class="gc-step-body">
+                <p>
+                  Peserta memberikan ulasan jujur mengenai:
+                </p>
+                <ul class="gc-sublist">
+                  <li>Kejelasan instruktur dalam menyampaikan materi &amp; studi kasus.</li>
+                  <li>Relevansi silabus terhadap tantangan pekerjaan riil.</li>
+                  <li>Kelayakan fasilitas ruangan, konsumsi, atau konektivitas virtual.</li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- 3. Upload Evidence -->
+            <div class="gc-step-card">
+              <div class="gc-step-header">
+                <span class="gc-step-number">03</span>
+                <div>
+                  <h4>Unggah Bukti Pelatihan (Evidence Upload)</h4>
+                  <span class="gc-step-tag">Verifikasi Portofolio Karyawan</span>
+                </div>
+              </div>
+              <div class="gc-step-body">
+                <p>
+                  Peserta wajib mengunggah salah satu atau beberapa bukti berikut:
+                </p>
+                <ul class="gc-sublist">
+                  <li><strong>Sertifikat Resmi:</strong> Format PDF atau file gambar hasil kelulusan.</li>
+                  <li><strong>Foto Dokumentasi:</strong> Dokumentasi saat mengikuti pelatihan onsite/online.</li>
+                  <li><strong>Slide / Catatan Materi:</strong> Ringkasan materi yang dipelajari.</li>
+                </ul>
+                <div class="gc-format-box">Batas ukuran file: Maksimal 10MB per berkas (JPG, PNG, PDF).</div>
+              </div>
+            </div>
+
+            <!-- 4. Knowledge Sharing -->
+            <div class="gc-step-card">
+              <div class="gc-step-header">
+                <span class="gc-step-number">04</span>
+                <div>
+                  <h4>Sesi Knowledge Sharing Internal</h4>
+                  <span class="gc-step-tag">Transfer Pengetahuan ke Rekan Sejawat</span>
+                </div>
+              </div>
+              <div class="gc-step-body">
+                <p>
+                  Karyawan yang telah mengikuti training mengadakan sesi presentasi mini (30-60 menit) kepada rekan satu tim untuk menyebarkan wawasan baru sehingga seluruh divisi turut merasakan manfaat pelatihan.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="gc-cta-wrap">
+            <button type="button" class="btn-primary" onclick="goToPage('post-training')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+              <span>Buka Halaman Pasca Pelatihan</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- ================= TAB 5: LEARNING PASSPORT ================= -->
+        <div class="gc-panel" id="gcPanelPassport" style="display:none;">
+          <div class="gc-section-header">
+            <h3>Panduan Learning Passport (Transkrip Belajar Digital)</h3>
+            <p>Portofolio rekam jejak personal setiap karyawan yang mencatat jam belajar resmi dan cap rekognisi kompetensi terverifikasi.</p>
+          </div>
+
+          <div class="gc-steps-container">
+            <div class="gc-step-card">
+              <div class="gc-step-header">
+                <span class="gc-step-number">01</span>
+                <div>
+                  <h4>Cara Membuka &amp; Mencari Paspor</h4>
+                  <span class="gc-step-tag">Pencarian Fleksibel</span>
+                </div>
+              </div>
+              <div class="gc-step-body">
+                <ol class="gc-numbered-list">
+                  <li>Buka menu <strong>Learning Passport</strong> di sidebar.</li>
+                  <li>Ketik nama lengkap atau alamat email kantor Anda pada bilah pencarian.</li>
+                  <li>Tekan <strong>"Cari Paspor"</strong> atau Enter.</li>
+                  <li>Sistem akan menampilkan transkrip lengkap, avatar profil, akumulasi jam belajar, dan progres pengisian paspor pelatihan.</li>
+                </ol>
+              </div>
+            </div>
+
+            <div class="gc-step-card">
+              <div class="gc-step-header">
+                <span class="gc-step-number">02</span>
+                <div>
+                  <h4>Progres Jam Belajar</h4>
+                  <span class="gc-step-tag">Pencatatan Jam Pembelajaran</span>
+                </div>
+              </div>
+              <div class="gc-step-body">
+                <p>
+                  Jam pelatihan yang telah diselesaikan akan tercatat otomatis. Progress bar di Learning Passport akan terisi seiring penyelesaian program pelatihan.
+                </p>
+              </div>
+            </div>
+
+            <div class="gc-step-card">
+              <div class="gc-step-header">
+                <span class="gc-step-number">03</span>
+                <div>
+                  <h4>Jejak Perjalanan Belajar</h4>
+                  <span class="gc-step-tag">Stempel Verifikasi Pelatihan</span>
+                </div>
+              </div>
+              <div class="gc-step-body">
+                <p>
+                  Setiap pelatihan yang telah diselesaikan akan tercatat sebagai jejak resmi dengan stempel kelulusan dan durasi jam belajar, yang terdiri dari 5 tingkatan rekognisi:
+                </p>
+                <ul class="gc-sublist">
+                  <li><strong>Completed (Moss Green):</strong> Tanda kelulusan program pelatihan reguler.</li>
+                  <li><strong>Verified (Blue Ink):</strong> Program pelatihan dengan kurikulum terverifikasi resmi.</li>
+                  <li><strong>Hours Record (Classic Gold):</strong> Pengakuan pemenuhan akumulasi jam belajar intensif.</li>
+                  <li><strong>Achievement (Royal Purple):</strong> Pencapaian kompetensi tingkat lanjut (Advanced).</li>
+                  <li><strong>Mastery (Deep Ink):</strong> Program penguasaan keahlian strategis organisasi.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div class="gc-cta-wrap">
+            <button type="button" class="btn-primary" onclick="goToPage('learning-passport')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"></rect><circle cx="12" cy="10" r="3"></circle><path d="M7 17a5 5 0 0 1 10 0"></path></svg>
+              <span>Buka Learning Passport Saya</span>
+            </button>
+          </div>
+        </div>
+
+      </section>
+
+
+      <!-- ================= 5. PAGE: VENDOR DIRECTORY (#page-vendor) ================= -->
+            <section class="tds-page" id="page-vendor">
+        <!-- Vendor Directory Header -->
+        <header class="doc-header">
+          <div class="doc-header-main">
+            <div class="header-icon-box">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 21h18"></path>
+                <path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"></path>
+                <path d="M9 8h1"></path>
+                <path d="M9 12h1"></path>
+                <path d="M9 16h1"></path>
+                <path d="M14 8h1"></path>
+                <path d="M14 12h1"></path>
+                <path d="M14 16h1"></path>
+              </svg>
+            </div>
+            <div class="doc-header-text">
+              <p class="kicker">Direktori Mitra Eksternal</p>
+              <h1 class="voice">Vendor Directory</h1>
+              <span class="helper-note">Daftar vendor penyedia training eksternal yang pernah digunakan beserta PIC dan kontaknya.</span>
+            </div>
+          </div>
+        </header>
 
         <div id="vendorDirectoryContainer">
           <!-- Filled by renderVendorDirectoryPage() -->
@@ -2323,41 +3007,20 @@
       <!-- ================= PAGE: POST TRAINING TRAMPOLINE (#page-post-training) ================= -->
             <section class="tds-page" id="page-post-training" style="display:none;">
         <!-- Header Halaman -->
-        <header class="doc-header" style="margin-bottom:18px;">
-          <div style="display:flex;align-items:center;gap:14px;">
-            <div class="header-icon-box" style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg, #4B96FF, #00178F);display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 6px 16px -4px rgba(75,150,255,0.45);color:#fff;">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"></path>
-                <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"></path>
-                <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"></path>
-                <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"></path>
+        <header class="doc-header">
+          <div class="doc-header-main">
+            <div class="header-icon-box" id="trampolineHeaderIcon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline>
               </svg>
             </div>
-            <div>
-              <p class="kicker">Performance Impact &amp; Evaluation Hub</p>
-              <h1 class="voice" style="font-size:24px;margin:0 0 2px;">Post Training Trampoline</h1>
-              <span class="helper-note" id="trampolinePageSubtitle" style="margin:0;font-size:13px;">Pusat tindak lanjut pasca-pelatihan: unggah bukti kegiatan ke Google Drive &amp; evaluasi hasil post-test.</span>
+            <div class="doc-header-text">
+              <p class="kicker" id="trampolinePageKicker">Post Training Trampoline</p>
+              <h1 class="voice" id="trampolinePageTitle">Unggah Bukti Pelatihan</h1>
+              <span class="helper-note" id="trampolinePageSubtitle">Pusat tindak lanjut pasca-pelatihan: unggah bukti foto kegiatan &amp; modul materi ke Google Drive.</span>
             </div>
           </div>
         </header>
-
-        <!-- Tab Switcher (Post Test, Unggah Bukti & Knowledge Sharing) -->
-        <div class="trampoline-tabs-bar" style="margin-bottom:18px;">
-          <div class="trampoline-tabs">
-            <button type="button" class="trampoline-tab-btn active" id="tabBtnEvidence" onclick="switchTrampolineTab('evidence')">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-              <span>Unggah Bukti</span>
-            </button>
-            <button type="button" class="trampoline-tab-btn" id="tabBtnPostTest" onclick="switchTrampolineTab('posttest')">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
-              <span>Post Test</span>
-            </button>
-            <button type="button" class="trampoline-tab-btn" id="tabBtnSharing" onclick="switchTrampolineTab('sharing')">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
-              <span>Knowledge Sharing</span>
-            </button>
-          </div>
-        </div>
 
         <!-- ================= PANEL 1: UNGGAH BUKTI ================= -->
         <div class="trampoline-tab-panel active" id="trampolinePanelEvidence">
@@ -2506,25 +3169,47 @@
               </div>
 
               <!-- ========================================================================= -->
-              <!-- LEMBAR EVALUASI & SOAL POST-TEST (GOOGLE FORM TERINTEGRASI)               -->
+              <!-- SUB-TAB SWITCHER & DUAL-SECTION EVALUASI PASCA TRAINING                   -->
               <!-- ========================================================================= -->
-              <div class="post-test-link-card">
+              <div class="pt-subtab-container" style="margin-bottom:16px;">
+                <div class="pt-subtab-nav" role="tablist" aria-label="Pilihan Formulir Evaluasi">
+                  <button type="button" class="pt-subtab-btn active" id="subTabBtnEvalTrainee" onclick="switchPostTestEvaluationTab('trainee')" role="tab" aria-selected="true">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                      <circle cx="9" cy="7" r="4"></circle>
+                      <polyline points="16 11 18 13 22 9"></polyline>
+                    </svg>
+                    <span>Evaluasi Trainee (oleh Atasan)</span>
+                  </button>
+                  <button type="button" class="pt-subtab-btn" id="subTabBtnEvalTrainer" onclick="switchPostTestEvaluationTab('trainer')" role="tab" aria-selected="false">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"></path>
+                      <polyline points="10 8 12 10 16 6"></polyline>
+                    </svg>
+                    <span>Evaluasi Trainer (oleh Peserta)</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- ================= SECTION 1: EVALUASI TRAINEE (OLEH ATASAN) ================= -->
+              <div class="post-test-link-card" id="evalSectionTrainee">
                 <div class="pt-card-header">
-                  <div class="pt-card-icon">
+                  <div class="pt-card-icon" style="background:rgba(0,23,143,0.08);color:var(--accent-dark);">
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
-                      <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
-                      <path d="m9 14 2 2 4-4"></path>
+                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                      <circle cx="9" cy="7" r="4"></circle>
+                      <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                      <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
                     </svg>
                   </div>
                   <div class="pt-card-info">
                     <div class="pt-badge-row">
                       <span class="pt-badge-live">Tautan Resmi Aktif</span>
-                      <span class="pt-badge-type">Google Form</span>
+                      <span class="pt-badge-role">Diisi oleh Atasan / User Divisi</span>
                     </div>
-                    <h3 class="pt-card-title">Form Evaluasi Pasca Training (Trainer &amp; Peserta)</h3>
+                    <h3 class="pt-card-title">Evaluasi Penerapan &amp; Dampak Kinerja Peserta</h3>
                     <p class="pt-card-desc">
-                      Pengerjaan lembar soal dan evaluasi pasca-pelatihan dilakukan secara langsung melalui tautan Google Form resmi di bawah ini. Peserta maupun trainer dapat mengisi kuis evaluasi melalui form ini.
+                      Formulir evaluasi pasca-pelatihan bagi Atasan Langsung / User Divisi untuk menilai perkembangan kompetensi trainee, penguasaan keterampilan, dan implementasi materi dalam pekerjaan sehari-hari.
                     </p>
                   </div>
                 </div>
@@ -2535,11 +3220,11 @@
                       <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
                       <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
                     </svg>
-                    <input type="text" readonly class="pt-link-input" id="postTestGoogleFormUrl" value="https://docs.google.com/forms/d/e/1FAIpQLSdLNo9kzy22HEKq3xSCBHmZO2ksfCE2K7U_Y3EA2hCzQtRYmw/viewform" title="Klik untuk memilih teks tautan" onclick="this.select()">
+                    <input type="text" readonly class="pt-link-input" id="evalTraineeFormUrl" value="https://docs.google.com/forms/d/1W6Txh0Y1B9jvqi32FepiWCLbocOZL8qRPgegoUICLl4/viewform" title="Klik untuk memilih tautan" onclick="this.select()">
                   </div>
 
                   <div class="pt-actions-wrap">
-                    <button type="button" class="btn-secondary pt-btn-copy" onclick="copyPostTestFormLink()" title="Salin tautan ke clipboard">
+                    <button type="button" class="btn-secondary pt-btn-copy" onclick="copyEvalTraineeLink()" title="Salin tautan ke clipboard">
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                         <rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect>
                         <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path>
@@ -2547,15 +3232,15 @@
                       <span>Salin Link</span>
                     </button>
 
-                    <button type="button" class="pt-btn-preview-toggle" id="btnTogglePtPreview" onclick="togglePostTestPreview()" title="Buka pratinjau langsung di dalam halaman">
+                    <button type="button" class="pt-btn-preview-toggle" id="btnToggleEvalTraineePreview" onclick="toggleEvalTraineePreview()" title="Buka pratinjau langsung di dalam halaman">
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
                         <circle cx="12" cy="12" r="3"></circle>
                       </svg>
-                      <span id="ptPreviewBtnText">Tampilkan Form di Sini</span>
+                      <span id="evalTraineePreviewBtnText">Tampilkan Form di Sini</span>
                     </button>
 
-                    <a href="https://docs.google.com/forms/d/e/1FAIpQLSdLNo9kzy22HEKq3xSCBHmZO2ksfCE2K7U_Y3EA2hCzQtRYmw/viewform" target="_blank" rel="noopener noreferrer" class="btn-primary pt-btn-open" title="Buka di tab baru">
+                    <a id="btnOpenEvalTraineeTab" href="https://docs.google.com/forms/d/1W6Txh0Y1B9jvqi32FepiWCLbocOZL8qRPgegoUICLl4/viewform" target="_blank" rel="noopener noreferrer" class="btn-primary pt-btn-open" title="Buka di tab baru">
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
                         <polyline points="15 3 21 3 21 9"></polyline>
@@ -2567,9 +3252,75 @@
                 </div>
 
                 <!-- Live Embedded Iframe Accordion Container (Lazy Loaded) -->
-                <div class="pt-preview-collapse" id="ptPreviewContainer">
+                <div class="pt-preview-collapse" id="evalTraineeIframeWrap">
                   <div class="pt-iframe-wrap">
-                    <iframe id="ptGoogleFormIframe" src="about:blank" title="Google Form Evaluasi Pasca Training" loading="lazy">Memuat formulir...</iframe>
+                    <iframe id="iframeEvalTrainee" src="about:blank" title="Form Evaluasi Pasca Training (Trainee)" loading="lazy">Memuat formulir...</iframe>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ================= SECTION 2: EVALUASI TRAINER (OLEH PESERTA) ================= -->
+              <div class="post-test-link-card" id="evalSectionTrainer" style="display:none;">
+                <div class="pt-card-header">
+                  <div class="pt-card-icon" style="background:rgba(21,128,61,0.08);color:#15803D;">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+                      <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
+                    </svg>
+                  </div>
+                  <div class="pt-card-info">
+                    <div class="pt-badge-row">
+                      <span class="pt-badge-live">Tautan Resmi Aktif</span>
+                      <span class="pt-badge-role">Diisi oleh Peserta Pelatihan</span>
+                    </div>
+                    <h3 class="pt-card-title">Evaluasi Mutu Fasilitator &amp; Pelatihan</h3>
+                    <p class="pt-card-desc">
+                      Formulir evaluasi bagi seluruh peserta pelatihan untuk memberikan masukan terhadap penguasaan materi, kejelasan penyampaian, responsivitas trainer, dan kepuasan umum training.
+                    </p>
+                  </div>
+                </div>
+
+                <div class="pt-link-box">
+                  <div class="pt-link-url-wrap">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                    </svg>
+                    <input type="text" readonly class="pt-link-input" id="evalTrainerFormUrl" value="https://docs.google.com/forms/d/e/1FAIpQLSdLNo9kzy22HEKq3xSCBHmZO2ksfCE2K7U_Y3EA2hCzQtRYmw/viewform" title="Klik untuk memilih tautan" onclick="this.select()">
+                  </div>
+
+                  <div class="pt-actions-wrap">
+                    <button type="button" class="btn-secondary pt-btn-copy" onclick="copyEvalTrainerLink()" title="Salin tautan ke clipboard">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect>
+                        <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path>
+                      </svg>
+                      <span>Salin Link</span>
+                    </button>
+
+                    <button type="button" class="pt-btn-preview-toggle" id="btnToggleEvalTrainerPreview" onclick="toggleEvalTrainerPreview()" title="Buka pratinjau langsung di dalam halaman">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                      </svg>
+                      <span id="evalTrainerPreviewBtnText">Tampilkan Form di Sini</span>
+                    </button>
+
+                    <a id="btnOpenEvalTrainerTab" href="https://docs.google.com/forms/d/e/1FAIpQLSdLNo9kzy22HEKq3xSCBHmZO2ksfCE2K7U_Y3EA2hCzQtRYmw/viewform" target="_blank" rel="noopener noreferrer" class="btn-primary pt-btn-open" title="Buka di tab baru">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                        <polyline points="15 3 21 3 21 9"></polyline>
+                        <line x1="10" y1="14" x2="21" y2="3"></line>
+                      </svg>
+                      <span>Buka Google Form</span>
+                    </a>
+                  </div>
+                </div>
+
+                <!-- Live Embedded Iframe Accordion Container (Lazy Loaded) -->
+                <div class="pt-preview-collapse" id="evalTrainerIframeWrap">
+                  <div class="pt-iframe-wrap">
+                    <iframe id="iframeEvalTrainer" src="about:blank" title="Form Evaluasi Pasca Training (Trainer)" loading="lazy">Memuat formulir...</iframe>
                   </div>
                 </div>
               </div>
@@ -2691,16 +3442,21 @@
         <!-- ================= MASTER / TRAINING DASHBOARD VIEW ================= -->
         <main id="masterView">
           <!-- Operations Header -->
-          <header class="dash-op-header" style="margin-bottom:20px;">
-            <div class="dash-op-text">
-              <div class="dash-op-kicker">
-                <span class="dash-op-dot"></span>
-                <span>Otorisasi &amp; Master Data</span>
+          <header class="doc-header">
+            <div class="doc-header-main">
+              <div class="header-icon-box">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
               </div>
-              <h1 class="dash-op-title voice">Portal Approval &amp; Master Data</h1>
-              <p class="dash-op-desc">Ringkasan evaluasi kelayakan program, otorisasi pengajuan, dan audit data historis pelatihan.</p>
+              <div class="doc-header-text">
+                <p class="kicker">Khusus HR &amp; Approver</p>
+                <h1 class="voice">Portal Otorisasi HR &amp; Evaluasi Training</h1>
+                <span class="helper-note">Pusat evaluasi kelayakan program, otorisasi proposal, dan audit data historis pelatihan untuk HR Management.</span>
+              </div>
             </div>
-            <div class="dash-op-actions">
+            <div class="doc-header-actions">
               <button type="button" class="btn-secondary" onclick="exportToCsv()" style="font-size:12.5px;padding:8px 14px;gap:6px;">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                 <span>Export CSV</span>
@@ -2709,14 +3465,14 @@
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
                 <span>Refresh</span>
               </button>
-              <button type="button" class="btn-secondary" onclick="lockAdminAccess()" title="Kunci sesi admin dan kembali ke formulir pengajuan" style="font-size:12.5px;padding:8px 14px;gap:6px;color:var(--danger);border-color:var(--danger-tint);">
+              <button type="button" class="btn-secondary" onclick="lockAdminAccess()" title="Kunci sesi portal HR" style="font-size:12.5px;padding:8px 14px;gap:6px;color:var(--danger);border-color:var(--danger-tint);">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
                 <span>Kunci</span>
               </button>
-              <button type="button" class="btn-primary" onclick="goToPage('ajukan')" style="font-size:12.5px;padding:8px 14px;gap:6px;">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
-                <span>Form Pengajuan</span>
-              </button>
+              <a href="approval/index.html" class="btn-primary" style="font-size:12.5px;padding:8px 14px;gap:6px;text-decoration:none;display:inline-flex;align-items:center;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                <span>Buka Approval Console</span>
+              </a>
             </div>
           </header>
 
@@ -3218,7 +3974,7 @@
       <div id="aiLoadingState" style="display:none;text-align:center;padding:24px 12px;">
         <div class="spinner" style="width:32px;height:32px;border:3px solid rgba(79,70,229,0.2);border-top-color:#4F46E5;border-radius:50%;margin:0 auto 12px;animation:spin 0.8s linear infinite;"></div>
         <div style="font-weight:600;font-size:13.5px;color:var(--ink);" id="aiLoadingStep">Merumuskan tujuan &amp; silabus pembelajaran...</div>
-        <div style="font-size:12px;color:var(--ink-soft);margin-top:4px;">Memproses silabus modul, pembagian durasi, dan tolok ukur evaluasi</div>
+        <div style="font-size:12px;color:var(--ink-soft);margin-top:4px;">Memproses silabus modul, pembagian durasi, dan tolak ukur evaluasi</div>
       </div>
 
       <!-- Preview Container -->
@@ -3239,7 +3995,7 @@
         </div>
 
         <div class="ai-preview-section">
-          <h4>Tolok Ukur &amp; Evaluasi Dampak</h4>
+          <h4>Tolak Ukur &amp; Evaluasi Dampak</h4>
           <p style="margin-bottom:6px;"><strong>Hasil Diharapkan:</strong> <span id="previewAiExpected">-</span></p>
           <p style="margin-bottom:6px;"><strong>Penerapan di Pekerjaan:</strong> <span id="previewAiApply">-</span></p>
           <p><strong>Indikator Keberhasilan:</strong> <span id="previewAiKpi">-</span></p>
@@ -3549,7 +4305,7 @@
           </div>
           <ul class="guide-checklist">
             <li>
-              <strong>PIC &amp; Waktu Evaluasi:</strong> Tentukan siapa yang memonitor hasil belajar karyawan (misal: Leader / HR) dan kapan dievaluasi (umumnya 1 bulan atau 3 bulan pasca-training).
+              <strong>PIC &amp; Waktu Evaluasi:</strong> Tentukan siapa yang memonitor hasil belajar karyawan (misal: Leader / HR) dan kapan dievaluasi (langsung selesai pelatihan pada Hari H atau maksimal H+7 setelah training).
             </li>
             <li>
               <strong>Approver Otorisasi:</strong> Pilih atasan langsung (Direct Supervisor) dan Dept Head/HR. Notifikasi email persetujuan akan otomatis dikirimkan ke kotak masuk approver.

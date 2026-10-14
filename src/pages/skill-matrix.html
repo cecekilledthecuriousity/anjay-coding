@@ -1,23 +1,21 @@
       <section class="tds-page" id="page-skill-matrix" style="display:none;">
         <!-- Header Halaman Skill Matrix -->
-        <div class="doc-header" style="margin-bottom:8px;">
-          <div style="display:flex;align-items:center;gap:14px;">
-            <div class="icon-box" style="width:52px;height:52px;border-radius:16px;background:linear-gradient(135deg,#4B96FF,#7CB8F0);display:flex;align-items:center;justify-content:center;box-shadow:0 6px 14px -4px rgba(75,150,255,0.45);flex-shrink:0;">
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><!-- icon grid/matrix 4 kotak --><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect><rect x="14" y="14" width="7" height="7" rx="1"></rect></svg>
+        <header class="doc-header">
+          <div class="doc-header-main">
+            <div class="header-icon-box">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 20V10"></path>
+                <path d="M18 20V4"></path>
+                <path d="M6 20v-4"></path>
+              </svg>
             </div>
-            <div>
+            <div class="doc-header-text">
               <p class="kicker">Employee Development Program</p>
-              <h1 class="voice">Skill Matrix</h1>
+              <h1 class="voice">Skill Matrix Karyawan</h1>
+              <span class="helper-note">Pemetaan level kompetensi karyawan terhadap standar jabatan untuk analisis gap dan kebutuhan training terukur.</span>
             </div>
           </div>
-        </div>
-
-        <!-- Penjelasan singkat di atas halaman -->
-        <div style="margin:10px 0 20px;padding:12px 18px;background:rgba(255,255,255,0.7);border:1px solid var(--line-soft);border-radius:10px;">
-          <p style="font-size:13px;color:var(--ink-soft);line-height:1.6;margin:0;">
-            Skill Matrix memetakan level kompetensi tiap karyawan dibandingkan standar jabatannya, sehingga gap kompetensi dan kebutuhan training dapat ditentukan secara objektif dan terukur.
-          </p>
-        </div>
+        </header>
 
         <!-- STATE 1: Empty Selection Prompt (No department chosen yet) -->
         <div id="skillMatrixEmptyPrompt" class="form-card" style="text-align:center;padding:50px 24px;margin-bottom:24px;background:linear-gradient(180deg, #FFFFFF 0%, #FAF9F5 100%);border:1.5px dashed var(--line-soft);border-radius:14px;">

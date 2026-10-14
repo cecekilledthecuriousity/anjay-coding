@@ -2723,7 +2723,11 @@ function updateParticipantCount() {
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent);"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
           <span>Belum Ada Peserta Terdaftar</span>
         </div>
-        <div>Gunakan tombol <strong>Quick Paste dari Excel</strong> di bawah untuk memasukkan daftar peserta secara instan, atau klik <strong>Tambah Peserta</strong>.</div>
+        <div style="margin-bottom:10px;">Tambahkan peserta manual atau gunakan Quick Paste dari Excel / Google Sheets.</div>
+        <div style="display:inline-flex;gap:8px;flex-wrap:wrap;justify-content:center;">
+          <button type="button" class="btn-table-action" onclick="addParticipant()" style="font-size:11.5px;padding:5px 12px;">+ Tambah Manual</button>
+          <button type="button" class="btn-table-action" onclick="openModal('modalQuickPasteExcel')" style="font-size:11.5px;padding:5px 12px;background:rgba(0,23,143,0.06);border-color:rgba(0,23,143,0.25);color:#00178F;">Quick Paste dari Excel</button>
+        </div>
       </td>
     `;
     tbody.appendChild(emptyTr);
@@ -3283,11 +3287,13 @@ function goToPage(page) {
   if (page === 'calendar' || page === 'jadwal') page = 'kalender';
   if (page === 'studio' || page === 'ai') page = 'ai-studio';
   if (page === 'admin' || page === 'master' || page === 'data' || page === 'portal-approval' || page === 'approval' || page === 'approver') page = 'portal-approval';
-  if (page === 'my-training' || page === 'mytraining') page = 'training-saya';
+  if (page === 'my-training' || page === 'mytraining' || page === 'training-saya') page = 'learning-passport';
   if (page === 'vendors' || page === 'directory') page = 'vendor';
   if (page === 'skill-matrix' || page === 'matrix' || page === 'skillmatrix' || page === 'skills') page = 'skill-matrix';
   if (page === 'post-training' || page === 'trampoline' || page === 'post-test' || page === 'evidence' || page === 'posttraining') page = 'post-training';
   if (page === 'absensi' || page === 'absen' || page === 'presensi' || page === 'checkin' || page === 'live-absensi') page = 'absensi';
+  if (page === 'learning-passport' || page === 'passport' || page === 'paspor' || page === 'learningpassport') page = 'learning-passport';
+  if (page === 'guide-center' || page === 'guide' || page === 'guidecenter' || page === 'panduan') page = 'guide-center';
 
   // Gate for portal-approval (requires PIN unlock)
   if (page === 'portal-approval') {
@@ -3329,8 +3335,8 @@ function goToPage(page) {
   }
 
   // 5. URL Hash sync
-  if (page === 'absensi' && (window.location.hash.includes('?') || window.location.search.includes('id='))) {
-    // Preserve query parameters for mobile attendance check-in (e.g. ?id=...#absen or #absen?id=...)
+  if ((page === 'absensi' || page === 'learning-passport') && (window.location.hash.includes('?') || window.location.search.includes('id=') || window.location.search.includes('email='))) {
+    // Preserve query parameters for mobile attendance check-in or learning passport direct link
   } else {
     const targetHash = `#${page}`;
     if (window.location.hash !== targetHash) {
@@ -3364,12 +3370,17 @@ function goToPage(page) {
     } else {
       resetMyTrainingSearch();
     }
+  } else if (page === 'learning-passport') {
+    initLearningPassportPage();
   } else if (page === 'vendor') {
     renderVendorDirectoryPage();
   } else if (page === 'post-training') {
     populateTrampolineTrainingDropdowns();
     const navGroup = document.getElementById('navGroupPostTraining');
     if (navGroup) navGroup.classList.add('is-open');
+    const activeSub = navGroup ? navGroup.querySelector('.tds-nav-sub-item.active') : null;
+    const subName = activeSub ? activeSub.getAttribute('data-sub') : 'evidence';
+    switchTrampolineTab(subName);
   } else if (page === 'portal-approval') {
     const masterView = document.getElementById('masterView');
     if (masterView) masterView.style.display = '';
@@ -3379,6 +3390,29 @@ function goToPage(page) {
 
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
+
+function switchGuideCenterTab(tabId) {
+  const tabs = ['overview', 'request', 'absensi', 'post', 'passport'];
+  tabs.forEach(t => {
+    const btn = document.getElementById(`gcTabBtn${t.charAt(0).toUpperCase() + t.slice(1)}`);
+    const panel = document.getElementById(`gcPanel${t.charAt(0).toUpperCase() + t.slice(1)}`);
+    if (btn) {
+      if (t === tabId) {
+        btn.classList.add('active');
+        btn.setAttribute('aria-selected', 'true');
+      } else {
+        btn.classList.remove('active');
+        btn.setAttribute('aria-selected', 'false');
+      }
+    }
+    if (panel) {
+      panel.style.display = (t === tabId) ? 'block' : 'none';
+      if (t === tabId) panel.classList.add('active');
+      else panel.classList.remove('active');
+    }
+  });
+}
+window.switchGuideCenterTab = switchGuideCenterTab;
 
 // Backward compatibility helper
 function switchPublicView(view) {
@@ -3432,7 +3466,7 @@ function handleHashNavigation() {
   }
 
   const rawHash = (window.location.hash || '').replace('#', '').toLowerCase();
-  if (rawHash === 'approval-page' || rawHash === 'approver-portal') {
+  if (rawHash === 'approval' || rawHash === 'approver' || rawHash === 'approval-page' || rawHash === 'approver-portal') {
     requestApprovalAccess();
   } else if (!rawHash || rawHash === 'dashboard' || rawHash === 'home' || rawHash === 'ajukan' || rawHash === 'form') {
     goToPage('ajukan');
@@ -3443,14 +3477,16 @@ function handleHashNavigation() {
   } else if (rawHash === 'kalender' || rawHash === 'calendar' || rawHash === 'jadwal') {
     goToPage('kalender');
   } else if (rawHash === 'training-saya' || rawHash === 'my-training' || rawHash === 'mytraining') {
-    goToPage('training-saya');
+    goToPage('learning-passport');
+  } else if (rawHash.startsWith('learning-passport') || rawHash.startsWith('passport') || rawHash.startsWith('paspor')) {
+    goToPage('learning-passport');
   } else if (rawHash === 'vendor' || rawHash === 'vendors' || rawHash === 'directory') {
     goToPage('vendor');
   } else if (rawHash === 'post-training' || rawHash === 'trampoline' || rawHash === 'evidence' || rawHash === 'posttest') {
     goToPage('post-training');
   } else if (rawHash.startsWith('absen') || rawHash.startsWith('absensi') || rawHash.startsWith('checkin') || rawHash.startsWith('presensi')) {
     goToPage('absensi');
-  } else if (rawHash === 'portal-approval' || rawHash === 'approval' || rawHash === 'approver' || rawHash === 'admin' || rawHash === 'master' || rawHash === 'data') {
+  } else if (rawHash === 'portal-approval' || rawHash === 'admin' || rawHash === 'master' || rawHash === 'data') {
     goToPage('portal-approval');
   } else {
     goToPage('ajukan');
@@ -3483,14 +3519,31 @@ function switchTrampolineTab(tabName) {
     item.classList.toggle('active', sub === tabName);
   });
 
+  const headerKicker = document.getElementById('trampolinePageKicker');
+  const headerTitle = document.getElementById('trampolinePageTitle');
   const headerSub = document.getElementById('trampolinePageSubtitle');
-  if (headerSub) {
-    if (tabName === 'evidence') {
-      headerSub.textContent = 'Pusat tindak lanjut pasca-pelatihan: unggah bukti foto kegiatan & modul materi ke Google Drive.';
-    } else if (tabName === 'posttest') {
-      headerSub.textContent = 'Pusat tindak lanjut pasca-pelatihan: evaluasi pemahaman peserta melalui lembar Google Form resmi.';
-    } else if (tabName === 'sharing') {
-      headerSub.textContent = 'Pusat tindak lanjut pasca-pelatihan: pelaporan realisasi sesi knowledge sharing kepada rekan tim.';
+  const headerIcon = document.getElementById('trampolineHeaderIcon');
+
+  if (tabName === 'evidence') {
+    if (headerKicker) headerKicker.textContent = 'Post Training Trampoline';
+    if (headerTitle) headerTitle.textContent = 'Unggah Bukti Pelatihan';
+    if (headerSub) headerSub.textContent = 'Pusat tindak lanjut pasca-pelatihan: unggah bukti foto kegiatan & modul materi ke Google Drive.';
+    if (headerIcon) {
+      headerIcon.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>';
+    }
+  } else if (tabName === 'posttest') {
+    if (headerKicker) headerKicker.textContent = 'Post Training Trampoline';
+    if (headerTitle) headerTitle.textContent = 'Evaluasi & Post-Test Pelatihan';
+    if (headerSub) headerSub.textContent = 'Pusat evaluasi pasca-pelatihan: evaluasi penerapan trainee oleh atasan dan evaluasi trainer oleh peserta.';
+    if (headerIcon) {
+      headerIcon.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>';
+    }
+  } else if (tabName === 'sharing') {
+    if (headerKicker) headerKicker.textContent = 'Post Training Trampoline';
+    if (headerTitle) headerTitle.textContent = 'Knowledge Sharing ke Tim';
+    if (headerSub) headerSub.textContent = 'Pusat tindak lanjut pasca-pelatihan: pelaporan realisasi sesi knowledge sharing kepada rekan satu divisi.';
+    if (headerIcon) {
+      headerIcon.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>';
     }
   }
 
@@ -3562,7 +3615,8 @@ function populateTrampolineTrainingDropdowns() {
         nama: name,
         id: meta['ID training'] || item.id || '',
         divisi: meta['Departemen / divisi'] || item.divisi || '',
-        kategori: meta['Kategori training'] || meta['Kategori'] || 'Soft skill'
+        kategori: meta['Kategori training'] || meta['Kategori'] || 'Soft skill',
+        tanggal: meta['Tanggal & jam pelaksanaan'] || item.tanggal || ''
       });
     }
   });
@@ -3675,43 +3729,164 @@ function handlePostTestTrainingChange(trainingName) {
 }
 window.handlePostTestTrainingChange = handlePostTestTrainingChange;
 
-// Google Form Post-Test Integration
-const GOOGLE_FORM_POST_TEST_URL = "https://docs.google.com/forms/d/e/1FAIpQLSdLNo9kzy22HEKq3xSCBHmZO2ksfCE2K7U_Y3EA2hCzQtRYmw/viewform";
+// Dual-Section Evaluasi Pasca Training Integration
+const GOOGLE_FORM_EVAL_TRAINEE_URL = "https://docs.google.com/forms/d/1W6Txh0Y1B9jvqi32FepiWCLbocOZL8qRPgegoUICLl4/viewform";
+const GOOGLE_FORM_EVAL_TRAINER_URL = "https://docs.google.com/forms/d/e/1FAIpQLSdLNo9kzy22HEKq3xSCBHmZO2ksfCE2K7U_Y3EA2hCzQtRYmw/viewform";
+const GOOGLE_FORM_POST_TEST_URL = GOOGLE_FORM_EVAL_TRAINER_URL;
 
-function copyPostTestFormLink() {
-  const url = GOOGLE_FORM_POST_TEST_URL;
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(url).then(() => {
-      showToast('Tautan Google Form Post-Test berhasil disalin ke clipboard!', 'success');
-    }).catch(() => {
-      fallbackCopyText(url, 'Tautan Google Form Post-Test berhasil disalin ke clipboard!');
-    });
+/**
+ * Switch antara Sub-Tab Evaluasi Trainee (oleh Atasan) dan Evaluasi Trainer (oleh Peserta)
+ * @param {'trainee'|'trainer'} targetType
+ */
+function switchPostTestEvaluationTab(targetType) {
+  const btnTrainee = document.getElementById('subTabBtnEvalTrainee');
+  const btnTrainer = document.getElementById('subTabBtnEvalTrainer');
+  const secTrainee = document.getElementById('evalSectionTrainee');
+  const secTrainer = document.getElementById('evalSectionTrainer');
+
+  if (targetType === 'trainer') {
+    if (btnTrainee) {
+      btnTrainee.classList.remove('active');
+      btnTrainee.setAttribute('aria-selected', 'false');
+    }
+    if (btnTrainer) {
+      btnTrainer.classList.add('active');
+      btnTrainer.setAttribute('aria-selected', 'true');
+    }
+    if (secTrainee) secTrainee.style.display = 'none';
+    if (secTrainer) secTrainer.style.display = 'block';
+
+    // Tutup preview iframe di trainee jika sedang terbuka untuk menghemat memori
+    const traineeIframeWrap = document.getElementById('evalTraineeIframeWrap');
+    if (traineeIframeWrap && traineeIframeWrap.classList.contains('open')) {
+      traineeIframeWrap.classList.remove('open');
+      const btnText = document.getElementById('evalTraineePreviewBtnText');
+      if (btnText) btnText.textContent = 'Tampilkan Form di Sini';
+      const iframe = document.getElementById('iframeEvalTrainee');
+      if (iframe) iframe.src = 'about:blank';
+    }
   } else {
-    fallbackCopyText(url, 'Tautan Google Form Post-Test berhasil disalin ke clipboard!');
-  }
-}
+    // Default: 'trainee'
+    if (btnTrainee) {
+      btnTrainee.classList.add('active');
+      btnTrainee.setAttribute('aria-selected', 'true');
+    }
+    if (btnTrainer) {
+      btnTrainer.classList.remove('active');
+      btnTrainer.setAttribute('aria-selected', 'false');
+    }
+    if (secTrainee) secTrainee.style.display = 'block';
+    if (secTrainer) secTrainer.style.display = 'none';
 
-function togglePostTestPreview() {
-  const container = document.getElementById('ptPreviewContainer');
-  const btn = document.getElementById('btnTogglePtPreview');
-  const btnText = document.getElementById('ptPreviewBtnText');
-  const iframe = document.getElementById('ptGoogleFormIframe');
-
-  if (!container) return;
-
-  const isOpen = container.classList.contains('open');
-  if (isOpen) {
-    container.classList.remove('open');
-    if (btnText) btnText.textContent = 'Tampilkan Form di Sini';
-  } else {
-    container.classList.add('open');
-    if (btnText) btnText.textContent = 'Sembunyikan Form';
-    if (iframe && (!iframe.src || iframe.src === 'about:blank' || iframe.getAttribute('src') === 'about:blank')) {
-      iframe.src = `${GOOGLE_FORM_POST_TEST_URL}?embedded=true`;
+    // Tutup preview iframe di trainer jika sedang terbuka untuk menghemat memori
+    const trainerIframeWrap = document.getElementById('evalTrainerIframeWrap');
+    if (trainerIframeWrap && trainerIframeWrap.classList.contains('open')) {
+      trainerIframeWrap.classList.remove('open');
+      const btnText = document.getElementById('evalTrainerPreviewBtnText');
+      if (btnText) btnText.textContent = 'Tampilkan Form di Sini';
+      const iframe = document.getElementById('iframeEvalTrainer');
+      if (iframe) iframe.src = 'about:blank';
     }
   }
 }
 
+/**
+ * Salin Tautan Formulir Evaluasi Trainee (oleh Atasan)
+ */
+function copyEvalTraineeLink() {
+  const input = document.getElementById('evalTraineeFormUrl');
+  const url = (input && input.value) ? input.value : GOOGLE_FORM_EVAL_TRAINEE_URL;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(url).then(() => {
+      showToast('Tautan Evaluasi Trainee berhasil disalin ke clipboard!', 'success');
+    }).catch(() => {
+      fallbackCopyText(url, 'Tautan Evaluasi Trainee berhasil disalin ke clipboard!');
+    });
+  } else {
+    fallbackCopyText(url, 'Tautan Evaluasi Trainee berhasil disalin ke clipboard!');
+  }
+}
+
+/**
+ * Salin Tautan Formulir Evaluasi Trainer (oleh Peserta)
+ */
+function copyEvalTrainerLink() {
+  const input = document.getElementById('evalTrainerFormUrl');
+  const url = (input && input.value) ? input.value : GOOGLE_FORM_EVAL_TRAINER_URL;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(url).then(() => {
+      showToast('Tautan Evaluasi Trainer berhasil disalin ke clipboard!', 'success');
+    }).catch(() => {
+      fallbackCopyText(url, 'Tautan Evaluasi Trainer berhasil disalin ke clipboard!');
+    });
+  } else {
+    fallbackCopyText(url, 'Tautan Evaluasi Trainer berhasil disalin ke clipboard!');
+  }
+}
+
+/**
+ * Toggle Pratinjau Iframe Evaluasi Trainee (oleh Atasan)
+ */
+function toggleEvalTraineePreview() {
+  const wrap = document.getElementById('evalTraineeIframeWrap');
+  const btnText = document.getElementById('evalTraineePreviewBtnText');
+  const iframe = document.getElementById('iframeEvalTrainee');
+  if (!wrap) return;
+
+  const isOpen = wrap.classList.contains('open');
+  if (isOpen) {
+    wrap.classList.remove('open');
+    if (btnText) btnText.textContent = 'Tampilkan Form di Sini';
+  } else {
+    wrap.classList.add('open');
+    if (btnText) btnText.textContent = 'Sembunyikan Form';
+    if (iframe && (!iframe.src || iframe.src === 'about:blank' || iframe.getAttribute('src') === 'about:blank')) {
+      const input = document.getElementById('evalTraineeFormUrl');
+      const url = (input && input.value) ? input.value : GOOGLE_FORM_EVAL_TRAINEE_URL;
+      iframe.src = `${url}?embedded=true`;
+    }
+  }
+}
+
+/**
+ * Toggle Pratinjau Iframe Evaluasi Trainer (oleh Peserta)
+ */
+function toggleEvalTrainerPreview() {
+  const wrap = document.getElementById('evalTrainerIframeWrap');
+  const btnText = document.getElementById('evalTrainerPreviewBtnText');
+  const iframe = document.getElementById('iframeEvalTrainer');
+  if (!wrap) return;
+
+  const isOpen = wrap.classList.contains('open');
+  if (isOpen) {
+    wrap.classList.remove('open');
+    if (btnText) btnText.textContent = 'Tampilkan Form di Sini';
+  } else {
+    wrap.classList.add('open');
+    if (btnText) btnText.textContent = 'Sembunyikan Form';
+    if (iframe && (!iframe.src || iframe.src === 'about:blank' || iframe.getAttribute('src') === 'about:blank')) {
+      const input = document.getElementById('evalTrainerFormUrl');
+      const url = (input && input.value) ? input.value : GOOGLE_FORM_EVAL_TRAINER_URL;
+      iframe.src = `${url}?embedded=true`;
+    }
+  }
+}
+
+// Legacy Aliases
+function copyPostTestFormLink() {
+  copyEvalTrainerLink();
+}
+
+function togglePostTestPreview() {
+  toggleEvalTrainerPreview();
+}
+
+// Window Exposures
+window.switchPostTestEvaluationTab = switchPostTestEvaluationTab;
+window.copyEvalTraineeLink = copyEvalTraineeLink;
+window.copyEvalTrainerLink = copyEvalTrainerLink;
+window.toggleEvalTraineePreview = toggleEvalTraineePreview;
+window.toggleEvalTrainerPreview = toggleEvalTrainerPreview;
 window.copyPostTestFormLink = copyPostTestFormLink;
 window.togglePostTestPreview = togglePostTestPreview;
 
@@ -4213,13 +4388,16 @@ async function submitEvidence(e) {
 
   const trainingData = window._trampolineTrainingsData?.get(trainingSelect.value);
   const trainingDivisi = trainingData?.divisi || '-';
+  const trainingId = trainingData?.id || '';
 
   const payload = {
     action: "submitPostTrainingEvidence",
+    trainingId: trainingId,
     namaTraining: trainingSelect.value,
     namaPeserta: "-",
     divisi: trainingDivisi,
     kategori: kategoriHidden?.value || 'Soft skill',
+    tanggalPelaksanaan: trainingData?.tanggal || '',
     tanggal: new Date().toISOString().split('T')[0],
     files: selectedEvidenceFiles.map(f => {
       let b64 = f.base64 || '';
@@ -4368,9 +4546,11 @@ async function submitPostTest(e) {
 
   const trainingData = window._trampolineTrainingsData?.get(trainingSelect.value);
   const trainingDivisi = trainingData?.divisi || '-';
+  const trainingId = trainingData?.id || '';
 
   const payload = {
     action: "submitPostTest",
+    trainingId: trainingId,
     namaTraining: trainingSelect.value,
     namaPeserta: "-",
     divisi: trainingDivisi,
@@ -4658,9 +4838,9 @@ function cancelApprovalPin() {
 }
 
 function requestAdminAccess() {
-  const isUnlocked = sessionStorage.getItem('admin_unlocked') === 'true';
+  const isUnlocked = sessionStorage.getItem('admin_unlocked') === 'true' || sessionStorage.getItem('approval_auth_token') === 'true';
   if (isUnlocked) {
-    goToPage('portal-approval');
+    window.location.href = 'approval/index.html';
   } else {
     openModal('modalAdminPin');
     const pinInput = document.getElementById('adminPinInput');
@@ -4683,9 +4863,12 @@ function checkAdminPin() {
      enteredPin === DEFAULT_ADMIN_PIN)
   ) {
     sessionStorage.setItem('admin_unlocked', 'true');
+    sessionStorage.setItem('approval_auth_token', 'true');
     closeModal('modalAdminPin');
     showToast('Akses Portal Approval berhasil dibuka.', 'success');
-    goToPage('portal-approval');
+    setTimeout(() => {
+      window.location.href = 'approval/index.html';
+    }, 200);
   } else if (pinInput) {
     pinInput.classList.add('error');
     showToast('PIN Admin salah. Silahkan coba lagi (Default: ubahpin123).', 'error');
@@ -4696,7 +4879,7 @@ function checkAdminPin() {
 function cancelAdminPin() {
   closeModal('modalAdminPin');
   if (currentPage === 'portal-approval') {
-    goToPage('ajukan');
+    goToPage('learning-passport');
   } else {
     goToPage(currentPage);
   }
@@ -4704,7 +4887,8 @@ function cancelAdminPin() {
 
 function lockAdminAccess() {
   sessionStorage.removeItem('admin_unlocked');
-  goToPage('ajukan');
+  sessionStorage.removeItem('approval_auth_token');
+  goToPage('learning-passport');
   showToast('Sesi Portal Approval telah dikunci.', 'info');
 }
 
@@ -4983,9 +5167,9 @@ function renderKanbanBoard(filteredItems, containerId) {
   if (!container) return;
 
   const cols = {
-    pending: { title: 'Menunggu Approval', class: 'pending', items: [] },
+    pending: { title: 'Menunggu Persetujuan', class: 'pending', items: [] },
     approved: { title: 'Disetujui', class: 'approved', items: [] },
-    rejected: { title: 'Ditolak / Revisi', class: 'rejected', items: [] }
+    rejected: { title: 'Perlu Revisi / Ditolak', class: 'rejected', items: [] }
   };
 
   filteredItems.forEach(item => {
@@ -5183,7 +5367,7 @@ function populateReviewSummary() {
   const countPeserta = (data.participants || []).filter(p => p.nama).length;
   const countEmail = (data.participants || []).filter(p => p.email).length;
   setRev('revDurationParticipants', `${m['Total durasi belajar'] || '-'} • ${countPeserta} Peserta (${countEmail} Email terdaftar)`);
-  const evaluasiDisplay = m['PIC evaluasi'] ? `${m['PIC evaluasi']} (${m['Waktu evaluasi'] || 'Setelah training'})` : (m['Waktu evaluasi'] || '-');
+  const evaluasiDisplay = m['PIC evaluasi'] ? `${m['PIC evaluasi']} (${m['Waktu evaluasi'] || 'Langsung Selesai Pelatihan'})` : (m['Waktu evaluasi'] || '-');
   setRev('revEvaluasi', evaluasiDisplay);
   setRev('revBudget', m['Budget diajukan'] || m['Estimasi biaya'] || 'Rp 0');
 
@@ -5280,7 +5464,7 @@ function collectFormData() {
   meta['Penerapan di pekerjaan'] = meta['Penerapan di pekerjaan'] || meta['Aplikasi / implementasi'] || '';
   meta['Aplikasi / implementasi'] = meta['Penerapan di pekerjaan'];
 
-  meta['Waktu evaluasi'] = meta['Waktu evaluasi'] || meta['Interval follow-up'] || 'Setelah training';
+  meta['Waktu evaluasi'] = meta['Waktu evaluasi'] || meta['Interval follow-up'] || 'Langsung Selesai Pelatihan';
   meta['Interval follow-up'] = meta['Waktu evaluasi'];
 
   meta['PIC evaluasi'] = meta['PIC evaluasi'] || meta['PIC monitoring'] || meta['Nama pengaju'] || meta['Leader pengaju'] || '';
@@ -5642,7 +5826,7 @@ function resetForm() {
   const category = document.getElementById('category');
   if (category) category.value = 'Soft Skill';
   const waktuEvaluasi = document.getElementById('waktuEvaluasi');
-  if (waktuEvaluasi) waktuEvaluasi.value = 'Setelah training';
+  if (waktuEvaluasi) waktuEvaluasi.value = 'Langsung Selesai Pelatihan';
   const onlinePlatform = document.getElementById('onlinePlatform');
   if (onlinePlatform) onlinePlatform.value = 'Google Meet';
   if (typeof handleOnlinePlatformChange === 'function') {
@@ -10852,6 +11036,19 @@ function handleAttendanceTrainingChange(trainingId) {
     if (elTotal) elTotal.textContent = '0';
     if (elPercent) elPercent.textContent = '0%';
     if (elFill) elFill.style.width = '0%';
+
+    const elGuideText = document.getElementById('attGuideText');
+    const elStatusBadgeText = document.getElementById('attStatusBadgeText');
+    if (elGuideText) {
+      elGuideText.innerHTML = `<strong>Panduan Fleksibel Presensi:</strong> Tampilkan QR Code di proyektor untuk presensi kelas tatap muka, atau bagikan tautan langsung bagi peserta training mandiri dan sesi online. Trainer juga dapat mencatat kehadiran secara manual pada daftar peserta di samping.`;
+    }
+    if (elStatusBadgeText) {
+      elStatusBadgeText.textContent = 'Sesi Presensi Aktif';
+    }
+
+    if (typeof renderIndividualAttendanceTable === 'function') {
+      renderIndividualAttendanceTable([]);
+    }
     return;
   }
 
@@ -10913,9 +11110,32 @@ function handleAttendanceTrainingChange(trainingId) {
     });
   });
 
+  // Cek apakah mode Training Mandiri / Individual (1 peserta terdaftar)
+  const isIndividual = (activeAttendanceParticipants.length === 1) || (meta['Jenis training'] === 'Training Mandiri');
+  const elGuideText = document.getElementById('attGuideText');
+  const elStatusBadgeText = document.getElementById('attStatusBadgeText');
+  if (isIndividual) {
+    if (elGuideText) {
+      elGuideText.innerHTML = `<strong>Mode Training Mandiri / Individual:</strong> Peserta cukup memindai kode QR di layar ini menggunakan smartphone untuk mencatat timestamp kehadiran resmi.`;
+    }
+    if (elStatusBadgeText) {
+      elStatusBadgeText.textContent = 'Training Mandiri / Individual (1 Peserta)';
+    }
+  } else {
+    if (elGuideText) {
+      elGuideText.innerHTML = `<strong>Panduan Fleksibel Presensi:</strong> Tampilkan QR Code di proyektor untuk presensi kelas tatap muka, atau bagikan tautan langsung bagi peserta training mandiri dan sesi online. Trainer juga dapat mencatat kehadiran secara manual pada daftar peserta di samping.`;
+    }
+    if (elStatusBadgeText) {
+      elStatusBadgeText.textContent = 'Sesi Presensi Aktif';
+    }
+  }
+
   // Render QR & Board
   renderAttendanceSessionQR();
   syncAttendanceHubLogs();
+  if (typeof renderIndividualAttendanceTable === 'function') {
+    renderIndividualAttendanceTable();
+  }
 }
 
 /**
@@ -11001,6 +11221,17 @@ function renderAttendanceParticipantBoard(searchQuery = '') {
     return p.nama.toLowerCase().includes(q) || p.email.toLowerCase().includes(q) || p.departemen.toLowerCase().includes(q);
   });
 
+  // Hitung persentase kehadiran keseluruhan per individu
+  const indivRates = (Array.isArray(cachedIndivAttendanceData) && cachedIndivAttendanceData.length > 0)
+    ? cachedIndivAttendanceData
+    : calculateIndividualAttendance();
+
+  const rateMap = new Map();
+  indivRates.forEach(r => {
+    if (r.email) rateMap.set(String(r.email).toLowerCase().trim(), r);
+    if (r.nama) rateMap.set(String(r.nama).toLowerCase().trim(), r);
+  });
+
   let presentCount = 0;
   container.innerHTML = '';
 
@@ -11009,9 +11240,22 @@ function renderAttendanceParticipantBoard(searchQuery = '') {
   } else {
     filtered.forEach(p => {
       const emailKey = p.email.toLowerCase().trim();
+      const nameKey = p.nama.toLowerCase().trim();
       const log = presentEmailMap.get(emailKey);
       const isPresent = !!log;
       if (isPresent) presentCount++;
+
+      const indivInfo = (emailKey ? rateMap.get(emailKey) : null) || rateMap.get(nameKey);
+      const overallPercent = indivInfo ? Number(indivInfo.persen) : 0;
+      const overallHadir = indivInfo ? indivInfo.hadir : 0;
+      const overallTotal = indivInfo ? indivInfo.total : 1;
+      const isRateLow = overallPercent < 75;
+
+      const rateChipHtml = `
+        <span class="att-indiv-chip ${isRateLow ? 'warn' : 'ok'}" title="Kehadiran keseluruhan: ${overallPercent}% (${overallHadir}/${overallTotal} sesi)" style="margin-left:6px;">
+          ${overallPercent}%
+        </span>
+      `;
 
       const item = document.createElement('div');
       item.className = `att-participant-item ${isPresent ? 'present' : ''}`;
@@ -11034,8 +11278,12 @@ function renderAttendanceParticipantBoard(searchQuery = '') {
 
       item.innerHTML = `
         <div class="att-item-meta">
-          <span class="att-item-name">${p.nama} ${p.isWalkIn ? '<span style="font-size:10.5px;padding:1px 6px;border-radius:10px;background:rgba(183,134,40,0.15);color:var(--accent-gold);margin-left:4px;">Walk-in</span>' : ''}</span>
-          <span class="att-item-sub">${p.departemen} &bull; ${p.email}</span>
+          <div class="att-item-name">
+            <span class="att-name-text">${escapeHtml(p.nama)}</span>
+            ${p.isWalkIn ? '<span class="att-pill-walkin" style="margin-left:4px;">Walk-in</span>' : ''}
+            ${rateChipHtml}
+          </div>
+          <span class="att-item-sub">${escapeHtml(p.departemen)} &bull; ${escapeHtml(p.email)}</span>
         </div>
         <div class="att-item-actions">
           ${badgeHtml}
@@ -11098,6 +11346,9 @@ async function manualCheckInParticipant(email) {
   logs.push(newLog);
   saveStoredAttendanceLogs(logs);
   renderAttendanceParticipantBoard();
+  if (typeof renderIndividualAttendanceTable === 'function') {
+    renderIndividualAttendanceTable();
+  }
   showToast(`Presensi ${found.nama} berhasil dicatat!`, 'success');
 
   // Kirim background sync ke Google Apps Script
@@ -11165,6 +11416,9 @@ async function submitWalkInParticipant(event) {
 
   closeWalkInModal();
   renderAttendanceParticipantBoard();
+  if (typeof renderIndividualAttendanceTable === 'function') {
+    renderIndividualAttendanceTable();
+  }
   showToast(`Peserta walk-in ${nama} berhasil ditambahkan dan dicatat hadir!`, 'success');
 
   try {
@@ -11174,6 +11428,49 @@ async function submitWalkInParticipant(event) {
       body: JSON.stringify({ action: 'recordAttendance', isWalkIn: true, ...newLog })
     }).catch(() => {});
   } catch (err) {}
+}
+
+/**
+ * Buka Form Presensi Peserta di Tab Baru Browser
+ */
+function openDirectAttendanceTab(event) {
+  if (event) event.preventDefault();
+
+  if (!activeAttendanceTraining) {
+    showToast('Silakan pilih agenda pelatihan pada dropdown di atas terlebih dahulu.', 'warning');
+    const sel = document.getElementById('attTrainingSelect');
+    if (sel) {
+      sel.focus();
+      sel.style.transition = 'box-shadow 0.3s ease, border-color 0.3s ease';
+      sel.style.borderColor = 'var(--accent, #4B96FF)';
+      sel.style.boxShadow = '0 0 0 4px rgba(75, 150, 255, 0.25)';
+      setTimeout(() => {
+        sel.style.borderColor = '';
+        sel.style.boxShadow = '';
+      }, 1500);
+    }
+    return;
+  }
+
+  const meta = activeAttendanceTraining.meta || {};
+  const trnId = (meta['ID training'] || activeAttendanceTraining.id || '').trim();
+  const modId = activeAttendanceModule || 'Sesi 1';
+
+  // Jika sedang dijalankan di lingkungan lokal (file:/// atau localhost), gunakan basis URL lokal saat ini
+  let targetUrl = '';
+  const isLocalEnv = window.location.protocol === 'file:' ||
+                     window.location.hostname === 'localhost' ||
+                     window.location.hostname === '127.0.0.1';
+
+  if (isLocalEnv) {
+    const localBase = window.location.href.split('?')[0].split('#')[0];
+    targetUrl = `${localBase}?id=${encodeURIComponent(trnId)}&sesi=${encodeURIComponent(modId)}#absen`;
+  } else {
+    const input = document.getElementById('attDirectUrlInput');
+    targetUrl = (input && input.value) ? input.value : `${getAttendanceBaseUrl()}?id=${encodeURIComponent(trnId)}&sesi=${encodeURIComponent(modId)}#absen`;
+  }
+
+  window.open(targetUrl, '_blank');
 }
 
 /**
@@ -11227,6 +11524,9 @@ document.addEventListener('keydown', (e) => {
  */
 async function syncAttendanceHubLogs() {
   renderAttendanceParticipantBoard();
+  if (typeof renderIndividualAttendanceTable === 'function') {
+    renderIndividualAttendanceTable();
+  }
   if (!activeAttendanceTraining) return;
 
   const meta = activeAttendanceTraining.meta || {};
@@ -11252,16 +11552,343 @@ async function syncAttendanceHubLogs() {
         });
         saveStoredAttendanceLogs(merged);
         renderAttendanceParticipantBoard();
+        if (typeof renderIndividualAttendanceTable === 'function') {
+          renderIndividualAttendanceTable();
+        }
       }
     }
   } catch (err) {
     // Offline fallback: rely on local logs
   }
+
+  // Sinkronisasi data per individu dari backend Apps Script jika tersedia
+  try {
+    const indivUrl = `${GOOGLE_SCRIPT_URL}?action=getParticipantAttendance&trainingId=${encodeURIComponent(trnId)}&_ts=${Date.now()}`;
+    const indivResp = await fetch(indivUrl);
+    if (indivResp.ok) {
+      const serverRates = await indivResp.json();
+      if (Array.isArray(serverRates) && serverRates.length > 0) {
+        if (typeof renderIndividualAttendanceTable === 'function') {
+          renderIndividualAttendanceTable(serverRates);
+        }
+      }
+    }
+  } catch (eIndiv) {}
 }
 
 function refreshAttendanceHubData() {
   syncAttendanceHubLogs();
   showToast('Memperbarui data kehadiran...', 'info');
+}
+
+// ==========================================
+// KONTROLER REKAPITULASI KEHADIRAN PER INDIVIDU
+// ==========================================
+
+let currentIndivAttendanceFilter = 'all'; // 'all' | 'low'
+let currentIndivAttendanceSearch = '';
+let cachedIndivAttendanceData = [];
+
+/**
+ * Menghitung persentase kehadiran per individu peserta berdasarkan data training & presensi.
+ * Aturan:
+ * - Scan = Hadir, Tidak Scan = Tidak Hadir. Status telat tidak dibedakan.
+ * - Persentase = (jumlah sesi yang di-scan ÷ jumlah sesi yang diikuti peserta) × 100, dibulatkan ke bilangan bulat.
+ * - Penyebut hanya sesi yang diikuti peserta tersebut, bukan semua sesi di sistem.
+ */
+function calculateIndividualAttendance(trainingId) {
+  const targetTrn = activeAttendanceTraining;
+  if (!targetTrn) return [];
+
+  const meta = targetTrn.meta || {};
+  const trnId = (meta['ID training'] || targetTrn.id || '').trim();
+  if (!trnId) return [];
+
+  // Hitung total sesi yang ada pada pelatihan ini
+  const rawModules = targetTrn.modules || [];
+  const totalSessions = Math.max(rawModules.length, 1);
+
+  // Ambil seluruh log presensi untuk pelatihan ini
+  const allLogs = getStoredAttendanceLogs();
+  const trnLogs = allLogs.filter(l => String(l.trainingId).trim() === trnId);
+
+  // Map kehadiran per peserta: email / nama -> Set of moduleId
+  const attendedModulesByPerson = new Map();
+  trnLogs.forEach(l => {
+    const key = (l.participantEmail || l.participantName || '').toLowerCase().trim();
+    if (!key) return;
+    if (!attendedModulesByPerson.has(key)) {
+      attendedModulesByPerson.set(key, new Set());
+    }
+    attendedModulesByPerson.get(key).add(String(l.moduleId || 'Sesi 1').trim());
+  });
+
+  const list = [];
+  const processedKeys = new Set();
+
+  // 1. Peserta terdaftar dari proposal / form
+  const regParts = activeAttendanceParticipants || [];
+  regParts.forEach(p => {
+    const pNama = (p.nama || '').trim();
+    const pEmail = (p.email || '').toLowerCase().trim();
+    const key = pEmail || pNama.toLowerCase();
+    if (!key) return;
+
+    processedKeys.add(key);
+    processedKeys.add(pNama.toLowerCase());
+
+    const attendedSet = attendedModulesByPerson.get(key) || attendedModulesByPerson.get(pNama.toLowerCase()) || new Set();
+    const hadir = attendedSet.size;
+    const total = totalSessions;
+    const persen = total > 0 ? Math.round((hadir / total) * 100) : 0;
+
+    list.push({
+      nama: pNama,
+      email: p.email || '',
+      departemen: p.departemen || p.divisi || '-',
+      hadir: hadir,
+      total: total,
+      persen: persen,
+      isWalkIn: false
+    });
+  });
+
+  // 2. Peserta Walk-in yang hadir pada log
+  trnLogs.forEach(l => {
+    const pNama = (l.participantName || '').trim();
+    const pEmail = (l.participantEmail || '').toLowerCase().trim();
+    const key = pEmail || pNama.toLowerCase();
+
+    if (!processedKeys.has(key) && !processedKeys.has(pNama.toLowerCase())) {
+      processedKeys.add(key);
+      processedKeys.add(pNama.toLowerCase());
+
+      const attendedSet = attendedModulesByPerson.get(key) || attendedModulesByPerson.get(pNama.toLowerCase()) || new Set();
+      const hadir = attendedSet.size;
+      const total = totalSessions;
+      const persen = total > 0 ? Math.round((hadir / total) * 100) : 0;
+
+      list.push({
+        nama: pNama,
+        email: l.participantEmail || '',
+        departemen: l.department || '-',
+        hadir: hadir,
+        total: total,
+        persen: persen,
+        isWalkIn: true
+      });
+    }
+  });
+
+  // Urutkan alfabetis berdasarkan nama peserta
+  list.sort((a, b) => a.nama.localeCompare(b.nama));
+  return list;
+}
+
+/**
+ * Switch antara Tab "Sesi Ini" dan "Rekap per Individu" di panel kanan absensi
+ * @param {'session'|'rekap'} tabName
+ */
+function switchAttendanceTab(tabName) {
+  const btnSession = document.getElementById('tabBtnSession');
+  const btnRekap = document.getElementById('tabBtnRekap');
+  const paneSession = document.getElementById('attTabContentSession');
+  const paneRekap = document.getElementById('attTabContentRekap');
+
+  if (tabName === 'rekap') {
+    if (btnSession) {
+      btnSession.classList.remove('active');
+      btnSession.setAttribute('aria-selected', 'false');
+    }
+    if (btnRekap) {
+      btnRekap.classList.add('active');
+      btnRekap.setAttribute('aria-selected', 'true');
+    }
+    if (paneSession) paneSession.style.display = 'none';
+    if (paneRekap) paneRekap.style.display = 'block';
+
+    renderIndividualAttendanceTable();
+  } else {
+    if (btnSession) {
+      btnSession.classList.add('active');
+      btnSession.setAttribute('aria-selected', 'true');
+    }
+    if (btnRekap) {
+      btnRekap.classList.remove('active');
+      btnRekap.setAttribute('aria-selected', 'false');
+    }
+    if (paneSession) paneSession.style.display = 'block';
+    if (paneRekap) paneRekap.style.display = 'none';
+
+    renderAttendanceParticipantBoard();
+  }
+}
+
+/**
+ * Toggle filter kehadiran di bawah 75%
+ */
+function toggleIndividualAttendanceLowFilter() {
+  if (currentIndivAttendanceFilter === 'low') {
+    currentIndivAttendanceFilter = 'all';
+  } else {
+    currentIndivAttendanceFilter = 'low';
+  }
+
+  const btnLow = document.getElementById('btnFilterIndivLow');
+  if (btnLow) {
+    btnLow.classList.toggle('active', currentIndivAttendanceFilter === 'low');
+  }
+
+  renderIndividualAttendanceTable();
+}
+
+/**
+ * Handle filter tombol all / low jika dipanggil langsung
+ */
+function setIndividualAttendanceFilter(filterType) {
+  currentIndivAttendanceFilter = filterType || 'all';
+  const btnLow = document.getElementById('btnFilterIndivLow');
+  if (btnLow) {
+    btnLow.classList.toggle('active', currentIndivAttendanceFilter === 'low');
+  }
+  renderIndividualAttendanceTable();
+}
+
+/**
+ * Handle pencarian nama atau departemen pada tab Rekap per individu
+ */
+function handleIndividualAttendanceFilterChange() {
+  const input = document.getElementById('attIndivSearchInput');
+  currentIndivAttendanceSearch = input ? input.value.trim().toLowerCase() : '';
+  renderIndividualAttendanceTable();
+}
+
+/**
+ * Render Tabel Rekapitulasi Kehadiran Per Individu (Tab Rekap per Individu)
+ */
+function renderIndividualAttendanceTable(serverData) {
+  const tbody = document.getElementById('attIndividualTableBody');
+  if (!tbody) return;
+
+  if (Array.isArray(serverData)) {
+    cachedIndivAttendanceData = serverData;
+  } else if (!cachedIndivAttendanceData || cachedIndivAttendanceData.length === 0 || !serverData) {
+    cachedIndivAttendanceData = calculateIndividualAttendance();
+  }
+
+  // Hitung total peserta, peserta < 75%, dan rata-rata persentase
+  const totalCount = cachedIndivAttendanceData.length;
+  const lowCount = cachedIndivAttendanceData.filter(p => Number(p.persen) < 75).length;
+  const avgPercent = totalCount > 0
+    ? Math.round(cachedIndivAttendanceData.reduce((sum, p) => sum + Number(p.persen || 0), 0) / totalCount)
+    : 0;
+
+  // 1. Update 2 Kartu Ringkasan & Badge Filter
+  const elAvg = document.getElementById('attSummaryAvgPercent');
+  const elLow = document.getElementById('attSummaryLowCount');
+  const elBadge = document.getElementById('btnFilterIndivLowBadge');
+  const elLowCard = document.getElementById('attSummaryLowCard');
+
+  if (elAvg) elAvg.textContent = `${avgPercent}%`;
+  if (elLow) elLow.textContent = `${lowCount} Peserta`;
+  if (elBadge) elBadge.textContent = lowCount;
+  if (elLowCard) {
+    elLowCard.classList.toggle('warn', lowCount > 0);
+  }
+
+  // Fallback untuk elemen legacy jika ada
+  const elTotalCount = document.getElementById('attIndivTotalCount');
+  const elLegacyLowCount = document.getElementById('attIndivLowCount');
+  if (elTotalCount) elTotalCount.textContent = totalCount;
+  if (elLegacyLowCount) elLegacyLowCount.textContent = lowCount;
+
+  // State: Belum ada pelatihan dipilih atau tidak ada peserta
+  if (!activeAttendanceTraining || totalCount === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="4" class="att-table-empty">
+          ${!activeAttendanceTraining ? 'Silakan pilih pelatihan pada dropdown di atas untuk memuat data rekap per individu.' : 'Belum ada data peserta terdaftar pada pelatihan ini.'}
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  // Terapkan Filter & Pencarian
+  const q = (currentIndivAttendanceSearch || '').toLowerCase().trim();
+  const filtered = cachedIndivAttendanceData.filter(p => {
+    // 1. Filter < 75%
+    if (currentIndivAttendanceFilter === 'low' && Number(p.persen) >= 75) {
+      return false;
+    }
+    // 2. Pencarian Nama atau Departemen
+    if (q) {
+      const matchNama = (p.nama || '').toLowerCase().includes(q);
+      const matchEmail = (p.email || '').toLowerCase().includes(q);
+      const matchDept = (p.departemen || '').toLowerCase().includes(q);
+      if (!matchNama && !matchEmail && !matchDept) return false;
+    }
+    return true;
+  });
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="4" class="att-table-empty">
+          ${currentIndivAttendanceFilter === 'low'
+            ? 'Seluruh peserta telah memenuhi batas kelulusan presensi (&ge; 75%). Tidak ada peserta yang perlu follow-up.'
+            : 'Tidak ada peserta yang cocok dengan filter atau kata kunci pencarian.'}
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  tbody.innerHTML = '';
+  filtered.forEach(p => {
+    const isLow = Number(p.persen) < 75;
+    const tr = document.createElement('tr');
+    if (isLow) tr.className = 'att-row-alert';
+
+    const statusBadge = isLow
+      ? `<span class="att-badge-followup" title="Kehadiran di bawah 75%, perlu tindak lanjut">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+          <span>Follow-up</span>
+        </span>`
+      : `<span class="att-badge-good" title="Kehadiran memenuhi syarat (&ge; 75%)">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          <span>Baik</span>
+        </span>`;
+
+    tr.innerHTML = `
+      <td>
+        <div style="font-weight:600;color:var(--ink);display:flex;align-items:center;gap:6px;">
+          <span>${escapeHtml(p.nama)}</span>
+          ${p.isWalkIn ? '<span class="att-pill-walkin">Walk-in</span>' : ''}
+        </div>
+        <div style="font-size:11.5px;color:var(--ink-soft);margin-top:2px;display:flex;gap:6px;align-items:center;">
+          <span>${escapeHtml(p.departemen || '-')}</span>
+          ${p.email ? `<span>&bull;</span><span>${escapeHtml(p.email)}</span>` : ''}
+        </div>
+      </td>
+      <td style="text-align:center;">
+        <strong style="color:var(--ink);font-size:13px;">${p.hadir}</strong>
+        <span style="color:var(--ink-soft);font-size:12px;"> / ${p.total} Sesi</span>
+      </td>
+      <td>
+        <div class="att-indiv-progress-cell">
+          <div class="att-indiv-bar-bg">
+            <div class="att-indiv-bar-fill ${isLow ? 'low' : 'ok'}" style="width:${p.persen}%;"></div>
+          </div>
+          <strong class="att-indiv-bar-num ${isLow ? 'low' : 'ok'}">${p.persen}%</strong>
+        </div>
+      </td>
+      <td style="text-align:center;">
+        ${statusBadge}
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
 }
 
 // ==========================================
@@ -11388,10 +12015,33 @@ async function setupMobileAttendanceView(trainingId, moduleId) {
     optWalkIn.value = '__walkin__';
     optWalkIn.textContent = '➕ Nama saya belum ada di daftar (Peserta Baru / Walk-in)';
     selParticipant.appendChild(optWalkIn);
-  }
 
-  // Reset tampilan form walk-in
-  handleMobParticipantChange('');
+    // Auto-select jika terdeteksi Training Mandiri / Individual (1 peserta terdaftar)
+    if (mobileParticipantsList.length === 1) {
+      const singleP = mobileParticipantsList[0];
+      selParticipant.value = singleP.nama;
+      handleMobParticipantChange(singleP.nama);
+      const hint = document.getElementById('mobParticipantHint');
+      if (hint) {
+        hint.textContent = '🎯 Terdeteksi Training Mandiri / Individual (1 peserta). Nama Anda otomatis dipilih.';
+        hint.style.color = 'var(--moss)';
+        hint.style.fontWeight = '600';
+      }
+      const emailField = document.getElementById('mobEmailVerify');
+      if (emailField) {
+        setTimeout(() => emailField.focus(), 150);
+      }
+    } else {
+      // Reset tampilan form walk-in
+      handleMobParticipantChange('');
+      const hint = document.getElementById('mobParticipantHint');
+      if (hint) {
+        hint.textContent = 'Pilih nama Anda yang terdaftar pada pelatihan ini.';
+        hint.style.color = 'var(--ink-soft)';
+        hint.style.fontWeight = 'normal';
+      }
+    }
+  }
 }
 
 function handleMobParticipantChange(selectedName) {
@@ -11506,7 +12156,9 @@ async function submitMobileAttendance(event) {
     department: finalDept,
     method: isWalkIn ? 'QR Web (Walk-in)' : 'QR Web (Self)',
     status: 'Hadir',
-    note: isWalkIn ? 'Presensi Mandiri QR (Walk-in)' : 'Presensi Mandiri QR'
+    note: (mobileParticipantsList.length === 1 || meta['Jenis training'] === 'Training Mandiri')
+      ? (isWalkIn ? 'Presensi Mandiri QR (Walk-in - Training Mandiri / Individual)' : 'Presensi Mandiri QR (Training Mandiri / Individual)')
+      : (isWalkIn ? 'Presensi Mandiri QR (Walk-in)' : 'Presensi Mandiri QR')
   };
 
   // Simpan ke local log (jika perangkat dapat menyimpan)
@@ -11575,17 +12227,532 @@ window.openWalkInModal = openWalkInModal;
 window.closeWalkInModal = closeWalkInModal;
 window.submitWalkInParticipant = submitWalkInParticipant;
 window.copyAttendanceLink = copyAttendanceLink;
+window.openDirectAttendanceTab = openDirectAttendanceTab;
 window.toggleProjectorMode = toggleProjectorMode;
 window.refreshAttendanceHubData = refreshAttendanceHubData;
 window.handleMobParticipantChange = handleMobParticipantChange;
 window.submitMobileAttendance = submitMobileAttendance;
 window.openAttendanceFromCalendar = openAttendanceFromCalendar;
+window.switchAttendanceTab = switchAttendanceTab;
+window.toggleIndividualAttendanceLowFilter = toggleIndividualAttendanceLowFilter;
+window.setIndividualAttendanceFilter = setIndividualAttendanceFilter;
+window.handleIndividualAttendanceFilterChange = handleIndividualAttendanceFilterChange;
+window.renderIndividualAttendanceTable = renderIndividualAttendanceTable;
+window.calculateIndividualAttendance = calculateIndividualAttendance;
 
 // Window Exposures for Form Guide Drawer
 window.openGuideDrawer = openGuideDrawer;
 window.closeGuideDrawer = closeGuideDrawer;
 window.handleGuideDrawerOverlayClick = handleGuideDrawerOverlayClick;
 window.switchGuideTab = switchGuideTab;
+
+// ==========================================
+// LEARNING PASSPORT (PERSONAL LEARNING TRANSCRIPT)
+// ==========================================
+
+const LP_STORAGE_LAST_SEARCH = 'lp_last_search_query';
+
+function initLearningPassportPage() {
+  const input = document.getElementById('lpSearchInput');
+  
+  // 1. Check URL parameters (e.g. ?email=... or ?nama=...)
+  let paramQuery = '';
+  try {
+    const urlParams = new URLSearchParams(window.location.search);
+    paramQuery = urlParams.get('email') || urlParams.get('nama') || urlParams.get('q') || '';
+    if (!paramQuery && window.location.hash.includes('?')) {
+      const hashQuery = window.location.hash.split('?')[1];
+      const hashParams = new URLSearchParams(hashQuery);
+      paramQuery = hashParams.get('email') || hashParams.get('nama') || hashParams.get('q') || '';
+    }
+  } catch (e) {
+    paramQuery = '';
+  }
+
+  if (paramQuery && input) {
+    input.value = paramQuery;
+    searchLearningPassport(paramQuery);
+    return;
+  }
+
+  // 2. Fallback to last remembered search in localStorage (or default to demo)
+  const lastSearch = localStorage.getItem(LP_STORAGE_LAST_SEARCH) || 'budi@perusahaan.com';
+  if (lastSearch && input && !input.value.trim()) {
+    input.value = lastSearch;
+    searchLearningPassport(lastSearch);
+  } else if (!input || !input.value.trim()) {
+    resetLearningPassport(false);
+  }
+}
+
+function searchLearningPassport(customQuery) {
+  const input = document.getElementById('lpSearchInput');
+  const query = (customQuery !== undefined ? customQuery : (input ? input.value : '')).trim().toLowerCase();
+
+  const emptyPrompt = document.getElementById('lpEmptyPrompt');
+  const notFoundState = document.getElementById('lpNotFoundState');
+  const resultView = document.getElementById('lpResultView');
+
+  if (!query) {
+    resetLearningPassport(false);
+    return;
+  }
+
+  // Save last query to localStorage
+  localStorage.setItem(LP_STORAGE_LAST_SEARCH, query);
+
+  // 1. Fetch all submissions
+  let submissions = [];
+  try {
+    const raw = localStorage.getItem(SUBMISSIONS_STORAGE_KEY);
+    if (raw) submissions = JSON.parse(raw);
+  } catch (e) {
+    submissions = [];
+  }
+
+  // Fallback demo submissions if storage is empty
+  if (!submissions || submissions.length === 0) {
+    submissions = [
+      {
+        meta: {
+          'ID training': 'TRN-20260921-WEB-01',
+          'Nama training': 'Workshop Golang Backend & Microservices',
+          'Trainer': 'Duta TnD',
+          'Tanggal & jam pelaksanaan': '2026-09-21, 09:00 - 15:00 WIB',
+          'Metode training': 'Online',
+          'Total durasi belajar': '6 Jam',
+          'Departemen / divisi': 'WEB DEVELOPER',
+          'Status': 'Selesai',
+          'Link silabus materi': 'https://drive.google.com/'
+        },
+        participants: [
+          { nama: 'Budi Santoso', email: 'budi@perusahaan.com', departemen: 'WEB DEVELOPER' }
+        ]
+      },
+      {
+        meta: {
+          'ID training': 'TRN-20261005-ENG-02',
+          'Nama training': 'Clean Code, Architecture & Unit Testing',
+          'Trainer': 'Alex Chandra',
+          'Tanggal & jam pelaksanaan': '2026-10-05, 09:00 - 17:00 WIB',
+          'Metode training': 'Onsite',
+          'Total durasi belajar': '8 Jam',
+          'Departemen / divisi': 'WEB DEVELOPER',
+          'Status': 'Selesai',
+          'Link silabus materi': 'https://drive.google.com/'
+        },
+        participants: [
+          { nama: 'Budi Santoso', email: 'budi@perusahaan.com', departemen: 'WEB DEVELOPER' }
+        ]
+      },
+      {
+        meta: {
+          'ID training': 'TRN-20261018-OPS-03',
+          'Nama training': 'Docker & Containerization Fundamentals',
+          'Trainer': 'Rian Saputra',
+          'Tanggal & jam pelaksanaan': '2026-10-18, 09:00 - 19:00 WIB',
+          'Metode training': 'Hybrid',
+          'Total durasi belajar': '10 Jam',
+          'Departemen / divisi': 'WEB DEVELOPER',
+          'Status': 'Selesai',
+          'Link silabus materi': 'https://drive.google.com/'
+        },
+        participants: [
+          { nama: 'Budi Santoso', email: 'budi@perusahaan.com', departemen: 'WEB DEVELOPER' }
+        ]
+      }
+    ];
+  }
+
+  // Also check Skill Employees for richer profile info
+  let allSkillEmployees = [];
+  if (typeof getSkillEmployees === 'function') {
+    try { allSkillEmployees = getSkillEmployees(); } catch (e) { allSkillEmployees = []; }
+  }
+
+  // Find matched submissions
+  const matchedTrainings = [];
+  let detectedName = '';
+  let detectedEmail = '';
+  let detectedDept = '';
+
+  // Check if query matches skill employee directly
+  const skillEmpMatch = allSkillEmployees.find(e => 
+    (e.nama && e.nama.toLowerCase().includes(query)) ||
+    (e.email && e.email.toLowerCase() === query)
+  );
+  if (skillEmpMatch) {
+    detectedName = skillEmpMatch.nama;
+    detectedDept = skillEmpMatch.divisi || '';
+  }
+
+  // 1. Ekstraksi pelatihan sebagai Peserta (Stempel & Jam Belajar)
+  submissions.forEach(sub => {
+    const meta = sub.meta || {};
+    const participants = Array.isArray(sub.participants) ? sub.participants : [];
+    
+    // Check if participant matches query
+    const matchedP = participants.find(p => {
+      const pName = (p.nama || '').trim().toLowerCase();
+      const pEmail = (p.email || '').trim().toLowerCase();
+      return (pEmail && pEmail === query) || (pName && (pName === query || pName.includes(query) || query.includes(pName)));
+    });
+
+    if (matchedP) {
+      if (!detectedName) detectedName = matchedP.nama || '';
+      if (!detectedEmail && matchedP.email) detectedEmail = matchedP.email || '';
+      if (!detectedDept && matchedP.departemen) detectedDept = matchedP.departemen || meta['Departemen / divisi'] || '';
+
+      matchedTrainings.push({
+        submission: sub,
+        participant: matchedP,
+        meta: meta
+      });
+    }
+  });
+
+  // If no match found in submissions
+  if (matchedTrainings.length === 0) {
+    if (emptyPrompt) emptyPrompt.style.display = 'none';
+    if (resultView) resultView.style.display = 'none';
+    if (notFoundState) {
+      notFoundState.style.display = 'block';
+      const titleEl = document.getElementById('lpNotFoundTitle');
+      if (titleEl) titleEl.textContent = `Tidak Ada Riwayat Pelatihan untuk "${customQuery || (input ? input.value : '')}"`;
+    }
+    return;
+  }
+
+  // Match found! Show result view
+  if (emptyPrompt) emptyPrompt.style.display = 'none';
+  if (notFoundState) notFoundState.style.display = 'none';
+  if (resultView) resultView.style.display = 'block';
+
+  // Sort matched trainings by date descending
+  matchedTrainings.sort((a, b) => {
+    const dateA = a.meta['Tanggal & jam pelaksanaan'] || '';
+    const dateB = b.meta['Tanggal & jam pelaksanaan'] || '';
+    return dateB.localeCompare(dateA);
+  });
+
+  // Calculate metrics
+  let totalHours = 0;
+  let completedCount = 0;
+  const now = new Date();
+
+  matchedTrainings.forEach(item => {
+    const durasiStr = item.meta['Total durasi belajar'] || '6 Jam';
+    const hours = parseInt(durasiStr, 10) || 6;
+
+    // Check if completed:
+    // Status is Selesai, Disetujui, or date has arrived
+    const status = (item.meta['Status'] || item.submission.status || '').toLowerCase();
+    const dateStr = item.meta['Tanggal & jam pelaksanaan'] || '';
+    let isPast = false;
+    if (dateStr) {
+      const parsedDate = new Date(dateStr.split(',')[0].trim());
+      if (!isNaN(parsedDate.getTime()) && parsedDate <= now) {
+        isPast = true;
+      }
+    }
+    
+    const isCompleted = status.includes('selesai') || isPast || status.includes('setuju') || status === '';
+    item.isCompleted = isCompleted;
+    item.hours = hours;
+
+    if (isCompleted) {
+      totalHours += hours;
+      completedCount++;
+    }
+  });
+
+  // Render Profile Card
+  renderLearningPassportProfile({
+    name: detectedName || 'Karyawan',
+    email: detectedEmail || (query.includes('@') ? query : '-'),
+    dept: detectedDept || 'GENERAL',
+    totalHours: totalHours,
+    completedCount: completedCount,
+    totalPrograms: matchedTrainings.length
+  });
+
+  // Render Training Stamp Cards
+  renderLearningPassportCards(matchedTrainings);
+}
+
+function renderLearningPassportProfile(data) {
+  const card = document.getElementById('lpProfileCard');
+  if (!card) return;
+
+  // Generate initials
+  const initials = data.name.split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map(w => w[0].toUpperCase())
+    .join('') || 'LP';
+
+  const hasCompleted = data.completedCount > 0;
+
+  // Progres Jam Belajar: bar terisi seiring akumulasi jam pelatihan yang telah diselesaikan
+  const baselineHours = 24;
+  const pct = data.totalHours > 0 ? Math.min(100, Math.round((data.totalHours / baselineHours) * 100)) : 0;
+
+  card.innerHTML = `
+    <div class="lp-profile-top">
+      <div class="lp-avatar">${escapeHtml(initials)}</div>
+      <div class="lp-profile-info" style="flex:1;">
+        <div class="lp-name-row">
+          <h2>${escapeHtml(data.name)}</h2>
+          <span class="lp-badge-dept">${escapeHtml(data.dept)}</span>
+        </div>
+        <div class="lp-profile-sub">
+          <span>${escapeHtml(data.email)}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Blok Apresiasi Pembelajaran Karyawan (Professional Recognition Banner) -->
+    <div class="lp-appreciation-card">
+      <div class="lp-appreciation-icon-wrap">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="8" r="6"></circle>
+          <path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"></path>
+        </svg>
+      </div>
+      <div class="lp-appreciation-text">
+        <div class="lp-appreciation-kicker">Apresiasi Pembelajaran</div>
+        <h3 class="lp-appreciation-title">${hasCompleted ? 'Pencapaian &amp; Komitmen Belajar Terverifikasi' : 'Komitmen Pembelajaran &amp; Pengembangan Diri'}</h3>
+        <p class="lp-appreciation-desc">
+          ${hasCompleted 
+            ? `Apresiasi atas dedikasi dan keaktifan Anda yang telah menyelesaikan <strong>${data.completedCount} program pelatihan</strong> dengan akumulasi <strong>${data.totalHours} jam belajar</strong> untuk penguatan kapabilitas profesional.`
+            : `Selamat atas keikutsertaan Anda dalam program pembelajaran TDS. Selesaikan seluruh sesi pelatihan terjadwal untuk mengumpulkan jam belajar dan stempel kompetensi resmi.`}
+        </p>
+      </div>
+      <div class="lp-appreciation-tag-wrap">
+        <span class="lp-appreciation-badge">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          <span>${hasCompleted ? 'Alumni Terverifikasi' : 'Peserta Terdaftar'}</span>
+        </span>
+      </div>
+    </div>
+
+    <!-- 3 Metrik Kunci -->
+    <div class="lp-metrics-grid">
+      <div class="lp-metric-card">
+        <span>Total Jam Belajar</span>
+        <strong>${data.totalHours} Jam</strong>
+      </div>
+      <div class="lp-metric-card">
+        <span>Pelatihan Selesai</span>
+        <strong>${data.completedCount} / ${data.totalPrograms} Program</strong>
+      </div>
+      <div class="lp-metric-card">
+        <span>Rata-rata Kehadiran</span>
+        <strong>${hasCompleted ? '100%' : '0%'}</strong>
+      </div>
+    </div>
+
+    <!-- Progres Jam Belajar -->
+    <div class="lp-goal-box">
+      <div class="lp-goal-meta">
+        <span><strong>Progres Jam Belajar</strong></span>
+        <span><strong>${data.totalHours} Jam Terakumulasi</strong></span>
+      </div>
+      <div class="lp-goal-track">
+        <div class="lp-goal-fill" style="width:${pct}%;"></div>
+      </div>
+      <p style="margin:8px 0 0;font-size:11.5px;color:var(--ink-soft);line-height:1.45;">Jam pelatihan yang telah diselesaikan akan tercatat otomatis. Progress bar di Learning Passport akan terisi seiring penyelesaian program pelatihan.</p>
+    </div>
+  `;
+}
+
+// Helper Penentuan Kategori Stempel Berdasarkan Karakter Training:
+// 1. Mastery (Deep Ink): Spesialisasi keahlian strategis (Level Advanced)
+// 2. Verified (Blue Ink): Pelatihan bersertifikasi resmi
+// 3. Hours Record (Classic Gold): Durasi jam intensif (>= 6 Jam)
+// 4. Achievement (Royal Purple): Kompetensi tingkat lanjut (Level Intermediate)
+// 5. Completed (Moss Green): Kelulusan program reguler (Default / Basic)
+function getTrainingPassportStamp(meta, hours) {
+  const level = (meta['Target level kemahiran'] || '').toLowerCase();
+  const sertifikasi = (
+    (meta['Output sertifikasi'] || '') + ' ' + 
+    (meta['Sertifikasi'] || '') + ' ' + 
+    (meta['Kategori training'] || '') + ' ' +
+    (meta['Jenis training'] || '')
+  ).toLowerCase();
+  const durHours = hours || parseInt(meta['Total durasi belajar'] || '0', 10) || 0;
+
+  // 1. Mastery: Spesialisasi keahlian strategis (Advanced)
+  if (level.includes('advanced') || level.includes('expert') || level.includes('spesialis')) {
+    return {
+      file: 'stamp-mastery.png',
+      colorClass: 'overlay-dark',
+      rot: -6,
+      categoryName: 'Mastery (Spesialisasi)',
+      categoryDesc: 'Program spesialisasi keahlian strategis'
+    };
+  }
+
+  // 2. Verified: Program pelatihan bersertifikasi resmi
+  if (sertifikasi.includes('sertifikasi') || sertifikasi.includes('certified') || sertifikasi.includes('resmi') || sertifikasi.includes('vendor')) {
+    return {
+      file: 'stamp-verified.png',
+      colorClass: 'overlay-blue',
+      rot: 6,
+      categoryName: 'Verified (Bersertifikasi)',
+      categoryDesc: 'Program pelatihan bersertifikasi resmi'
+    };
+  }
+
+  // 3. Hours Record: Durasi jam intensif (>= 6 Jam)
+  if (durHours >= 6) {
+    return {
+      file: 'stamp-hours.png',
+      colorClass: 'overlay-gold',
+      rot: -5,
+      categoryName: 'Hours Record (Intensif)',
+      categoryDesc: 'Pengakuan akumulasi durasi jam intensif'
+    };
+  }
+
+  // 4. Achievement: Pencapaian kompetensi tingkat lanjut (Intermediate)
+  if (level.includes('intermediate') || level.includes('menengah')) {
+    return {
+      file: 'stamp-achievement.png',
+      colorClass: 'overlay-purple',
+      rot: 7,
+      categoryName: 'Achievement (Tingkat Lanjut)',
+      categoryDesc: 'Pencapaian kompetensi tingkat lanjut'
+    };
+  }
+
+  // 5. Completed: Tanda kelulusan program reguler (Basic / Default)
+  return {
+    file: 'stamp-completed.png',
+    colorClass: 'overlay-moss',
+    rot: -8,
+    categoryName: 'Completed (Reguler)',
+    categoryDesc: 'Tanda kelulusan program reguler'
+  };
+}
+
+function renderLearningPassportCards(items) {
+  const grid = document.getElementById('lpCardsGrid');
+  const countBadge = document.getElementById('lpCountBadge');
+  if (!grid) return;
+
+  if (countBadge) {
+    countBadge.textContent = `${items.length} Pelatihan Terdaftar`;
+  }
+
+  let html = '';
+  items.forEach((item, idx) => {
+    const meta = item.meta || {};
+    const title = meta['Nama training'] || 'Pelatihan Karyawan';
+    const trnId = meta['ID training'] || `TRN-${idx + 1}`;
+    const trainer = meta['Trainer'] || '-';
+    const dateRaw = meta['Tanggal & jam pelaksanaan'] || '';
+    const metode = meta['Metode training'] || 'Online';
+    const hours = item.hours || 6;
+    const driveUrl = meta['Link silabus materi'] || '';
+
+    // Format stamp date as DD.MM.YYYY
+    let stampDate = 'VERIFIED';
+    if (dateRaw) {
+      const matchDate = dateRaw.match(/(\d{4})[-/](\d{2})[-/](\d{2})/);
+      if (matchDate) {
+        stampDate = `${matchDate[3]}.${matchDate[2]}.${matchDate[1]}`;
+      } else {
+        const parts = dateRaw.split(',')[0].trim();
+        stampDate = parts.replace(/[-/]/g, '.');
+      }
+    }
+
+    // Stamp is ONLY rendered if status is completed
+    let stampHtml = '';
+    if (item.isCompleted) {
+      const stampDef = getTrainingPassportStamp(meta, hours);
+      stampHtml = `
+        <div class="lp-stamp-wrapper" style="transform: rotate(${stampDef.rot}deg);" title="${escapeHtml(stampDef.categoryName)}: ${escapeHtml(stampDef.categoryDesc)}">
+          <img src="assets/stamps/${stampDef.file}" class="lp-stamp-img" alt="${escapeHtml(stampDef.categoryName)}">
+          <div class="lp-stamp-overlay ${stampDef.colorClass}">
+            <div class="lp-stamp-date">${escapeHtml(stampDate)}</div>
+            <div class="lp-stamp-hours">${hours} HOURS</div>
+          </div>
+        </div>
+      `;
+    }
+
+    // Drive button
+    let driveBtnHtml = '';
+    if (driveUrl && driveUrl.startsWith('http')) {
+      driveBtnHtml = `
+        <a href="${escapeHtml(driveUrl)}" target="_blank" rel="noopener noreferrer" class="lp-btn-materi" title="Buka Silabus / Materi di Google Drive">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+          <span>Buka Materi (Google Drive)</span>
+        </a>
+      `;
+    } else {
+      driveBtnHtml = `
+        <span style="font-size:12px;color:var(--ink-faint);display:inline-flex;align-items:center;gap:4px;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+          Materi internal
+        </span>
+      `;
+    }
+
+    const statusBadge = item.isCompleted 
+      ? '<span class="lp-status-completed"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Selesai Diikuti</span>'
+      : '<span class="lp-status-scheduled"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> Terjadwal</span>';
+
+    html += `
+      <div class="lp-training-card">
+        ${stampHtml}
+        <div class="lp-card-content">
+          <div class="lp-card-tag-row">
+            <span class="lp-code-tag">${escapeHtml(trnId)}</span>
+            ${statusBadge}
+          </div>
+          <h4 class="lp-card-title">${escapeHtml(title)}</h4>
+          <div class="lp-card-meta">
+            <div><strong>Tanggal:</strong> ${escapeHtml(dateRaw || '-')}</div>
+            <div><strong>Trainer:</strong> ${escapeHtml(trainer)} &bull; <strong>Metode:</strong> ${escapeHtml(metode)}</div>
+          </div>
+          <div class="lp-duration-chip">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            <span>${hours} Jam Pembelajaran</span>
+          </div>
+        </div>
+        <div class="lp-card-actions">
+          ${driveBtnHtml}
+        </div>
+      </div>
+    `;
+  });
+
+  grid.innerHTML = html;
+}
+
+function resetLearningPassport(clearInput = true) {
+  const input = document.getElementById('lpSearchInput');
+  if (clearInput && input) input.value = '';
+  localStorage.removeItem(LP_STORAGE_LAST_SEARCH);
+
+  const emptyPrompt = document.getElementById('lpEmptyPrompt');
+  const notFoundState = document.getElementById('lpNotFoundState');
+  const resultView = document.getElementById('lpResultView');
+
+  if (emptyPrompt) emptyPrompt.style.display = 'block';
+  if (notFoundState) notFoundState.style.display = 'none';
+  if (resultView) resultView.style.display = 'none';
+}
+
+// Window Exposures for Learning Passport
+window.initLearningPassportPage = initLearningPassportPage;
+window.searchLearningPassport = searchLearningPassport;
+window.resetLearningPassport = resetLearningPassport;
+window.getTrainingPassportStamp = getTrainingPassportStamp;
+
 
 
 

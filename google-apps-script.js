@@ -6,17 +6,17 @@
  * 1. Simpan pengajuan form ke Google Sheets "Training Submissions"
  * 2. Kirim Email Konfirmasi Instan (HTML) ke setiap peserta yang memiliki email
  * 3. Otomatis buat event Google Calendar & undang email peserta (Google Calendar Invite)
- * 4. Automated Daily Scheduler: Kirim Email Reminder H-1 sebelum training dimulai
+ * 4. Automated Daily Scheduler: Kirim Email Reminder H-1 ke peserta & Email Follow-Up Persetujuan H+3 ke Approver
  * 5. Multi-Source Date Extraction (Mendukung ID Baru TRN-YYYYMMDD-..., Modul, Teks Jadwal, JSON)
  * 6. Fallback Ekstraksi Peserta jika Raw Data JSON tidak lengkap
- * 7. Test Runners Lengkap: testSendSampleEmail, testSendReminderEmail, testSendApprovalDecisionEmail, forceSendReminderToFirstRow
+ * 7. Test Runners Lengkap: testSendSampleEmail, testSendReminderEmail, testSendApprovalDecisionEmail, testSendApprovalFollowUpEmail, forceSendReminderToFirstRow
  * ==============================================================================
  * Petunjuk Instalasi & Update:
  * 1. Buka Google Sheets Anda yang terhubung dengan form ini.
  * 2. Klik menu "Extensions" (Ekstensi) > "Apps Script".
  * 3. Hapus seluruh kode lama dan tempelkan SELURUH isi file ini.
  * 4. Klik tombol "Save" (ikon disket).
- * 5. Jalankan fungsi "setupDailyReminderTrigger" sekali untuk mengaktifkan scheduler reminder jam 08:00 WIB.
+ * 5. Jalankan fungsi "setupDailyReminderTrigger" sekali untuk mengaktifkan scheduler reminder & follow-up jam 08:00 WIB.
  * 6. Klik "Deploy" > "Manage deployments" > klik ikon Pensil (Edit) > Version: "New version" > Klik "Deploy".
  * ==============================================================================
  */
@@ -89,7 +89,7 @@ const HEADERS = [
   "Link Form Evaluasi",
   "Status Email Konfirmasi",
   "Status Email Reminder H-1",
-  "Status Reminder Approval",
+  "Status Follow-Up Approval",
   "ID Event Google Calendar",
   "Approver",
   "Tanggal Approval",
@@ -316,6 +316,7 @@ function doPost(e) {
       "Link Form Evaluasi": linkEvaluasi,
       "Status Email Konfirmasi": confirmationEmailStatus,
       "Status Email Reminder H-1": reminderStatus,
+      "Status Follow-Up Approval": slaReminderStatus,
       "Status Reminder Approval": slaReminderStatus,
       "ID Event Google Calendar": calendarEventId,
       "Approver": "-",
@@ -739,7 +740,14 @@ function setupSheetHeaders(sheet) {
     // Sinkronkan kolom baru jika ada header yang belum tercantum pada row 1
     const currentHeaders = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0].map(h => String(h).trim());
     const currentHeadersLower = currentHeaders.map(h => h.toLowerCase());
-    const missingHeaders = HEADERS.filter(h => !currentHeadersLower.includes(h.toLowerCase()));
+    const missingHeaders = HEADERS.filter(h => {
+      const hLower = h.toLowerCase();
+      // Jangan duplikasi kolom jika sheet lama sudah memiliki 'Status Reminder Approval'
+      if (hLower === "status follow-up approval" && currentHeadersLower.includes("status reminder approval")) {
+        return false;
+      }
+      return !currentHeadersLower.includes(hLower);
+    });
     if (missingHeaders.length > 0) {
       const startCol = currentHeaders.length + 1;
       sheet.getRange(1, startCol, 1, missingHeaders.length).setValues([missingHeaders]);
@@ -761,6 +769,7 @@ function onOpen() {
       .addItem("🚀 Setup Inisialisasi Sheet Baru", "setupInitialSpreadsheet")
       .addSeparator()
       .addItem("⏰ Cek & Kirim Reminder H-1 Sekarang", "checkAndSendReminders")
+      .addItem("📨 Cek & Kirim Follow-Up Approver (H+3) Sekarang", "checkAndSendApprovalFollowUps")
       .addItem("📧 Test Kirim Notifikasi Email", "testSendAllEmails")
       .addToUi();
   } catch (e) {
@@ -820,7 +829,8 @@ function resetSheetHeadersToPreview() {
   const aliasMap = {
     "goals (target)": "Training Goals",
     "tujuan & purpose": "Training Goals",
-    "link form evaluasi / post-test": "Link Form Evaluasi"
+    "link form evaluasi / post-test": "Link Form Evaluasi",
+    "status reminder approval": "Status Follow-Up Approval"
   };
 
   const newRows = oldData.map(row => {
@@ -1527,14 +1537,15 @@ function sendApproverNotification(meta, participants, modules, trainingId) {
 }
 
 // ==============================================================================
-// 3.3 SCHEDULER PENGINGAT ESKALASI SLA 3 HARI KE APPROVER
+// ==============================================================================
+// 3.3 SCHEDULER EMAIL FOLLOW-UP PERSETUJUAN (H+3 SEJAK PENGAJUAN) KE APPROVER
 // ==============================================================================
 /**
  * Memeriksa seluruh pengajuan dengan status 'Diajukan' / 'Menunggu Approval'
- * yang telah melewati batas SLA 3 hari sejak tanggal pengajuan dan belum diproses.
- * Mengirimkan email pengingat eskalasi ke 2-3 approver utama.
+ * yang telah melewati batas 3 hari sejak tanggal pengajuan (H+3) dan belum diproses.
+ * Mengirimkan email follow-up santun dan profesional ke 2-3 approver utama.
  */
-function checkAndSendApprovalReminders() {
+function checkAndSendApprovalFollowUps() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName(SHEET_NAME);
   if (!sheet || sheet.getLastRow() <= 1) return;
@@ -1556,13 +1567,13 @@ function checkAndSendApprovalReminders() {
   const colDept = getCol("Departemen / Divisi");
   const colJadwal = getCol("Jadwal Pelaksanaan");
   const colJenis = getCol("Jenis Training");
-  const colStatusSla = getCol("Status Reminder Approval");
+  const colStatusSla = getCol("Status Follow-Up Approval") || getCol("Status Reminder Approval");
 
   const today = new Date();
   const todayStr = Utilities.formatDate(today, TIME_ZONE, "yyyy-MM-dd");
 
   const data = sheet.getDataRange().getValues();
-  let remindedCount = 0;
+  let followUpCount = 0;
 
   for (let r = 1; r < data.length; r++) {
     const row = data[r];
@@ -1600,12 +1611,12 @@ function checkAndSendApprovalReminders() {
     const diffTime = today.getTime() - submitDate.getTime();
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
-    // Jika sudah 3 hari atau lebih sejak pengajuan
+    // Jika sudah 3 hari atau lebih sejak pengajuan (H+3)
     if (diffDays >= 3) {
-      // Cek apakah sudah pernah dikirim reminder hari ini
+      // Cek apakah sudah pernah dikirim follow-up hari ini
       const slaStatus = colStatusSla ? String(row[colStatusSla - 1] || "") : "";
       if (slaStatus.includes(todayStr)) {
-        Logger.log(`[SLA Approver] Training ${trainingId} sudah dikirim pengingat hari ini.`);
+        Logger.log(`[Follow-Up Approver] Training ${trainingId} sudah dikirim email follow-up hari ini.`);
         continue;
       }
 
@@ -1619,7 +1630,7 @@ function checkAndSendApprovalReminders() {
       if (approverEmails.length === 0) continue;
 
       const directApprovalLink = `${APPROVAL_PORTAL_URL}?id=${encodeURIComponent(trainingId)}`;
-      const subject = `[ESKALASI SLA 3 HARI] Pengingat Approval Training: ${trainingName} (${trainingId})`;
+      const subject = `[Follow-Up] Pengajuan Training: ${trainingName} (${trainingId}) - Menunggu Persetujuan`;
 
       const htmlBody = `
   <div style="margin:0;padding:32px 16px;background:#F0F1F7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
@@ -1627,85 +1638,91 @@ function checkAndSendApprovalReminders() {
       <tr>
         <td style="background:linear-gradient(135deg,#EAF1FF 0%,#BFDBFF 50%,#FFD3DE 100%);background-color:#BFDBFF;padding:36px 32px 30px;" align="center">
           <div style="width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,0.6);display:inline-block;line-height:52px;text-align:center;margin-bottom:14px;">
-            <span style="font-size:26px;">&#9200;</span>
+            <span style="font-size:26px;">&#128269;</span>
           </div>
-          <p style="margin:0 0 6px;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#00178F;">Training Request System</p>
-          <h1 style="margin:0;font-size:21px;font-weight:700;color:#00178F;line-height:1.3;">Pengingat: Training Menunggu Approval (${diffDays} Hari)</h1>
+          <p style="margin:0 0 6px;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#00178F;">Training Request System &bull; Follow-Up</p>
+          <h1 style="margin:0;font-size:21px;font-weight:700;color:#00178F;line-height:1.3;">Follow-Up: Menunggu Persetujuan (${diffDays} Hari)</h1>
         </td>
       </tr>
 
-      <div style="padding:32px 32px 12px;">
-        <p style="margin:0 0 16px;font-size:15px;color:#00178F;font-weight:600;">Yth. Bapak/Ibu Approver,</p>
-        <p style="margin:0 0 20px;font-size:14.5px;line-height:1.65;color:#4A4F8F;">
-          Pengajuan pelatihan berikut diajukan pada <strong>${Utilities.formatDate(submitDate, TIME_ZONE, "yyyy-MM-dd")}</strong> (sudah <strong>${diffDays} hari kalender</strong>) dan hingga saat ini belum menerima keputusan tindakan (Setujui / Tolak):
-        </p>
+      <tr>
+        <td style="padding:32px 32px 12px;">
+          <p style="margin:0 0 16px;font-size:15px;color:#00178F;font-weight:600;">Yth. Bapak/Ibu Approver,</p>
+          <p style="margin:0 0 20px;font-size:14.5px;line-height:1.65;color:#4A4F8F;">
+            Semoga Bapak/Ibu senantiasa dalam keadaan sehat. Menindaklanjuti program pelatihan berikut yang telah diajukan pada <strong>${Utilities.formatDate(submitDate, TIME_ZONE, "yyyy-MM-dd")}</strong> (${diffDays} hari yang lalu), mohon kesediaan Bapak/Ibu untuk meninjau dan memberikan keputusan persetujuan:
+          </p>
 
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F9FBFE;border-radius:12px;border:1px solid #E1E8F8;overflow:hidden;margin-bottom:22px;">
-          <tr>
-            <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:12px;font-weight:600;color:#8D93C2;width:130px;">ID Training</td>
-            <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;font-weight:700;color:#00178F;">${trainingId}</td>
-          </tr>
-          <tr>
-            <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:12px;font-weight:600;color:#8D93C2;">Topik Pelatihan</td>
-            <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;font-weight:600;color:#00178F;">${trainingName}</td>
-          </tr>
-          <tr>
-            <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:12px;font-weight:600;color:#8D93C2;">Pengaju</td>
-            <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;color:#4A4F8F;">${pengaju} (${deptName})</td>
-          </tr>
-          <tr>
-            <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:12px;font-weight:600;color:#8D93C2;">Jadwal</td>
-            <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;font-weight:600;color:#00178F;">${jadwal}</td>
-          </tr>
-          <tr>
-            <td style="padding:11px 16px;font-size:12px;font-weight:600;color:#8D93C2;">Jenis Training</td>
-            <td style="padding:11px 16px;font-size:13.5px;font-weight:700;color:#00178F;">${jenisTraining}</td>
-          </tr>
-        </table>
+          <div style="background:rgba(75, 150, 255, 0.08);border-left:4px solid #4B96FF;border-radius:8px;padding:12px 16px;margin-bottom:22px;font-size:13px;line-height:1.6;color:#00178F;">
+            &#128197; <strong>Status Tindak Lanjut:</strong> Pengajuan ini masih menunggu peninjauan Anda agar tim pengaju dan panitia dapat segera mempersiapkan kebutuhan teknis, materi, serta jadwal pelatihan.
+          </div>
 
-        <div style="text-align:center;margin:24px 0 20px;">
-          <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F9FBFE;border-radius:12px;border:1px solid #E1E8F8;overflow:hidden;margin-bottom:22px;">
             <tr>
-              <td align="center" style="border-radius:100px;background:#00178F;">
-                <a href="${directApprovalLink}" target="_blank" style="display:inline-block;padding:15px 36px;font-size:15px;font-weight:700;color:#FFFFFF;text-decoration:none;border-radius:100px;background-color:#00178F;">Buka &amp; Selesaikan Approval &nbsp;&#8594;</a>
-              </td>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:12px;font-weight:600;color:#8D93C2;width:130px;">ID Training</td>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;font-weight:700;color:#00178F;">${trainingId}</td>
+            </tr>
+            <tr>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:12px;font-weight:600;color:#8D93C2;">Topik Pelatihan</td>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;font-weight:600;color:#00178F;">${trainingName}</td>
+            </tr>
+            <tr>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:12px;font-weight:600;color:#8D93C2;">Pengaju</td>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;color:#4A4F8F;">${pengaju} (${deptName})</td>
+            </tr>
+            <tr>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:12px;font-weight:600;color:#8D93C2;">Jadwal</td>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;font-weight:600;color:#00178F;">${jadwal}</td>
+            </tr>
+            <tr>
+              <td style="padding:11px 16px;font-size:12px;font-weight:600;color:#8D93C2;">Jenis Training</td>
+              <td style="padding:11px 16px;font-size:13.5px;font-weight:700;color:#00178F;">${jenisTraining}</td>
             </tr>
           </table>
-          <p style="margin:12px 0 0;font-size:12px;color:#8D93C2;">
-            Jika tombol di atas tidak merespons, buka tautan langsung berikut:<br>
-            <a href="${directApprovalLink}" target="_blank" style="color:#00178F;word-break:break-all;font-weight:600;text-decoration:underline;">${directApprovalLink}</a>
-          </p>
-        </div>
 
-        <p style="margin:0;font-size:13.5px;color:#4A4F8F;line-height:1.6;">
-          Mohon kerja samanya agar proses administrasi dan persiapan training dapat berjalan sesuai timeline.<br><br>
-          Salam hangat,<br>
-          <strong style="color:#00178F;">Sistem Otomatis Portal Training</strong>
-        </p>
-      </div>
+          <div style="text-align:center;margin:24px 0 20px;">
+            <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto;">
+              <tr>
+                <td align="center" style="border-radius:100px;background:#00178F;">
+                  <a href="${directApprovalLink}" target="_blank" style="display:inline-block;padding:15px 36px;font-size:15px;font-weight:700;color:#FFFFFF;text-decoration:none;border-radius:100px;background-color:#00178F;">Tinjau &amp; Berikan Keputusan &nbsp;&#8594;</a>
+                </td>
+              </tr>
+            </table>
+            <p style="margin:12px 0 0;font-size:12px;color:#8D93C2;">
+              Jika tombol di atas tidak merespons, buka tautan langsung berikut:<br>
+              <a href="${directApprovalLink}" target="_blank" style="color:#00178F;word-break:break-all;font-weight:600;text-decoration:underline;">${directApprovalLink}</a>
+            </p>
+          </div>
+
+          <p style="margin:0;font-size:13.5px;color:#4A4F8F;line-height:1.6;">
+            Apabila Bapak/Ibu membutuhkan informasi lebih lanjut mengenai pengajuan ini, Anda dapat menghubungi tim pengaju secara langsung atau mencantumkan catatan saat proses review.<br><br>
+            Salam hangat,<br>
+            <strong style="color:#00178F;">Sistem Portal Training &amp; Development</strong>
+          </p>
+        </td>
+      </tr>
 
       <tr>
         <td style="padding:18px 32px;background:#FAFAFD;border-top:1px solid #EDF1FE;" align="center">
-          <p style="margin:0;font-size:11px;color:#9AA3D6;">Notifikasi eskalasi SLA otomatis untuk ID: ${trainingId} &middot; Jangan reply email ini</p>
+          <p style="margin:0;font-size:11px;color:#9AA3D6;">Notifikasi follow-up persetujuan otomatis untuk ID: ${trainingId} &middot; Jangan reply email ini</p>
         </td>
       </tr>
     </table>
   </div>`;
 
-      const plainText = `Yth. Approver,\n\nPengingat SLA 3 Hari untuk pengajuan training:\nID: ${trainingId}\nTopik: ${trainingName}\nPengaju: ${pengaju} (${deptName})\nStatus: Menunggu Approval sejak ${diffDays} hari lalu.\n\nSilahkan buka tautan berikut untuk memproses:\n${directApprovalLink}\n\nSalam,\nSistem Portal Training`;
+      const plainText = `Yth. Bapak/Ibu Approver,\n\nSemoga senantiasa sehat. Menindaklanjuti pengajuan program training berikut:\nID: ${trainingId}\nTopik: ${trainingName}\nPengaju: ${pengaju} (${deptName})\nJadwal: ${jadwal}\nJenis Training: ${jenisTraining}\nStatus: Menunggu Persetujuan (${diffDays} hari sejak diajukan)\n\nSilahkan buka tautan berikut untuk meninjau:\n${directApprovalLink}\n\nSalam hangat,\nSistem Portal Training`;
 
       approverEmails.forEach(email => {
         try {
           GmailApp.sendEmail(email, subject, plainText, {
             htmlBody: htmlBody,
-            name: "Portal Training - Approval SLA Reminder"
+            name: "Portal Training - Follow-Up Persetujuan"
           });
         } catch (e) {
-          Logger.log(`Gagal kirim SLA reminder ke ${email}: ${e.toString()}`);
+          Logger.log(`Gagal kirim follow-up email ke ${email}: ${e.toString()}`);
         }
       });
 
-      remindedCount++;
+      followUpCount++;
       const timeNow = Utilities.formatDate(today, TIME_ZONE, "yyyy-MM-dd HH:mm");
       if (colStatusSla) {
         sheet.getRange(r + 1, colStatusSla).setValue(`Terkirim (${timeNow})`);
@@ -1713,7 +1730,15 @@ function checkAndSendApprovalReminders() {
     }
   }
 
-  Logger.log(`[SLA Approver Check Selesai] Total ${remindedCount} pengingat SLA dikirim.`);
+  Logger.log(`[Follow-Up Approver Selesai] Total ${followUpCount} email follow-up dikirim.`);
+  return `Selesai (${followUpCount} follow-up dikirim)`;
+}
+
+/**
+ * Alias fungsi lama agar trigger / script eksternal yang memanggil nama lama tetap berfungsi normal.
+ */
+function checkAndSendApprovalReminders() {
+  return checkAndSendApprovalFollowUps();
 }
 
 // ==============================================================================
@@ -2102,11 +2127,11 @@ function checkAndSendReminders(forceTargetId) {
     Logger.log(`[Reminder Check] MODE FORCE AKTIF untuk target ID: ${forceTargetId}`);
   }
 
-  // Jalankan juga pengecekan SLA Approver (pengajuan training yang menunggu > 3 hari)
+  // Jalankan juga pengecekan Follow-Up Approver (pengajuan training yang menunggu > 3 hari)
   try {
-    checkAndSendApprovalReminders();
+    checkAndSendApprovalFollowUps();
   } catch (slaErr) {
-    Logger.log("Peringatan eksekusi checkAndSendApprovalReminders: " + slaErr.toString());
+    Logger.log("Peringatan eksekusi checkAndSendApprovalFollowUps: " + slaErr.toString());
   }
 
   const numRows = lastRow - 1;
@@ -2644,14 +2669,138 @@ function testSendApproverNotification() {
 }
 
 /**
- * 5. Test Seluruh Email Sekaligus (4-in-1 Test: Konfirmasi, Reminder H-1, Keputusan, Notif Approver)
+ * 5. Test Kirim Email Follow-Up Persetujuan (H+3) ke Email Akun Anda Sendiri
+ */
+function testSendApprovalFollowUpEmail() {
+  const myEmail = Session.getActiveUser().getEmail();
+  if (!myEmail) {
+    Logger.log("ERROR: Tidak dapat mendeteksi email aktif. Jalankan otorisasi izin script.");
+    return;
+  }
+
+  const sampleMeta = {
+    "ID training": "TRN-TEST-FOLLOWUP",
+    "Nama training": "Workshop Advanced System Architecture",
+    "Leader pengaju": "Senior Engineer",
+    "Email pengaju": myEmail,
+    "Departemen / divisi": "WEB DEVELOPER",
+    "Tanggal & jam pelaksanaan": "28 September 2026, 09:00 - 15:00 WIB",
+    "Metode training": "Online",
+    "Platform online": "Google Meet",
+    "Link meeting online": "https://meet.google.com/abc-defg-hij",
+    "Trainer": "Head of Engineering",
+    "Budget diajukan": "Rp 4.500.000",
+    "Jenis training": "Training Internal"
+  };
+
+  Logger.log(`Menjalankan testSendApprovalFollowUpEmail ke ${myEmail}...`);
+  const directApprovalLink = `${APPROVAL_PORTAL_URL}?id=${encodeURIComponent(sampleMeta["ID training"])}`;
+  const subject = `[Follow-Up] Pengajuan Training: ${sampleMeta["Nama training"]} (${sampleMeta["ID training"]}) - Menunggu Persetujuan`;
+  const diffDays = 3;
+  const submitDateStr = Utilities.formatDate(new Date(Date.now() - (3 * 24 * 60 * 60 * 1000)), TIME_ZONE, "yyyy-MM-dd");
+
+  const htmlBody = `
+  <div style="margin:0;padding:32px 16px;background:#F0F1F7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;margin:0 auto;background:#FFFFFF;border-radius:16px;overflow:hidden;box-shadow:0 12px 32px -12px rgba(0,23,143,0.25);">
+      <tr>
+        <td style="background:linear-gradient(135deg,#EAF1FF 0%,#BFDBFF 50%,#FFD3DE 100%);background-color:#BFDBFF;padding:36px 32px 30px;" align="center">
+          <div style="width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,0.6);display:inline-block;line-height:52px;text-align:center;margin-bottom:14px;">
+            <span style="font-size:26px;">&#128269;</span>
+          </div>
+          <p style="margin:0 0 6px;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#00178F;">Training Request System &bull; Follow-Up</p>
+          <h1 style="margin:0;font-size:21px;font-weight:700;color:#00178F;line-height:1.3;">Follow-Up: Menunggu Persetujuan (${diffDays} Hari)</h1>
+        </td>
+      </tr>
+
+      <tr>
+        <td style="padding:32px 32px 12px;">
+          <p style="margin:0 0 16px;font-size:15px;color:#00178F;font-weight:600;">Yth. Bapak/Ibu Approver,</p>
+          <p style="margin:0 0 20px;font-size:14.5px;line-height:1.65;color:#4A4F8F;">
+            Semoga Bapak/Ibu senantiasa dalam keadaan sehat. Menindaklanjuti program pelatihan berikut yang telah diajukan pada <strong>${submitDateStr}</strong> (${diffDays} hari yang lalu), mohon kesediaan Bapak/Ibu untuk meninjau dan memberikan keputusan persetujuan:
+          </p>
+
+          <div style="background:rgba(75, 150, 255, 0.08);border-left:4px solid #4B96FF;border-radius:8px;padding:12px 16px;margin-bottom:22px;font-size:13px;line-height:1.6;color:#00178F;">
+            &#128197; <strong>Status Tindak Lanjut:</strong> Pengajuan ini masih menunggu peninjauan Anda agar tim pengaju dan panitia dapat segera mempersiapkan kebutuhan teknis, materi, serta jadwal pelatihan.
+          </div>
+
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F9FBFE;border-radius:12px;border:1px solid #E1E8F8;overflow:hidden;margin-bottom:22px;">
+            <tr>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:12px;font-weight:600;color:#8D93C2;width:130px;">ID Training</td>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;font-weight:700;color:#00178F;">${sampleMeta["ID training"]}</td>
+            </tr>
+            <tr>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:12px;font-weight:600;color:#8D93C2;">Topik Pelatihan</td>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;font-weight:600;color:#00178F;">${sampleMeta["Nama training"]}</td>
+            </tr>
+            <tr>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:12px;font-weight:600;color:#8D93C2;">Pengaju</td>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;color:#4A4F8F;">${sampleMeta["Leader pengaju"]} (${sampleMeta["Departemen / divisi"]})</td>
+            </tr>
+            <tr>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:12px;font-weight:600;color:#8D93C2;">Jadwal</td>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;font-weight:600;color:#00178F;">${sampleMeta["Tanggal & jam pelaksanaan"]}</td>
+            </tr>
+            <tr>
+              <td style="padding:11px 16px;font-size:12px;font-weight:600;color:#8D93C2;">Jenis Training</td>
+              <td style="padding:11px 16px;font-size:13.5px;font-weight:700;color:#00178F;">${sampleMeta["Jenis training"]}</td>
+            </tr>
+          </table>
+
+          <div style="text-align:center;margin:24px 0 20px;">
+            <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto;">
+              <tr>
+                <td align="center" style="border-radius:100px;background:#00178F;">
+                  <a href="${directApprovalLink}" target="_blank" style="display:inline-block;padding:15px 36px;font-size:15px;font-weight:700;color:#FFFFFF;text-decoration:none;border-radius:100px;background-color:#00178F;">Tinjau &amp; Berikan Keputusan &nbsp;&#8594;</a>
+                </td>
+              </tr>
+            </table>
+            <p style="margin:12px 0 0;font-size:12px;color:#8D93C2;">
+              Jika tombol di atas tidak merespons, buka tautan langsung berikut:<br>
+              <a href="${directApprovalLink}" target="_blank" style="color:#00178F;word-break:break-all;font-weight:600;text-decoration:underline;">${directApprovalLink}</a>
+            </p>
+          </div>
+
+          <p style="margin:0;font-size:13.5px;color:#4A4F8F;line-height:1.6;">
+            Apabila Bapak/Ibu membutuhkan informasi lebih lanjut mengenai pengajuan ini, Anda dapat menghubungi tim pengaju secara langsung atau mencantumkan catatan saat proses review.<br><br>
+            Salam hangat,<br>
+            <strong style="color:#00178F;">Sistem Portal Training &amp; Development</strong>
+          </p>
+        </td>
+      </tr>
+
+      <tr>
+        <td style="padding:18px 32px;background:#FAFAFD;border-top:1px solid #EDF1FE;" align="center">
+          <p style="margin:0;font-size:11px;color:#9AA3D6;">Notifikasi follow-up persetujuan otomatis untuk ID: ${sampleMeta["ID training"]} &middot; Jangan reply email ini</p>
+        </td>
+      </tr>
+    </table>
+  </div>`;
+
+  const plainText = `Yth. Bapak/Ibu Approver,\n\nSemoga senantiasa sehat. Menindaklanjuti pengajuan program training berikut:\nID: ${sampleMeta["ID training"]}\nTopik: ${sampleMeta["Nama training"]}\nPengaju: ${sampleMeta["Leader pengaju"]} (${sampleMeta["Departemen / divisi"]})\nStatus: Menunggu Persetujuan (${diffDays} hari sejak diajukan)\n\nSilahkan buka tautan berikut untuk meninjau:\n${directApprovalLink}\n\nSalam hangat,\nSistem Portal Training`;
+
+  try {
+    GmailApp.sendEmail(myEmail, subject, plainText, {
+      htmlBody: htmlBody,
+      name: "Portal Training - Follow-Up Persetujuan"
+    });
+    Logger.log(`Email follow-up persetujuan berhasil dikirim ke ${myEmail}`);
+    return "Berhasil dikirim ke " + myEmail;
+  } catch (e) {
+    Logger.log(`Gagal kirim test follow-up email ke ${myEmail}: ${e.toString()}`);
+    return "Gagal: " + e.message;
+  }
+}
+
+/**
+ * 6. Test Seluruh Email Sekaligus (5-in-1 Test: Konfirmasi, Reminder H-1, Keputusan, Notif Approver, Follow-Up Approver)
  */
 function testSendAllEmails() {
-  Logger.log("=== MEMULAI TEST SEMUA EMAIL (4-IN-1 TEST) ===");
+  Logger.log("=== MEMULAI TEST SEMUA EMAIL (5-IN-1 TEST) ===");
   testSendSampleEmail();
   testSendReminderEmail();
   testSendApprovalDecisionEmail();
   testSendApproverNotification();
+  testSendApprovalFollowUpEmail();
   checkEmailQuota();
   Logger.log("=== TEST SEMUA EMAIL SELESAI ===");
 }
@@ -2813,6 +2962,12 @@ function doGet(e) {
     if (action === 'getAttendanceLogs' || action === 'get_attendance' || action === 'attendance_logs') {
       const ss = SpreadsheetApp.getActiveSpreadsheet();
       return handleGetAttendanceLogs(ss, params);
+    }
+
+    // Aksi 4b: Pengambilan persentase kehadiran per individu (?action=getParticipantAttendance&trainingId=...)
+    if (action === 'getParticipantAttendance' || action === 'getAttendanceRates' || action === 'attendance_rates') {
+      const ss = SpreadsheetApp.getActiveSpreadsheet();
+      return handleGetParticipantAttendance(ss, params);
     }
 
     // Aksi 5: Pengambilan detail sesi training & daftar peserta untuk Mobile QR Check-in (?action=getTrainingDetails&id=...)
@@ -3303,12 +3458,14 @@ function getLinkSpreadsheet() {
 // ==============================================================================
 
 /**
- * Kirim email "Training Selesai" ke peserta individual dengan tautan evaluasi & post-test.
+ * Kirim email "Training Selesai" ke peserta individual dengan tautan evaluasi & post-test,
+ * serta link langsung untuk melihat akumulasi stempel & jam belajar di Learning Passport.
  */
 function sendTrainingCompletionEmail(participantName, participantEmail, evaluationFormUrl) {
   if (!participantEmail) return;
   const targetUrl = evaluationFormUrl || DEFAULT_EVALUATION_URL;
-  const subject = "Training Selesai!";
+  const passportUrl = `https://request-training-development.vercel.app/#learning-passport?email=${encodeURIComponent(participantEmail)}`;
+  const subject = "Training Selesai! Akses Post-Test & Learning Passport Anda";
   const htmlBody = `
   <div style="margin:0;padding:32px 16px;background:#F0F1F7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;margin:0 auto;background:#FFFFFF;border-radius:16px;overflow:hidden;box-shadow:0 12px 32px -12px rgba(0,23,143,0.25);">
@@ -3325,16 +3482,34 @@ function sendTrainingCompletionEmail(participantName, participantEmail, evaluati
         <td style="padding:32px 32px 8px;">
           <p style="margin:0 0 16px;font-size:15px;color:#00178F;font-weight:600;">Halo ${participantName},</p>
           <p style="margin:0 0 14px;font-size:14.5px;line-height:1.65;color:#4A4F8F;">Terima kasih sudah mengikuti dan berpartisipasi aktif dalam sesi pelatihan.</p>
-          <p style="margin:0 0 22px;font-size:14.5px;line-height:1.65;color:#4A4F8F;">Semoga ilmu dan keterampilan yang didapatkan dapat memberikan manfaat dan mendukung pekerjaan sehari-hari.</p>
-          <p style="margin:0;font-size:14.5px;line-height:1.65;color:#4A4F8F;">Sebagai penutup, silahkan isi evaluasi trainer sekaligus post-test melalui tautan berikut:</p>
+          <p style="margin:0 0 18px;font-size:14.5px;line-height:1.65;color:#4A4F8F;">Semoga ilmu dan keterampilan yang didapatkan dapat memberikan manfaat dan mendukung pekerjaan sehari-hari.</p>
+          
+          <!-- Box Apresiasi Learning Passport -->
+          <div style="background:#FAF9F5;border:1px solid rgba(0,23,143,0.12);border-left:4px solid #B78628;border-radius:12px;padding:16px 18px;margin-bottom:24px;">
+            <p style="margin:0 0 6px;font-size:13px;font-weight:700;color:#00178F;">
+              &#128216; Stempel Paspor Pembelajaran Anda Telah Diterbitkan!
+            </p>
+            <p style="margin:0 0 12px;font-size:13px;color:#4A4F8F;line-height:1.5;">
+              Jam belajar dan stempel kompetensi resmi untuk pelatihan ini telah otomatis dicatat ke dalam <strong>Learning Passport</strong> digital Anda.
+            </p>
+            <table role="presentation" cellpadding="0" cellspacing="0">
+              <tr>
+                <td style="border-radius:8px;background:#00178F;">
+                  <a href="${passportUrl}" target="_blank" style="display:inline-block;padding:10px 18px;font-size:13px;font-weight:600;color:#FFFFFF;text-decoration:none;border-radius:8px;">Buka Learning Passport Saya &nbsp;&#8594;</a>
+                </td>
+              </tr>
+            </table>
+          </div>
+
+          <p style="margin:0 0 16px;font-size:14.5px;line-height:1.65;color:#4A4F8F;">Sebagai penutup, silahkan isi evaluasi trainer sekaligus post-test melalui tautan berikut:</p>
         </td>
       </tr>
       <tr>
-        <td style="padding:22px 32px 34px;" align="center">
+        <td style="padding:10px 32px 34px;" align="center">
           <table role="presentation" cellpadding="0" cellspacing="0">
             <tr>
               <td style="border-radius:100px;background:linear-gradient(180deg,#EAF1FF 0%,#BFDBFF 50%,#FFD3DE 100%);background-color:#FFD3DE;">
-                <a href="${targetUrl}" style="display:inline-block;padding:14px 30px;font-size:14.5px;font-weight:700;color:#00178F;text-decoration:none;border-radius:100px;">Evaluasi Trainer &amp; Post-Test &nbsp;&#8594;</a>
+                <a href="${targetUrl}" target="_blank" style="display:inline-block;padding:14px 30px;font-size:14.5px;font-weight:700;color:#00178F;text-decoration:none;border-radius:100px;">Evaluasi Trainer &amp; Post-Test &nbsp;&#8594;</a>
               </td>
             </tr>
           </table>
@@ -3467,8 +3642,115 @@ function getEvidenceRootFolder() {
 }
 
 /**
+ * Mencari atau membuat folder sesi training tunggal di Google Drive.
+ * Memastikan semua file (foto, modul, evidence) untuk training yang sama
+ * SELALU terkumpul ke dalam 1 folder yang sama persis, tanpa terpecah-pecah.
+ */
+function getOrCreateTrainingSessionFolder(evidenceMainFolder, deptFolder, trainingName, trainingId, postSheet) {
+  const cleanTargetName = String(trainingName || "").trim();
+  const cleanTargetId = String(trainingId || "").trim();
+  const targetNameLower = cleanTargetName.toLowerCase();
+  const targetIdLower = cleanTargetId.toLowerCase();
+
+  // 1. Level 1: Cek riwayat Link Folder di spreadsheet 'Post Training' jika ada
+  if (postSheet && postSheet.getLastRow() > 1) {
+    try {
+      const dataRange = postSheet.getDataRange().getValues();
+      const headers = dataRange[0].map(h => String(h).trim().toLowerCase());
+      const colTraining = headers.indexOf("nama training");
+      const colFolderUrl = headers.indexOf("link folder google drive");
+
+      if (colTraining !== -1 && colFolderUrl !== -1) {
+        for (let r = dataRange.length - 1; r >= 1; r--) {
+          const rowTraining = String(dataRange[r][colTraining] || "").trim().toLowerCase();
+          const rowUrl = String(dataRange[r][colFolderUrl] || "").trim();
+
+          const isMatch = (targetNameLower && (rowTraining === targetNameLower || rowTraining.includes(targetNameLower) || targetNameLower.includes(rowTraining))) ||
+                          (targetIdLower && rowTraining.includes(targetIdLower));
+
+          if (isMatch && rowUrl && rowUrl !== "-") {
+            const folderIdMatch = rowUrl.match(/folders\/([a-zA-Z0-9_-]+)/) || rowUrl.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+            const folderId = folderIdMatch ? folderIdMatch[1] : (rowUrl.length > 20 && !rowUrl.includes("/") ? rowUrl : null);
+            if (folderId) {
+              try {
+                const existingFolder = DriveApp.getFolderById(folderId);
+                if (existingFolder && !existingFolder.isTrashed()) {
+                  Logger.log(`[Smart Folder Match] Menggunakan folder yang sudah ada dari spreadsheet: ${existingFolder.getName()} (${existingFolder.getId()})`);
+                  return existingFolder;
+                }
+              } catch (eDrive) {
+                Logger.log(`Folder dari link spreadsheet tidak dapat diakses (${folderId}): ${eDrive.toString()}`);
+              }
+            }
+          }
+        }
+      }
+    } catch (eSheetLookup) {
+      Logger.log("Peringatan lookup folder dari spreadsheet: " + eSheetLookup.toString());
+    }
+  }
+
+  // 2. Level 2: Cari di dalam folder divisi (deptFolder)
+  try {
+    const subFolders = deptFolder.getFolders();
+    while (subFolders.hasNext()) {
+      const f = subFolders.next();
+      if (f.isTrashed()) continue;
+      const fName = f.getName().trim().toLowerCase();
+
+      // Cocok jika nama persis sama
+      if (targetNameLower && fName === targetNameLower) return f;
+      // Cocok jika diawali [ID Training]
+      if (targetIdLower && (fName.startsWith(`[${targetIdLower}]`) || fName.includes(targetIdLower))) return f;
+      // Cocok jika diawali Nama Training (mengantisipasi folder lama 'Nama Training - YYYY-MM-DD')
+      if (targetNameLower && (fName === targetNameLower || fName.startsWith(`${targetNameLower} -`) || fName.startsWith(`${targetNameLower}_`))) {
+        return f;
+      }
+    }
+  } catch (eDeptLookup) {
+    Logger.log("Peringatan lookup folder di deptFolder: " + eDeptLookup.toString());
+  }
+
+  // 3. Level 3: Cari lintas divisi di dalam evidenceMainFolder (jika divisi sebelumnya berbeda)
+  try {
+    const allDeptFolders = evidenceMainFolder.getFolders();
+    while (allDeptFolders.hasNext()) {
+      const otherDept = allDeptFolders.next();
+      if (otherDept.getId() === deptFolder.getId() || otherDept.isTrashed()) continue;
+      const innerFolders = otherDept.getFolders();
+      while (innerFolders.hasNext()) {
+        const f = innerFolders.next();
+        if (f.isTrashed()) continue;
+        const fName = f.getName().trim().toLowerCase();
+        if (
+          (targetIdLower && (fName.startsWith(`[${targetIdLower}]`) || fName.includes(targetIdLower))) ||
+          (targetNameLower && (fName === targetNameLower || fName.startsWith(`${targetNameLower} -`)))
+        ) {
+          Logger.log(`[Cross-Dept Match] Ditemukan folder training di divisi lain (${otherDept.getName()}): ${f.getName()}`);
+          return f;
+        }
+      }
+    }
+  } catch (eCrossLookup) {
+    Logger.log("Peringatan lookup lintas divisi: " + eCrossLookup.toString());
+  }
+
+  // 4. Level 4: Jika belum ada folder sama sekali, buat baru dengan nama kanonikal tetap (TANPA tanggal upload)
+  let canonicalName = cleanTargetName;
+  if (cleanTargetId && cleanTargetName) {
+    canonicalName = `[${cleanTargetId}] ${cleanTargetName}`;
+  } else if (!canonicalName) {
+    canonicalName = cleanTargetId || "Training";
+  }
+  canonicalName = canonicalName.replace(/[\/\\:*?"<>|]/g, "_");
+
+  Logger.log(`[New Folder] Membuat folder baru untuk sesi training: ${canonicalName}`);
+  return getOrCreateSubFolder(deptFolder, canonicalName);
+}
+
+/**
  * Menangani pengunggahan file bukti training (Evidence) ke Google Drive
- * Struktur Folder: Evidence Training / [Divisi] / [Nama Training - Tanggal]
+ * Struktur Folder: Evidence Training / [Divisi] / [Folder Sesi Training Bersama]
  * Dan mencatat transaksi ke tab "Post Training".
  */
 function handlePostTrainingEvidence(ss, data) {
@@ -3494,10 +3776,8 @@ function handlePostTrainingEvidence(ss, data) {
     const divisiClean = (data.divisi || "Umum").toString().trim().replace(/[\/\\:*?"<>|]/g, "_");
     const deptFolder = getOrCreateSubFolder(evidenceMainFolder, divisiClean);
 
-    const trainingNameClean = (data.namaTraining || "Training").toString().trim().replace(/[\/\\:*?"<>|]/g, "_");
-    const dateStr = data.tanggal || Utilities.formatDate(new Date(), TIME_ZONE, "yyyy-MM-dd");
-    const sessionFolderName = `${trainingNameClean} - ${dateStr}`;
-    const targetFolder = getOrCreateSubFolder(deptFolder, sessionFolderName);
+    // Dapatkan atau gunakan folder tunggal yang konsisten untuk training ini (anti-duplikasi)
+    const targetFolder = getOrCreateTrainingSessionFolder(evidenceMainFolder, deptFolder, data.namaTraining, data.trainingId, postSheet);
 
     // Atur hak akses folder ke Domain Workspace (karyawan cpssoft.com / cppsoft.com) atau siapa pun yang memiliki link
     try {
@@ -4138,4 +4418,251 @@ function handleGetTrainingDetails(ss, params) {
     Logger.log("Error handleGetTrainingDetails: " + err.toString());
     return ContentService.createTextOutput(JSON.stringify({ error: err.toString() })).setMimeType(ContentService.MimeType.JSON);
   }
+}
+
+// ==============================================================================
+// 13. REKAPITULASI PERSENTASE KEHADIRAN PER INDIVIDU PESERTA
+// ==============================================================================
+/**
+ * Membaca sheet "Training Attendance" & "Training Submissions",
+ * mengelompokkan per nama peserta, dan mengembalikan array:
+ * [ { nama, hadir, total, persen, email, departemen } ]
+ *
+ * Aturan perhitungan:
+ * - Scan = Hadir, Tidak Scan = Tidak Hadir. Status telat tidak dibedakan.
+ * - Persentase = (jumlah sesi yang di-scan ÷ jumlah sesi yang diikuti peserta) × 100, dibulatkan ke bilangan bulat.
+ * - Penyebut (total) hanya sesi yang diikuti peserta tersebut, bukan semua sesi di sistem.
+ * - Contoh: terdaftar di 4 sesi, hadir di 2 sesi -> { nama: "Budi", hadir: 2, total: 4, persen: 50 }
+ *
+ * @param {string} [trainingId] - Opsional. ID training spesifik untuk memfilter, atau kosong untuk semua.
+ * @returns {Array<{nama: string, hadir: number, total: number, persen: number, email?: string, departemen?: string}>}
+ */
+function getParticipantAttendanceRates(trainingId) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const attSheet = ss.getSheetByName(ATTENDANCE_SHEET_NAME);
+  const subSheet = ss.getSheetByName(SHEET_NAME);
+
+  const targetTrnId = String(trainingId || "").trim();
+
+  // 1. Petakan data sesi & peserta dari sheet "Training Submissions"
+  const trainingMap = new Map();
+
+  if (subSheet && subSheet.getLastRow() > 1) {
+    const subValues = subSheet.getDataRange().getValues();
+    const subHeaders = subValues[0].map(h => String(h).trim());
+    const idColIdx = subHeaders.indexOf("ID Training");
+    const jsonColIdx = subHeaders.indexOf("Raw Data JSON");
+    const partsColIdx = subHeaders.indexOf("Daftar Peserta (Ringkasan)");
+    const modColIdx = subHeaders.indexOf("Modul & Sesi (Ringkasan)");
+
+    for (let r = 1; r < subValues.length; r++) {
+      const row = subValues[r];
+      const trnId = String(idColIdx !== -1 ? row[idColIdx] : row[1] || "").trim();
+      if (!trnId) continue;
+      if (targetTrnId && trnId.toLowerCase() !== targetTrnId.toLowerCase()) continue;
+
+      let modules = [];
+      let participants = [];
+
+      if (jsonColIdx !== -1 && row[jsonColIdx]) {
+        try {
+          const raw = JSON.parse(row[jsonColIdx]);
+          if (Array.isArray(raw.modules)) modules = raw.modules;
+          if (Array.isArray(raw.participants)) participants = raw.participants;
+        } catch (e) {}
+      }
+
+      // Fallback jika raw JSON belum lengkap
+      if (modules.length === 0 && modColIdx !== -1 && row[modColIdx]) {
+        const lines = String(row[modColIdx]).split(/\n/).filter(Boolean);
+        modules = lines.map((l, i) => ({ modul: `Sesi ${i + 1}` }));
+      }
+      if (modules.length === 0) {
+        modules = [{ modul: "Sesi 1" }];
+      }
+
+      if (participants.length === 0 && partsColIdx !== -1 && row[partsColIdx]) {
+        const pLines = String(row[partsColIdx]).split(/\n/).filter(Boolean);
+        pLines.forEach(pLine => {
+          const clean = pLine.replace(/^\d+[\.\)]\s*/, "").trim();
+          if (clean) {
+            participants.push({ nama: clean, email: "", departemen: "" });
+          }
+        });
+      }
+
+      trainingMap.set(trnId, {
+        totalModules: Math.max(modules.length, 1),
+        modulesList: modules.map(m => String(m.modul || "").trim()),
+        participants: participants
+      });
+    }
+  }
+
+  // 2. Baca log presensi aktual dari sheet "Training Attendance"
+  // Scan = Hadir. Setiap record presensi dihitung hadir.
+  const attendedSessionsByPerson = new Map(); // key (nama) -> Set of "trainingId:::moduleId"
+  const personMetaMap = new Map();            // key (nama) -> { nama, email, departemen }
+
+  if (attSheet && attSheet.getLastRow() > 1) {
+    const attValues = attSheet.getDataRange().getValues();
+    const attHeaders = attValues[0].map(h => String(h).trim());
+    const colTrnId = attHeaders.indexOf("ID Training");
+    const colModId = attHeaders.indexOf("ID Sesi Modul");
+    const colNama = attHeaders.indexOf("Nama Peserta");
+    const colEmail = attHeaders.indexOf("Email Peserta");
+    const colDept = attHeaders.indexOf("Departemen / Divisi");
+
+    for (let i = 1; i < attValues.length; i++) {
+      const row = attValues[i];
+      const rowTrnId = String(colTrnId !== -1 ? row[colTrnId] : row[1] || "").trim();
+      if (!rowTrnId) continue;
+      if (targetTrnId && rowTrnId.toLowerCase() !== targetTrnId.toLowerCase()) continue;
+
+      const pNama = String(colNama !== -1 ? row[colNama] : row[5] || "").trim();
+      const pEmail = String(colEmail !== -1 ? row[colEmail] : row[6] || "").trim().toLowerCase();
+      const pDept = String(colDept !== -1 ? row[colDept] : row[7] || "").trim();
+      const modId = String(colModId !== -1 ? row[colModId] : row[3] || "Sesi 1").trim();
+
+      if (!pNama && !pEmail) continue;
+      const key = pNama || pEmail;
+
+      if (!attendedSessionsByPerson.has(key)) {
+        attendedSessionsByPerson.set(key, new Set());
+      }
+      if (!personMetaMap.has(key)) {
+        personMetaMap.set(key, { nama: pNama || pEmail, email: pEmail, departemen: pDept });
+      }
+
+      // Setiap sesi modul yang di-scan dicatat hadir
+      attendedSessionsByPerson.get(key).add(`${rowTrnId}:::${modId}`);
+    }
+  }
+
+  // 3. Rekapitulasi per nama peserta
+  const result = [];
+  const processedNames = new Set();
+
+  // A. Evaluasi peserta terdaftar dari Training Submissions
+  trainingMap.forEach((trnData, trnId) => {
+    trnData.participants.forEach(p => {
+      const pNama = String(p.nama || p.namaPeserta || "").trim();
+      if (!pNama) return;
+      const key = pNama;
+
+      const sessionsAttended = attendedSessionsByPerson.get(key) || new Set();
+      let hadirInThisTrn = 0;
+      sessionsAttended.forEach(sKey => {
+        if (sKey.startsWith(trnId + ":::")) {
+          hadirInThisTrn++;
+        }
+      });
+
+      const totalInThisTrn = trnData.totalModules;
+
+      if (targetTrnId) {
+        if (!processedNames.has(key)) {
+          processedNames.add(key);
+          const hadir = hadirInThisTrn;
+          const total = totalInThisTrn;
+          const persen = total > 0 ? Math.round((hadir / total) * 100) : 0;
+          result.push({
+            nama: pNama,
+            hadir: hadir,
+            total: total,
+            persen: persen,
+            email: p.email || "",
+            departemen: p.departemen || p.divisi || "-"
+          });
+        }
+      } else {
+        let existing = result.find(item => item.nama.toLowerCase() === pNama.toLowerCase());
+        if (!existing) {
+          existing = {
+            nama: pNama,
+            hadir: 0,
+            total: 0,
+            persen: 0,
+            email: p.email || "",
+            departemen: p.departemen || p.divisi || "-"
+          };
+          result.push(existing);
+        }
+        existing.total += totalInThisTrn;
+        existing.hadir += hadirInThisTrn;
+        existing.persen = existing.total > 0 ? Math.round((existing.hadir / existing.total) * 100) : 0;
+        processedNames.add(key);
+      }
+    });
+  });
+
+  // B. Tambahkan peserta walk-in yang hadir tapi belum ada di Training Submissions
+  attendedSessionsByPerson.forEach((sessionsSet, key) => {
+    const isAlreadyProcessed = result.some(item => item.nama.toLowerCase() === key.toLowerCase());
+    if (!isAlreadyProcessed) {
+      const meta = personMetaMap.get(key) || { nama: key, email: "", departemen: "-" };
+      let estimatedTotal = 0;
+      const trainingsAttended = new Set();
+      sessionsSet.forEach(sKey => {
+        trainingsAttended.add(sKey.split(":::")[0]);
+      });
+
+      trainingsAttended.forEach(tId => {
+        const tData = trainingMap.get(tId);
+        estimatedTotal += tData ? tData.totalModules : 1;
+      });
+
+      const hadir = sessionsSet.size;
+      const total = Math.max(estimatedTotal, hadir);
+      const persen = total > 0 ? Math.round((hadir / total) * 100) : 0;
+
+      result.push({
+        nama: meta.nama,
+        hadir: hadir,
+        total: total,
+        persen: persen,
+        email: meta.email || "",
+        departemen: meta.departemen || "-"
+      });
+    }
+  });
+
+  // Urutkan alfabetis berdasarkan nama peserta
+  result.sort((a, b) => a.nama.localeCompare(b.nama));
+  return result;
+}
+
+/**
+ * Alias fungsi untuk getParticipantAttendanceRates sesuai spesifikasi
+ */
+function getParticipantAttendance(trainingId) {
+  return getParticipantAttendanceRates(trainingId);
+}
+
+/**
+ * Endpoint Web App GET handler untuk persentase kehadiran per individu.
+ */
+function handleGetParticipantAttendance(ss, params) {
+  try {
+    const trainingId = String(params.trainingId || params.id || "").trim();
+    const rates = getParticipantAttendanceRates(trainingId);
+    return ContentService.createTextOutput(JSON.stringify(rates)).setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    Logger.log("Error handleGetParticipantAttendance: " + err.toString());
+    return ContentService.createTextOutput(JSON.stringify({ error: err.toString() })).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+/**
+ * Test Runner: Menguji Perhitungan Persentase Kehadiran Per Individu
+ */
+function testGetParticipantAttendanceRates() {
+  Logger.log("=== MEMULAI TEST getParticipantAttendanceRates ===");
+  const rates = getParticipantAttendanceRates();
+  Logger.log(`Total peserta terhitung: ${rates.length}`);
+  rates.forEach((r, idx) => {
+    Logger.log(`${idx + 1}. ${r.nama} -> Hadir: ${r.hadir}/${r.total} (${r.persen}%)`);
+  });
+  Logger.log("=== TEST getParticipantAttendanceRates SELESAI ===");
+  return rates;
 }

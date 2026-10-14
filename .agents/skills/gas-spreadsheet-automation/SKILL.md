@@ -54,7 +54,7 @@ const HEADERS = [
   "Link Form Evaluasi",
   "Status Email Konfirmasi",
   "Status Email Reminder H-1",
-  "Status Reminder Approval",
+  "Status Follow-Up Approval",
   "ID Event Google Calendar",
   "Approver",
   "Tanggal Approval",

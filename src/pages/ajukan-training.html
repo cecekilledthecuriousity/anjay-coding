@@ -1,20 +1,22 @@
       <section class="tds-page active" id="page-ajukan">
         <!-- Main Top Header -->
-        <header class="doc-header" style="margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
-          <div style="display:flex;align-items:center;gap:14px;">
-            <div class="header-icon-box" style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg, #6E62F0, #372FB0);display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 14px rgba(55, 47, 176, 0.25);">
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
-                <path d="M2 17l10 5 10-5"></path>
-                <path d="M2 12l10 5 10-5"></path>
+        <header class="doc-header">
+          <div class="doc-header-main">
+            <div class="header-icon-box">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="12" y1="18" x2="12" y2="12"></line>
+                <line x1="9" y1="15" x2="15" y2="15"></line>
               </svg>
             </div>
-            <div>
+            <div class="doc-header-text">
               <p class="kicker">Employee Development Program</p>
               <h1 class="voice">Request Training &amp; Development</h1>
+              <span class="helper-note">Rencanakan program pelatihan internal dengan alur terpadu dan persetujuan bertingkat.</span>
             </div>
           </div>
-          <div class="doc-header-actions" style="display:flex;align-items:center;gap:8px;">
+          <div class="doc-header-actions">
             <button type="button" class="btn-guide-trigger" onclick="openGuideDrawer()" title="Buka Buku Saku &amp; Panduan Pengisian">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
@@ -396,7 +398,7 @@
               </div>
               <div class="schedule-detail-body">
                 <div class="schedule-detail-title">Karakteristik Pelatihan 1 Hari</div>
-                <div class="schedule-detail-desc">Pelatihan rampung dalam <strong>1 hari pertemuan</strong> (contoh: seminar, workshop kilat, atau evaluasi). Format sesi dapat berupa 1 sesi penuh atau dibagi pagi dan siang.</div>
+                <div class="schedule-detail-desc">Pelatihan rampung dalam <strong>1 hari pertemuan</strong>. Format sesi dapat berupa 1 sesi penuh atau dibagi pagi dan siang.</div>
               </div>
             </div>
 
@@ -943,27 +945,32 @@
           <span class="card-sub" id="participantCount">0 peserta</span>
         </div>
 
-        <!-- 2 Opsi Pengisian Peserta: Manual vs Impor Spreadsheet -->
-        <div class="participant-methods-banner" style="background:#FAFBFD;border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
-          <div style="display:flex;align-items:center;gap:10px;">
-            <div style="width:34px;height:34px;border-radius:8px;background:rgba(0,23,143,0.08);color:#00178F;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-            </div>
-            <div>
-              <div style="font-size:12.5px;font-weight:700;color:var(--ink);">Metode Pengisian Peserta:</div>
-              <div style="font-size:11.5px;color:var(--ink-soft);">Input manual di tabel bawah untuk 1-3 orang, atau gunakan template spreadsheet untuk banyak peserta.</div>
-            </div>
+        <!-- Panduan Pengisian & Tujuan Email Peserta -->
+        <div style="background:var(--sand-panel);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:12px;color:var(--ink-soft);line-height:1.5;">
+          <div style="font-weight:600;color:var(--ink);margin-bottom:3px;display:flex;align-items:center;gap:6px;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+            Panduan Pengisian Peserta Pelatihan
           </div>
-          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-            <button type="button" class="btn-table-action" onclick="downloadPesertaTemplate()" style="padding:6px 12px;font-size:12px;display:inline-flex;align-items:center;gap:6px;" title="Unduh template Excel / CSV resmi">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-              <span>Unduh Template</span>
+          <div>• Masukkan nama karyawan yang wajib hadir sebagai peserta pelatihan (Trainer / Pengajar tidak perlu dimasukkan di tabel ini).</div>
+          <div>• Pastikan email aktif &amp; benar untuk pengiriman undangan <strong>Google Calendar</strong>, link absensi QR, dan reminder H-1 otomatis.</div>
+        </div>
+
+        <!-- Toolbar Aksi Peserta -->
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px;">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button type="button" class="btn-table-action" onclick="addParticipant()" style="font-size:12px;padding:7px 13px;display:inline-flex;align-items:center;gap:6px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+              <span>+ Tambah Peserta Manual</span>
             </button>
-            <button type="button" class="btn-table-action" onclick="openModal('modalQuickPasteExcel')" style="padding:6px 12px;font-size:12px;display:inline-flex;align-items:center;gap:6px;background:rgba(0,23,143,0.06);border-color:rgba(0,23,143,0.25);color:#00178F;" title="Impor dari Google Sheets / Excel">
+            <button type="button" class="btn-table-action" onclick="openModal('modalQuickPasteExcel')" style="font-size:12px;padding:7px 13px;display:inline-flex;align-items:center;gap:6px;background:rgba(0,23,143,0.06);border-color:rgba(0,23,143,0.25);color:#00178F;" title="Salin dari Excel atau Google Sheets">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
-              <span>Impor Spreadsheet</span>
+              <span>Quick Paste dari Excel / Sheets</span>
             </button>
           </div>
+          <button type="button" class="btn-table-action" onclick="downloadPesertaTemplate()" style="font-size:12px;padding:7px 13px;display:inline-flex;align-items:center;gap:6px;" title="Unduh template Excel / CSV resmi">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            <span>Unduh Template CSV</span>
+          </button>
         </div>
 
         <div class="tbl-wrap">
@@ -972,7 +979,7 @@
               <tr>
                 <th style="width:36px">No</th>
                 <th style="min-width:180px">Nama Karyawan</th>
-                <th style="width:190px">Email</th>
+                <th style="width:200px">Email (Untuk Invite Kalender)</th>
                 <th style="width:200px">Departemen / Divisi</th>
                 <th style="width:40px"></th>
               </tr>
@@ -981,14 +988,10 @@
           </table>
         </div>
 
-        <div class="table-toolbar">
+        <div class="table-toolbar" style="margin-top:10px;">
           <button type="button" class="btn-table-action" onclick="addParticipant()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-            Tambah Peserta Manual
-          </button>
-          <button type="button" class="btn-table-action" onclick="openModal('modalQuickPasteExcel')">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
-            Quick Paste dari Excel / Google Sheets
+            + Tambah Baris Peserta
           </button>
         </div>
       </section>
@@ -1000,7 +1003,7 @@
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
           </div>
           <h2>Evaluasi &amp; Output Pelatihan</h2>
-          <span class="card-sub">Tolok ukur keberhasilan &amp; komitmen transfer knowledge ke tim</span>
+          <span class="card-sub">Tolak ukur keberhasilan &amp; komitmen transfer knowledge ke tim</span>
         </div>
 
         <div class="field-row cols-2">
@@ -1026,9 +1029,8 @@
           <div class="field">
             <label>Waktu Evaluasi</label>
             <select id="waktuEvaluasi" data-field="Waktu evaluasi">
-              <option value="Setelah training" selected>Langsung Pasca Training (Default)</option>
-              <option value="H+7 Pelaksanaan">Maksimal H+7 Setelah Training</option>
-              <option value="Sesuai Jadwal Sesi">Sesuai Jadwal Sesi Pelatihan</option>
+              <option value="Langsung Selesai Pelatihan" selected>Langsung Selesai Pelatihan (Hari H)</option>
+              <option value="H+7 Setelah Pelatihan">H+7 Setelah Pelatihan</option>
             </select>
           </div>
           <div class="field">

@@ -79,7 +79,9 @@ $deprecatedDashboardIds = @(
     "postTestNamaPeserta",
     "postTestDivisi",
     "evidenceNamaPeserta",
-    "evidenceDivisi"
+    "evidenceDivisi",
+    "tabBtnEvidence",
+    "tabBtnPostTest"
 )
 
 $missingIds = @()

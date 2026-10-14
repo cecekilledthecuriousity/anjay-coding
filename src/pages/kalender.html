@@ -1,14 +1,28 @@
       <section class="tds-page" id="page-kalender">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px;">
-          <div>
-            <h2 class="voice" style="font-size:22px;margin:0 0 4px;color:var(--ink);">Kalender Jadwal Training</h2>
-            <span class="helper-note" style="margin:0;font-size:13px;">Linimasa visual jadwal pelatihan karyawan per ruangan meeting dan departemen.</span>
+        <!-- Calendar Header -->
+        <header class="doc-header">
+          <div class="doc-header-main">
+            <div class="header-icon-box">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+            </div>
+            <div class="doc-header-text">
+              <p class="kicker">Jadwal &amp; Agenda Pelatihan</p>
+              <h1 class="voice">Kalender Jadwal Training</h1>
+              <span class="helper-note">Linimasa visual jadwal pelatihan karyawan per ruangan meeting dan departemen.</span>
+            </div>
           </div>
-          <button type="button" class="btn-primary" onclick="goToPage('ajukan')" style="gap:6px;font-size:13px;padding:8px 14px;">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-            Ajukan Training Baru
-          </button>
-        </div>
+          <div class="doc-header-actions">
+            <button type="button" class="btn-primary" onclick="goToPage('ajukan')" style="gap:6px;font-size:13px;padding:8px 14px;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+              <span>Ajukan Training Baru</span>
+            </button>
+          </div>
+        </header>
 
         <div class="calendar-app-layout">
           <!-- Tombol Filter Mobile -->

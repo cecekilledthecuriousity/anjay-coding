@@ -102,6 +102,11 @@ Formulir terdiri dari 4 tahapan stepper wizard:
    * Memindai sheet untuk jadwal pelatihan yang jatuh tempo besok hari (H-1) atau hari ini, lalu mengirimkan email pengingat HTML ke seluruh peserta.
    * Mengupdate kolom spreadsheet `"Status Email Reminder H-1"` menjadi `Terkirim (YYYY-MM-DD HH:mm)`.
    * Trigger dipasang dengan menjalankan fungsi `setupDailyReminderTrigger()` sekali dari editor Apps Script.
+5. **Follow-Up Persetujuan Approver (H+3)**:
+   * Fungsi `checkAndSendApprovalFollowUps()` (alias: `checkAndSendApprovalReminders()`) berjalan otomatis dalam siklus trigger harian.
+   * Mendeteksi pengajuan dengan status *Diajukan / Menunggu Approval* yang belum diproses setelah 3 hari kalender (H+3).
+   * Mengirimkan email follow-up yang santun dan profesional ke approver bersangkutan untuk menindaklanjuti proses persetujuan.
+   * Mengupdate kolom spreadsheet `"Status Follow-Up Approval"` menjadi `Terkirim (YYYY-MM-DD HH:mm)`.
 
 ---
 
