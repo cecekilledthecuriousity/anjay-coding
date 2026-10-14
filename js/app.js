@@ -6935,14 +6935,29 @@ function loadMasterData() {
   entries.forEach((entry, idx) => {
     const m = entry.meta || {};
     const cls = entry.statusClass || 'draft';
+    const prioVal = m['Tingkat prioritas'] || 'Sedang';
+    const sasaranVal = m['Sasaran pengembangan'] || 'Individu';
+    let prioBadge = `<span class="mini-pill" style="font-size:10.5px;padding:1px 6px;font-weight:600;background:rgba(217,119,6,0.1);color:#B45309;">${escapeHtml(prioVal)}</span>`;
+    if (prioVal === 'Tinggi') {
+      prioBadge = `<span class="mini-pill" style="font-size:10.5px;padding:1px 6px;font-weight:700;background:rgba(220,38,38,0.1);color:#DC2626;">${escapeHtml(prioVal)}</span>`;
+    } else if (prioVal === 'Rendah') {
+      prioBadge = `<span class="mini-pill" style="font-size:10.5px;padding:1px 6px;font-weight:600;background:rgba(22,163,74,0.1);color:#15803D;">${escapeHtml(prioVal)}</span>`;
+    }
+
     const date = entry.submittedAt
       ? new Date(entry.submittedAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
       : '-';
 
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td><strong>${m['ID training'] || '-'}</strong></td>
-      <td>${m['Nama training'] || '-'}</td>
+      <td>
+        <strong>${m['ID training'] || '-'}</strong>
+        <div style="margin-top:3px;">${prioBadge}</div>
+      </td>
+      <td>
+        <div style="font-weight:600;">${m['Nama training'] || '-'}</div>
+        <div style="font-size:11.5px;color:var(--ink-soft);margin-top:2px;">${sasaranVal === 'Individu' ? '👤 Individu' : '🏢 ' + escapeHtml(sasaranVal)}</div>
+      </td>
       <td>${m['Nama pengaju'] || m['Leader pengaju'] || '-'}</td>
       <td>${m['Departemen / divisi'] || '-'}</td>
       <td>${m['Kategori training'] || '-'} [${m['Target level kemahiran'] || 'General'}]</td>
@@ -6983,6 +6998,14 @@ function showDetail(entry, index) {
     .map(v => `• <strong>${v.nama}</strong> &mdash; Kontak: ${v.kontak || '-'} | Est. Biaya: ${v.biaya || '-'} ${v.catatan ? ' (' + v.catatan + ')' : ''}`)
     .join('<br>');
 
+  const detailPrio = m['Tingkat prioritas'] || 'Sedang';
+  let detailPrioBadge = `<span class="mini-pill" style="font-size:11px;padding:2px 7px;font-weight:600;background:rgba(217,119,6,0.1);color:#B45309;">${escapeHtml(detailPrio)}</span>`;
+  if (detailPrio === 'Tinggi') {
+    detailPrioBadge = `<span class="mini-pill" style="font-size:11px;padding:2px 7px;font-weight:700;background:rgba(220,38,38,0.1);color:#DC2626;">${escapeHtml(detailPrio)}</span>`;
+  } else if (detailPrio === 'Rendah') {
+    detailPrioBadge = `<span class="mini-pill" style="font-size:11px;padding:2px 7px;font-weight:600;background:rgba(22,163,74,0.1);color:#15803D;">${escapeHtml(detailPrio)}</span>`;
+  }
+
   const detailHtml = `
     <div class="detail-panel" style="margin-top:0;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
@@ -6994,6 +7017,9 @@ function showDetail(entry, index) {
         <div class="review-item"><label>Nama Training</label><div>${m['Nama training'] || '-'}</div></div>
         <div class="review-item"><label>Nama Pengaju</label><div>${m['Nama pengaju'] || m['Leader pengaju'] || '-'}</div></div>
         <div class="review-item"><label>Departemen / Divisi</label><div>${m['Departemen / divisi'] || '-'}</div></div>
+        <div class="review-item"><label>Sasaran Pengembangan</label><div>${m['Sasaran pengembangan'] === 'Individu' ? '👤 Individu' : '🏢 ' + escapeHtml(m['Sasaran pengembangan'] || 'Individu')}</div></div>
+        <div class="review-item"><label>Tingkat Prioritas</label><div>${detailPrioBadge}</div></div>
+        ${m['Alasan penentuan prioritas'] ? `<div class="review-item" style="grid-column:1/-1;"><label>Alasan Penentuan Prioritas</label><div style="font-style:italic;color:var(--ink);">${escapeHtml(m['Alasan penentuan prioritas'])}</div></div>` : ''}
         <div class="review-item"><label>Kategori & Level</label><div>${m['Kategori training'] || '-'} (${m['Target level kemahiran'] || 'General'})</div></div>
         <div class="review-item"><label>Kebutuhan (Urgensi)</label><div>${m['Kategori kebutuhan training'] || '-'}</div></div>
         <div class="review-item"><label>Metode Training</label><div>${m['Metode training'] || '-'}</div></div>

@@ -475,6 +475,22 @@ function isDummyOrDeletedSubmission(id, namaTraining, pengaju) {
 }
 
 /**
+ * Helper render badge prioritas pelatihan (TDS Design System)
+ * @param {string} prio Tingkat prioritas ('Tinggi', 'Sedang', 'Rendah')
+ * @param {string} size Ukuran badge ('sm' atau 'lg')
+ */
+function getPriorityBadgeHtml(prio, size = 'sm') {
+  const p = (prio || 'Sedang').trim();
+  if (p === 'Tinggi') {
+    return `<span class="mini-pill" style="font-size:${size === 'lg' ? '12px' : '10.5px'};padding:2px 8px;font-weight:700;background:rgba(220,38,38,0.1);color:#DC2626;border:1px solid rgba(220,38,38,0.25);display:inline-flex;align-items:center;gap:4px;"><span style="width:6px;height:6px;border-radius:50%;background:#DC2626;display:inline-block;"></span>Tinggi</span>`;
+  }
+  if (p === 'Rendah') {
+    return `<span class="mini-pill" style="font-size:${size === 'lg' ? '12px' : '10.5px'};padding:2px 8px;font-weight:600;background:rgba(22,163,74,0.1);color:#15803D;border:1px solid rgba(22,163,74,0.25);display:inline-flex;align-items:center;gap:4px;"><span style="width:6px;height:6px;border-radius:50%;background:#16A34A;display:inline-block;"></span>Rendah</span>`;
+  }
+  return `<span class="mini-pill" style="font-size:${size === 'lg' ? '12px' : '10.5px'};padding:2px 8px;font-weight:600;background:rgba(217,119,6,0.1);color:#B45309;border:1px solid rgba(217,119,6,0.25);display:inline-flex;align-items:center;gap:4px;"><span style="width:6px;height:6px;border-radius:50%;background:#D97706;display:inline-block;"></span>Sedang</span>`;
+}
+
+/**
  * Normalisasi objek data baik dari respon Google Sheets (doGet)
  * maupun format localStorage form submission.
  */
@@ -533,6 +549,13 @@ function normalizeSubmission(raw) {
   const tanggalApproval = String(raw.tanggalApproval || meta['Tanggal Approval'] || raw['Tanggal Approval'] || '-').trim();
   const catatanApprover = String(raw.catatanApprover || meta['Catatan Approver'] || raw['Catatan Approver'] || '-').trim();
 
+  // Field prioritas, sasaran, alasan penentuan prioritas, dan goals terukur
+  const prioritas = String(meta['Tingkat prioritas'] || raw['Tingkat Prioritas'] || raw['Tingkat prioritas'] || meta['Prioritas'] || raw['Prioritas'] || 'Sedang').trim();
+  const alasanPrioritas = String(meta['Alasan penentuan prioritas'] || raw['Alasan Penentuan Prioritas'] || raw['Alasan penentuan prioritas'] || raw['Alasan Prioritas'] || '').trim();
+  const sasaran = String(meta['Sasaran pengembangan'] || raw['Sasaran Pengembangan'] || raw['Sasaran pengembangan'] || 'Individu').trim();
+  const goals = String(meta['Training goals'] || raw['Training Goals'] || raw['Training goals'] || meta['Goals / tujuan terukur'] || '').trim();
+  const purpose = String(meta['Training plan purpose'] || raw['Training plan purpose'] || meta['Purpose / latar belakang'] || '').trim();
+
   return {
     id,
     namaTraining,
@@ -551,6 +574,11 @@ function normalizeSubmission(raw) {
     approver,
     tanggalApproval,
     catatanApprover,
+    prioritas,
+    alasanPrioritas,
+    sasaran,
+    goals,
+    purpose,
     rawEntry: {
       ...raw,
       meta,
@@ -743,12 +771,19 @@ function renderUrgentPendingList() {
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap;">
           <span style="font-family:monospace;font-size:12px;font-weight:700;color:var(--accent);">${escapeHtml(item.id)}</span>
           <span class="mini-pill submitted" style="font-size:11px;padding:1px 7px;"><span class="dot"></span>Menunggu Approval</span>
+          ${getPriorityBadgeHtml(item.prioritas, 'sm')}
+          <span class="mini-pill" style="font-size:11px;padding:1px 7px;background:rgba(0,23,143,0.06);color:var(--ink);">${item.sasaran === 'Individu' ? '👤 Individu' : '🏢 ' + escapeHtml(item.sasaran || 'Lintas Divisi')}</span>
           <span style="font-size:11.5px;color:var(--ink-faint);">${formatDateIndo(item.submittedAt)}</span>
         </div>
         <div style="font-size:14.5px;font-weight:700;color:var(--ink);">${escapeHtml(item.namaTraining)}</div>
         <div style="font-size:12.5px;color:var(--ink-soft);margin-top:2px;">
           Pengaju: <strong>${escapeHtml(item.pengaju)}</strong> &bull; Divisi: ${escapeHtml(item.departemen)} &bull; Budget: <strong style="color:var(--ink);">${escapeHtml(item.budget)}</strong>
         </div>
+        ${item.alasanPrioritas ? `
+          <div style="font-size:12px;color:var(--ink-soft);margin-top:6px;background:rgba(217,119,6,0.06);border-left:2.5px solid #D97706;padding:4px 9px;border-radius:4px;line-height:1.45;">
+            <strong style="color:#B45309;">Alasan Prioritas (${escapeHtml(item.prioritas)}):</strong> ${escapeHtml(item.alasanPrioritas)}
+          </div>
+        ` : ''}
       </div>
       <div style="display:flex;gap:8px;align-items:center;">
         <button type="button" class="btn-primary" style="font-size:12.5px;padding:7px 14px;gap:5px;box-shadow:0 4px 12px rgba(0,23,143,0.25);" onclick="openReviewModal('${escapeHtml(item.id)}')">
@@ -897,7 +932,9 @@ function applyFilterAndSearch() {
       const matchName = (item.namaTraining || '').toLowerCase().includes(query);
       const matchPengaju = (item.pengaju || '').toLowerCase().includes(query);
       const matchDept = (item.departemen || '').toLowerCase().includes(query);
-      return matchId || matchName || matchPengaju || matchDept;
+      const matchPrio = (item.prioritas || '').toLowerCase().includes(query);
+      const matchSasaran = (item.sasaran || '').toLowerCase().includes(query);
+      return matchId || matchName || matchPengaju || matchDept || matchPrio || matchSasaran;
     }
 
     return true;
@@ -925,11 +962,19 @@ function renderTable(items) {
 
   tbody.innerHTML = items.map(item => `
     <tr onclick="handleRowClick(event, '${escapeHtml(item.id)}')">
-      <td><strong>${escapeHtml(item.id)}</strong></td>
+      <td>
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+          <strong>${escapeHtml(item.id)}</strong>
+          ${getPriorityBadgeHtml(item.prioritas, 'sm')}
+        </div>
+      </td>
       <td style="font-size:12.5px;color:var(--ink-soft);white-space:nowrap;">${formatDateIndo(item.submittedAt)}</td>
       <td>
         <div style="font-weight:600;color:var(--ink);">${escapeHtml(item.namaTraining)}</div>
-        <div style="font-size:12px;color:var(--ink-soft);margin-top:2px;">${escapeHtml(item.kategori)} &bull; <span style="color:var(--ink-faint);">${escapeHtml(item.level)}</span></div>
+        <div style="font-size:12px;color:var(--ink-soft);margin-top:2px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+          <span>${escapeHtml(item.kategori)} &bull; <span style="color:var(--ink-faint);">${escapeHtml(item.level)}</span></span>
+          <span class="mini-pill" style="font-size:10.5px;padding:1px 6px;background:rgba(0,23,143,0.05);color:var(--ink);">${item.sasaran === 'Individu' ? '👤 Individu' : '🏢 ' + escapeHtml(item.sasaran || 'Lintas Divisi')}</span>
+        </div>
       </td>
       <td>
         <div style="font-weight:500;">${escapeHtml(item.pengaju)}</div>
@@ -1766,34 +1811,66 @@ function renderModalDetails(item) {
     `;
   }
 
-  // Purpose / Goals Box
-  const purposeText = meta['Purpose / latar belakang'] || '';
-  const goalsText = meta['Goals / tujuan terukur'] || '';
-  let purposeGoalsHtml = '';
-  if (purposeText || goalsText) {
-    purposeGoalsHtml = `
-      <div style="background:#FFFFFF;border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-bottom:18px;box-shadow:var(--shadow-sm);">
-        <div style="font-size:13.5px;font-weight:700;color:var(--ink);margin-bottom:12px;display:flex;align-items:center;gap:7px;">
+  // Justifikasi Strategis, Prioritas, Sasaran & Goals Box
+  const purposeText = item.purpose || meta['Purpose / latar belakang'] || meta['Training plan purpose'] || '';
+  const goalsText = item.goals || meta['Training goals'] || meta['Goals / tujuan terukur'] || '';
+  const sasaranText = item.sasaran || meta['Sasaran pengembangan'] || 'Individu';
+  const prioText = item.prioritas || meta['Tingkat prioritas'] || 'Sedang';
+  const prioReasonText = item.alasanPrioritas || meta['Alasan penentuan prioritas'] || meta['Alasan prioritas'] || '';
+
+  const justificationHtml = `
+    <div style="background:#FFFFFF;border:1px solid rgba(0,23,143,0.14);border-radius:14px;padding:18px 20px;margin-bottom:18px;box-shadow:var(--shadow-sm);">
+      <div style="font-size:13.5px;font-weight:700;color:var(--ink);margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+        <div style="display:flex;align-items:center;gap:7px;">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent);">
             <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
           </svg>
-          Sasaran &amp; Tujuan Pelatihan
+          Justifikasi Strategis &amp; Sasaran Pelatihan
         </div>
-        ${purposeText ? `
-          <div style="margin-bottom:10px;">
-            <div style="font-size:10.5px;font-weight:700;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:3px;">Latar Belakang (Purpose):</div>
-            <div style="font-size:13px;color:var(--ink);line-height:1.55;">${escapeHtml(purposeText)}</div>
-          </div>
-        ` : ''}
-        ${goalsText ? `
-          <div>
-            <div style="font-size:10.5px;font-weight:700;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:3px;">Tujuan Terukur (Goals):</div>
-            <div style="font-size:13px;color:var(--ink);line-height:1.55;">${escapeHtml(goalsText)}</div>
-          </div>
-        ` : ''}
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span style="font-size:11px;font-weight:600;color:var(--ink-soft);">Tingkat Urgensi:</span>
+          ${getPriorityBadgeHtml(prioText, 'sm')}
+        </div>
       </div>
-    `;
-  }
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:10px;margin-bottom:12px;">
+        <div style="background:var(--paper);border:1px solid var(--line-soft);border-radius:10px;padding:9px 12px;">
+          <div style="font-size:10.5px;font-weight:700;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:2px;">Sasaran Pengembangan</div>
+          <div style="font-size:13px;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:6px;">
+            <span>${sasaranText === 'Individu' ? '👤' : '🏢'}</span>
+            <span>${escapeHtml(sasaranText)}</span>
+          </div>
+        </div>
+        <div style="background:var(--paper);border:1px solid var(--line-soft);border-radius:10px;padding:9px 12px;">
+          <div style="font-size:10.5px;font-weight:700;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:2px;">Tingkat Prioritas</div>
+          <div style="font-size:13px;font-weight:700;color:var(--ink);">
+            ${getPriorityBadgeHtml(prioText, 'sm')}
+          </div>
+        </div>
+      </div>
+
+      ${prioReasonText ? `
+        <div style="background:rgba(217,119,6,0.06);border-left:3.5px solid #D97706;border-radius:6px;padding:10px 13px;margin-bottom:12px;">
+          <div style="font-size:10.5px;font-weight:700;color:#B45309;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:2px;">Alasan Penentuan Prioritas:</div>
+          <div style="font-size:12.5px;color:var(--ink);line-height:1.5;font-weight:500;">${escapeHtml(prioReasonText)}</div>
+        </div>
+      ` : ''}
+
+      ${goalsText ? `
+        <div style="margin-bottom:10px;">
+          <div style="font-size:10.5px;font-weight:700;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:3px;">Tujuan Terukur (Training Goals):</div>
+          <div style="font-size:13px;color:var(--ink);line-height:1.55;background:#FAFBFD;padding:9px 12px;border-radius:8px;border:1px solid var(--line-soft);">${escapeHtml(goalsText)}</div>
+        </div>
+      ` : ''}
+
+      ${purposeText && purposeText !== goalsText ? `
+        <div>
+          <div style="font-size:10.5px;font-weight:700;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:3px;">Latar Belakang (Purpose):</div>
+          <div style="font-size:13px;color:var(--ink-soft);line-height:1.55;">${escapeHtml(purposeText)}</div>
+        </div>
+      ` : ''}
+    </div>
+  `;
 
   // Approver decision stamp (if already reviewed)
   let decisionStampHtml = '';
@@ -1828,6 +1905,8 @@ function renderModalDetails(item) {
       <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:12px;">
         <span class="mini-pill" style="font-weight:700;font-size:11.5px;background:rgba(0,23,143,0.08);color:var(--ink);">${escapeHtml(item.departemen || 'Semua Divisi')}</span>
         <span class="mini-pill" style="font-size:11.5px;">${escapeHtml(item.kategori || 'Pelatihan')} &bull; ${escapeHtml(item.level || 'All Level')}</span>
+        <span class="mini-pill" style="font-size:11.5px;background:rgba(0,23,143,0.06);color:var(--ink);">${item.sasaran === 'Individu' ? '👤 Individu' : '🏢 ' + escapeHtml(item.sasaran || 'Lintas Divisi')}</span>
+        ${getPriorityBadgeHtml(item.prioritas, 'lg')}
         ${meta['Metode training'] ? `<span class="mini-pill" style="font-size:11.5px;background:rgba(75,150,255,0.14);color:var(--ink);">${escapeHtml(meta['Metode training'])}</span>` : ''}
         <span class="mini-pill ${item.statusClass}" style="margin-left:auto;font-weight:700;font-size:11.5px;"><span class="dot"></span>${escapeHtml(item.status)}</span>
       </div>
@@ -1875,8 +1954,8 @@ function renderModalDetails(item) {
     <!-- Approver Decision History (if any) -->
     ${decisionStampHtml}
 
-    <!-- Purpose & Goals -->
-    ${purposeGoalsHtml}
+    <!-- Strategic Justification, Priority & Goals -->
+    ${justificationHtml}
 
     <!-- Daftar Peserta -->
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
@@ -2804,8 +2883,11 @@ function buildAuthSheetHtml(item) {
   const schedule = item.jadwal || meta['Tanggal & jam pelaksanaan'] || item.waktu || '-';
 
   // Purpose & Goals
-  const purpose = meta['Purpose / latar belakang'] || meta['Purpose'] || '-';
-  const goals = meta['Goals / tujuan terukur'] || meta['Goals'] || '-';
+  const purpose = meta['Purpose / latar belakang'] || meta['Training plan purpose'] || meta['Purpose'] || '-';
+  const goals = item.goals || meta['Training goals'] || meta['Goals / tujuan terukur'] || meta['Goals'] || '-';
+  const prioVal = item.prioritas || meta['Tingkat prioritas'] || 'Sedang';
+  const sasaranVal = item.sasaran || meta['Sasaran pengembangan'] || 'Individu';
+  const prioReason = item.alasanPrioritas || meta['Alasan penentuan prioritas'] || meta['Alasan prioritas'] || '';
 
   // Budget
   const estCost = item.budget || meta['Estimasi biaya'] || 'Rp 0';
@@ -2907,7 +2989,7 @@ function buildAuthSheetHtml(item) {
     <table class="auth-sheet-meta-table">
       <tr>
         <td class="lbl">Nama Training:</td>
-        <td class="val" colspan="3" style="font-size:13px;font-weight:700;color:var(--moss,#3F5A44);">${escapeHtml(trainingName)}</td>
+        <td class="val" colspan="3" style="font-size:13px;font-weight:700;color:#00178F;">${escapeHtml(trainingName)}</td>
       </tr>
       <tr>
         <td class="lbl">Leader Pengaju:</td>
@@ -2918,22 +3000,32 @@ function buildAuthSheetHtml(item) {
       <tr>
         <td class="lbl">Kategori &amp; Level:</td>
         <td class="val">${escapeHtml(skillCategory)} &bull; ${escapeHtml(skillLevel)}</td>
-        <td class="lbl">Metode &amp; Durasi:</td>
-        <td class="val">${escapeHtml(method)} &bull; ${escapeHtml(duration)}</td>
+        <td class="lbl">Sasaran &amp; Prioritas:</td>
+        <td class="val"><strong>${escapeHtml(sasaranVal)}</strong> &bull; Prioritas: <strong style="color:${prioVal === 'Tinggi' ? '#DC2626' : (prioVal === 'Sedang' ? '#D97706' : '#16A34A')};">${escapeHtml(prioVal)}</strong></td>
       </tr>
       <tr>
         <td class="lbl">Trainer / Fasilitator:</td>
         <td class="val">${escapeHtml(trainer)}</td>
-        <td class="lbl">Lokasi / Platform:</td>
-        <td class="val">${escapeHtml(venue)}</td>
+        <td class="lbl">Metode &amp; Durasi:</td>
+        <td class="val">${escapeHtml(method)} &bull; ${escapeHtml(duration)}</td>
       </tr>
+      <tr>
+        <td class="lbl">Lokasi / Platform:</td>
+        <td class="val" colspan="3">${escapeHtml(venue)}</td>
+      </tr>
+      ${prioReason ? `
+      <tr>
+        <td class="lbl">Alasan Prioritas:</td>
+        <td class="val" colspan="3" style="font-style:italic;color:#1E293B;">${escapeHtml(prioReason)}</td>
+      </tr>
+      ` : ''}
     </table>
 
     <!-- 2. SASARAN & TUJUAN -->
     <div class="auth-sheet-sec-title">2. Latar Belakang &amp; Sasaran Pelatihan</div>
     <div class="auth-sheet-box-text">
-      <div style="margin-bottom:6px;"><strong>Latar Belakang &amp; Urgensi:</strong> ${escapeHtml(purpose)}</div>
-      <div><strong>Tujuan Terukur (KPI / Goals):</strong> ${escapeHtml(goals)}</div>
+      ${goals && goals !== '-' ? `<div style="margin-bottom:6px;"><strong>Tujuan Terukur (Training Goals):</strong> ${escapeHtml(goals)}</div>` : ''}
+      <div><strong>Latar Belakang &amp; Urgensi:</strong> ${escapeHtml(purpose)}</div>
     </div>
 
     <!-- 3. RANGKAIAN MODUL -->
@@ -2991,7 +3083,7 @@ function buildAuthSheetHtml(item) {
         ${feeLain !== '-' ? `<tr><td>Biaya Lain-lain</td><td>Operasional Tambahan</td><td style="text-align:right;">${escapeHtml(feeLain)}</td></tr>` : ''}
         <tr style="background:#F2F4F0;font-weight:700;">
           <td colspan="2" style="text-align:right;text-transform:uppercase;">Total Komitmen Budget:</td>
-          <td style="text-align:right;color:var(--moss,#3F5A44);font-size:12.5px;">${escapeHtml(apprBudget)}</td>
+          <td style="text-align:right;color:#00178F;font-size:12.5px;">${escapeHtml(apprBudget)}</td>
         </tr>
       </tbody>
     </table>
@@ -3035,7 +3127,7 @@ function buildAuthSheetHtml(item) {
       <div class="auth-sheet-qr-box">
         <img src="${qrCodeUrl}" alt="QR Verifikasi" class="auth-sheet-qr-img" onerror="this.style.display='none'">
         <div>
-          <div style="font-weight:700;font-size:11px;color:#1F2421;margin-bottom:2px;">VERIFIKASI KEABSAHAN DOKUMEN OTORISASI</div>
+          <div style="font-weight:700;font-size:11px;color:#00178F;margin-bottom:2px;">VERIFIKASI KEABSAHAN DOKUMEN OTORISASI</div>
           <div style="font-size:10px;color:#6B7264;font-family:monospace;">ID: ${escapeHtml(trainingId)} &bull; STATUS: ${escapeHtml(statusStr)}</div>
         </div>
       </div>

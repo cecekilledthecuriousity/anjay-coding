@@ -81,6 +81,9 @@ const HEADERS = [
   "Modul & Sesi (Ringkasan)",
   "Modul & Materi (File/Link)",
   "Training Goals",
+  "Tingkat Prioritas",
+  "Alasan Penentuan Prioritas",
+  "Sasaran Pengembangan",
   "Hasil yang Diharapkan",
   "Penerapan di Pekerjaan",
   "Indikator Keberhasilan",
@@ -308,6 +311,9 @@ function doPost(e) {
       "Modul & Sesi (Ringkasan)": modulesSummary || "-",
       "Modul & Materi (File/Link)": proposalMaterialsSummary || meta["Link silabus materi"] || "-",
       "Training Goals": goals,
+      "Tingkat Prioritas": meta["Tingkat prioritas"] || "Sedang",
+      "Alasan Penentuan Prioritas": meta["Alasan penentuan prioritas"] || meta["Alasan prioritas"] || "-",
+      "Sasaran Pengembangan": meta["Sasaran pengembangan"] || "Individu",
       "Hasil yang Diharapkan": hasilDiharapkan,
       "Penerapan di Pekerjaan": penerapanKerja,
       "Indikator Keberhasilan": indikator,
@@ -1484,6 +1490,19 @@ function sendApproverNotification(meta, participants, modules, trainingId) {
               <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:12px;font-weight:600;color:#8D93C2;">Jumlah Peserta</td>
               <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;color:#4A4F8F;">${jmlPeserta} orang</td>
             </tr>
+            <tr>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:12px;font-weight:600;color:#8D93C2;">Prioritas &amp; Sasaran</td>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;font-weight:700;color:${meta["Tingkat prioritas"] === "Tinggi" ? "#DC2626" : "#00178F"};">
+                ${meta["Tingkat prioritas"] || "Sedang"} &bull; ${meta["Sasaran pengembangan"] || "Individu"}
+                ${meta["Alasan penentuan prioritas"] ? `<div style="font-size:12px;font-weight:400;color:#4A4F8F;margin-top:4px;"><em>Alasan: ${meta["Alasan penentuan prioritas"]}</em></div>` : ''}
+              </td>
+            </tr>
+            ${(meta["Training goals"] || tujuan) && (meta["Training goals"] || tujuan) !== '-' ? `
+            <tr>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:12px;font-weight:600;color:#8D93C2;">Training Goals</td>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13px;color:#00178F;line-height:1.5;">${meta["Training goals"] || tujuan}</td>
+            </tr>
+            ` : ''}
             <tr>
               <td style="padding:11px 16px;font-size:12px;font-weight:600;color:#8D93C2;">Jenis Training</td>
               <td style="padding:11px 16px;font-size:13.5px;font-weight:700;color:#00178F;">${meta["Jenis training"] || "Training Internal"}</td>
