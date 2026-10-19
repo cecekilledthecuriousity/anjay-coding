@@ -83,6 +83,7 @@ const HEADERS = [
   "Training Goals",
   "Tingkat Prioritas",
   "Alasan Penentuan Prioritas",
+  "Dasar Identifikasi Kebutuhan",
   "Sasaran Pengembangan",
   "Hasil yang Diharapkan",
   "Penerapan di Pekerjaan",
@@ -296,7 +297,7 @@ function doPost(e) {
       "Departemen / Divisi": meta["Departemen / divisi"] || "-",
       "Kategori Training": meta["Kategori training"] || "-",
       "Target Level Kemahiran": meta["Target level kemahiran"] || "-",
-      "Kategori Kebutuhan Training": meta["Kategori kebutuhan training"] || "-",
+      "Kategori Kebutuhan Training": meta["Kategori kebutuhan training"] || meta["Dasar identifikasi kebutuhan"] || "-",
       "Tanggal Pengajuan": meta["Tanggal pengajuan"] || "-",
       "Metode Training": meta["Metode training"] || "-",
       "Jadwal Pelaksanaan": meta["Tanggal & jam pelaksanaan"] || "-",
@@ -313,6 +314,7 @@ function doPost(e) {
       "Training Goals": goals,
       "Tingkat Prioritas": meta["Tingkat prioritas"] || "Sedang",
       "Alasan Penentuan Prioritas": meta["Alasan penentuan prioritas"] || meta["Alasan prioritas"] || "-",
+      "Dasar Identifikasi Kebutuhan": meta["Dasar identifikasi kebutuhan"] || "-",
       "Sasaran Pengembangan": meta["Sasaran pengembangan"] || "Individu",
       "Hasil yang Diharapkan": hasilDiharapkan,
       "Penerapan di Pekerjaan": penerapanKerja,
@@ -1497,6 +1499,12 @@ function sendApproverNotification(meta, participants, modules, trainingId) {
                 ${meta["Alasan penentuan prioritas"] ? `<div style="font-size:12px;font-weight:400;color:#4A4F8F;margin-top:4px;"><em>Alasan: ${meta["Alasan penentuan prioritas"]}</em></div>` : ''}
               </td>
             </tr>
+            ${meta["Dasar identifikasi kebutuhan"] && meta["Dasar identifikasi kebutuhan"] !== '-' ? `
+            <tr>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:12px;font-weight:600;color:#8D93C2;">Dasar Kebutuhan</td>
+              <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:13.5px;font-weight:600;color:#00178F;">${meta["Dasar identifikasi kebutuhan"]}</td>
+            </tr>
+            ` : ''}
             ${(meta["Training goals"] || tujuan) && (meta["Training goals"] || tujuan) !== '-' ? `
             <tr>
               <td style="padding:11px 16px;border-bottom:1px solid #EDF1FE;font-size:12px;font-weight:600;color:#8D93C2;">Training Goals</td>

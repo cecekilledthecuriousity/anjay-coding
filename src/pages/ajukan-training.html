@@ -157,18 +157,23 @@
             </select>
           </div>
           <div class="field">
-            <label>Kategori Kebutuhan Training <span class="hint">(Urgensi)</span></label>
-            <select id="urgencyCategory" data-field="Kategori kebutuhan training">
-              <option value="">Pilih kategori kebutuhan</option>
-              <option value="Kesenjangan Kinerja">Kesenjangan Kinerja</option>
-              <option value="Kesenjangan Keterampilan">Kesenjangan Keterampilan</option>
-              <option value="Kesenjangan Pengetahuan">Kesenjangan Pengetahuan</option>
-              <option value="Kebutuhan Pengembangan Perilaku">Kebutuhan Pengembangan Perilaku</option>
-              <option value="Perubahan Proses / Sistem">Perubahan Proses / Sistem</option>
-              <option value="Pengembangan Kepemimpinan">Pengembangan Kepemimpinan</option>
-              <option value="Kepatuhan / Wajib">Kepatuhan / Wajib</option>
-              <option value="Kebutuhan Bisnis / Strategis">Kebutuhan Bisnis / Strategis</option>
+            <label>
+              <span>Dasar Identifikasi Kebutuhan <span style="color:var(--danger)">*</span></span>
+            </label>
+            <select id="dasarKebutuhan" data-field="Dasar identifikasi kebutuhan" onchange="handleDasarKebutuhanChange(this)" required>
+              <option value="">Pilih dasar kebutuhan...</option>
+              <option value="Hasil Matriks Kompetensi">Hasil Matriks Kompetensi</option>
+              <option value="Hasil Performance Review">Hasil Performance Review</option>
+              <option value="Hasil Audit Internal">Hasil Audit Internal</option>
+              <option value="Hasil Audit Eksternal">Hasil Audit Eksternal</option>
+              <option value="Perubahan Proses Kerja">Perubahan Proses Kerja</option>
+              <option value="Perubahan Sistem/Aplikasi">Perubahan Sistem/Aplikasi</option>
+              <option value="Perubahan Regulasi Peraturan">Perubahan Regulasi Peraturan</option>
+              <option value="Permintaan Atasan">Permintaan Atasan</option>
+              <option value="Pengembangan Karier">Pengembangan Karier</option>
+              <option value="custom">Lainnya (Ketik manual)...</option>
             </select>
+            <input type="text" id="customDasarKebutuhanInput" placeholder="Ketik dasar kebutuhan..." style="display:none;margin-top:6px;">
           </div>
           <div class="field">
             <label>Tanggal Pengajuan</label>
@@ -371,7 +376,7 @@
 
         <div class="field">
           <label>
-            <span>Training Goals <span style="color:var(--danger)">*</span></span>
+            <span>Tujuan Training Diadakan <span style="color:var(--danger)">*</span></span>
             <span class="hint">(Tujuan &amp; hasil yang diharapkan)</span>
           </label>
           <textarea placeholder="Jelaskan kebutuhan yang ingin dijawab dan hasil yang diharapkan setelah training." id="goals" data-field="Training goals" rows="3" required></textarea>

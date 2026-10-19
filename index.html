@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8">
@@ -285,18 +285,23 @@
             </select>
           </div>
           <div class="field">
-            <label>Kategori Kebutuhan Training <span class="hint">(Urgensi)</span></label>
-            <select id="urgencyCategory" data-field="Kategori kebutuhan training">
-              <option value="">Pilih kategori kebutuhan</option>
-              <option value="Kesenjangan Kinerja">Kesenjangan Kinerja</option>
-              <option value="Kesenjangan Keterampilan">Kesenjangan Keterampilan</option>
-              <option value="Kesenjangan Pengetahuan">Kesenjangan Pengetahuan</option>
-              <option value="Kebutuhan Pengembangan Perilaku">Kebutuhan Pengembangan Perilaku</option>
-              <option value="Perubahan Proses / Sistem">Perubahan Proses / Sistem</option>
-              <option value="Pengembangan Kepemimpinan">Pengembangan Kepemimpinan</option>
-              <option value="Kepatuhan / Wajib">Kepatuhan / Wajib</option>
-              <option value="Kebutuhan Bisnis / Strategis">Kebutuhan Bisnis / Strategis</option>
+            <label>
+              <span>Dasar Identifikasi Kebutuhan <span style="color:var(--danger)">*</span></span>
+            </label>
+            <select id="dasarKebutuhan" data-field="Dasar identifikasi kebutuhan" onchange="handleDasarKebutuhanChange(this)" required>
+              <option value="">Pilih dasar kebutuhan...</option>
+              <option value="Hasil Matriks Kompetensi">Hasil Matriks Kompetensi</option>
+              <option value="Hasil Performance Review">Hasil Performance Review</option>
+              <option value="Hasil Audit Internal">Hasil Audit Internal</option>
+              <option value="Hasil Audit Eksternal">Hasil Audit Eksternal</option>
+              <option value="Perubahan Proses Kerja">Perubahan Proses Kerja</option>
+              <option value="Perubahan Sistem/Aplikasi">Perubahan Sistem/Aplikasi</option>
+              <option value="Perubahan Regulasi Peraturan">Perubahan Regulasi Peraturan</option>
+              <option value="Permintaan Atasan">Permintaan Atasan</option>
+              <option value="Pengembangan Karier">Pengembangan Karier</option>
+              <option value="custom">Lainnya (Ketik manual)...</option>
             </select>
+            <input type="text" id="customDasarKebutuhanInput" placeholder="Ketik dasar kebutuhan..." style="display:none;margin-top:6px;">
           </div>
           <div class="field">
             <label>Tanggal Pengajuan</label>
@@ -499,7 +504,7 @@
 
         <div class="field">
           <label>
-            <span>Training Goals <span style="color:var(--danger)">*</span></span>
+            <span>Tujuan Training Diadakan <span style="color:var(--danger)">*</span></span>
             <span class="hint">(Tujuan &amp; hasil yang diharapkan)</span>
           </label>
           <textarea placeholder="Jelaskan kebutuhan yang ingin dijawab dan hasil yang diharapkan setelah training." id="goals" data-field="Training goals" rows="3" required></textarea>
@@ -3782,7 +3787,7 @@
           <div class="review-item"><label>Nama Pengaju</label><div id="revLeader">-</div></div>
           <div class="review-item"><label>Departemen / Divisi</label><div id="revDept">-</div></div>
           <div class="review-item"><label>Kategori / Level</label><div id="revCategory">-</div></div>
-          <div class="review-item"><label>Kebutuhan (Urgensi)</label><div id="revNeed">-</div></div>
+          <div class="review-item"><label>Dasar Kebutuhan</label><div id="revDasarKebutuhan">-</div></div>
           <div class="review-item"><label>Metode &amp; Jadwal</label><div id="revSchedule">-</div></div>
           <div class="review-item"><label>Lokasi / Platform</label><div id="revVenue">-</div></div>
           <div class="review-item"><label>Trainer</label><div id="revTrainer">-</div></div>
@@ -3790,7 +3795,7 @@
           <div class="review-item"><label>Waktu &amp; PIC Evaluasi</label><div id="revEvaluasi">-</div></div>
         </div>
         <div id="revGoalsWrapper" style="display:none;margin-top:12px;padding-top:10px;border-top:1px dashed var(--line);font-size:12.5px;">
-          <label style="font-size:11px;font-weight:600;text-transform:uppercase;color:var(--ink-faint);display:block;margin-bottom:3px;">Training Goals (Tujuan &amp; Hasil)</label>
+          <label style="font-size:11px;font-weight:600;text-transform:uppercase;color:var(--ink-faint);display:block;margin-bottom:3px;">Tujuan Training Diadakan</label>
           <div id="revGoals" style="color:var(--ink);line-height:1.5;">-</div>
         </div>
         <div id="revMaterialsWrapper" style="display:none;margin-top:12px;padding-top:10px;border-top:1px dashed var(--line);font-size:12.5px;">

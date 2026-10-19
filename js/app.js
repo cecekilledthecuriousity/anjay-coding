@@ -790,10 +790,13 @@ function validateStep(step) {
     const nameVal = (document.getElementById('trainingName')?.value || '').trim();
     const leaderVal = (document.getElementById('leaderName')?.value || '').trim();
     const deptVal = (document.getElementById('deptName')?.value || '').trim();
+    const dasarSelect = document.getElementById('dasarKebutuhan');
+    const dasarVal = (dasarSelect?.value || '').trim();
+    const customDasarVal = (document.getElementById('customDasarKebutuhanInput')?.value || '').trim();
     const alasanVal = (document.getElementById('alasanPrioritas')?.value || '').trim();
     const goalsVal = (document.getElementById('goals')?.value || '').trim();
 
-    if (!nameVal || !leaderVal || !deptVal || !alasanVal || !goalsVal) {
+    if (!nameVal || !leaderVal || !deptVal || !dasarVal || (dasarVal === 'custom' && !customDasarVal) || !alasanVal || !goalsVal) {
       if (!nameVal) {
         showToast('Mohon lengkapi Nama Training / Topik Pelatihan.', 'error');
         document.getElementById('trainingName')?.focus();
@@ -803,11 +806,17 @@ function validateStep(step) {
       } else if (!deptVal) {
         showToast('Mohon pilih Departemen / Divisi pengaju.', 'error');
         document.getElementById('deptName')?.focus();
+      } else if (!dasarVal) {
+        showToast('Mohon pilih Dasar Identifikasi Kebutuhan pelatihan.', 'error');
+        dasarSelect?.focus();
+      } else if (dasarVal === 'custom' && !customDasarVal) {
+        showToast('Mohon ketikkan Dasar Identifikasi Kebutuhan lainnya secara spesifik.', 'error');
+        document.getElementById('customDasarKebutuhanInput')?.focus();
       } else if (!alasanVal) {
         showToast('Mohon isi Alasan Penentuan Prioritas pelatihan.', 'error');
         document.getElementById('alasanPrioritas')?.focus();
       } else if (!goalsVal) {
-        showToast('Mohon lengkapi Training Goals (Tujuan & Hasil yang diharapkan).', 'error');
+        showToast('Mohon lengkapi Tujuan Training Diadakan (Tujuan & Hasil yang diharapkan).', 'error');
         document.getElementById('goals')?.focus();
       }
       return false;
@@ -1732,6 +1741,18 @@ function handleDeptChange(selectEl) {
     }
   }
   updateTrainingId();
+}
+
+function handleDasarKebutuhanChange(selectEl) {
+  const customInput = document.getElementById('customDasarKebutuhanInput');
+  if (!customInput) return;
+  if (selectEl.value === 'custom') {
+    customInput.style.display = 'block';
+    customInput.focus();
+  } else {
+    customInput.style.display = 'none';
+    customInput.value = '';
+  }
 }
 
 function formatDateLongId(dateStr) {
@@ -5447,7 +5468,8 @@ function populateReviewSummary() {
     }
   }
 
-  setRev('revNeed', m['Kategori kebutuhan training'] || '-');
+  setRev('revNeed', m['Dasar identifikasi kebutuhan'] || m['Kategori kebutuhan training'] || '-');
+  setRev('revDasarKebutuhan', m['Dasar identifikasi kebutuhan'] || m['Kategori kebutuhan training'] || '-');
   setRev('revSchedule', m['Tanggal & jam pelaksanaan']);
 
   let venueDisplay = m['Lokasi / venue'] || '-';
@@ -5518,6 +5540,17 @@ function collectFormData() {
   if (meta['Departemen / divisi'] === 'custom') {
     const custom = document.getElementById('customDeptInput');
     meta['Departemen / divisi'] = custom && custom.value.trim() ? custom.value.trim() : 'Lainnya';
+  }
+
+  // Handle custom dasar kebutuhan if selected
+  if (meta['Dasar identifikasi kebutuhan'] === 'custom') {
+    const custom = document.getElementById('customDasarKebutuhanInput');
+    meta['Dasar identifikasi kebutuhan'] = custom && custom.value.trim() ? custom.value.trim() : 'Lainnya';
+  }
+
+  // Sync to Kategori kebutuhan training for backward compatibility
+  if (!meta['Kategori kebutuhan training'] && meta['Dasar identifikasi kebutuhan']) {
+    meta['Kategori kebutuhan training'] = meta['Dasar identifikasi kebutuhan'];
   }
 
   // Fallback Training plan purpose from Training goals if only goals was filled
@@ -5825,11 +5858,16 @@ function resetForm() {
     });
   }
 
-  // 3. Reset custom dept input
+  // 3. Reset custom dept input & dasar kebutuhan input
   const customDept = document.getElementById('customDeptInput');
   if (customDept) {
     customDept.style.display = 'none';
     customDept.value = '';
+  }
+  const customDasar = document.getElementById('customDasarKebutuhanInput');
+  if (customDasar) {
+    customDasar.style.display = 'none';
+    customDasar.value = '';
   }
 
   // 4. Reset dates & times to default
@@ -7021,7 +7059,7 @@ function showDetail(entry, index) {
         <div class="review-item"><label>Tingkat Prioritas</label><div>${detailPrioBadge}</div></div>
         ${m['Alasan penentuan prioritas'] ? `<div class="review-item" style="grid-column:1/-1;"><label>Alasan Penentuan Prioritas</label><div style="font-style:italic;color:var(--ink);">${escapeHtml(m['Alasan penentuan prioritas'])}</div></div>` : ''}
         <div class="review-item"><label>Kategori & Level</label><div>${m['Kategori training'] || '-'} (${m['Target level kemahiran'] || 'General'})</div></div>
-        <div class="review-item"><label>Kebutuhan (Urgensi)</label><div>${m['Kategori kebutuhan training'] || '-'}</div></div>
+        <div class="review-item"><label>Dasar Identifikasi Kebutuhan</label><div>${escapeHtml(m['Dasar identifikasi kebutuhan'] || m['Kategori kebutuhan training'] || '-')}</div></div>
         <div class="review-item"><label>Metode Training</label><div>${m['Metode training'] || '-'}</div></div>
         <div class="review-item"><label>Jadwal Pelaksanaan</label><div>${m['Tanggal & jam pelaksanaan'] || '-'}</div></div>
         <div class="review-item"><label>Lokasi / Venue</label><div>${m['Lokasi / venue'] || '-'}</div></div>
@@ -7030,9 +7068,9 @@ function showDetail(entry, index) {
       </div>
       <div style="font-weight:600;margin:14px 0 6px;">Tujuan &amp; Goals:</div>
       <div style="font-size:13px;line-height:1.6;margin-bottom:12px;">
-        ${m['Training goals'] ? `<div><strong>Training Goals:</strong> ${m['Training goals']}</div>` : ''}
+        ${m['Training goals'] ? `<div><strong>Tujuan Training Diadakan:</strong> ${m['Training goals']}</div>` : ''}
         ${m['Training plan purpose'] && m['Training plan purpose'] !== m['Training goals'] ? `<div><strong>Purpose:</strong> ${m['Training plan purpose']}</div>` : ''}
-        ${!m['Training goals'] && !m['Training plan purpose'] ? `<div><strong>Training Goals:</strong> -</div>` : ''}
+        ${!m['Training goals'] && !m['Training plan purpose'] ? `<div><strong>Tujuan Training Diadakan:</strong> -</div>` : ''}
         ${m['Link silabus materi'] ? `<div><strong>Link Silabus / Materi:</strong> <a href="${m['Link silabus materi']}" target="_blank" style="color:var(--accent);text-decoration:underline;word-break:break-all;">${m['Link silabus materi']}</a></div>` : ''}
         ${m['Modul & Materi (File/Link)'] && m['Modul & Materi (File/Link)'] !== '-' && m['Modul & Materi (File/Link)'] !== m['Link silabus materi'] ? `<div><strong>Lampiran Modul:</strong> <div style="white-space:pre-line;color:var(--ink-soft);">${escapeHtml(m['Modul & Materi (File/Link)'])}</div></div>` : ''}
         ${entry.materials && entry.materials.length > 0 ? `<div style="margin-top:4px;"><strong>Berkas Modul Dilampirkan:</strong> ${entry.materials.map(mat => `<span style="display:inline-block;padding:2px 8px;margin:2px 4px 2px 0;background:rgba(21,128,61,0.08);border:1px solid rgba(21,128,61,0.25);border-radius:6px;font-size:11.5px;color:#15803D;">${escapeHtml(mat.name)}</span>`).join('')}</div>` : ''}
@@ -7264,7 +7302,7 @@ function exportToCsv() {
     'Departemen / Divisi',
     'Kategori Training',
     'Target Level Kemahiran',
-    'Kategori Kebutuhan Training',
+    'Dasar Identifikasi Kebutuhan',
     'Tanggal Pengajuan',
     'Metode Training',
     'Jadwal Pelaksanaan',
@@ -7317,7 +7355,7 @@ function exportToCsv() {
       `"${(m['Departemen / divisi'] || '').replace(/"/g, '""')}"`,
       `"${(m['Kategori training'] || '').replace(/"/g, '""')}"`,
       `"${(m['Target level kemahiran'] || 'General').replace(/"/g, '""')}"`,
-      `"${(m['Kategori kebutuhan training'] || '').replace(/"/g, '""')}"`,
+      `"${(m['Dasar identifikasi kebutuhan'] || m['Kategori kebutuhan training'] || '').replace(/"/g, '""')}"`,
       `"${(m['Tanggal pengajuan'] || '').replace(/"/g, '""')}"`,
       `"${(m['Metode training'] || '').replace(/"/g, '""')}"`,
       `"${(m['Tanggal & jam pelaksanaan'] || '').replace(/"/g, '""')}"`,
@@ -7806,6 +7844,10 @@ function applyAiPlanToForm() {
     goalsEl.value = currentAiPlan.goals;
   }
 
+  const dasarEl = document.getElementById('dasarKebutuhan');
+  if (dasarEl && (currentAiPlan.dasarKebutuhan || currentAiPlan.kategoriUrgensi)) {
+    dasarEl.value = currentAiPlan.dasarKebutuhan || currentAiPlan.kategoriUrgensi;
+  }
   const urgencyEl = document.getElementById('urgencyCategory');
   if (urgencyEl && currentAiPlan.kategoriUrgensi) {
     urgencyEl.value = currentAiPlan.kategoriUrgensi;
