@@ -1,0 +1,3860 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Preview UI: Performance Review & Portal Approver HR - TDS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      /* Palette: Executive Slate Navy & Cool Steel (Bukan Deep Forest Moss) */
+      --pr-navy-950: #0B0F19;
+      --pr-navy-900: #0F172A;
+      --pr-navy-800: #1E293B;
+      --pr-navy-700: #334155;
+      --pr-slate-500: #64748B;
+      --pr-slate-400: #94A3B8;
+      --pr-slate-300: #CBD5E1;
+      --pr-slate-200: #E2E8F0;
+      --pr-slate-100: #F1F5F9;
+      --pr-slate-50:  #F8FAFC;
+      --pr-white:     #FFFFFF;
+
+      --pr-primary:   #2563EB;
+      --pr-primary-hover: #1D4ED8;
+      --pr-primary-light: #EFF6FF;
+
+      --pr-amber:     #D97706;
+      --pr-amber-light: #FEF3C7;
+      --pr-emerald:   #059669;
+      --pr-emerald-light: #ECFDF5;
+      --pr-rose:      #E11D48;
+      --pr-indigo:    #4F46E5;
+
+      --font-main: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-main);
+      background-color: #F8FAFC;
+      color: var(--pr-navy-900);
+      line-height: 1.5;
+      padding-bottom: 90px;
+    }
+
+    /* Simulation Control Bar */
+    .sim-bar {
+      background: var(--pr-navy-900);
+      color: var(--pr-white);
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .sim-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+    }
+    .sim-badge {
+      background: rgba(37, 99, 235, 0.3);
+      color: #93C5FD;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      border: 1px solid rgba(147, 197, 253, 0.25);
+    }
+    .sim-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .sim-btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #F8FAFC;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .sim-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+    .sim-btn.active {
+      background: var(--pr-primary);
+      border-color: var(--pr-primary);
+      color: #FFFFFF;
+      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4);
+    }
+    .sim-btn.approver-btn.active {
+      background: var(--pr-indigo);
+      border-color: var(--pr-indigo);
+      box-shadow: 0 2px 8px rgba(79, 70, 229, 0.4);
+    }
+
+    /* Container */
+    .pr-container {
+      max-width: 980px;
+      margin: 24px auto;
+      padding: 0 20px;
+    }
+
+    /* Countdown Banner (Quiet & Functional) */
+    .pr-countdown-card {
+      background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%);
+      border-radius: 14px;
+      padding: 14px 20px;
+      color: var(--pr-white);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .pr-countdown-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .pr-countdown-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: rgba(37, 99, 235, 0.2);
+      border: 1px solid rgba(147, 197, 253, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #93C5FD;
+      flex-shrink: 0;
+    }
+    .pr-countdown-title {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: #F8FAFC;
+    }
+    .pr-countdown-desc {
+      font-size: 12px;
+      color: #94A3B8;
+    }
+    .pr-timer-box {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(15, 23, 42, 0.6);
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      font-family: var(--font-mono);
+    }
+    .pr-timer-segment {
+      text-align: center;
+    }
+    .pr-timer-num {
+      font-size: 15px;
+      font-weight: 700;
+      color: #60A5FA;
+      line-height: 1;
+    }
+    .pr-timer-lbl {
+      font-size: 8px;
+      color: #94A3B8;
+      text-transform: uppercase;
+      margin-top: 2px;
+      font-family: var(--font-main);
+    }
+    .pr-timer-sep {
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.3);
+      font-weight: 600;
+    }
+
+    /* ======================================================== */
+    /* 1. EXECUTIVE DOCUMENT HEADER & PROFILE (HUMANIZED)       */
+    /* ======================================================== */
+    .doc-header-card {
+      background: var(--pr-white);
+      border-radius: 14px;
+      border: 1px solid var(--pr-slate-200);
+      padding: 22px 24px;
+      margin-bottom: 18px;
+      display: grid;
+      grid-template-columns: 1fr 240px;
+      gap: 24px;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+    }
+    .doc-title-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .doc-kicker {
+      display: block;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--pr-primary);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin-bottom: 3px;
+    }
+    .doc-title {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--pr-navy-900);
+      letter-spacing: -0.2px;
+    }
+    .doc-confidential-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #B91C1C;
+      background: #FEF2F2;
+      border: 1px solid #FEE2E2;
+      padding: 4px 10px;
+      border-radius: 6px;
+      white-space: nowrap;
+    }
+    .confidential-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #DC2626;
+    }
+
+    .doc-profile-box {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding-top: 14px;
+      border-top: 1px solid var(--pr-slate-100);
+    }
+    .profile-avatar-circle {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      background: #F1F5F9;
+      color: var(--pr-navy-800);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 15px;
+      border: 1px solid var(--pr-slate-200);
+      flex-shrink: 0;
+    }
+    .profile-primary-name {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--pr-navy-900);
+    }
+    .profile-detail-line {
+      font-size: 12.5px;
+      color: var(--pr-slate-500);
+      margin-top: 2px;
+    }
+    .profile-detail-line strong {
+      color: var(--pr-navy-800);
+      font-weight: 600;
+    }
+    .dot-divider {
+      margin: 0 6px;
+      color: var(--pr-slate-300);
+    }
+
+    /* Document Sidebar Info (Administrative Block) */
+    .doc-header-side {
+      border-left: 1px solid var(--pr-slate-100);
+      padding-left: 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 10px;
+    }
+    .admin-meta-row {
+      display: flex;
+      flex-direction: column;
+    }
+    .admin-meta-lbl {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--pr-slate-400);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+    .admin-meta-val {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--pr-navy-900);
+    }
+
+    /* ======================================================== */
+    /* 2. HUMANIZED RUBRIC STRIP (CLEAN & INTEGRATED)           */
+    /* ======================================================== */
+    .rubric-card {
+      background: var(--pr-white);
+      border-radius: 14px;
+      border: 1px solid var(--pr-slate-200);
+      padding: 16px 20px;
+      margin-bottom: 18px;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.02);
+    }
+    .rubric-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .rubric-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .rubric-heading {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--pr-navy-900);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .rubric-subtext {
+      font-size: 11.5px;
+      color: var(--pr-slate-500);
+    }
+    .btn-rubric-toggle {
+      background: var(--pr-slate-50);
+      border: 1px solid var(--pr-slate-200);
+      color: var(--pr-slate-600);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .btn-rubric-toggle:hover {
+      background: var(--pr-slate-100);
+      color: var(--pr-navy-900);
+    }
+
+    /* 4-Step Segmented Track (Clean, Non-Rainbow, Humanized) */
+    .rubric-track {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+    .rubric-segment {
+      background: var(--pr-slate-50);
+      border: 1px solid var(--pr-slate-200);
+      border-radius: 10px;
+      padding: 12px 14px;
+      transition: all 0.15s ease;
+    }
+    .rubric-segment:hover {
+      background: #FFFFFF;
+      border-color: #CBD5E1;
+    }
+    .segment-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+    .segment-badge {
+      width: 20px;
+      height: 20px;
+      border-radius: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 800;
+      background: var(--pr-navy-800);
+      color: #FFFFFF;
+      font-family: var(--font-mono);
+      flex-shrink: 0;
+    }
+    .segment-title {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--pr-navy-900);
+    }
+    .segment-desc {
+      font-size: 11.5px;
+      color: var(--pr-slate-500);
+      line-height: 1.45;
+    }
+    .rubric-card.is-compact .segment-desc {
+      display: none;
+    }
+    .rubric-card.is-compact .rubric-segment {
+      padding: 8px 12px;
+    }
+
+    /* ======================================================== */
+    /* ACCORDION / DROPDOWN SECTION WRAPPER                     */
+    /* ======================================================== */
+    .accordion-section {
+      background: var(--pr-white);
+      border-radius: 14px;
+      border: 1px solid var(--pr-slate-200);
+      margin-bottom: 16px;
+      box-shadow: 0 1px 4px rgba(15, 23, 42, 0.02);
+      overflow: hidden;
+      transition: all 0.2s ease;
+    }
+    .accordion-section.is-open {
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
+      border-color: #CBD5E1;
+    }
+
+    /* Accordion Clickable Header */
+    .accordion-header {
+      padding: 16px 20px;
+      background: var(--pr-white);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.15s ease;
+    }
+    .accordion-header:hover {
+      background: var(--pr-slate-50);
+    }
+    .accordion-header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .accordion-chevron {
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      background: var(--pr-slate-100);
+      color: var(--pr-slate-600);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.25s ease;
+      flex-shrink: 0;
+    }
+    .accordion-section.is-open .accordion-chevron {
+      transform: rotate(180deg);
+      background: var(--pr-primary-light);
+      color: var(--pr-primary);
+    }
+    .accordion-pill {
+      background: var(--pr-navy-800);
+      color: var(--pr-white);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 5px;
+      font-family: var(--font-mono);
+    }
+    .accordion-title {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--pr-navy-900);
+    }
+    .accordion-weight {
+      background: var(--pr-slate-100);
+      color: var(--pr-slate-600);
+      border: 1px solid var(--pr-slate-200);
+      padding: 3px 10px;
+      border-radius: 100px;
+      font-size: 11.5px;
+      font-weight: 700;
+    }
+    .accordion-header-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .accordion-status-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      border-radius: 100px;
+      font-size: 11.5px;
+      font-weight: 700;
+      font-family: var(--font-mono);
+    }
+    .chip-complete {
+      background: #ECFDF5;
+      color: var(--pr-emerald);
+      border: 1px solid #A7F3D0;
+    }
+    .chip-incomplete {
+      background: #FEF3C7;
+      color: #D97706;
+      border: 1px solid #FCD34D;
+    }
+
+    /* Accordion Body */
+    .accordion-body {
+      padding: 0 20px 20px;
+      border-top: 1px solid var(--pr-slate-100);
+      display: none;
+    }
+    .accordion-section.is-open .accordion-body {
+      display: block;
+      padding-top: 18px;
+    }
+
+    /* Competency Card Inside Accordion */
+    .pr-item-card {
+      background: var(--pr-slate-50);
+      border-radius: 12px;
+      padding: 16px 18px;
+      border: 1px solid var(--pr-slate-200);
+      margin-bottom: 12px;
+      transition: all 0.15s ease;
+    }
+    .pr-item-card:hover {
+      background: var(--pr-white);
+      border-color: #CBD5E1;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+    }
+    .pr-item-top {
+      margin-bottom: 12px;
+    }
+    .pr-item-name {
+      font-size: 14.5px;
+      font-weight: 700;
+      color: var(--pr-navy-900);
+      margin-bottom: 3px;
+    }
+    .pr-item-desc {
+      font-size: 12px;
+      color: var(--pr-slate-500);
+      line-height: 1.4;
+    }
+
+    /* Rating Button Group */
+    .pr-rating-group {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+    .pr-rate-btn {
+      background: var(--pr-white);
+      border: 1.5px solid var(--pr-slate-200);
+      border-radius: 8px;
+      padding: 8px 6px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .pr-rate-btn:hover {
+      background: #FFFFFF;
+      border-color: var(--pr-primary);
+      transform: translateY(-1px);
+    }
+    .pr-rate-btn.selected {
+      border-color: var(--pr-primary);
+      background: #EFF6FF;
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+    }
+    .pr-rate-btn.selected .btn-score {
+      color: var(--pr-primary);
+    }
+    .pr-rate-btn .btn-score {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--pr-navy-800);
+      margin-bottom: 1px;
+      display: block;
+      font-family: var(--font-mono);
+    }
+    .pr-rate-btn .btn-label {
+      font-size: 10.5px;
+      font-weight: 600;
+      color: var(--pr-slate-500);
+      display: block;
+    }
+
+    /* Qualitative Feedback Section */
+    .pr-feedback-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+    .pr-feedback-card {
+      background: var(--pr-slate-50);
+      border-radius: 12px;
+      padding: 16px 18px;
+      border: 1px solid var(--pr-slate-200);
+    }
+    .pr-feedback-title {
+      font-size: 13.5px;
+      font-weight: 700;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .pr-feedback-desc {
+      font-size: 11.5px;
+      color: var(--pr-slate-500);
+      margin-bottom: 10px;
+    }
+    .pr-textarea {
+      width: 100%;
+      min-height: 110px;
+      border: 1.5px solid var(--pr-slate-200);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-family: var(--font-main);
+      font-size: 13px;
+      color: var(--pr-navy-900);
+      resize: vertical;
+      outline: none;
+      transition: border-color 0.2s ease;
+      background: #FFFFFF;
+    }
+    .pr-textarea:focus {
+      border-color: var(--pr-primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    /* ======================================================== */
+    /* SLEEK CORNER PROGRESS BAR & MINIMALIST BOTTOM BAR        */
+    /* ======================================================== */
+    .corner-progress-fab {
+      position: fixed;
+      bottom: 84px;
+      right: 24px;
+      background: var(--pr-navy-900);
+      color: var(--pr-white);
+      border-radius: 100px;
+      padding: 8px 16px 8px 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.25);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      z-index: 95;
+      font-size: 12px;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+    .corner-progress-fab:hover {
+      transform: translateY(-2px);
+    }
+    .corner-ring-svg {
+      width: 28px;
+      height: 28px;
+      transform: rotate(-90deg);
+    }
+    .corner-ring-bg {
+      fill: none;
+      stroke: rgba(255, 255, 255, 0.15);
+      stroke-width: 3.5;
+    }
+    .corner-ring-fg {
+      fill: none;
+      stroke: #34D399;
+      stroke-width: 3.5;
+      stroke-dasharray: 75.4;
+      stroke-dashoffset: 0;
+      transition: stroke-dashoffset 0.3s ease;
+    }
+    .corner-text-wrap {
+      display: flex;
+      flex-direction: column;
+    }
+    .corner-text-lbl {
+      font-size: 9px;
+      color: #94A3B8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 600;
+    }
+    .corner-text-val {
+      font-size: 12px;
+      font-weight: 800;
+      font-family: var(--font-mono);
+      color: #F8FAFC;
+    }
+
+    /* Sleek Clean Bottom Bar */
+    .pr-bottom-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #FFFFFF;
+      border-top: 1px solid var(--pr-slate-200);
+      padding: 10px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      box-shadow: 0 -4px 16px rgba(15, 23, 42, 0.05);
+      z-index: 90;
+    }
+    .pr-bottom-content {
+      max-width: 980px;
+      margin: 0 auto;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .pr-bottom-hint {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--pr-slate-500);
+    }
+    .pr-bottom-hint svg {
+      color: var(--pr-slate-400);
+      flex-shrink: 0;
+    }
+    .pr-submit-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .btn-save-draft {
+      background: var(--pr-slate-100);
+      color: var(--pr-navy-800);
+      border: 1px solid var(--pr-slate-200);
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .btn-save-draft:hover {
+      background: var(--pr-slate-200);
+    }
+    .btn-submit-final {
+      background: var(--pr-primary);
+      color: #FFFFFF;
+      border: none;
+      padding: 8px 20px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-submit-final:hover {
+      background: var(--pr-primary-hover);
+      transform: translateY(-1px);
+    }
+
+    /* Quick Toggle All Button */
+    .section-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      padding: 0 4px;
+    }
+    .btn-toggle-all {
+      background: transparent;
+      border: 1px solid var(--pr-slate-200);
+      color: var(--pr-slate-600);
+      padding: 5px 12px;
+      border-radius: 6px;
+      font-size: 11.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-toggle-all:hover {
+      background: var(--pr-slate-100);
+      color: var(--pr-navy-900);
+    }
+
+    /* Modal Styling */
+    .pr-modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .pr-modal-overlay.active {
+      display: flex;
+    }
+    .pr-modal {
+      background: #FFFFFF;
+      border-radius: 20px;
+      max-width: 460px;
+      width: 100%;
+      padding: 28px;
+      box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25);
+      border: 1px solid var(--pr-slate-200);
+      text-align: center;
+    }
+    .pr-modal-icon {
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      background: #EFF6FF;
+      color: var(--pr-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
+    }
+    .pr-modal h3 {
+      font-size: 19px;
+      font-weight: 800;
+      color: var(--pr-navy-900);
+      margin-bottom: 6px;
+    }
+    .pr-modal p {
+      font-size: 13px;
+      color: var(--pr-slate-500);
+      line-height: 1.5;
+      margin-bottom: 20px;
+    }
+    .pr-modal-btns {
+      display: flex;
+      gap: 10px;
+    }
+    .pr-modal-btns button {
+      flex: 1;
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .btn-modal-cancel {
+      background: var(--pr-slate-100);
+      color: var(--pr-slate-700);
+      border: 1px solid var(--pr-slate-200);
+    }
+    .btn-modal-confirm {
+      background: var(--pr-primary);
+      color: #FFFFFF;
+      border: none;
+    }
+
+    /* Simulation State Screens (Locked & Completed) */
+    .state-screen {
+      display: none;
+      background: #FFFFFF;
+      border-radius: 20px;
+      padding: 60px 30px;
+      text-align: center;
+      border: 1px solid var(--pr-slate-200);
+      box-shadow: 0 4px 20px rgba(15, 23, 42, 0.05);
+      margin-top: 30px;
+    }
+    .state-icon-box {
+      width: 68px;
+      height: 68px;
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 18px;
+    }
+    .state-screen h2 {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--pr-navy-900);
+      margin-bottom: 8px;
+    }
+    .state-screen p {
+      font-size: 13.5px;
+      color: var(--pr-slate-500);
+      max-width: 520px;
+      margin: 0 auto 20px;
+      line-height: 1.6;
+    }
+    .state-pill-meta {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      background: var(--pr-slate-50);
+      border: 1px solid var(--pr-slate-200);
+      border-radius: 100px;
+      font-size: 12px;
+      color: var(--pr-slate-700);
+      font-family: var(--font-mono);
+    }
+
+    /* ======================================================== */
+    /* SCREEN 4: PORTAL APPROVER / HR REVIEWER HUB              */
+    /* ======================================================== */
+    .hr-portal-wrap {
+      display: none;
+    }
+    .hr-header-card {
+      background: linear-gradient(135deg, #1E1B4B 0%, #0F172A 100%);
+      border-radius: 16px;
+      padding: 22px 26px;
+      color: var(--pr-white);
+      margin-bottom: 20px;
+      box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .hr-header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+    .hr-kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+    }
+    .hr-kpi-card {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      padding: 12px 16px;
+      border-radius: 10px;
+    }
+    .hr-kpi-card .num {
+      font-size: 22px;
+      font-weight: 800;
+      color: #A5B4FC;
+      font-family: var(--font-mono);
+      margin-bottom: 2px;
+    }
+    .hr-kpi-card .lbl {
+      font-size: 11px;
+      color: #CBD5E1;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* HR Employee Review Table */
+    .hr-panel-card {
+      background: var(--pr-white);
+      border-radius: 14px;
+      padding: 20px 22px;
+      border: 1px solid var(--pr-slate-200);
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.03);
+      margin-bottom: 20px;
+    }
+    .hr-table-filter {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .hr-search-input {
+      padding: 7px 12px;
+      border: 1.5px solid var(--pr-slate-200);
+      border-radius: 8px;
+      font-size: 12.5px;
+      width: 240px;
+      outline: none;
+    }
+    .hr-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12.5px;
+    }
+    .hr-table th {
+      background: var(--pr-slate-50);
+      padding: 9px 12px;
+      text-align: left;
+      font-weight: 700;
+      color: var(--pr-slate-500);
+      border-bottom: 1.5px solid var(--pr-slate-200);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .hr-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--pr-slate-100);
+      color: var(--pr-navy-900);
+      vertical-align: middle;
+    }
+    .badge-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 8px;
+      border-radius: 100px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .badge-ready { background: #EEF2FF; color: var(--pr-indigo); border: 1px solid #C7D2FE; }
+    .badge-waiting { background: #FEF3C7; color: var(--pr-amber); border: 1px solid #FDE68A; }
+    .badge-done { background: #ECFDF5; color: var(--pr-emerald); border: 1px solid #A7F3D0; }
+
+    /* Detail Calibration Modal / Box */
+    .calibration-box {
+      background: var(--pr-slate-50);
+      border: 1.5px solid #C7D2FE;
+      border-radius: 14px;
+      padding: 20px;
+      margin-top: 20px;
+    }
+    .calib-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--pr-slate-200);
+    }
+    .calib-dual-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+    .calib-card-branch {
+      background: var(--pr-white);
+      border-radius: 10px;
+      padding: 14px 16px;
+      border: 1px solid var(--pr-slate-200);
+    }
+    .calib-card-branch h4 {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--pr-navy-900);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .calib-score-line {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      padding: 5px 0;
+      border-bottom: 1px dashed var(--pr-slate-200);
+    }
+    .calib-hr-section {
+      background: #FFFFFF;
+      border: 1.5px solid #E0E7FF;
+      border-radius: 10px;
+      padding: 18px;
+      margin-top: 14px;
+    }
+    .hr-input-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 14px;
+      margin-top: 10px;
+    }
+
+    @media (max-width: 820px) {
+      .doc-header-card {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+      .doc-header-side {
+        border-left: none;
+        border-top: 1px solid var(--pr-slate-100);
+        padding-left: 0;
+        padding-top: 14px;
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 16px;
+      }
+      .rubric-track {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 600px) {
+      .rubric-track {
+        grid-template-columns: 1fr;
+      }
+      .doc-profile-box {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .pr-countdown-card {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .pr-timer-box {
+        width: 100%;
+        justify-content: center;
+      }
+      .pr-rating-group {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .corner-progress-fab {
+        bottom: 70px;
+        right: 14px;
+      }
+      .pr-bottom-bar {
+        padding: 8px 16px;
+      }
+      .pr-bottom-content {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+      }
+      .pr-bottom-hint {
+        justify-content: center;
+      }
+      .pr-submit-actions {
+        width: 100%;
+      }
+      .btn-save-draft, .btn-submit-final {
+        flex: 1;
+        text-align: center;
+        justify-content: center;
+      }
+    }
+
+    /* ======================================================== */
+    /* 11. DIRECTORY & LOCKED CARDS VIEW                        */
+    /* ======================================================== */
+    .dir-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+      margin-bottom: 40px;
+    }
+    .dir-hero-card {
+      background: var(--pr-white);
+      border-radius: 14px;
+      border: 1px solid var(--pr-slate-200);
+      padding: 22px 24px;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+    }
+    .dir-hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      background: #EFF6FF;
+      color: #1D4ED8;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+    .dir-hero-title {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--pr-navy-900);
+      margin: 0 0 6px 0;
+    }
+    .dir-hero-desc {
+      font-size: 13px;
+      color: var(--pr-slate-600);
+      line-height: 1.55;
+      margin: 0 0 16px 0;
+      max-width: 820px;
+    }
+    .dir-token-tester {
+      background: var(--pr-slate-50);
+      border: 1.5px dashed var(--pr-slate-300);
+      border-radius: 10px;
+      padding: 14px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .dir-tester-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .dir-tester-lbl {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--pr-navy-900);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .dir-tester-input-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .dir-token-input {
+      flex: 1;
+      min-width: 220px;
+      padding: 9px 14px;
+      border: 1.5px solid var(--pr-slate-300);
+      border-radius: 8px;
+      font-family: var(--font-mono);
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--pr-navy-900);
+      background: #FFFFFF;
+      transition: all 0.15s ease;
+    }
+    .dir-token-input:focus {
+      outline: none;
+      border-color: var(--pr-primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    }
+    .btn-unlock-token {
+      background: var(--pr-primary);
+      color: #FFFFFF;
+      border: none;
+      padding: 9px 18px;
+      border-radius: 8px;
+      font-size: 12.5px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.15s ease;
+    }
+    .btn-unlock-token:hover {
+      background: var(--pr-primary-hover);
+    }
+    .dir-tester-shortcuts {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      font-size: 11.5px;
+      color: var(--pr-slate-500);
+    }
+    .shortcut-chip {
+      background: #FFFFFF;
+      border: 1px solid var(--pr-slate-200);
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--pr-navy-800);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+    .shortcut-chip:hover {
+      background: #EFF6FF;
+      border-color: #BFDBFE;
+      color: #1D4ED8;
+    }
+    .shortcut-chip-danger {
+      color: #DC2626;
+      border-color: #FECACA;
+    }
+    .shortcut-chip-danger:hover {
+      background: #FEF2F2;
+      border-color: #FCA5A5;
+      color: #B91C1C;
+    }
+    .dir-division-section {
+      background: var(--pr-white);
+      border-radius: 14px;
+      border: 1px solid var(--pr-slate-200);
+      padding: 18px 22px;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.02);
+    }
+    .dir-division-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--pr-slate-100);
+      margin-bottom: 16px;
+    }
+    .dir-division-title {
+      font-size: 13.5px;
+      font-weight: 800;
+      color: var(--pr-navy-900);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .dir-division-badge {
+      background: var(--pr-slate-100);
+      color: var(--pr-slate-600);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 6px;
+    }
+    .dir-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 16px;
+    }
+    .dir-card {
+      border: 1.5px solid var(--pr-slate-200);
+      border-radius: 12px;
+      padding: 16px;
+      background: #FFFFFF;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 14px;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+    .dir-card:hover {
+      border-color: var(--pr-slate-300);
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
+    }
+    .dir-card-top {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    .dir-avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      background: var(--pr-navy-900);
+      color: #FFFFFF;
+      font-weight: 800;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .dir-card-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .dir-card-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--pr-navy-900);
+      margin-bottom: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .dir-card-role {
+      font-size: 12px;
+      color: var(--pr-slate-500);
+      margin-bottom: 4px;
+    }
+    .dir-card-meta {
+      font-size: 11px;
+      color: var(--pr-slate-400);
+    }
+    .dir-lock-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #B45309;
+      background: #FEF3C7;
+      padding: 3px 8px;
+      border-radius: 6px;
+    }
+    .cryptic-box {
+      background: #F8FAFC;
+      border: 1px dashed #CBD5E1;
+      border-radius: 8px;
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .cryptic-meta {
+      display: flex;
+      flex-direction: column;
+    }
+    .cryptic-lbl {
+      font-size: 9.5px;
+      font-weight: 700;
+      color: var(--pr-slate-400);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .cryptic-code {
+      font-family: var(--font-mono);
+      font-size: 14px;
+      font-weight: 800;
+      color: #1E293B;
+      letter-spacing: 1px;
+    }
+    .btn-card-unlock {
+      background: var(--pr-navy-900);
+      color: #FFFFFF;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-size: 11.5px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+      width: 100%;
+    }
+    .btn-card-unlock:hover {
+      background: #1E293B;
+    }
+    .sim-emp-select {
+      font-size: 11px;
+      color: #94A3B8;
+      margin-left: 8px;
+      margin-right: 2px;
+      font-weight: 600;
+    }
+    .sim-emp-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #CBD5E1;
+      font-size: 11.5px;
+      font-weight: 600;
+      padding: 5px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+    .sim-emp-btn:hover {
+      background: rgba(255, 255, 255, 0.15);
+      color: #FFFFFF;
+    }
+    .sim-emp-btn.active {
+      background: #2563EB;
+      color: #FFFFFF;
+      border-color: #3B82F6;
+      font-weight: 700;
+    }
+
+    /* ======================================================== */
+    /* 12. RATING SCALE UI: VERTICAL STACKED CARDS              */
+    /* ======================================================== */
+    /* Style 3: Vertical Stacked Cards with In-Context Definitions (Adopted Design) */
+    .pr-stacked-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .pr-stacked-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border: 1.5px solid var(--pr-slate-200);
+      border-radius: 9px;
+      background: #FFFFFF;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      text-align: left;
+      width: 100%;
+      user-select: none;
+    }
+    .pr-stacked-row:hover {
+      border-color: #93C5FD;
+      background: #F8FAFC;
+    }
+    .pr-stacked-row:focus-visible {
+      outline: 2px solid var(--pr-primary);
+      outline-offset: 1px;
+    }
+    .pr-stacked-row.selected {
+      border-color: var(--pr-primary);
+      background: #EFF6FF;
+      box-shadow: 0 1px 4px rgba(37, 99, 235, 0.14);
+    }
+    .pr-stacked-radio {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 2px solid var(--pr-slate-300);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.15s ease;
+      background: #FFFFFF;
+    }
+    .pr-stacked-row.selected .pr-stacked-radio {
+      border-color: var(--pr-primary);
+      background: var(--pr-primary);
+    }
+    .pr-stacked-radio-inner {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #FFFFFF;
+      opacity: 0;
+      transition: opacity 0.15s ease;
+    }
+    .pr-stacked-row.selected .pr-stacked-radio-inner {
+      opacity: 1;
+    }
+    .pr-stacked-badge {
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 5px;
+      background: var(--pr-slate-100);
+      color: var(--pr-navy-800);
+      flex-shrink: 0;
+    }
+    .pr-stacked-row.selected .pr-stacked-badge {
+      background: #DBEAFE;
+      color: #1D4ED8;
+    }
+    .pr-stacked-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--pr-navy-900);
+      min-width: 125px;
+      flex-shrink: 0;
+    }
+    .pr-stacked-row.selected .pr-stacked-title {
+      color: #1D4ED8;
+    }
+    .pr-stacked-desc {
+      font-size: 12px;
+      color: var(--pr-slate-500);
+      flex: 1;
+      line-height: 1.45;
+    }
+    .pr-stacked-row.selected .pr-stacked-desc {
+      color: var(--pr-navy-800);
+    }
+
+    @media (max-width: 640px) {
+      .pr-stacked-row {
+        display: grid;
+        grid-template-columns: auto auto 1fr;
+        align-items: baseline;
+        column-gap: 10px;
+        row-gap: 5px;
+        padding: 10px 12px;
+      }
+      .pr-stacked-radio {
+        grid-column: 1;
+        grid-row: 1;
+        align-self: center;
+      }
+      .pr-stacked-badge {
+        grid-column: 2;
+        grid-row: 1;
+      }
+      .pr-stacked-title {
+        grid-column: 3;
+        grid-row: 1;
+        min-width: 0;
+      }
+      .pr-stacked-desc {
+        grid-column: 2 / span 2;
+        grid-row: 2;
+        line-height: 1.45;
+        font-size: 11.5px;
+      }
+    }
+
+
+
+    /* Incomplete Reminder Modal Styles */
+    .incomplete-badge {
+      display: inline-flex;
+      align-items: center;
+      background: #FEE2E2;
+      color: #DC2626;
+      border: 1px solid #FECACA;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      white-space: nowrap;
+    }
+    .incomplete-list-box {
+      max-height: 220px;
+      overflow-y: auto;
+      border: 1.5px solid var(--pr-slate-200);
+      border-radius: 8px;
+      background: #FFFFFF;
+      margin-bottom: 12px;
+      display: flex;
+      flex-direction: column;
+    }
+    .incomplete-item-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 9px 12px;
+      border-bottom: 1px solid var(--pr-slate-100);
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+    .incomplete-item-row:last-child {
+      border-bottom: none;
+    }
+    .incomplete-item-row:hover {
+      background: #FEF3C7;
+    }
+    .incomplete-item-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+    .incomplete-item-cat {
+      font-size: 10px;
+      font-weight: 700;
+      color: #9A3412;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .incomplete-item-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--pr-navy-900);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .btn-jump-item {
+      background: #FFFFFF;
+      border: 1px solid #CBD5E1;
+      color: var(--pr-slate-700);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 5px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s ease;
+    }
+    .incomplete-item-row:hover .btn-jump-item {
+      background: #D97706;
+      border-color: #D97706;
+      color: #FFFFFF;
+    }
+    @keyframes pulseHighlight {
+      0% {
+        box-shadow: 0 0 0 0 rgba(217, 119, 6, 0.5);
+      }
+      50% {
+        box-shadow: 0 0 0 10px rgba(217, 119, 6, 0);
+      }
+      100% {
+        box-shadow: 0 0 0 0 rgba(217, 119, 6, 0);
+      }
+    }
+    .item-highlight-pulse {
+      animation: pulseHighlight 1.5s ease-out 2 !important;
+      border-color: #F59E0B !important;
+      background: #FFFBEB !important;
+      transition: all 0.3s ease;
+    }
+    .btn-test-incomplete {
+      background: #FEF3C7;
+      border: 1px solid #FCD34D;
+      color: #92400E;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 7px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.15s ease;
+    }
+    .btn-test-incomplete:hover {
+      background: #FDE68A;
+      border-color: #F59E0B;
+    }
+    .btn-edit-emp-profile {
+      background: #FFFFFF;
+      border: 1px solid var(--pr-slate-300);
+      color: var(--pr-navy-900);
+      font-size: 11.5px;
+      font-weight: 700;
+      padding: 5px 11px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    }
+    .btn-edit-emp-profile:hover {
+      background: #EFF6FF;
+      border-color: #93C5FD;
+      color: #1D4ED8;
+    }
+    .btn-sim-blank {
+      background: rgba(37, 99, 235, 0.2) !important;
+      border-color: rgba(96, 165, 250, 0.4) !important;
+      color: #93C5FD !important;
+    }
+    .btn-sim-blank:hover {
+      background: rgba(37, 99, 235, 0.35) !important;
+      color: #FFFFFF !important;
+    }
+    .btn-sim-blank.active {
+      background: #2563EB !important;
+      border-color: #3B82F6 !important;
+      color: #FFFFFF !important;
+      box-shadow: 0 0 8px rgba(37, 99, 235, 0.4);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Simulation Toolbar -->
+  <header class="sim-bar">
+    <div class="sim-title">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#60A5FA" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      <span>TDS Performance Review Preview</span>
+      <span class="sim-badge">Executive &amp; Confidential</span>
+    </div>
+    <div class="sim-actions">
+      <span style="font-size: 11.5px; color: #94A3B8; margin-right: 2px;">Tampilan:</span>
+      <button class="sim-btn" id="simModeDirectory" onclick="setSimState('directory')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        <span>Direktori Divisi</span>
+      </button>
+      <button class="sim-btn active" id="simModeActive" onclick="setSimState('active')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        <span>Form Evaluasi Aktif</span>
+      </button>
+      <button class="sim-btn" id="simModeExpired" onclick="setSimState('expired')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span>Waktu Habis (00:00)</span>
+      </button>
+      <button class="sim-btn" id="simModeSubmitted" onclick="setSimState('submitted')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        <span>Sudah Diserahkan</span>
+      </button>
+      <button class="sim-btn approver-btn" id="simModeApprover" onclick="setSimState('approver')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <span>Portal Approver HR</span>
+      </button>
+
+      <span class="sim-emp-select">| Karyawan Aktif:</span>
+      <button class="sim-emp-btn active" id="btnEmpDimas" onclick="switchActiveEmployee('PR26-8492')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span>Dimas (PR26-8492)</span>
+      </button>
+      <button class="sim-emp-btn" id="btnEmpAnita" onclick="switchActiveEmployee('PR26-7319')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span>Anita (PR26-7319)</span>
+      </button>
+      <button class="sim-emp-btn btn-sim-blank" id="btnEmpBlank" onclick="switchActiveEmployee('PR26-BLANK')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+        <span>✨ Template Kosong</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main View Container -->
+  <main class="pr-container">
+
+    <!-- Screen 0: Direktori Divisi & Kartu Terkunci (Zero Leakage / Confidentiality) -->
+    <div id="screenDirectory" class="dir-wrap" style="display:none;">
+      
+      <!-- Directory Hero Header -->
+      <section class="dir-hero-card">
+        <span class="dir-hero-badge">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          Siklus Performance Review Tahunan 2026
+        </span>
+        <h1 class="dir-hero-title">Direktori Divisi &amp; Lembar Penilaian Karyawan</h1>
+        <p class="dir-hero-desc">
+          Demi menjaga kerahasiaan mutlak (<em>strict confidentiality</em>), seluruh lembar evaluasi berstatus <strong>Terkunci</strong>. Karyawan atau divisi lain tidak dapat saling melihat penilaian. Setiap evaluator hanya dapat membuka formulir menggunakan <strong>Cryptic Access Code</strong> unik yang dikirimkan langsung ke email korporat.
+        </p>
+
+        <!-- Interactive Cryptic Code Simulator Tester -->
+        <div class="dir-token-tester">
+          <div class="dir-tester-header">
+            <span class="dir-tester-lbl">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+              Coba Buka Kunci Formulir dengan Cryptic Code:
+            </span>
+            <span style="font-size: 11px; color: var(--pr-slate-500);">Simulasi Autentikasi Penilai</span>
+          </div>
+
+          <div class="dir-tester-input-row">
+            <input type="text" id="inputCrypticCode" class="dir-token-input" placeholder="Masukkan 8-karakter Cryptic Code (misal: PR26-8492)..." value="PR26-8492">
+            <button class="btn-unlock-token" onclick="testUnlockFromInput()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
+              Buka Form Evaluasi
+            </button>
+          </div>
+
+          <div class="dir-tester-shortcuts">
+            <span style="font-size:12px; color:var(--pr-slate-500);">Pintasan token simulasi:</span>
+            <button type="button" class="shortcut-chip" onclick="quickFillToken('PR26-8492')">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+              <span>Dimas Ardiansyah (PR26-8492)</span>
+            </button>
+            <button type="button" class="shortcut-chip" onclick="quickFillToken('PR26-7319')">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+              <span>Anita Wijaya (PR26-7319)</span>
+            </button>
+            <button type="button" class="shortcut-chip" style="background:#EFF6FF; border-color:#93C5FD; color:#1D4ED8; font-weight:700;" onclick="quickFillToken('PR26-BLANK')">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+              <span>✨ Template Kosong (PR26-BLANK)</span>
+            </button>
+            <button type="button" class="shortcut-chip shortcut-chip-danger" onclick="quickFillToken('PR26-SALAH')">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+              <span>Simulasi Token Salah</span>
+            </button>
+          </div>
+
+          <div id="crypticFeedback" style="display:none; font-size:12px; font-weight:600; padding:6px 10px; border-radius:6px; margin-top:2px;"></div>
+        </div>
+      </section>
+
+      <!-- Division 1: Technology & Engineering -->
+      <section class="dir-division-section">
+        <div class="dir-division-header">
+          <div class="dir-division-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+            Divisi Technology &amp; Engineering
+          </div>
+          <span class="dir-division-badge">1 Karyawan Terdaftar</span>
+        </div>
+
+        <div class="dir-cards-grid">
+          <!-- Card Employee 1: Dimas Ardiansyah -->
+          <article class="dir-card">
+            <div>
+              <div class="dir-card-top">
+                <div class="dir-avatar">DA</div>
+                <div class="dir-card-info">
+                  <div class="dir-card-name" title="Dimas Ardiansyah">Dimas Ardiansyah</div>
+                  <div class="dir-card-role">Lead System Architect</div>
+                  <div class="dir-card-meta">NIK: EMP-2024-082 • Golongan: Tier 1</div>
+                </div>
+              </div>
+              <div style="margin-top: 12px; font-size: 11.5px; color: var(--pr-slate-600);">
+                Penilai Resmi: <strong>Budi Pratama, M.Kom</strong> (Head of Engineering)
+              </div>
+            </div>
+
+            <!-- Cryptic Code Box -->
+            <div class="cryptic-box">
+              <div class="cryptic-meta">
+                <span class="cryptic-lbl">Cryptic Access Code:</span>
+                <span class="cryptic-code">PR26-8492</span>
+              </div>
+              <span class="dir-lock-status">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                Terkunci
+              </span>
+            </div>
+
+            <button class="btn-card-unlock" onclick="unlockAndOpenEmployee('PR26-8492')">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
+              <span>Buka Formulir Evaluasi (PR26-8492)</span>
+            </button>
+          </article>
+        </div>
+      </section>
+
+      <!-- Division 2: Finance & Accounting -->
+      <section class="dir-division-section">
+        <div class="dir-division-header">
+          <div class="dir-division-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            Divisi Finance &amp; Accounting
+          </div>
+          <span class="dir-division-badge">1 Karyawan Terdaftar</span>
+        </div>
+
+        <div class="dir-cards-grid">
+          <!-- Card Employee 2: Anita Wijaya -->
+          <article class="dir-card">
+            <div>
+              <div class="dir-card-top">
+                <div class="dir-avatar" style="background:#0F766E;">AW</div>
+                <div class="dir-card-info">
+                  <div class="dir-card-name" title="Anita Wijaya, S.E.">Anita Wijaya, S.E.</div>
+                  <div class="dir-card-role">Senior Financial Analyst</div>
+                  <div class="dir-card-meta">NIK: EMP-2023-045 • Golongan: Tier 2</div>
+                </div>
+              </div>
+              <div style="margin-top: 12px; font-size: 11.5px; color: var(--pr-slate-600);">
+                Penilai Resmi: <strong>Ratna Dewi, Ak., CA</strong> (Finance Director)
+              </div>
+            </div>
+
+            <!-- Cryptic Code Box -->
+            <div class="cryptic-box">
+              <div class="cryptic-meta">
+                <span class="cryptic-lbl">Cryptic Access Code:</span>
+                <span class="cryptic-code">PR26-7319</span>
+              </div>
+              <span class="dir-lock-status">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                Terkunci
+              </span>
+            </div>
+
+            <button class="btn-card-unlock" onclick="unlockAndOpenEmployee('PR26-7319')">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
+              <span>Buka Formulir Evaluasi (PR26-7319)</span>
+            </button>
+          </article>
+        </div>
+      </section>
+
+      <!-- Section: Uji Coba Template Kosong (Custom Karyawan Riil) -->
+      <section class="dir-division-section" style="border: 2px dashed #93C5FD; background: #F8FAFC;">
+        <div class="dir-division-header" style="border-bottom-color: #E2E8F0;">
+          <div class="dir-division-title" style="color: var(--pr-primary);">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+            Uji Coba: Lembar Evaluasi Kosong (Real Employee Dummy)
+          </div>
+          <span class="dir-division-badge" style="background: #EFF6FF; color: #1D4ED8; font-weight:700;">Template Kosong Tersedia</span>
+        </div>
+
+        <div class="dir-cards-grid">
+          <article class="dir-card" style="border-color: #BFDBFE; background: #FFFFFF;">
+            <div>
+              <div class="dir-card-top">
+                <div class="dir-avatar" id="dirCustomAvatarDisplay" style="background: #2563EB;">✨</div>
+                <div class="dir-card-info">
+                  <div class="dir-card-name" id="dirCustomNameDisplay">Formulir Evaluasi Kosong (Custom Karyawan)</div>
+                  <div class="dir-card-role" id="dirCustomRoleDisplay">Bebas diisi untuk nama, NIK, dan divisi karyawan riil Anda</div>
+                  <div class="dir-card-meta" id="dirCustomMetaDisplay">Status: 100% Kosong (0/13 Butir) • Siap Diisi</div>
+                </div>
+              </div>
+              <div style="margin-top: 12px; font-size: 11.5px; color: var(--pr-slate-600);">
+                Dapat disesuaikan: <strong>Nama Karyawan, Divisi, Jabatan, &amp; Preset Kompetensi</strong>
+              </div>
+            </div>
+
+            <!-- Cryptic Code Box -->
+            <div class="cryptic-box" style="background:#EFF6FF; border-color:#BFDBFE;">
+              <div class="cryptic-meta">
+                <span class="cryptic-lbl">Cryptic Access Code:</span>
+                <span class="cryptic-code" style="color:#1D4ED8;">PR26-BLANK</span>
+              </div>
+              <span class="dir-lock-status" style="background:#DBEAFE; color:#1E40AF;">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                Siap Dibuka
+              </span>
+            </div>
+
+            <button class="btn-card-unlock" style="background:#2563EB;" onclick="unlockAndOpenEmployee('PR26-BLANK')">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
+              <span>Buka Template Kosong (PR26-BLANK)</span>
+            </button>
+          </article>
+        </div>
+      </section>
+
+      <!-- Division 3: Divisi Lainnya (Simulasi Terkunci Permanen untuk Akun Ini) -->
+      <section class="dir-division-section" style="opacity: 0.72; background: #FAFBFD;">
+        <div class="dir-division-header">
+          <div class="dir-division-title" style="color: var(--pr-slate-500);">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            Divisi Lainnya (Marketing, HR, Operasional)
+          </div>
+          <span class="dir-division-badge">46 Karyawan • Terproteksi</span>
+        </div>
+        <p style="font-size:12px; color:var(--pr-slate-500); margin:0; display:flex; align-items:flex-start; gap:8px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0; margin-top:2px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <span><em>Seluruh 46 karyawan pada divisi lain tidak dapat diakses dan tidak terlihat oleh penilai di luar struktur hierarki yang ditentukan. Akses penuh hanya dimiliki oleh Tim People Operations di <strong>Portal Approver</strong>.</em></span>
+        </p>
+      </section>
+
+    </div>
+
+    <!-- Screen 1: Form Penilaian Aktif (Leader / Anggota) -->
+    <div id="screenActive">
+      
+      <!-- Countdown & Deadline Warning Banner -->
+      <section class="pr-countdown-card">
+        <div class="pr-countdown-info">
+          <div class="pr-countdown-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+          <div>
+            <div class="pr-countdown-title">Periode Pengisian PR Tahunan 2026 Sedang Dibuka</div>
+            <div class="pr-countdown-desc">Batas akhir: <strong>Kamis, 18 Oktober 2026 • Tepat Pukul 23:59 WIB</strong></div>
+          </div>
+        </div>
+        <div class="pr-timer-box">
+          <div class="pr-timer-segment">
+            <div class="pr-timer-num" id="timerDays">02</div>
+            <div class="pr-timer-lbl">Hari</div>
+          </div>
+          <div class="pr-timer-sep">:</div>
+          <div class="pr-timer-segment">
+            <div class="pr-timer-num" id="timerHours">04</div>
+            <div class="pr-timer-lbl">Jam</div>
+          </div>
+          <div class="pr-timer-sep">:</div>
+          <div class="pr-timer-segment">
+            <div class="pr-timer-num" id="timerMins">18</div>
+            <div class="pr-timer-lbl">Menit</div>
+          </div>
+          <div class="pr-timer-sep">:</div>
+          <div class="pr-timer-segment">
+            <div class="pr-timer-num" id="timerSecs">45</div>
+            <div class="pr-timer-lbl">Detik</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Template Kosong Active Banner -->
+      <div id="blankEmployeeBanner" style="display:none; background: #EFF6FF; border: 1.5px solid #BFDBFE; border-radius: 12px; padding: 12px 18px; margin-bottom: 16px; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div style="width: 36px; height: 36px; border-radius: 9px; background: #2563EB; color: #FFF; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0;">
+            ✨
+          </div>
+          <div>
+            <div style="font-size: 13.5px; font-weight: 800; color: #1E3A8A; display: flex; align-items: center; gap: 8px;">
+              <span>Mode Uji Coba: Template Formulir Kosong (0/13 Terisi)</span>
+              <span style="font-size: 10.5px; font-weight: 700; background: #DBEAFE; color: #1D4ED8; padding: 2px 7px; border-radius: 4px; font-family: var(--font-mono);">PR26-BLANK</span>
+            </div>
+            <div style="font-size: 12px; color: #3B82F6; margin-top: 2px;">
+              Formulir ini dalam kondisi bersih (semua butir bernilai 0). Anda dapat mengganti identitas dengan <strong>karyawan riil di perusahaan Anda</strong> dan memilih preset kompetensinya.
+            </div>
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <button type="button" onclick="openEditEmployeeModal()" style="background: #2563EB; color: #FFFFFF; border: none; padding: 8px 14px; border-radius: 7px; font-size: 12px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(37,99,235,0.25);">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            <span>Ubah Data Karyawan &amp; Divisi</span>
+          </button>
+          <button type="button" onclick="resetBlankFormToZero()" style="background: #FFFFFF; color: #1E40AF; border: 1px solid #BFDBFE; padding: 8px 12px; border-radius: 7px; font-size: 12px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+            <span>Reset ke 0</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 1. Executive Document Header & Employee Profile (Humanized & Dignified) -->
+      <section class="doc-header-card">
+        <div class="doc-header-main">
+          <div class="doc-title-row">
+            <div>
+              <span class="doc-kicker">Performance Review Tahunan · Periode 2026</span>
+              <h1 class="doc-title">Lembar Evaluasi Kinerja &amp; Kompetensi</h1>
+            </div>
+          </div>
+
+          <div class="doc-profile-box">
+            <div class="profile-avatar-circle" id="profAvatar">DA</div>
+            <div>
+              <div class="profile-primary-name" id="profName">Dimas Ardiansyah</div>
+              <div class="profile-detail-line">
+                <span id="profRole">Lead System Architect</span>
+                <span class="dot-divider">•</span>
+                <span id="profDivisi">Technology &amp; Engineering</span>
+                <span class="dot-divider">•</span>
+                <span id="profNik">NIK: EMP-2024-082</span>
+              </div>
+              <div class="profile-detail-line" style="margin-top: 4px;">
+                <span id="profEvaluator">Penilai: <strong>Budi Pratama</strong> (Head of Engineering)</span>
+              </div>
+              <div style="margin-top: 8px;">
+                <button type="button" class="btn-edit-emp-profile" onclick="openEditEmployeeModal()">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                  <span>Atur Data Karyawan (Riil / Dummy)</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="doc-header-side">
+          <div class="admin-meta-row">
+            <span class="admin-meta-lbl">Klasifikasi Keamanan</span>
+            <span class="admin-meta-val" style="color: #B91C1C; display: inline-flex; align-items: center; gap: 6px; font-size: 12px;">
+              <span class="confidential-dot"></span>
+              Strictly Confidential (Penilai &amp; HR)
+            </span>
+          </div>
+          <div class="admin-meta-row">
+            <span class="admin-meta-lbl">Batas Waktu Pengisian</span>
+            <span class="admin-meta-val">18 Okt 2026, 23:59 WIB</span>
+          </div>
+          <div class="admin-meta-row">
+            <span class="admin-meta-lbl">Kode Akses Referensi</span>
+            <span class="admin-meta-val" id="profToken" style="font-family: var(--font-mono); color: var(--pr-primary);">PR26-8492</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. Humanized Rubric Strip (Clean, Professional, Non-AI) -->
+      <section class="rubric-card" id="rubricCard">
+        <div class="rubric-top">
+          <div class="rubric-title-wrap">
+            <div class="rubric-heading">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+              Panduan Skala Penilaian
+            </div>
+            <span class="rubric-subtext">Gunakan acuan ini untuk menjaga objektivitas dan konsistensi penilaian:</span>
+          </div>
+          <button type="button" class="btn-rubric-toggle" onclick="toggleRubricDetails()">
+            <span id="rubricToggleText">Ringkas</span>
+          </button>
+        </div>
+
+        <div class="rubric-track">
+          <!-- Level 1 -->
+          <div class="rubric-segment">
+            <div class="segment-header">
+              <span class="segment-badge">1</span>
+              <span class="segment-title">Kurang (Below Expectation)</span>
+            </div>
+            <p class="segment-desc">Tidak memenuhi standar, banyak kesalahan, perlu bimbingan intensif.</p>
+          </div>
+
+          <!-- Level 2 -->
+          <div class="rubric-segment">
+            <div class="segment-header">
+              <span class="segment-badge">2</span>
+              <span class="segment-title">Cukup (Need Improvement)</span>
+            </div>
+            <p class="segment-desc">Mulai memenuhi, namun masih sering perlu arahan & perbaikan.</p>
+          </div>
+
+          <!-- Level 3 -->
+          <div class="rubric-segment">
+            <div class="segment-header">
+              <span class="segment-badge">3</span>
+              <span class="segment-title">Baik (Meets Expectation)</span>
+            </div>
+            <p class="segment-desc">Sudah sesuai standar, mandiri, hasil kerja konsisten.</p>
+          </div>
+
+          <!-- Level 4 -->
+          <div class="rubric-segment">
+            <div class="segment-header">
+              <span class="segment-badge">4</span>
+              <span class="segment-title">Sangat Baik (Exceeds Expectation)</span>
+            </div>
+            <p class="segment-desc">Melebihi ekspektasi, proaktif, hasil sangat optimal & berdampak.</p>
+          </div>
+        </div>
+      </section>
+
+
+
+      <!-- Quick Section Toolbar (Expand/Collapse All) -->
+      <div class="section-toolbar">
+        <span style="font-size: 12px; font-weight: 700; color: var(--pr-slate-500); text-transform: uppercase; letter-spacing: 0.5px;">
+          Bagian Evaluasi (Klik untuk Buka/Tutup)
+        </span>
+        <button class="btn-toggle-all" onclick="toggleAllSections()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 13l5 5 5-5M7 6l5 5 5-5"/></svg>
+          <span id="toggleAllLabel">Tutup Semua</span>
+        </button>
+      </div>
+
+      <!-- ======================================================== -->
+      <!-- ACCORDION 1: Leadership & Role Competencies (60%)       -->
+      <!-- ======================================================== -->
+      <section class="accordion-section is-open" id="secComp">
+        <div class="accordion-header" onclick="toggleSection('secComp')">
+          <div class="accordion-header-left">
+            <div class="accordion-chevron">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <span class="accordion-pill">BAGIAN I</span>
+            <span class="accordion-title">Leadership &amp; Role Competencies</span>
+          </div>
+          <div class="accordion-header-right">
+            <span class="accordion-status-chip chip-complete" id="statusSecComp">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              6 / 6 Terisi
+            </span>
+          </div>
+        </div>
+
+        <div class="accordion-body" id="accordionCompBody">
+          <!-- Competency Item 1 -->
+          <article class="pr-item-card" data-category="comp" id="itemComp1">
+            <div class="pr-item-top">
+              <div class="pr-item-name">1. Analytical &amp; Adaptability</div>
+              <div class="pr-item-desc">Kemampuan menganalisa situasi dan mempertimbangkan solusi secara logis dan efektif dalam pekerjaan. Kemampuan belajar dan menyesuaikan diri terhadap perubahan teknologi.</div>
+            </div>
+            <div class="pr-rating-group">
+              <button class="pr-rate-btn" onclick="selectRating('comp_1', 1, 25)"><span class="btn-score">1</span><span class="btn-label">Kurang</span></button>
+              <button class="pr-rate-btn" onclick="selectRating('comp_1', 2, 50)"><span class="btn-score">2</span><span class="btn-label">Cukup</span></button>
+              <button class="pr-rate-btn" onclick="selectRating('comp_1', 3, 75)"><span class="btn-score">3</span><span class="btn-label">Baik</span></button>
+              <button class="pr-rate-btn selected" onclick="selectRating('comp_1', 4, 100)"><span class="btn-score">4</span><span class="btn-label">Sangat Baik</span></button>
+            </div>
+          </article>
+
+          <!-- Competency Item 2 -->
+          <article class="pr-item-card" data-category="comp" id="itemComp2">
+            <div class="pr-item-top">
+              <div class="pr-item-name">2. Attention to Detail</div>
+              <div class="pr-item-desc">Ketelitian dalam bekerja untuk meminimalisir kesalahan dan menjaga kualitas hasil kerja arsitektur sistem.</div>
+            </div>
+            <div class="pr-rating-group">
+              <button class="pr-rate-btn" onclick="selectRating('comp_2', 1, 25)"><span class="btn-score">1</span><span class="btn-label">Kurang</span></button>
+              <button class="pr-rate-btn" onclick="selectRating('comp_2', 2, 50)"><span class="btn-score">2</span><span class="btn-label">Cukup</span></button>
+              <button class="pr-rate-btn" onclick="selectRating('comp_2', 3, 75)"><span class="btn-score">3</span><span class="btn-label">Baik</span></button>
+              <button class="pr-rate-btn selected" onclick="selectRating('comp_2', 4, 100)"><span class="btn-score">4</span><span class="btn-label">Sangat Baik</span></button>
+            </div>
+          </article>
+
+          <!-- Competency Item 3 -->
+          <article class="pr-item-card" data-category="comp" id="itemComp3">
+            <div class="pr-item-top">
+              <div class="pr-item-name">3. Communication</div>
+              <div class="pr-item-desc">Kemampuan berkomunikasi dan berkoordinasi dengan tim maupun divisi lain secara jelas dan efektif, baik lisan maupun tulisan.</div>
+            </div>
+            <div class="pr-rating-group">
+              <button class="pr-rate-btn" onclick="selectRating('comp_3', 1, 25)"><span class="btn-score">1</span><span class="btn-label">Kurang</span></button>
+              <button class="pr-rate-btn" onclick="selectRating('comp_3', 2, 50)"><span class="btn-score">2</span><span class="btn-label">Cukup</span></button>
+              <button class="pr-rate-btn selected" onclick="selectRating('comp_3', 3, 75)"><span class="btn-score">3</span><span class="btn-label">Baik</span></button>
+              <button class="pr-rate-btn" onclick="selectRating('comp_3', 4, 100)"><span class="btn-score">4</span><span class="btn-label">Sangat Baik</span></button>
+            </div>
+          </article>
+
+          <!-- Competency Item 4 -->
+          <article class="pr-item-card" data-category="comp" id="itemComp4">
+            <div class="pr-item-top">
+              <div class="pr-item-name">4. Stakeholder Awareness</div>
+              <div class="pr-item-desc">Kemampuan memahami kebutuhan, ekspektasi, dan perspektif pihak manajemen dan pengguna dalam membangun fitur.</div>
+            </div>
+            <div class="pr-rating-group">
+              <button class="pr-rate-btn" onclick="selectRating('comp_4', 1, 25)"><span class="btn-score">1</span><span class="btn-label">Kurang</span></button>
+              <button class="pr-rate-btn" onclick="selectRating('comp_4', 2, 50)"><span class="btn-score">2</span><span class="btn-label">Cukup</span></button>
+              <button class="pr-rate-btn" onclick="selectRating('comp_4', 3, 75)"><span class="btn-score">3</span><span class="btn-label">Baik</span></button>
+              <button class="pr-rate-btn selected" onclick="selectRating('comp_4', 4, 100)"><span class="btn-score">4</span><span class="btn-label">Sangat Baik</span></button>
+            </div>
+          </article>
+
+          <!-- Competency Item 5 -->
+          <article class="pr-item-card" data-category="comp" id="itemComp5">
+            <div class="pr-item-top">
+              <div class="pr-item-name">5. Ownership</div>
+              <div class="pr-item-desc">Tanggung jawab penuh terhadap pekerjaan, stabilitas rilis, serta hasil akhir kode dan aplikasi yang dikerjakan tim.</div>
+            </div>
+            <div class="pr-rating-group">
+              <button class="pr-rate-btn" onclick="selectRating('comp_5', 1, 25)"><span class="btn-score">1</span><span class="btn-label">Kurang</span></button>
+              <button class="pr-rate-btn" onclick="selectRating('comp_5', 2, 50)"><span class="btn-score">2</span><span class="btn-label">Cukup</span></button>
+              <button class="pr-rate-btn" onclick="selectRating('comp_5', 3, 75)"><span class="btn-score">3</span><span class="btn-label">Baik</span></button>
+              <button class="pr-rate-btn selected" onclick="selectRating('comp_5', 4, 100)"><span class="btn-score">4</span><span class="btn-label">Sangat Baik</span></button>
+            </div>
+          </article>
+
+          <!-- Competency Item 6 -->
+          <article class="pr-item-card" data-category="comp" id="itemComp6">
+            <div class="pr-item-top">
+              <div class="pr-item-name">6. Strategic AI Implementation</div>
+              <div class="pr-item-desc">Kemampuan untuk merencanakan dan mengimplementasikan tools AI guna meningkatkan efisiensi dan performa tim pengembang.</div>
+            </div>
+            <div class="pr-rating-group">
+              <button class="pr-rate-btn" onclick="selectRating('comp_6', 1, 25)"><span class="btn-score">1</span><span class="btn-label">Kurang</span></button>
+              <button class="pr-rate-btn" onclick="selectRating('comp_6', 2, 50)"><span class="btn-score">2</span><span class="btn-label">Cukup</span></button>
+              <button class="pr-rate-btn" onclick="selectRating('comp_6', 3, 75)"><span class="btn-score">3</span><span class="btn-label">Baik</span></button>
+              <button class="pr-rate-btn selected" onclick="selectRating('comp_6', 4, 100)"><span class="btn-score">4</span><span class="btn-label">Sangat Baik</span></button>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- ======================================================== -->
+      <!-- ACCORDION 2: ELASTIC — Core Values (40%)                 -->
+      <!-- ======================================================== -->
+      <section class="accordion-section is-open" id="secCore">
+        <div class="accordion-header" onclick="toggleSection('secCore')">
+          <div class="accordion-header-left">
+            <div class="accordion-chevron">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <span class="accordion-pill">BAGIAN II</span>
+            <span class="accordion-title">ELASTIC — Corporate Core Values</span>
+          </div>
+          <div class="accordion-header-right">
+            <span class="accordion-status-chip chip-complete" id="statusSecCore">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              7 / 7 Terisi
+            </span>
+          </div>
+        </div>
+
+        <div class="accordion-body" id="accordionCoreBody">
+          <!-- 7 Core Values -->
+          <article class="pr-item-card" data-category="core" id="itemCore1">
+            <div class="pr-item-top">
+              <div class="pr-item-name">1. Enthusiasm</div>
+              <div class="pr-item-desc">Semangat tinggi dalam bekerja, proaktif, dan membawa energi positif ke lingkungan tim.</div>
+            </div>
+            <div class="pr-rating-group">
+              <button class="pr-rate-btn" onclick="selectRating('core_1', 1, 25)"><span class="btn-score">1</span><span class="btn-label">Kurang</span></button>
+              <button class="pr-rate-btn" onclick="selectRating('core_1', 2, 50)"><span class="btn-score">2</span><span class="btn-label">Cukup</span></button>
+              <button class="pr-rate-btn" onclick="selectRating('core_1', 3, 75)"><span class="btn-score">3</span><span class="btn-label">Baik</span></button>
+              <button class="pr-rate-btn selected" onclick="selectRating('core_1', 4, 100)"><span class="btn-score">4</span><span class="btn-label">Sangat Baik</span></button>
+            </div>
+          </article>
+
+          <article class="pr-item-card" data-category="core" id="itemCore2">
+            <div class="pr-item-top">
+              <div class="pr-item-name">2. Learning Continuously</div>
+              <div class="pr-item-desc">Terus belajar, berkembang, dan selalu terbuka terhadap pengetahuan baru serta feedback konstruktif.</div>
+            </div>
+            <div class="pr-rating-group">
+              <button class="pr-rate-btn" onclick="selectRating('core_2', 1, 25)"><span class="btn-score">1</span><span class="btn-label">Kurang</span></button>
+              <button class="pr-rate-btn" onclick="selectRating('core_2', 2, 50)"><span class="btn-score">2</span><span class="btn-label">Cukup</span></button>
+              <button class="pr-rate-btn" onclick="selectRating('core_2', 3, 75)"><span class="btn-score">3</span><span class="btn-label">Baik</span></button>
+              <button class="pr-rate-btn selected" onclick="selectRating('core_2', 4, 100)"><span class="btn-score">4</span><span class="btn-label">Sangat Baik</span></button>
+            </div>
+          </article>
+
+          <article class="pr-item-card" data-category="core" id="itemCore3">
+            <div class="pr-item-top">
+              <div class="pr-item-name">3. Accountability &amp; Dependability</div>
+              <div class="pr-item-desc">Bertanggung jawab penuh, konsisten terhadap komitmen rilis, dan dapat diandalkan dalam menyelesaikan tugas kritis.</div>
+            </div>
+            <div class="pr-rating-group">
+              <button class="pr-rate-btn" onclick="selectRating('core_3', 1, 25)"><span class="btn-score">1</span><span class="btn-label">Kurang</span></button>
+              <button class="pr-rate-btn" onclick="selectRating('core_3', 2, 50)"><span class="btn-score">2</span><span class="btn-label">Cukup</span></button>
+              <button class="pr-rate-btn" onclick="selectRating('core_3', 3, 75)"><span class="btn-score">3</span><span class="btn-label">Baik</span></button>
+              <button class="pr-rate-btn selected" onclick="selectRating('core_3', 4, 100)"><span class="btn-score">4</span><span class="btn-label">Sangat Baik</span></button>
+            </div>
+          </article>
+
+          <article class="pr-item-card" data-category="core" id="itemCore4">
+            <div class="pr-item-top">
+              <div class="pr-item-name">4. Simplicity</div>
+              <div class="pr-item-desc">Menyederhanakan proses arsitektur kode agar lebih efektif, efisien, rapi, dan mudah dipahami rekan pengembang lain.</div>
+            </div>
+            <div class="pr-rating-group">
+              <button class="pr-rate-btn" onclick="selectRating('core_4', 1, 25)"><span class="btn-score">1</span><span class="btn-label">Kurang</span></button>
+              <button class="pr-rate-btn" onclick="selectRating('core_4', 2, 50)"><span class="btn-score">2</span><span class="btn-label">Cukup</span></button>
+              <button class="pr-rate-btn" onclick="selectRating('core_4', 3, 75)"><span class="btn-score">3</span><span class="btn-label">Baik</span></button>
+              <button class="pr-rate-btn selected" onclick="selectRating('core_4', 4, 100)"><span class="btn-score">4</span><span class="btn-label">Sangat Baik</span></button>
+            </div>
+          </article>
+
+          <article class="pr-item-card" data-category="core" id="itemCore5">
+            <div class="pr-item-top">
+              <div class="pr-item-name">5. Teamwork</div>
+              <div class="pr-item-desc">Bekerja sama secara kolaboratif lintas tim pengembang untuk mencapai target sprint dan tujuan bersama perusahaan.</div>
+            </div>
+            <div class="pr-rating-group">
+              <button class="pr-rate-btn" onclick="selectRating('core_5', 1, 25)"><span class="btn-score">1</span><span class="btn-label">Kurang</span></button>
+              <button class="pr-rate-btn" onclick="selectRating('core_5', 2, 50)"><span class="btn-score">2</span><span class="btn-label">Cukup</span></button>
+              <button class="pr-rate-btn" onclick="selectRating('core_5', 3, 75)"><span class="btn-score">3</span><span class="btn-label">Baik</span></button>
+              <button class="pr-rate-btn selected" onclick="selectRating('core_5', 4, 100)"><span class="btn-score">4</span><span class="btn-label">Sangat Baik</span></button>
+            </div>
+          </article>
+
+          <article class="pr-item-card" data-category="core" id="itemCore6">
+            <div class="pr-item-top">
+              <div class="pr-item-name">6. Integrity</div>
+              <div class="pr-item-desc">Bertindak jujur, transparan dalam pelaporan kendala, konsisten, dan selalu menjunjung tinggi kode etik profesional.</div>
+            </div>
+            <div class="pr-rating-group">
+              <button class="pr-rate-btn" onclick="selectRating('core_6', 1, 25)"><span class="btn-score">1</span><span class="btn-label">Kurang</span></button>
+              <button class="pr-rate-btn" onclick="selectRating('core_6', 2, 50)"><span class="btn-score">2</span><span class="btn-label">Cukup</span></button>
+              <button class="pr-rate-btn" onclick="selectRating('core_6', 3, 75)"><span class="btn-score">3</span><span class="btn-label">Baik</span></button>
+              <button class="pr-rate-btn selected" onclick="selectRating('core_6', 4, 100)"><span class="btn-score">4</span><span class="btn-label">Sangat Baik</span></button>
+            </div>
+          </article>
+
+          <article class="pr-item-card" data-category="core" id="itemCore7">
+            <div class="pr-item-top">
+              <div class="pr-item-name">7. Creatively Bold</div>
+              <div class="pr-item-desc">Berani berpikir kreatif di luar kebiasaan, mengusulkan solusi inovatif, dan berani mengambil inisiatif terukur.</div>
+            </div>
+            <div class="pr-rating-group">
+              <button class="pr-rate-btn" onclick="selectRating('core_7', 1, 25)"><span class="btn-score">1</span><span class="btn-label">Kurang</span></button>
+              <button class="pr-rate-btn" onclick="selectRating('core_7', 2, 50)"><span class="btn-score">2</span><span class="btn-label">Cukup</span></button>
+              <button class="pr-rate-btn" onclick="selectRating('core_7', 3, 75)"><span class="btn-score">3</span><span class="btn-label">Baik</span></button>
+              <button class="pr-rate-btn selected" onclick="selectRating('core_7', 4, 100)"><span class="btn-score">4</span><span class="btn-label">Sangat Baik</span></button>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- ======================================================== -->
+      <!-- ACCORDION 3: Ulasan Kualitatif 360°                      -->
+      <!-- ======================================================== -->
+      <section class="accordion-section is-open" id="secFeedback">
+        <div class="accordion-header" onclick="toggleSection('secFeedback')">
+          <div class="accordion-header-left">
+            <div class="accordion-chevron">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <span class="accordion-pill">BAGIAN III</span>
+            <span class="accordion-title">Ulasan Kualitatif 360°</span>
+            <span class="accordion-weight">Naratif</span>
+          </div>
+          <div class="accordion-header-right">
+            <span class="accordion-status-chip chip-complete" id="statusSecFeedback">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              Lengkap
+            </span>
+          </div>
+        </div>
+
+        <div class="accordion-body">
+          <div class="pr-feedback-grid">
+            <div class="pr-feedback-card">
+              <div class="pr-feedback-title" style="color: var(--pr-emerald);">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                Strengths (Kekuatan & Hal Positif)
+              </div>
+              <div class="pr-feedback-desc">Tuliskan apresiasi konkret atas kontribusi, sikap kerja, atau pencapaian terbaik yang paling berdampak:</div>
+              <textarea class="pr-textarea" id="txtStrengths" oninput="updateProgress()" placeholder="Tuliskan ulasan kekuatan...">Sangat suportif dan selalu bersedia memberikan arahan teknis yang terstruktur saat berhadapan dengan infrastruktur backend kompleks. Memberikan ruang eksplorasi mandiri dan onboarding yang sangat baik bagi anggota tim baru.</textarea>
+            </div>
+
+            <div class="pr-feedback-card">
+              <div class="pr-feedback-title" style="color: var(--pr-amber);">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                Areas for Improvement (Area Pengembangan)
+              </div>
+              <div class="pr-feedback-desc">Tuliskan saran konstruktif dan hal konkret yang perlu ditingkatkan untuk perkembangan karir ke depan:</div>
+              <textarea class="pr-textarea" id="txtImprovements" oninput="updateProgress()" placeholder="Tuliskan saran perbaikan...">Kedepannya akan sangat bagus jika pencapaian teknis atau penyelesaian kendala backend yang sulit dari tim bisa lebih sering disorot atau dibagikan ke divisi lain, sehingga kontribusi tim pengembang semakin diakui secara luas di perusahaan.</textarea>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Floating Corner Progress Widget (Tidak Bala, Rapi di Pojok) -->
+      <div class="corner-progress-fab" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" title="Klik untuk scroll ke atas">
+        <svg class="corner-ring-svg" viewBox="0 0 32 32">
+          <circle class="corner-ring-bg" cx="16" cy="16" r="12"/>
+          <circle class="corner-ring-fg" id="cornerRingFg" cx="16" cy="16" r="12"/>
+        </svg>
+        <div class="corner-text-wrap">
+          <span class="corner-text-lbl">Progres Form</span>
+          <span class="corner-text-val" id="cornerProgressVal">13 / 13 Selesai</span>
+        </div>
+      </div>
+
+      <!-- Clean Minimalist Bottom Bar -->
+      <footer class="pr-bottom-bar">
+        <div class="pr-bottom-content">
+          <div class="pr-bottom-hint">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <span>Skor akhir bersifat rahasia & akan diverifikasi oleh HR di Portal Approver</span>
+          </div>
+          <div class="pr-submit-actions">
+            <button type="button" class="btn-test-incomplete" onclick="simulateIncompleteState()" title="Simulasikan 3 butir belum terisi untuk menguji coba modal peringatan">
+              ⚡ Tes: Kosongkan 3 Butir
+            </button>
+            <button class="btn-save-draft" onclick="alert('Draf berhasil disimpan secara lokal!')">Simpan Draf</button>
+            <button class="btn-submit-final" onclick="handleSubmitButtonClick()">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              Submit Evaluasi Final
+            </button>
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <!-- Screen 2: SIMULASI WAKTU HABIS (LOCKED STATE 00:00) -->
+    <div id="screenExpired" class="state-screen">
+      <div class="state-icon-box" style="background:#FEE2E2; color:#DC2626;">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      </div>
+      <h2>Periode Evaluasi Telah Ditutup</h2>
+      <p>Waktu pengisian Performance Review tahunan untuk kode akses <strong>PR26-8492</strong> telah berakhir pada <strong>18 Oktober 2026 pukul 23:59 WIB</strong>. Akses pengisian formulir telah dikunci otomatis oleh sistem.</p>
+      <div style="margin-bottom: 20px;">
+        <div class="state-pill-meta">
+          <span>Status Sistem:</span>
+          <strong style="color:#DC2626">EXPIRED_SESSION_LOCKED</strong>
+        </div>
+      </div>
+      <p style="font-size:12.5px; color:var(--pr-slate-400);">Jika Anda memerlukan perpanjangan dispensasi pengisian, silakan hubungi <strong>Tim People Operations / HR</strong> perusahaan.</p>
+    </div>
+
+    <!-- Screen 3: SIMULASI SUDAH DISUBMIT (SUBMITTED & ONE-TIME LOCK) -->
+    <div id="screenSubmitted" class="state-screen">
+      <div class="state-icon-box" style="background:#ECFDF5; color:#059669;">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      </div>
+      <h2>Evaluasi Telah Berhasil Diserahkan</h2>
+      <p>Terima kasih atas partisipasi Anda dalam Performance Review tahunan. Penilaian Anda terhadap <strong>Dimas Ardiansyah</strong> telah tersimpan aman dan terenkripsi di brankas sistem.</p>
+      <div style="margin-bottom: 20px;">
+        <div class="state-pill-meta">
+          <span>Waktu Submit:</span>
+          <strong>13 Okt 2026, 19:45 WIB</strong>
+          <span>• Status:</span>
+          <strong style="color:#059669">COMPLETED & LOCKED</strong>
+        </div>
+      </div>
+      <p style="font-size:12.5px; color:var(--pr-slate-400);">Hasil kompilasi dan skor akhir akan dikalibrasi oleh HR di portal approver sebelum dirilis resmi.</p>
+    </div>
+
+    <!-- Screen 4: SIMULASI PORTAL APPROVER / HR REVIEWER HUB -->
+    <div id="screenApprover" class="hr-portal-wrap">
+      
+      <!-- HR Dashboard Header -->
+      <section class="hr-header-card">
+        <div class="hr-header-top">
+          <div>
+            <div style="font-size:11.5px; color:#A5B4FC; text-transform:uppercase; font-weight:700; letter-spacing:1px; margin-bottom:3px;">
+              Executive HR Portal • TDS Approver Hub
+            </div>
+            <h2 style="font-size:20px; font-weight:800; color:#FFFFFF;">Monitoring & Kalibrasi Nilai PR 2026</h2>
+          </div>
+          <button style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:#FFFFFF; padding:7px 14px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:6px;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Ekspor Rekap Master (Excel/CSV)
+          </button>
+        </div>
+
+        <div class="hr-kpi-grid">
+          <div class="hr-kpi-card">
+            <div class="num">48</div>
+            <div class="lbl">Total Karyawan Siklus PR</div>
+          </div>
+          <div class="hr-kpi-card">
+            <div class="num">42 <span style="font-size:13px; color:#93C5FD">/ 48</span></div>
+            <div class="lbl">Review Leader Selesai (87.5%)</div>
+          </div>
+          <div class="hr-kpi-card">
+            <div class="num">39 <span style="font-size:13px; color:#93C5FD">/ 48</span></div>
+            <div class="lbl">Upward Review Selesai (81.2%)</div>
+          </div>
+          <div class="hr-kpi-card">
+            <div class="num" style="color:#FBBF24">14</div>
+            <div class="lbl">Menunggu Kalibrasi HR</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- HR Employee Review Table -->
+      <section class="hr-panel-card">
+        <div class="hr-table-filter">
+          <div style="font-size:14.5px; font-weight:800; color:var(--pr-navy-900);">
+            Daftar Penilaian Seluruh Karyawan (Dual-Branch Status)
+          </div>
+          <input type="text" class="hr-search-input" placeholder="Cari nama karyawan / divisi...">
+        </div>
+
+        <div style="overflow-x: auto;">
+          <table class="hr-table">
+            <thead>
+              <tr>
+                <th>Karyawan &amp; NIK</th>
+                <th>Divisi &amp; Jabatan</th>
+                <th>Cryptic Token</th>
+                <th>Leader Penilai</th>
+                <th>Review Leader</th>
+                <th>Upward Review</th>
+                <th>Status HR</th>
+                <th>Aksi Kalibrasi</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr id="hrRowDimas" style="background:#F8FAFC;">
+                <td>
+                  <strong>Dimas Ardiansyah</strong>
+                  <div style="font-size:11px; color:var(--pr-slate-500)">NIK: EMP-2024-082</div>
+                </td>
+                <td>
+                  <div>Technology &amp; Engineering</div>
+                  <div style="font-size:11px; color:var(--pr-slate-500)">Lead System Architect</div>
+                </td>
+                <td>
+                  <span style="font-family:var(--font-mono); font-size:11px; font-weight:700; background:#EFF6FF; color:#1D4ED8; padding:3px 7px; border-radius:4px;">PR26-8492</span>
+                </td>
+                <td>Budi Pratama</td>
+                <td><span class="badge-status badge-done"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Selesai (96.0)</span></td>
+                <td><span class="badge-status badge-done"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Selesai (95.0)</span></td>
+                <td><span class="badge-status badge-ready"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Siap Kalibrasi</span></td>
+                <td>
+                  <button onclick="loadApproverCalibration('PR26-8492')" style="background:var(--pr-indigo); color:#FFF; border:none; padding:6px 12px; border-radius:6px; font-size:11px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:5px;">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                    <span>Periksa &amp; Kalibrasi</span>
+                  </button>
+                </td>
+              </tr>
+              <tr id="hrRowAnita">
+                <td>
+                  <strong>Anita Wijaya, S.E.</strong>
+                  <div style="font-size:11px; color:var(--pr-slate-500)">NIK: EMP-2023-045</div>
+                </td>
+                <td>
+                  <div>Finance &amp; Accounting</div>
+                  <div style="font-size:11px; color:var(--pr-slate-500)">Senior Financial Analyst</div>
+                </td>
+                <td>
+                  <span style="font-family:var(--font-mono); font-size:11px; font-weight:700; background:#ECFDF5; color:#065F46; padding:3px 7px; border-radius:4px;">PR26-7319</span>
+                </td>
+                <td>Ratna Dewi</td>
+                <td><span class="badge-status badge-done"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Selesai (98.0)</span></td>
+                <td><span class="badge-status badge-done"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Selesai (96.0)</span></td>
+                <td><span class="badge-status badge-ready"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Siap Kalibrasi</span></td>
+                <td>
+                  <button onclick="loadApproverCalibration('PR26-7319')" style="background:var(--pr-indigo); color:#FFF; border:none; padding:6px 12px; border-radius:6px; font-size:11px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:5px;">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                    <span>Periksa &amp; Kalibrasi</span>
+                  </button>
+                </td>
+              </tr>
+              <tr id="hrRowBlank" style="border-left: 3px solid #2563EB;">
+                <td>
+                  <strong id="hrBlankName">Ahmad Fauzi (Custom)</strong>
+                  <div style="font-size:11px; color:var(--pr-slate-500)" id="hrBlankNik">NIK: EMP-2026-NEW</div>
+                </td>
+                <td>
+                  <div id="hrBlankDivisi">Sales &amp; Marketing</div>
+                  <div style="font-size:11px; color:var(--pr-slate-500)" id="hrBlankRole">Digital Marketing Specialist</div>
+                </td>
+                <td>
+                  <span style="font-family:var(--font-mono); font-size:11px; font-weight:700; background:#DBEAFE; color:#1E40AF; padding:3px 7px; border-radius:4px;">PR26-BLANK</span>
+                </td>
+                <td id="hrBlankLeader">Siti Rahma</td>
+                <td><span class="badge-status" id="hrBlankStatusLeader" style="background:#FEF3C7; color:#92400E;">Dalam Pengisian</span></td>
+                <td><span class="badge-status" style="background:#F1F5F9; color:#475569;">Belum Dimulai</span></td>
+                <td><span class="badge-status" style="background:#EFF6FF; color:#1D4ED8;">Template Kosong</span></td>
+                <td>
+                  <button onclick="loadApproverCalibration('PR26-BLANK')" style="background:var(--pr-primary); color:#FFF; border:none; padding:6px 12px; border-radius:6px; font-size:11px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:5px;">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                    <span>Periksa &amp; Kalibrasi</span>
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <strong>Reza Pratama</strong>
+                  <div style="font-size:11px; color:var(--pr-slate-500)">NIK: CP-2022-045</div>
+                </td>
+                <td>
+                  <div>Product Design</div>
+                  <div style="font-size:11px; color:var(--pr-slate-500)">Senior UI/UX</div>
+                </td>
+                <td>
+                  <span style="font-family:var(--font-mono); font-size:11px; font-weight:700; background:#F1F5F9; color:#475569; padding:3px 7px; border-radius:4px;">PR26-4190</span>
+                </td>
+                <td>Maya Indah</td>
+                <td><span class="badge-status badge-done"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Selesai (92.0)</span></td>
+                <td><span class="badge-status badge-done"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Selesai (94.0)</span></td>
+                <td><span class="badge-status badge-done"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Terverifikasi HR (94.8)</span></td>
+                <td>
+                  <button style="background:#FFFFFF; color:var(--pr-navy-800); border:1px solid var(--pr-slate-300); padding:5px 10px; border-radius:6px; font-size:11px; font-weight:600; cursor:pointer;" onclick="alert('Hasil evaluasi Reza Pratama telah selesai dirilis ke portal karyawan.')">
+                    Lihat Hasil Rilis
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Detail Calibration Box (Hanya Tampil di HR Portal!) -->
+        <div class="calibration-box">
+          <div class="calib-header">
+            <div>
+              <span id="calibTag" style="font-size:10.5px; font-weight:700; background:#E0E7FF; color:#4338CA; padding:3px 7px; border-radius:4px; font-family:var(--font-mono)">
+                PANEL KALIBRASI HR #PR26-8492
+              </span>
+              <h3 id="calibEmpName" style="font-size:16px; font-weight:800; color:var(--pr-navy-900); margin-top:3px;">
+                Hasil Evaluasi Lengkap: Dimas Ardiansyah
+              </h3>
+            </div>
+            <div style="text-align:right;">
+              <span style="font-size:11px; color:var(--pr-slate-500)">Status Validasi:</span>
+              <div style="font-weight:700; color:#4338CA; font-size:12.5px">Menunggu Keputusan HR</div>
+            </div>
+          </div>
+
+          <!-- Dual Review Cards -->
+          <div class="calib-dual-grid">
+            <!-- Side 1: Top-Down from Leader -->
+            <div class="calib-card-branch">
+              <h4>
+                <span>Sisi 1: Evaluasi Leader (Top-Down)</span>
+                <span id="calibLeaderName" style="font-size:11px; font-weight:600; color:var(--pr-slate-500)">Oleh: Budi Pratama (Head of Engineering)</span>
+              </h4>
+              <div class="calib-score-line">
+                <span>Skor Kompetensi &amp; Leadership (60%):</span>
+                <strong id="calibLeaderScore">96.0 <span style="color:var(--pr-slate-400); font-weight:500; margin:0 2px;">&rarr;</span> 57.6</strong>
+              </div>
+              <div class="calib-score-line">
+                <span>Skor ELASTIC Core Values (40%):</span>
+                <strong id="calibCoreScore">100.0 <span style="color:var(--pr-slate-400); font-weight:500; margin:0 2px;">&rarr;</span> 40.0</strong>
+              </div>
+              <div class="calib-score-line" style="border-bottom:none; margin-top:3px;">
+                <span style="font-weight:700;">Subtotal Skor Leader:</span>
+                <strong id="calibSubtotalScore" style="color:var(--pr-primary); font-size:14px">97.6 / 100</strong>
+              </div>
+              <div style="margin-top:8px; font-size:11px; color:var(--pr-slate-600); background:var(--pr-slate-50); padding:7px 9px; border-radius:6px;">
+                <strong>Catatan Leader:</strong> <span id="calibLeaderNote">"Kinerja arsitektur sistem sangat andal, memimpin perbaikan performa API hingga 40% lebih cepat."</span>
+              </div>
+            </div>
+
+            <!-- Side 2: Upward from Subordinate -->
+            <div class="calib-card-branch">
+              <h4>
+                <span>Sisi 2: Upward Feedback ke Leader</span>
+                <span id="calibSubordinateName" style="font-size:11px; font-weight:600; color:var(--pr-slate-500)">Oleh: Dimas Ardiansyah</span>
+              </h4>
+              <div class="calib-score-line">
+                <span>Kejelasan Arahan &amp; Dukungan:</span>
+                <strong>95.0 / 100</strong>
+              </div>
+              <div class="calib-score-line">
+                <span>Psychological Safety &amp; Empati:</span>
+                <strong>95.0 / 100</strong>
+              </div>
+              <div class="calib-score-line" style="border-bottom:none; margin-top:3px;">
+                <span style="font-weight:700;">Rata-rata Penilaian ke Leader:</span>
+                <strong id="calibUpwardScore" style="color:var(--pr-emerald); font-size:14px">95.0 / 100</strong>
+              </div>
+              <div style="margin-top:8px; font-size:11px; color:var(--pr-slate-600); background:var(--pr-slate-50); padding:7px 9px; border-radius:6px;">
+                <strong>Ulasan untuk Leader:</strong> <span id="calibUpwardNote">"Arahan teknis sprint sangat jelas, transparan, dan memberikan rasa aman dalam berpendapat."</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- HR Specific Inputs: Kedisiplinan & Final Calibration -->
+          <div class="calib-hr-section">
+            <div style="font-size:13.5px; font-weight:800; color:var(--pr-navy-900); display:flex; align-items:center; gap:8px;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4F46E5" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              Input Khusus HR (Sesuai Catatan Sheet: Komponen Kedisiplinan)
+            </div>
+
+            <div class="hr-input-grid">
+              <div>
+                <label style="display:block; font-size:11px; font-weight:700; color:var(--pr-slate-700); margin-bottom:3px;">
+                  Nilai Kedisiplinan &amp; Presensi (Diisi HR)
+                </label>
+                <input type="number" id="calibDisciplineInput" value="100" min="0" max="100" style="width:100%; padding:8px 10px; border:1.5px solid var(--pr-slate-200); border-radius:6px; font-weight:700; font-family:var(--font-mono); font-size:13.5px;">
+              </div>
+              <div>
+                <label style="display:block; font-size:11px; font-weight:700; color:var(--pr-slate-700); margin-bottom:3px;">
+                  Rekomendasi / Penyesuaian Grade HR
+                </label>
+                <select style="width:100%; padding:8px 10px; border:1.5px solid var(--pr-slate-200); border-radius:6px; font-weight:600; font-size:12.5px;">
+                  <option selected>Exceeds Expectation (Sangat Baik)</option>
+                  <option>Meets Expectation (Baik)</option>
+                  <option>Need Improvement (Cukup)</option>
+                </select>
+              </div>
+              <div style="grid-column: 1 / -1;">
+                <label style="display:block; font-size:11px; font-weight:700; color:var(--pr-slate-700); margin-bottom:3px;">
+                  Catatan Kalibrasi Tim People Operations (HR)
+                </label>
+                <textarea id="calibHrNote" style="width:100%; padding:7px 10px; border:1.5px solid var(--pr-slate-200); border-radius:6px; font-size:12px; min-height:55px;" placeholder="Tuliskan catatan kalibrasi resmi HR...">Kinerja dan kepemimpinan teknis terverifikasi sangat memuaskan, kedisiplinan 100%. Direkomendasikan untuk promosi / penyesuaian tier kompetensi periode depan.</textarea>
+              </div>
+            </div>
+
+            <!-- Official Final Score (Baru Tampil di Sini Setelah HR Memeriksa!) -->
+            <div style="margin-top:16px; padding-top:14px; border-top:1px solid var(--pr-slate-200); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px;">
+              <div>
+                <span style="font-size:10.5px; text-transform:uppercase; color:var(--pr-slate-500); font-weight:700; letter-spacing:0.5px">
+                  Skor Akhir Resmi (Terkalibrasi HR)
+                </span>
+                <div id="calibOfficialFinal" style="font-size:24px; font-weight:800; color:var(--pr-indigo); font-family:var(--font-mono)">
+                  98.0 / 100 <span style="font-size:12px; font-weight:700; color:var(--pr-emerald)">(Sangat Baik - Exceeds)</span>
+                </div>
+              </div>
+              <div style="display:flex; gap:8px;">
+                <button style="background:var(--pr-slate-100); color:var(--pr-slate-700); border:1px solid var(--pr-slate-200); padding:8px 14px; border-radius:6px; font-size:12px; font-weight:600; cursor:pointer;" onclick="alert('Draf kalibrasi berhasil disimpan!')">
+                  Simpan Draf Kalibrasi
+                </button>
+                <button style="background:var(--pr-emerald); color:#FFFFFF; border:none; padding:8px 18px; border-radius:6px; font-size:12.5px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:7px; box-shadow:0 4px 12px rgba(5,150,105,0.25);" onclick="alert('Hasil PR telah resmi diverifikasi &amp; dirilis ke karyawan dan leader!')">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                  <span>Setujui &amp; Rilis Hasil Resmi ke Karyawan</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+  </main>
+
+  <!-- Modal 0: Ubah Identitas Karyawan Riil (Dummy Tester) -->
+  <div class="pr-modal-overlay" id="editEmployeeModal">
+    <div class="pr-modal" style="max-width: 540px; text-align: left;">
+      <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 14px;">
+        <div>
+          <div style="font-size: 11px; font-weight: 700; color: #2563EB; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">
+            Simulasi Karyawan Perusahaan Anda
+          </div>
+          <h3 style="margin: 0; font-size: 18px; color: var(--pr-navy-900);">Atur Data Karyawan yang Dinilai</h3>
+        </div>
+        <button type="button" onclick="closeEditEmployeeModal()" style="background: none; border: none; font-size: 22px; color: var(--pr-slate-400); cursor: pointer; padding: 0 4px; line-height: 1;">&times;</button>
+      </div>
+
+      <p style="margin: 0 0 16px 0; font-size: 12px; color: var(--pr-slate-500); line-height: 1.45;">
+        Masukkan data riil atau dummy karyawan di perusahaan Anda untuk menguji coba alur pengisian dari form kosong hingga submit akhir.
+      </p>
+
+      <form id="formCustomEmployee" onsubmit="event.preventDefault(); applyCustomEmployeeData();" style="display: flex; flex-direction: column; gap: 12px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div>
+            <label style="display: block; font-size: 11px; font-weight: 700; color: var(--pr-slate-700); margin-bottom: 4px;">
+              Nama Lengkap Karyawan *
+            </label>
+            <input type="text" id="inpEmpName" required placeholder="Contoh: Ahmad Fauzi" style="width: 100%; padding: 8px 10px; border: 1.5px solid var(--pr-slate-300); border-radius: 7px; font-size: 12.5px; font-weight: 600;">
+          </div>
+          <div>
+            <label style="display: block; font-size: 11px; font-weight: 700; color: var(--pr-slate-700); margin-bottom: 4px;">
+              NIK Karyawan
+            </label>
+            <input type="text" id="inpEmpNik" placeholder="Contoh: EMP-2025-102" style="width: 100%; padding: 8px 10px; border: 1.5px solid var(--pr-slate-300); border-radius: 7px; font-size: 12.5px; font-family: var(--font-mono);">
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div>
+            <label style="display: block; font-size: 11px; font-weight: 700; color: var(--pr-slate-700); margin-bottom: 4px;">
+              Divisi / Departemen *
+            </label>
+            <select id="inpEmpDivisi" style="width: 100%; padding: 8px 10px; border: 1.5px solid var(--pr-slate-300); border-radius: 7px; font-size: 12.5px; font-weight: 600;">
+              <option value="Technology & Engineering">Technology & Engineering</option>
+              <option value="Finance & Accounting">Finance & Accounting</option>
+              <option value="Sales & Marketing">Sales & Marketing</option>
+              <option value="People Operations & HR">People Operations & HR</option>
+              <option value="Operations & Supply Chain">Operations & Supply Chain</option>
+              <option value="Product & Design">Product & Design</option>
+              <option value="General Corporate">General Corporate (Umum)</option>
+            </select>
+          </div>
+          <div>
+            <label style="display: block; font-size: 11px; font-weight: 700; color: var(--pr-slate-700); margin-bottom: 4px;">
+              Posisi / Jabatan *
+            </label>
+            <input type="text" id="inpEmpRole" required placeholder="Contoh: Digital Marketing Specialist" style="width: 100%; padding: 8px 10px; border: 1.5px solid var(--pr-slate-300); border-radius: 7px; font-size: 12.5px;">
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div>
+            <label style="display: block; font-size: 11px; font-weight: 700; color: var(--pr-slate-700); margin-bottom: 4px;">
+              Nama Penilai (Leader/Manager)
+            </label>
+            <input type="text" id="inpEmpLeader" placeholder="Contoh: Siti Rahma" style="width: 100%; padding: 8px 10px; border: 1.5px solid var(--pr-slate-300); border-radius: 7px; font-size: 12.5px;">
+          </div>
+          <div>
+            <label style="display: block; font-size: 11px; font-weight: 700; color: var(--pr-slate-700); margin-bottom: 4px;">
+              Jabatan Penilai
+            </label>
+            <input type="text" id="inpEmpLeaderRole" placeholder="Contoh: Marketing Lead" style="width: 100%; padding: 8px 10px; border: 1.5px solid var(--pr-slate-300); border-radius: 7px; font-size: 12.5px;">
+          </div>
+        </div>
+
+        <div>
+          <label style="display: block; font-size: 11px; font-weight: 700; color: var(--pr-slate-700); margin-bottom: 4px;">
+            Preset Kompetensi Peran (Bagian I) *
+          </label>
+          <select id="inpEmpPreset" style="width: 100%; padding: 8px 10px; border: 1.5px solid var(--pr-slate-300); border-radius: 7px; font-size: 12.5px; font-weight: 600;">
+            <option value="general">1. Standar Korporat Umum (Universal untuk Semua Posisi)</option>
+            <option value="tech">2. Teknologi &amp; Engineering (Software, Arsitektur, Infrastruktur)</option>
+            <option value="finance">3. Finance &amp; Accounting (Audit, Anggaran, Pajak, Pemodelan)</option>
+            <option value="marketing">4. Sales, Marketing &amp; Creative (Kampanye, Insight, Target, Brand)</option>
+            <option value="operations">5. Operations &amp; HR (SLA, Efisiensi Proses, Empathy, SOP)</option>
+          </select>
+          <span style="display: block; margin-top: 4px; font-size: 11px; color: var(--pr-slate-500);">
+            Bagian II akan selalu otomatis memuat 7 Nilai Inti Perusahaan (ELASTIC).
+          </span>
+        </div>
+
+        <div style="background: #F8FAFC; border: 1px solid var(--pr-slate-200); border-radius: 8px; padding: 10px 12px; margin-top: 4px;">
+          <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--pr-slate-700); cursor: pointer; user-select: none;">
+            <input type="checkbox" id="chkResetScores" checked style="width: 15px; height: 15px; accent-color: #2563EB;">
+            <span>Kosongkan semua skor penilaian (0/13) agar siap diisi dari awal</span>
+          </label>
+        </div>
+
+        <div class="pr-modal-btns" style="margin-top: 10px;">
+          <button type="button" class="btn-modal-cancel" onclick="closeEditEmployeeModal()">Batal</button>
+          <button type="submit" class="btn-modal-confirm" style="background: #2563EB; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);">
+            Terapkan ke Formulir &rarr;
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal 1: Peringatan Form Belum Selesai (Incomplete Reminder Modal) -->
+  <div class="pr-modal-overlay" id="incompleteModal">
+    <div class="pr-modal" style="max-width: 520px; text-align: left;">
+      <div style="display: flex; align-items: flex-start; gap: 14px; margin-bottom: 14px;">
+        <div class="pr-modal-icon" style="background: #FEF3C7; color: #D97706; margin: 0; flex-shrink: 0;">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+        </div>
+        <div style="flex: 1;">
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+            <h3 style="margin: 0; font-size: 18px; color: var(--pr-navy-900);">Penilaian Belum Lengkap</h3>
+            <span class="incomplete-badge" id="incompleteCountBadge">3 Butir Belum Diisi</span>
+          </div>
+          <p style="margin: 4px 0 0 0; font-size: 12.5px; color: var(--pr-slate-500); line-height: 1.45;">
+            Masih terdapat butir penilaian atau ulasan yang terlewat. Mohon lengkapi seluruh butir berikut sebelum melakukan submit final:
+          </p>
+        </div>
+      </div>
+
+      <!-- Missing Items List Container -->
+      <div class="incomplete-list-box" id="incompleteListContainer">
+        <!-- Rendered dynamically by JavaScript -->
+      </div>
+
+      <div style="background: #F8FAFC; border: 1px solid var(--pr-slate-200); border-radius: 8px; padding: 10px 12px; margin-bottom: 18px; font-size: 11.5px; color: var(--pr-slate-600); display: flex; align-items: center; gap: 8px;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        <span>Klik pada salah satu butir di atas untuk langsung menuju ke pertanyaan tersebut.</span>
+      </div>
+
+      <div class="pr-modal-btns">
+        <button class="btn-modal-cancel" onclick="closeIncompleteModal()">Tutup &amp; Cek Dulu</button>
+        <button class="btn-modal-confirm" id="btnJumpFirstIncomplete" onclick="jumpToFirstIncomplete()" style="background: #D97706; box-shadow: 0 4px 12px rgba(217, 119, 6, 0.25);">
+          Lengkapi Butir Pertama &rarr;
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirmation Modal -->
+  <div class="pr-modal-overlay" id="confirmModal">
+    <div class="pr-modal">
+      <div class="pr-modal-icon">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      </div>
+      <h3>Konfirmasi Submit Final</h3>
+      <p>Pastikan seluruh penilaian dan ulasan telah akurat. Setelah dikirim, form akan <strong>dikunci permanen</strong> dan diteruskan ke HR di Portal Approver untuk kalibrasi skor akhir.</p>
+      <div class="pr-modal-btns">
+        <button class="btn-modal-cancel" onclick="closeConfirmModal()">Periksa Lagi</button>
+        <button class="btn-modal-confirm" onclick="executeSubmitFinal()">Ya, Kirim Sekarang</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Preset Butir Kompetensi Peran (Bagian I) untuk Berbagai Posisi
+    const competencyPresets = {
+      general: {
+        label: "Standar Korporat Umum (Universal)",
+        items: [
+          { id: "comp_1", name: "1. Kualitas & Akurasi Hasil Kerja", desc: "Ketelitian, ketepatan, dan konsistensi mutu hasil kerja terhadap standar baku perusahaan." },
+          { id: "comp_2", name: "2. Problem Solving & Pemikiran Kritis", desc: "Kemampuan mengidentifikasi akar masalah, menganalisa situasi, dan menawarkan solusi yang efektif." },
+          { id: "comp_3", name: "3. Manajemen Waktu & Keandalan", desc: "Disiplin terhadap timeline dan SLA, komitmen rilis, serta dapat diandalkan dalam tugas kritis." },
+          { id: "comp_4", name: "4. Komunikasi & Keselarasan Tim", desc: "Komunikasi terbuka, aktif berkoordinasi lintas divisi, serta menjaga iklim kerja yang harmonis." },
+          { id: "comp_5", name: "5. Adaptabilitas & Kemauan Belajar", desc: "Cepat menyesuaikan diri terhadap dinamika bisnis, perubahan prioritas, dan antusias mempelajari hal baru." },
+          { id: "comp_6", name: "6. Inisiatif & Ownership", desc: "Proaktif mengambil tindakan tanpa harus selalu menunggu instruksi dan bertanggung jawab atas hasil kerja." }
+        ]
+      },
+      tech: {
+        label: "Teknologi & Engineering",
+        items: [
+          { id: "comp_1", name: "1. Analytical & Adaptability", desc: "Kemampuan menganalisa situasi dan mempertimbangkan solusi secara logis dalam pengembangan teknologi." },
+          { id: "comp_2", name: "2. Attention to Detail & Code Quality", desc: "Ketelitian dalam menjaga standar kode bersih, modular, dan meminimalisir bug atau regresi teknis." },
+          { id: "comp_3", name: "3. System Architecture & Scalability", desc: "Kemampuan merancang infrastruktur sistem yang andal, scalable, dan berperforma tinggi." },
+          { id: "comp_4", name: "4. Technical Leadership & Problem Solving", desc: "Ketangguhan memecahkan incident teknis kritis dan memandu rekan insinyur secara efektif." },
+          { id: "comp_5", name: "5. Code Security & Data Integrity", desc: "Kepatuhan penuh pada keamanan aplikasi, enkripsi data sensitif, dan best practice industri." },
+          { id: "comp_6", name: "6. Mentoring & Knowledge Sharing", desc: "Kepedulian mendokumentasikan best practice dan membimbing anggota tim baru." }
+        ]
+      },
+      finance: {
+        label: "Finance & Accounting",
+        items: [
+          { id: "comp_1", name: "1. Financial Modeling & Forecasting", desc: "Akurasi dalam merancang proyeksi arus kas, analisis variance anggaran, dan pemodelan profitabilitas." },
+          { id: "comp_2", name: "2. Attention to Numerical Detail", desc: "Ketelitian ekstrem dalam audit rekonsiliasi akun, jurnal penyesuaian, dan pencegahan selisih laporan." },
+          { id: "comp_3", name: "3. Budgeting & Cost Control Governance", desc: "Efektivitas monitoring kepatuhan anggaran per divisi dan analisis efisiensi belanja modal (CapEx/OpEx)." },
+          { id: "comp_4", name: "4. Regulatory Compliance & Tax Accuracy", desc: "Kepatuhan penuh terhadap PSAK terbaru, regulasi perpajakan korporasi, dan audit eksternal." },
+          { id: "comp_5", name: "5. Strategic Insight & Decision Support", desc: "Kemampuan menyajikan insight finansial berbasis data bagi jajaran manajemen untuk pertimbangan investasi." },
+          { id: "comp_6", name: "6. Stakeholder Collaboration", desc: "Komunikasi dan diplomasi harmonis dengan pimpinan divisi terkait verifikasi budget dan procurement." }
+        ]
+      },
+      marketing: {
+        label: "Sales, Marketing & Creative",
+        items: [
+          { id: "comp_1", name: "1. Campaign Strategy & Execution", desc: "Kemampuan merancang strategi pemasaran yang terukur dan mengeksekusi kampanye secara presisi." },
+          { id: "comp_2", name: "2. Customer Centricity & Market Insight", desc: "Kepekaan memahami tren pasar, pain point audiens, dan perilaku konsumen untuk memenangkan kompetisi." },
+          { id: "comp_3", name: "3. Commercial Acumen & Target Achievement", desc: "Fokus kuat pada pencapaian target revenue/leads dan optimalisasi alokasi budget marketing." },
+          { id: "comp_4", name: "4. Creative Thinking & Brand Voice", desc: "Inovasi ide kreatif yang orisinal, konsistensi identitas merek, dan resonansi pesan yang kuat." },
+          { id: "comp_5", name: "5. Data Analytics & ROI Optimization", desc: "Kemampuan membaca metrik konversi (CAC, ROAS, LTV) untuk pengambilan keputusan berbasis data." },
+          { id: "comp_6", name: "6. Agility & Speed of Execution", desc: "Kecepatan merespons dinamika pasar, testing ide baru, dan adaptasi taktik secara lincah." }
+        ]
+      },
+      operations: {
+        label: "Operations & HR (People Operations)",
+        items: [
+          { id: "comp_1", name: "1. Service Excellence & SLA Adherence", desc: "Dedikasi melayani pemangku kepentingan internal dengan ramah, solutif, dan tepat waktu sesuai SLA." },
+          { id: "comp_2", name: "2. Process Improvement & Efficiency", desc: "Kemampuan mengeliminasi bottleneck birokrasi dan menyederhanakan alur kerja operasional." },
+          { id: "comp_3", name: "3. Workplace Empathy & People Relations", desc: "Kecerdasan emosional dalam mediasi konflik kerja, mendengarkan masukan, dan membina engagement tim." },
+          { id: "comp_4", name: "4. Crisis & Incident Management", desc: "Ketenangan dan ketegasan dalam menangani kendala mendesak atau situasi darurat operasional." },
+          { id: "comp_5", name: "5. Compliance & SOP Governance", desc: "Kepatuhan konsisten terhadap regulasi ketenagakerjaan, SOP keselamatan, dan kode etik perusahaan." },
+          { id: "comp_6", name: "6. Talent Empowerment & Enablement", desc: "Mendukung pengembangan potensi karyawan dan fasilitasi lingkungan kerja yang produktif." }
+        ]
+      }
+    };
+
+    // Karyawan Data Store with Cryptic Access Tokens
+    const employeesData = {
+      "PR26-8492": {
+        token: "PR26-8492",
+        nik: "EMP-2024-082",
+        nama: "Dimas Ardiansyah",
+        avatar: "DA",
+        avatarBg: "var(--pr-navy-900)",
+        divisi: "Technology & Engineering",
+        jabatan: "Lead System Architect",
+        evaluator: "Budi Pratama, M.Kom",
+        evaluatorTitle: "Head of Engineering",
+        competencies: [
+          { id: "comp_1", name: "1. Analytical & Adaptability", desc: "Kemampuan menganalisa situasi dan mempertimbangkan solusi secara logis dan efektif dalam pekerjaan. Kemampuan belajar dan menyesuaikan diri terhadap perubahan teknologi." },
+          { id: "comp_2", name: "2. Attention to Detail", desc: "Ketelitian dalam bekerja untuk meminimalisir kesalahan dan menjaga kualitas hasil kerja arsitektur sistem." },
+          { id: "comp_3", name: "3. System Architecture & Scalability", desc: "Kemampuan merancang arsitektur sistem backend berdaya tahan tinggi dan performa optimal." },
+          { id: "comp_4", name: "4. Technical Leadership & Problem Solving", desc: "Ketangguhan memecahkan incident teknis kritis dan memandu tim insinyur secara efektif." },
+          { id: "comp_5", name: "5. Code Quality & Security Standards", desc: "Menegakkan standar kode bersih, modular, dan mematuhi best practices keamanan data." },
+          { id: "comp_6", name: "6. Mentoring & Knowledge Sharing", desc: "Kepedulian membimbing junior engineer serta mendokumentasikan best practice teknis." }
+        ],
+        scores: {
+          comp: { comp_1: 100, comp_2: 100, comp_3: 75, comp_4: 100, comp_5: 100, comp_6: 100 },
+          core: { core_1: 100, core_2: 100, core_3: 100, core_4: 100, core_5: 100, core_6: 100, core_7: 100 }
+        },
+        strengths: "Sangat suportif dan selalu bersedia memberikan arahan teknis yang terstruktur saat berhadapan dengan infrastruktur backend kompleks. Memberikan ruang eksplorasi mandiri dan onboarding yang sangat baik bagi anggota tim baru.",
+        improvements: "Kedepannya akan sangat bagus jika pencapaian teknis atau penyelesaian kendala backend yang sulit dari tim bisa lebih sering disorot atau dibagikan ke divisi lain, sehingga kontribusi tim pengembang semakin diakui secara luas di perusahaan.",
+        approverData: {
+          tag: "PANEL KALIBRASI HR #PR26-8492",
+          empTitle: "Hasil Evaluasi Lengkap: Dimas Ardiansyah",
+          leaderName: "Oleh: Budi Pratama (Head of Engineering)",
+          subName: "Oleh: Dimas Ardiansyah",
+          compWeightScore: "96.0 <span style=\"color:var(--pr-slate-400); font-weight:500; margin:0 2px;\">&rarr;</span> 57.6",
+          coreWeightScore: "100.0 <span style=\"color:var(--pr-slate-400); font-weight:500; margin:0 2px;\">&rarr;</span> 40.0",
+          leaderSubtotal: "97.6 / 100",
+          leaderNote: '"Kinerja arsitektur sistem sangat andal, memimpin perbaikan performa API hingga 40% lebih cepat."',
+          upwardNote: '"Arahan teknis sprint sangat jelas, transparan, dan memberikan rasa aman dalam berpendapat."',
+          upwardScore: "95.0 / 100",
+          hrDiscipline: 100,
+          hrCalibNote: "Kinerja dan kepemimpinan teknis terverifikasi sangat memuaskan, kedisiplinan 100%. Direkomendasikan untuk promosi / penyesuaian tier kompetensi periode depan.",
+          officialFinal: "98.0 / 100 (Sangat Baik - Exceeds)"
+        }
+      },
+      "PR26-7319": {
+        token: "PR26-7319",
+        nik: "EMP-2023-045",
+        nama: "Anita Wijaya, S.E.",
+        avatar: "AW",
+        avatarBg: "#0F766E",
+        divisi: "Finance & Accounting",
+        jabatan: "Senior Financial Analyst",
+        evaluator: "Ratna Dewi, Ak., CA",
+        evaluatorTitle: "Finance Director",
+        competencies: [
+          { id: "comp_1", name: "1. Financial Modeling & Forecasting", desc: "Akurasi dalam merancang proyeksi arus kas, analisis variance anggaran, dan pemodelan profitabilitas produk." },
+          { id: "comp_2", name: "2. Attention to Numerical Detail", desc: "Ketelitian ekstrem dalam audit rekonsiliasi akun, jurnal penyesuaian, dan pencegahan selisih laporan keuangan." },
+          { id: "comp_3", name: "3. Budgeting & Cost Control Governance", desc: "Efektivitas monitoring kepatuhan anggaran per divisi dan analisis efisiensi belanja modal (CapEx/OpEx)." },
+          { id: "comp_4", name: "4. Regulatory Compliance & Tax Accuracy", desc: "Kepatuhan penuh terhadap PSAK terbaru, regulasi perpajakan korporasi, dan audit eksternal." },
+          { id: "comp_5", name: "5. Strategic Insight & Decision Support", desc: "Kemampuan menyajikan insight finansial berbasis data bagi jajaran manajemen untuk pertimbangan investasi." },
+          { id: "comp_6", name: "6. Stakeholder Collaboration", desc: "Komunikasi dan diplomasi harmonis dengan pimpinan divisi terkait verifikasi budget dan procurement." }
+        ],
+        scores: {
+          comp: { comp_1: 100, comp_2: 100, comp_3: 100, comp_4: 75, comp_5: 100, comp_6: 100 },
+          core: { core_1: 100, core_2: 100, core_3: 100, core_4: 100, core_5: 100, core_6: 75, core_7: 100 }
+        },
+        strengths: "Akurasi pemodelan anggaran bulanan luar biasa tinggi, tidak pernah ada selisih rekonsiliasi kas, dan sangat proaktif membantu divisi lain memahami alokasi anggaran.",
+        improvements: "Dapat mengembangkan dashboard reporting otomatis berbasis sheet terintegrasi agar user non-finance dapat memantau serapan budget mereka secara mandiri.",
+        approverData: {
+          tag: "PANEL KALIBRASI HR #PR26-7319",
+          empTitle: "Hasil Evaluasi Lengkap: Anita Wijaya, S.E.",
+          leaderName: "Oleh: Ratna Dewi (Finance Director)",
+          subName: "Oleh: Anita Wijaya",
+          compWeightScore: "98.0 <span style=\"color:var(--pr-slate-400); font-weight:500; margin:0 2px;\">&rarr;</span> 58.8",
+          coreWeightScore: "96.0 <span style=\"color:var(--pr-slate-400); font-weight:500; margin:0 2px;\">&rarr;</span> 38.4",
+          leaderSubtotal: "97.2 / 100",
+          leaderNote: '"Sangat teliti, kepatuhan audit 100% clean tanpa temuan, dan komunikasi antar divisi sangat santun."',
+          upwardNote: '"Ibu Ratna selalu memberikan bimbingan regulasi pajak terbaru dengan penuh kesabaran dan kejelasan."',
+          upwardScore: "96.0 / 100",
+          hrDiscipline: 98,
+          hrCalibNote: "Integritas pelaporan keuangan luar biasa, kedisiplinan dan kepatuhan SOP sangat prima. Direkomendasikan sertifikasi Chartered Accountant.",
+          officialFinal: "97.4 / 100 (Sangat Baik - Exceeds)"
+        }
+      },
+      "PR26-BLANK": {
+        token: "PR26-BLANK",
+        nik: "EMP-2026-NEW",
+        nama: "Ahmad Fauzi (Custom Karyawan)",
+        avatar: "AF",
+        avatarBg: "#2563EB",
+        divisi: "Sales & Marketing",
+        jabatan: "Digital Marketing Specialist",
+        evaluator: "Siti Rahma, S.Kom",
+        evaluatorTitle: "Marketing Lead",
+        competenciesPreset: "general",
+        competencies: JSON.parse(JSON.stringify(competencyPresets.general.items)),
+        scores: {
+          comp: { comp_1: 0, comp_2: 0, comp_3: 0, comp_4: 0, comp_5: 0, comp_6: 0 },
+          core: { core_1: 0, core_2: 0, core_3: 0, core_4: 0, core_5: 0, core_6: 0, core_7: 0 }
+        },
+        strengths: "",
+        improvements: "",
+        approverData: {
+          tag: "PANEL KALIBRASI HR #PR26-BLANK",
+          empTitle: "Hasil Evaluasi Lengkap: Ahmad Fauzi",
+          leaderName: "Oleh: Siti Rahma (Marketing Lead)",
+          subName: "Oleh: Ahmad Fauzi",
+          compWeightScore: "0.0 <span style=\"color:var(--pr-slate-400); font-weight:500; margin:0 2px;\">&rarr;</span> 0.0",
+          coreWeightScore: "0.0 <span style=\"color:var(--pr-slate-400); font-weight:500; margin:0 2px;\">&rarr;</span> 0.0",
+          leaderSubtotal: "0.0 / 100",
+          leaderNote: 'Formulir baru sedang dalam proses penilaian.',
+          upwardNote: 'Belum ada ulasan upward feedback.',
+          upwardScore: "0.0 / 100",
+          hrDiscipline: 100,
+          hrCalibNote: "Formulir baru sedang dalam proses penilaian.",
+          officialFinal: "Menunggu Penilaian & Kalibrasi"
+        }
+      }
+    };
+
+    let currentToken = "PR26-8492";
+
+    // Switch between active employees
+    function switchActiveEmployee(token) {
+      if (!employeesData[token]) return;
+      currentToken = token;
+      const emp = employeesData[token];
+
+      // Update sim switcher buttons
+      const bD = document.getElementById('btnEmpDimas');
+      const bA = document.getElementById('btnEmpAnita');
+      const bB = document.getElementById('btnEmpBlank');
+      if (bD && bA) {
+        bD.classList.toggle('active', token === 'PR26-8492');
+        bA.classList.toggle('active', token === 'PR26-7319');
+      }
+      if (bB) {
+        bB.classList.toggle('active', token === 'PR26-BLANK');
+      }
+
+      // Update blank banner visibility
+      const banner = document.getElementById('blankEmployeeBanner');
+      if (banner) {
+        banner.style.display = (token === 'PR26-BLANK') ? 'flex' : 'none';
+      }
+
+      // Update header details
+      const av = document.getElementById('profAvatar');
+      if (av) {
+        av.textContent = emp.avatar;
+        av.style.background = emp.avatarBg;
+      }
+      const nm = document.getElementById('profName');
+      if (nm) nm.textContent = emp.nama;
+      const rl = document.getElementById('profRole');
+      if (rl) rl.textContent = emp.jabatan;
+      const dv = document.getElementById('profDivisi');
+      if (dv) dv.textContent = emp.divisi;
+      const nk = document.getElementById('profNik');
+      if (nk) nk.textContent = "NIK: " + emp.nik;
+      const ev = document.getElementById('profEvaluator');
+      if (ev) ev.innerHTML = "Penilai: <strong>" + emp.evaluator + "</strong> (" + emp.evaluatorTitle + ")";
+      const tk = document.getElementById('profToken');
+      if (tk) tk.textContent = emp.token;
+
+      // Update Competencies list (Bagian I)
+      renderCompetencies(emp);
+      // Update Core Values list (Bagian II)
+      renderCoreValues();
+
+      // Update Feedback (Bagian III)
+      const st = document.getElementById('txtStrengths');
+      if (st) st.value = emp.strengths;
+      const im = document.getElementById('txtImprovements');
+      if (im) im.value = emp.improvements;
+
+      updateProgress();
+    }
+
+    function openEditEmployeeModal() {
+      const emp = employeesData['PR26-BLANK'];
+      document.getElementById('inpEmpName').value = emp.nama.replace(" (Custom Karyawan)", "");
+      document.getElementById('inpEmpNik').value = emp.nik;
+      document.getElementById('inpEmpDivisi').value = emp.divisi;
+      document.getElementById('inpEmpRole').value = emp.jabatan;
+      document.getElementById('inpEmpLeader').value = emp.evaluator;
+      document.getElementById('inpEmpLeaderRole').value = emp.evaluatorTitle;
+      document.getElementById('inpEmpPreset').value = emp.competenciesPreset || 'general';
+      document.getElementById('editEmployeeModal').classList.add('active');
+    }
+
+    function closeEditEmployeeModal() {
+      document.getElementById('editEmployeeModal').classList.remove('active');
+    }
+
+    function applyCustomEmployeeData() {
+      const name = document.getElementById('inpEmpName').value.trim() || 'Karyawan Baru';
+      const nik = document.getElementById('inpEmpNik').value.trim() || 'EMP-2026-NEW';
+      const divisi = document.getElementById('inpEmpDivisi').value;
+      const role = document.getElementById('inpEmpRole').value.trim() || 'Staff';
+      const leader = document.getElementById('inpEmpLeader').value.trim() || 'Direct Supervisor';
+      const leaderRole = document.getElementById('inpEmpLeaderRole').value.trim() || 'Leader';
+      const presetKey = document.getElementById('inpEmpPreset').value;
+      const resetScores = document.getElementById('chkResetScores').checked;
+
+      // Inisial avatar (2 huruf)
+      const nameParts = name.split(' ');
+      const avatar = (nameParts[0][0] + (nameParts[1] ? nameParts[1][0] : nameParts[0][1] || '')).toUpperCase();
+
+      const chosenPreset = competencyPresets[presetKey] || competencyPresets.general;
+
+      const emp = employeesData['PR26-BLANK'];
+      emp.nama = name;
+      emp.nik = nik;
+      emp.divisi = divisi;
+      emp.jabatan = role;
+      emp.evaluator = leader;
+      emp.evaluatorTitle = leaderRole;
+      emp.avatar = avatar;
+      emp.competenciesPreset = presetKey;
+      emp.competencies = JSON.parse(JSON.stringify(chosenPreset.items));
+
+      if (resetScores) {
+        emp.scores.comp = { comp_1: 0, comp_2: 0, comp_3: 0, comp_4: 0, comp_5: 0, comp_6: 0 };
+        emp.scores.core = { core_1: 0, core_2: 0, core_3: 0, core_4: 0, core_5: 0, core_6: 0, core_7: 0 };
+        emp.strengths = "";
+        emp.improvements = "";
+      }
+
+      emp.approverData.empTitle = "Hasil Evaluasi Lengkap: " + name;
+      emp.approverData.leaderName = "Oleh: " + leader + " (" + leaderRole + ")";
+      emp.approverData.subName = "Oleh: " + name;
+
+      // Update directory display card
+      const dName = document.getElementById('dirCustomNameDisplay');
+      if (dName) dName.textContent = name;
+      const dRole = document.getElementById('dirCustomRoleDisplay');
+      if (dRole) dRole.textContent = role + " • " + divisi;
+      const dAvatar = document.getElementById('dirCustomAvatarDisplay');
+      if (dAvatar) dAvatar.textContent = avatar;
+
+      // Update approver table row if present
+      const hbName = document.getElementById('hrBlankName');
+      if (hbName) hbName.textContent = name;
+      const hbNik = document.getElementById('hrBlankNik');
+      if (hbNik) hbNik.textContent = "NIK: " + nik;
+      const hbDiv = document.getElementById('hrBlankDivisi');
+      if (hbDiv) hbDiv.textContent = divisi;
+      const hbRole = document.getElementById('hrBlankRole');
+      if (hbRole) hbRole.textContent = role;
+      const hbLeader = document.getElementById('hrBlankLeader');
+      if (hbLeader) hbLeader.textContent = leader;
+
+      closeEditEmployeeModal();
+
+      // Pindahkan ke form aktif untuk karyawan ini
+      switchActiveEmployee('PR26-BLANK');
+      setSimState('active');
+    }
+
+    function resetBlankFormToZero() {
+      const emp = employeesData['PR26-BLANK'];
+      if (!emp) return;
+      emp.scores.comp = { comp_1: 0, comp_2: 0, comp_3: 0, comp_4: 0, comp_5: 0, comp_6: 0 };
+      emp.scores.core = { core_1: 0, core_2: 0, core_3: 0, core_4: 0, core_5: 0, core_6: 0, core_7: 0 };
+      emp.strengths = "";
+      emp.improvements = "";
+      renderCompetencies(emp);
+      renderCoreValues();
+      const st = document.getElementById('txtStrengths');
+      if (st) st.value = "";
+      const im = document.getElementById('txtImprovements');
+      if (im) im.value = "";
+      updateProgress();
+    }
+
+    const rubricDefinitions = {
+      1: { label: "Kurang", sub: "Tidak memenuhi standar, banyak kesalahan, perlu bimbingan intensif." },
+      2: { label: "Cukup", sub: "Mulai memenuhi, namun masih sering perlu arahan & perbaikan." },
+      3: { label: "Baik", sub: "Sudah sesuai standar, mandiri, hasil kerja konsisten." },
+      4: { label: "Sangat Baik", sub: "Melebihi ekspektasi, proaktif, hasil sangat optimal & berdampak." }
+    };
+
+    const coreValuesList = [
+      { id: "core_1", name: "1. Enthusiasm (E)", desc: "Semangat tinggi dalam bekerja, proaktif, dan membawa energi positif ke lingkungan tim." },
+      { id: "core_2", name: "2. Loving (L)", desc: "Kepedulian terhadap sesama rekan kerja, empati, dan membangun hubungan kerja yang harmonis." },
+      { id: "core_3", name: "3. Adaptive (A)", desc: "Mampu beradaptasi cepat dengan dinamika bisnis, perubahan prioritas, dan tantangan baru." },
+      { id: "core_4", name: "4. Synergistic (S)", desc: "Kolaborasi efektif antar anggota dan lintas divisi untuk mencapai sasaran bersama." },
+      { id: "core_5", name: "5. Trustworthy (T)", desc: "Integritas tinggi, memegang komitmen, dapat diandalkan, dan transparan dalam bekerja." },
+      { id: "core_6", name: "6. Innovative (I)", desc: "Selalu mencari cara kerja yang lebih efisien, kreatif, dan memberikan solusi berdampak." },
+      { id: "core_7", name: "7. Consistent (C)", desc: "Konsisten dalam menjaga mutu hasil kerja, kepatuhan proses, dan kedisiplinan kerja." }
+    ];
+
+    // Opsi 3: Kartu Vertikal + Definisi Langsung (Desain Terpilih)
+    function generateRatingHtml(itemId, category, activeScorePercent) {
+      const scaleMap = { 25: 1, 50: 2, 75: 3, 100: 4 };
+      const activeScale = scaleMap[activeScorePercent] || 0;
+
+      return `
+        <div class="pr-stacked-group">
+          ${[1, 2, 3, 4].map(s => {
+            const isAct = activeScale > 0 && s === activeScale;
+            const pct = s * 25;
+            return `
+              <div class="pr-stacked-row ${isAct ? 'selected' : ''}"
+                   role="button"
+                   tabindex="0"
+                   aria-pressed="${isAct}"
+                   onclick="selectRating('${itemId}', ${s}, ${pct})"
+                   onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectRating('${itemId}', ${s}, ${pct});}">
+                <div class="pr-stacked-radio">
+                  <div class="pr-stacked-radio-inner"></div>
+                </div>
+                <span class="pr-stacked-badge">${s}</span>
+                <span class="pr-stacked-title">${rubricDefinitions[s].label}</span>
+                <span class="pr-stacked-desc">${rubricDefinitions[s].sub}</span>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+
+    // Render 6 competencies for the active employee
+    function renderCompetencies(emp) {
+      const container = document.getElementById('accordionCompBody');
+      if (!container) return;
+
+      const currentScores = emp.scores.comp;
+      let html = '';
+
+      emp.competencies.forEach((comp, idx) => {
+        const scoreVal = currentScores[comp.id] !== undefined ? currentScores[comp.id] : 0;
+        html += `
+          <article class="pr-item-card" data-category="comp" id="itemComp${idx + 1}">
+            <div class="pr-item-top">
+              <div class="pr-item-name">${comp.name}</div>
+              <div class="pr-item-desc">${comp.desc}</div>
+            </div>
+            ${generateRatingHtml(comp.id, 'comp', scoreVal)}
+          </article>
+        `;
+      });
+
+      container.innerHTML = html;
+    }
+
+    // Render 7 ELASTIC core values
+    function renderCoreValues() {
+      const container = document.getElementById('accordionCoreBody');
+      if (!container) return;
+
+      const emp = employeesData[currentToken];
+      const currentScores = emp ? emp.scores.core : {};
+      let html = '';
+
+      coreValuesList.forEach((core, idx) => {
+        const scoreVal = (currentScores && currentScores[core.id] !== undefined) ? currentScores[core.id] : 0;
+        html += `
+          <article class="pr-item-card" data-category="core" id="itemCore${idx + 1}">
+            <div class="pr-item-top">
+              <div class="pr-item-name">${core.name}</div>
+              <div class="pr-item-desc">${core.desc}</div>
+            </div>
+            ${generateRatingHtml(core.id, 'core', scoreVal)}
+          </article>
+        `;
+      });
+
+      container.innerHTML = html;
+    }
+
+    // Tester: Try unlocking with input
+    function testUnlockFromInput() {
+      const inp = document.getElementById('inputCrypticCode');
+      const fb = document.getElementById('crypticFeedback');
+      if (!inp) return;
+      const val = inp.value.trim().toUpperCase();
+
+      if (employeesData[val]) {
+        fb.style.display = 'block';
+        fb.style.background = '#ECFDF5';
+        fb.style.color = '#065F46';
+        fb.innerHTML = '<span style="display:inline-flex;align-items:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> <span><strong>Autentikasi Berhasil</strong> &bull; Membuka lembar evaluasi ' + employeesData[val].nama + '...</span></span>';
+        setTimeout(() => {
+          fb.style.display = 'none';
+          unlockAndOpenEmployee(val);
+        }, 600);
+      } else {
+        fb.style.display = 'block';
+        fb.style.background = '#FEF2F2';
+        fb.style.color = '#991B1B';
+        fb.innerHTML = '<span style="display:inline-flex;align-items:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg> <span><strong>Akses Ditolak</strong> &bull; Kode akses "' + val + '" tidak terdaftar dalam siklus evaluasi ini.</span></span>';
+      }
+    }
+
+    function quickFillToken(token) {
+      const inp = document.getElementById('inputCrypticCode');
+      if (inp) inp.value = token;
+      testUnlockFromInput();
+    }
+
+    function unlockAndOpenEmployee(token) {
+      switchActiveEmployee(token);
+      setSimState('active');
+    }
+
+    // Rubric Detail Toggle
+    function toggleRubricDetails() {
+      const card = document.getElementById('rubricCard');
+      const btn = document.getElementById('rubricToggleText');
+      if (card && btn) {
+        card.classList.toggle('is-compact');
+        btn.textContent = card.classList.contains('is-compact') ? 'Detail Kriteria' : 'Ringkas';
+      }
+    }
+
+    // Accordion Toggle Logic
+    function toggleSection(secId) {
+      const sec = document.getElementById(secId);
+      if (sec) sec.classList.toggle('is-open');
+    }
+
+    let allOpen = true;
+    function toggleAllSections() {
+      allOpen = !allOpen;
+      const sections = ['secComp', 'secCore', 'secFeedback'];
+      sections.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          if (allOpen) el.classList.add('is-open');
+          else el.classList.remove('is-open');
+        }
+      });
+      document.getElementById('toggleAllLabel').textContent = allOpen ? 'Tutup Semua' : 'Buka Semua';
+    }
+
+    function selectRating(itemId, scaleNum, scorePercent) {
+      const isComp = itemId.startsWith('comp');
+      const cat = isComp ? 'comp' : 'core';
+      
+      const emp = employeesData[currentToken];
+      if (emp) {
+        emp.scores[cat][itemId] = scorePercent;
+      }
+
+      if (isComp) {
+        renderCompetencies(emp);
+      } else {
+        renderCoreValues();
+      }
+
+      updateProgress();
+    }
+
+    function updateProgress() {
+      const emp = employeesData[currentToken];
+      if (!emp) return;
+
+      let compFilled = 0;
+      emp.competencies.forEach(comp => {
+        if (emp.scores.comp[comp.id] && emp.scores.comp[comp.id] > 0) compFilled++;
+      });
+
+      let coreFilled = 0;
+      coreValuesList.forEach(core => {
+        if (emp.scores.core[core.id] && emp.scores.core[core.id] > 0) coreFilled++;
+      });
+
+      const totalCount = compFilled + coreFilled; // 13 total
+
+      const cornerVal = document.getElementById('cornerProgressVal');
+      if (cornerVal) {
+        cornerVal.textContent = totalCount + ' / 13 Selesai';
+      }
+
+      const ring = document.getElementById('cornerRingFg');
+      if (ring) {
+        const circumference = 75.4;
+        const offset = circumference - (circumference * (totalCount / 13));
+        ring.style.strokeDashoffset = offset;
+      }
+
+      // Update Section Header status chips
+      const statusComp = document.getElementById('statusSecComp');
+      if (statusComp) {
+        if (compFilled === emp.competencies.length) {
+          statusComp.className = 'accordion-status-chip chip-complete';
+          statusComp.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> ' + compFilled + ' / ' + emp.competencies.length + ' Lengkap';
+        } else {
+          statusComp.className = 'accordion-status-chip chip-incomplete';
+          statusComp.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> ' + compFilled + ' / ' + emp.competencies.length + ' Terisi';
+        }
+      }
+
+      const statusCore = document.getElementById('statusSecCore');
+      if (statusCore) {
+        if (coreFilled === coreValuesList.length) {
+          statusCore.className = 'accordion-status-chip chip-complete';
+          statusCore.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> ' + coreFilled + ' / ' + coreValuesList.length + ' Lengkap';
+        } else {
+          statusCore.className = 'accordion-status-chip chip-incomplete';
+          statusCore.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> ' + coreFilled + ' / ' + coreValuesList.length + ' Terisi';
+        }
+      }
+
+      const statusFeedback = document.getElementById('statusSecFeedback');
+      if (statusFeedback) {
+        const st = document.getElementById('txtStrengths');
+        const im = document.getElementById('txtImprovements');
+        const hasFeedback = (st && st.value.trim().length > 0) && (im && im.value.trim().length > 0);
+        if (hasFeedback) {
+          statusFeedback.className = 'accordion-status-chip chip-complete';
+          statusFeedback.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Lengkap';
+        } else {
+          statusFeedback.className = 'accordion-status-chip chip-incomplete';
+          statusFeedback.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> Belum Lengkap';
+        }
+      }
+    }
+
+    // Incomplete Validation & Reminder Modal Logic
+    let lastMissingItems = [];
+
+    function checkFormCompleteness() {
+      const emp = employeesData[currentToken];
+      if (!emp) return [];
+      const missing = [];
+
+      // Bagian I: Kompetensi (6 butir)
+      emp.competencies.forEach((comp, idx) => {
+        const score = emp.scores.comp[comp.id];
+        if (!score || score <= 0) {
+          missing.push({
+            category: 'Bagian I: Kompetensi',
+            title: comp.name,
+            sectionId: 'secComp',
+            elementId: 'itemComp' + (idx + 1)
+          });
+        }
+      });
+
+      // Bagian II: Nilai ELASTIC (7 butir)
+      coreValuesList.forEach((core, idx) => {
+        const score = emp.scores.core[core.id];
+        if (!score || score <= 0) {
+          missing.push({
+            category: 'Bagian II: Nilai ELASTIC',
+            title: core.name,
+            sectionId: 'secCore',
+            elementId: 'itemCore' + (idx + 1)
+          });
+        }
+      });
+
+      // Bagian III: Ulasan Kualitatif 360°
+      const stEl = document.getElementById('txtStrengths');
+      const imEl = document.getElementById('txtImprovements');
+      const stVal = stEl ? stEl.value.trim() : '';
+      const imVal = imEl ? imEl.value.trim() : '';
+
+      if (!stVal) {
+        missing.push({
+          category: 'Bagian III: Ulasan 360°',
+          title: 'Strengths (Kekuatan & Hal Positif)',
+          sectionId: 'secFeedback',
+          elementId: 'txtStrengths'
+        });
+      }
+      if (!imVal) {
+        missing.push({
+          category: 'Bagian III: Ulasan 360°',
+          title: 'Areas for Improvement (Area Pengembangan)',
+          sectionId: 'secFeedback',
+          elementId: 'txtImprovements'
+        });
+      }
+
+      return missing;
+    }
+
+    function handleSubmitButtonClick() {
+      const missing = checkFormCompleteness();
+      if (missing.length > 0) {
+        openIncompleteModal(missing);
+      } else {
+        openConfirmModal();
+      }
+    }
+
+    function openIncompleteModal(missingList) {
+      lastMissingItems = missingList;
+      const badge = document.getElementById('incompleteCountBadge');
+      if (badge) {
+        badge.textContent = missingList.length + ' Butir Belum Diisi';
+      }
+
+      const container = document.getElementById('incompleteListContainer');
+      if (container) {
+        container.innerHTML = missingList.map(item => `
+          <div class="incomplete-item-row" onclick="jumpToMissingItem('${item.sectionId}', '${item.elementId}')">
+            <div class="incomplete-item-info">
+              <span class="incomplete-item-cat">${item.category}</span>
+              <span class="incomplete-item-title">${item.title}</span>
+            </div>
+            <button type="button" class="btn-jump-item" onclick="event.stopPropagation(); jumpToMissingItem('${item.sectionId}', '${item.elementId}')">
+              Isi Sekarang &rarr;
+            </button>
+          </div>
+        `).join('');
+      }
+
+      const modal = document.getElementById('incompleteModal');
+      if (modal) modal.classList.add('active');
+    }
+
+    function closeIncompleteModal() {
+      const modal = document.getElementById('incompleteModal');
+      if (modal) modal.classList.remove('active');
+    }
+
+    function jumpToFirstIncomplete() {
+      if (lastMissingItems && lastMissingItems.length > 0) {
+        const first = lastMissingItems[0];
+        jumpToMissingItem(first.sectionId, first.elementId);
+      } else {
+        closeIncompleteModal();
+      }
+    }
+
+    function jumpToMissingItem(sectionId, elementId) {
+      closeIncompleteModal();
+
+      // Buka accordion bila tertutup
+      const sec = document.getElementById(sectionId);
+      if (sec && !sec.classList.contains('is-open')) {
+        sec.classList.add('is-open');
+      }
+
+      setTimeout(() => {
+        const el = document.getElementById(elementId);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          el.classList.add('item-highlight-pulse');
+          if (el.tagName === 'TEXTAREA' || el.tagName === 'INPUT') {
+            el.focus();
+          }
+          setTimeout(() => {
+            el.classList.remove('item-highlight-pulse');
+          }, 3200);
+        }
+      }, 150);
+    }
+
+    let isIncompleteSimActive = false;
+    function simulateIncompleteState() {
+      const emp = employeesData[currentToken];
+      if (!emp) return;
+
+      if (!isIncompleteSimActive) {
+        // Kosongkan 3 butir: 2 kompetensi dan 1 core value
+        emp.scores.comp['comp_3'] = 0;
+        emp.scores.comp['comp_5'] = 0;
+        emp.scores.core['core_4'] = 0;
+        isIncompleteSimActive = true;
+
+        renderCompetencies(emp);
+        renderCoreValues();
+        updateProgress();
+
+        // Buka langsung modal reminder agar tester dapat langsung melihatnya
+        const missing = checkFormCompleteness();
+        openIncompleteModal(missing);
+
+        const btn = document.querySelector('.btn-test-incomplete');
+        if (btn) {
+          btn.innerHTML = '🔄 Pulihkan Semua Terisi (100%)';
+          btn.style.background = '#ECFDF5';
+          btn.style.borderColor = '#A7F3D0';
+          btn.style.color = '#065F46';
+        }
+      } else {
+        // Pulihkan nilai semula
+        emp.scores.comp['comp_3'] = 75;
+        emp.scores.comp['comp_5'] = 100;
+        emp.scores.core['core_4'] = 100;
+        isIncompleteSimActive = false;
+
+        renderCompetencies(emp);
+        renderCoreValues();
+        updateProgress();
+
+        const btn = document.querySelector('.btn-test-incomplete');
+        if (btn) {
+          btn.innerHTML = '⚡ Tes: Kosongkan 3 Butir';
+          btn.style.background = '#FEF3C7';
+          btn.style.borderColor = '#FCD34D';
+          btn.style.color = '#92400E';
+        }
+      }
+    }
+
+    // Approver Hub calibration loader
+    function loadApproverCalibration(token) {
+      const emp = employeesData[token];
+      if (!emp || !emp.approverData) return;
+      const d = emp.approverData;
+
+      // Update active row highlight in table
+      const rD = document.getElementById('hrRowDimas');
+      const rA = document.getElementById('hrRowAnita');
+      const rB = document.getElementById('hrRowBlank');
+      if (rD && rA) {
+        rD.style.background = (token === 'PR26-8492') ? '#F8FAFC' : '#FFFFFF';
+        rA.style.background = (token === 'PR26-7319') ? '#F0FDF4' : '#FFFFFF';
+      }
+      if (rB) {
+        rB.style.background = (token === 'PR26-BLANK') ? '#EFF6FF' : '#FFFFFF';
+      }
+
+      const tag = document.getElementById('calibTag');
+      if (tag) tag.textContent = d.tag;
+      const name = document.getElementById('calibEmpName');
+      if (name) name.textContent = d.empTitle;
+      const lName = document.getElementById('calibLeaderName');
+      if (lName) lName.textContent = d.leaderName;
+      const sName = document.getElementById('calibSubordinateName');
+      if (sName) sName.textContent = d.subName;
+      const lScore = document.getElementById('calibLeaderScore');
+      if (lScore) lScore.innerHTML = d.compWeightScore;
+      const cScore = document.getElementById('calibCoreScore');
+      if (cScore) cScore.innerHTML = d.coreWeightScore;
+      const subScore = document.getElementById('calibSubtotalScore');
+      if (subScore) subScore.textContent = d.leaderSubtotal;
+      const lNote = document.getElementById('calibLeaderNote');
+      if (lNote) lNote.textContent = d.leaderNote;
+      const upScore = document.getElementById('calibUpwardScore');
+      if (upScore) upScore.textContent = d.upwardScore;
+      const upNote = document.getElementById('calibUpwardNote');
+      if (upNote) upNote.textContent = d.upwardNote;
+      const disInp = document.getElementById('calibDisciplineInput');
+      if (disInp) disInp.value = d.hrDiscipline;
+      const hrNote = document.getElementById('calibHrNote');
+      if (hrNote) hrNote.value = d.hrCalibNote;
+      const fin = document.getElementById('calibOfficialFinal');
+      if (fin) fin.textContent = d.officialFinal;
+
+      const box = document.querySelector('.calibration-box');
+      if (box) box.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // Modal Handlers
+    function openConfirmModal() {
+      document.getElementById('confirmModal').classList.add('active');
+    }
+    function closeConfirmModal() {
+      document.getElementById('confirmModal').classList.remove('active');
+    }
+    function executeSubmitFinal() {
+      closeConfirmModal();
+      setSimState('submitted');
+    }
+
+    // Simulation States (Directory, Active, Expired, Submitted, Approver)
+    function setSimState(state) {
+      document.getElementById('simModeDirectory').classList.toggle('active', state === 'directory');
+      document.getElementById('simModeActive').classList.toggle('active', state === 'active');
+      document.getElementById('simModeExpired').classList.toggle('active', state === 'expired');
+      document.getElementById('simModeSubmitted').classList.toggle('active', state === 'submitted');
+      document.getElementById('simModeApprover').classList.toggle('active', state === 'approver');
+
+      document.getElementById('screenDirectory').style.display = (state === 'directory') ? 'flex' : 'none';
+      document.getElementById('screenActive').style.display = (state === 'active') ? 'block' : 'none';
+      document.getElementById('screenExpired').style.display = (state === 'expired') ? 'block' : 'none';
+      document.getElementById('screenSubmitted').style.display = (state === 'submitted') ? 'block' : 'none';
+      document.getElementById('screenApprover').style.display = (state === 'approver') ? 'block' : 'none';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Live Clock countdown simulator
+    setInterval(() => {
+      const s = document.getElementById('timerSecs');
+      if (s) {
+        let val = parseInt(s.textContent, 10);
+        val = (val <= 0) ? 59 : val - 1;
+        s.textContent = (val < 10 ? '0' : '') + val;
+      }
+    }, 1000);
+
+    // Initial render
+    switchActiveEmployee('PR26-8492');
+    setSimState('active');
+  </script>
+</body>
+</html>

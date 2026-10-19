@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pratinjau Desain: Learning Wall & Knowledge Sharing TDS</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    :root {
+      --ink: #1F2421;
+      --ink-soft: #48544C;
+      --ink-faint: #758379;
+      --paper: #FAF9F5;
+      --panel-solid: #FFFFFF;
+      --sand-panel: #FAF9F5;
+      --line: rgba(31, 36, 33, 0.12);
+      --line-strong: rgba(31, 36, 33, 0.22);
+      --accent: #3F5A44;
+      --accent-dark: #2D4331;
+      --accent-tint: rgba(63, 90, 68, 0.08);
+      --accent-tint-strong: rgba(63, 90, 68, 0.15);
+      --accent-gold: #B78628;
+      --accent-gold-tint: rgba(183, 134, 40, 0.10);
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 14px;
+    }
+
+    body {
+      background: #F8F9FA;
+      color: var(--ink);
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      margin: 0;
+      padding: 30px 16px 80px;
+      line-height: 1.5;
+    }
+
+    .preview-shell {
+      max-width: 1040px;
+      margin: 0 auto;
+    }
+
+    /* Top Context Notice Banner (Matching TDS Preview Style) */
+    .preview-header-banner {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      padding: 14px 18px;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .preview-header-banner .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11.5px;
+      font-weight: 700;
+      background: #FFFFFF;
+      color: var(--accent-dark);
+      padding: 4px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--line);
+    }
+
+    .preview-header-banner .meta {
+      font-size: 13px;
+      color: var(--ink-soft);
+    }
+
+    /* Header Section */
+    .wall-hero {
+      margin-bottom: 26px;
+    }
+
+    .wall-kicker {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--accent-gold);
+      margin: 0 0 4px;
+    }
+
+    .wall-title {
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--ink);
+      margin: 0 0 6px;
+      letter-spacing: -0.3px;
+    }
+
+    .wall-desc {
+      font-size: 14px;
+      color: var(--ink-soft);
+      margin: 0;
+      max-width: 720px;
+    }
+
+    /* Layout 2 Kolom: Kiri Feed, Kanan Simulasi Form Input */
+    .wall-grid {
+      display: grid;
+      grid-template-columns: 1.65fr 1.15fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    @media (max-width: 880px) {
+      .wall-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Filter Bar */
+    .wall-filters {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 18px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+
+    .filter-btn {
+      background: var(--sand-panel);
+      border: 1px solid var(--line);
+      color: var(--ink-soft);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s ease;
+    }
+
+    .filter-btn:hover {
+      border-color: var(--accent);
+      color: var(--ink);
+      background: #FFFFFF;
+    }
+
+    .filter-btn.active {
+      background: var(--accent-dark);
+      color: #FFFFFF;
+      border-color: var(--accent-dark);
+      box-shadow: 0 2px 6px rgba(0, 23, 143, 0.2);
+    }
+
+    /* Feed Container */
+    .feed-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* Card Feed */
+    .wall-card {
+      background: var(--panel-solid);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      padding: 22px;
+      box-shadow: 0 2px 8px rgba(0, 23, 143, 0.04);
+      transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+      position: relative;
+    }
+
+    .wall-card:hover {
+      border-color: var(--accent);
+      box-shadow: 0 6px 20px rgba(0, 23, 143, 0.08);
+      transform: translateY(-1px);
+    }
+
+    .wall-card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .author-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .author-avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background: var(--accent-tint);
+      color: var(--accent-dark);
+      font-weight: 700;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      border: 1px solid rgba(0, 23, 143, 0.12);
+    }
+
+    .author-avatar.anon {
+      background: var(--sand-panel);
+      color: var(--ink-soft);
+      border-color: var(--line);
+    }
+
+    .author-name {
+      font-size: 14.5px;
+      font-weight: 700;
+      color: var(--ink);
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .author-dept {
+      font-size: 12px;
+      color: var(--ink-soft);
+      margin-top: 1px;
+    }
+
+    .training-tag-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--accent-dark);
+      background: var(--accent-tint);
+      padding: 4px 10px;
+      border-radius: 6px;
+      text-decoration: none;
+      max-width: 210px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      border: 1px solid rgba(75, 150, 255, 0.15);
+    }
+
+    /* Content Area */
+    .wall-card-quote {
+      font-size: 14px;
+      color: var(--ink);
+      line-height: 1.6;
+      margin: 0 0 14px;
+    }
+
+    .wall-card-takeaway {
+      background: var(--sand-panel);
+      border-left: 3px solid var(--accent-dark);
+      padding: 11px 14px;
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      margin-bottom: 16px;
+      font-size: 13px;
+      color: var(--ink-soft);
+      line-height: 1.5;
+    }
+
+    .wall-card-takeaway strong {
+      color: var(--ink);
+      display: block;
+      margin-bottom: 2px;
+      font-size: 11.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Reactions & Meta */
+    .wall-card-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding-top: 12px;
+      border-top: 1px solid var(--line);
+      flex-wrap: wrap;
+    }
+
+    .wall-reactions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-reaction {
+      background: var(--sand-panel);
+      border: 1px solid var(--line);
+      color: var(--ink-soft);
+      border-radius: 8px;
+      padding: 5px 11px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.12s ease;
+    }
+
+    .btn-reaction:hover {
+      background: #FFFFFF;
+      border-color: var(--accent);
+      color: var(--ink);
+    }
+
+    .btn-reaction.reacted {
+      background: var(--accent-tint);
+      border-color: var(--accent-dark);
+      color: var(--accent-dark);
+      font-weight: 700;
+    }
+
+    .post-timestamp {
+      font-size: 11.5px;
+      color: var(--ink-faint);
+      font-family: monospace;
+      font-weight: 600;
+    }
+
+    /* Panel Kanan: Simulasi Quick-Share Form (Matching TDS Accent Card) */
+    .sim-panel {
+      background: var(--panel-solid);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      box-shadow: 0 4px 16px rgba(0, 23, 143, 0.04);
+      border-top: 4px solid var(--accent);
+      position: sticky;
+      top: 24px;
+    }
+
+    .sim-panel-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--ink);
+      margin: 0 0 4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sim-panel-subtitle {
+      font-size: 12.5px;
+      color: var(--ink-soft);
+      margin: 0 0 18px;
+      line-height: 1.45;
+    }
+
+    .sim-form-group {
+      margin-bottom: 14px;
+    }
+
+    .sim-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: 5px;
+    }
+
+    .sim-input,
+    .sim-select,
+    .sim-textarea {
+      width: 100%;
+      padding: 10px 13px;
+      border: 1.5px solid var(--line);
+      border-radius: var(--radius-sm);
+      font-size: 13.5px;
+      font-family: inherit;
+      background: #FFFFFF;
+      color: var(--ink);
+      box-sizing: border-box;
+      outline: none;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .sim-input:focus,
+    .sim-select:focus,
+    .sim-textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-tint);
+    }
+
+    .sim-textarea {
+      resize: vertical;
+      min-height: 84px;
+      line-height: 1.5;
+    }
+
+    /* Toggle Identitas */
+    .identity-selector {
+      background: var(--sand-panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      padding: 11px 13px;
+      margin-bottom: 18px;
+    }
+
+    .identity-option {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      cursor: pointer;
+      font-size: 12.5px;
+      margin-bottom: 8px;
+    }
+
+    .identity-option:last-child {
+      margin-bottom: 0;
+    }
+
+    .identity-option input[type="radio"] {
+      margin-top: 3px;
+      accent-color: var(--accent-dark);
+    }
+
+    .identity-text strong {
+      color: var(--ink);
+      display: block;
+      font-size: 12.5px;
+    }
+
+    .identity-text span {
+      color: var(--ink-soft);
+      font-size: 11px;
+    }
+
+    .btn-submit-insight {
+      width: 100%;
+      background: var(--accent-dark);
+      color: #FFFFFF;
+      border: none;
+      padding: 11px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 13.5px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 2px 8px rgba(0, 23, 143, 0.2);
+      transition: all 0.15s ease;
+    }
+
+    .btn-submit-insight:hover {
+      background: #001270;
+      box-shadow: 0 4px 12px rgba(0, 23, 143, 0.28);
+    }
+
+    .sim-info-footer {
+      margin-top: 16px;
+      padding-top: 14px;
+      border-top: 1px dashed var(--line);
+      font-size: 11.5px;
+      color: var(--ink-faint);
+      line-height: 1.45;
+      display: flex;
+      gap: 8px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="preview-shell">
+    
+    <!-- Top Context Banner -->
+    <div class="preview-header-banner">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span class="badge">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+          Pratinjau Desain TDS
+        </span>
+        <span class="meta">Pratinjau antarmuka <strong>Learning Wall</strong> dengan palet resmi TDS (Deep Blue Ink &amp; Accent Soft Blue).</span>
+      </div>
+      <div>
+        <a href="preview-learning-passport.html" style="font-size:12.5px;color:var(--ink);text-decoration:none;font-weight:600;display:inline-flex;align-items:center;gap:4px;">
+          <span>Lihat Learning Passport</span>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+        </a>
+      </div>
+    </div>
+
+    <!-- Header Section -->
+    <header class="wall-hero">
+      <p class="wall-kicker">Knowledge Sharing &amp; Peer Insights</p>
+      <h1 class="wall-title">Learning Wall</h1>
+      <p class="wall-desc">Ruang berbagi intisari materi, tips praktis, dan pengalaman nyata dari rekan-rekan yang baru saja menyelesaikan pelatihan di TDS.</p>
+    </header>
+
+    <!-- Main 2-Column Workspace -->
+    <div class="wall-grid">
+      
+      <!-- KOLOM KIRI: The Feed & Filters -->
+      <section>
+        
+        <!-- Filter Kategori Departemen / Topik -->
+        <div class="wall-filters">
+          <button class="filter-btn active" onclick="filterWall('all', this)">Semua Insight</button>
+          <button class="filter-btn" onclick="filterWall('IT', this)">Teknologi &amp; Dev</button>
+          <button class="filter-btn" onclick="filterWall('QA', this)">Quality Assurance</button>
+          <button class="filter-btn" onclick="filterWall('Finance', this)">Finance &amp; Pajak</button>
+          <button class="filter-btn" onclick="filterWall('CX', this)">Customer Experience</button>
+        </div>
+
+        <!-- Daftar Card Feed -->
+        <div class="feed-list" id="feedList">
+          
+          <!-- POST 1: Budi Santoso (Web Dev) -->
+          <article class="wall-card" data-dept="IT">
+            <div class="wall-card-header">
+              <div class="author-info">
+                <div class="author-avatar">BS</div>
+                <div>
+                  <h3 class="author-name">Budi Santoso</h3>
+                  <div class="author-dept">Web Developer &bull; Selesai 2 hari lalu</div>
+                </div>
+              </div>
+              <span class="training-tag-pill" title="Workshop Golang Backend Performance">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                Golang Backend Performance
+              </span>
+            </div>
+
+            <p class="wall-card-quote">
+              Materi goroutine pool kemarin langsung kita coba terapkan di service sync database internal. Ternyata alokasi memory turun hampir 40% cuma dengan membatasi worker concurrency secara terukur, bukan spawn goroutine liar di setiap HTTP request.
+            </p>
+
+            <div class="wall-card-takeaway">
+              <strong>Tips Praktis yang Bisa Dicoba Rekan Tim:</strong>
+              Selalu gunakan buffered channel worker pattern saat mengolah batch query di atas 10.000 rows agar heap memory stabil.
+            </div>
+
+            <div class="wall-card-meta">
+              <div class="wall-reactions">
+                <button class="btn-reaction" onclick="toggleReaction(this)">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                  <span>Bermanfaat</span>
+                  <span class="count">14</span>
+                </button>
+                <button class="btn-reaction" onclick="toggleReaction(this)">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg>
+                  <span>Mau Coba</span>
+                  <span class="count">8</span>
+                </button>
+              </div>
+              <span class="post-timestamp">TRN-20261004-IT-01</span>
+            </div>
+          </article>
+
+          <!-- POST 2: Siti Rahmawati (QA) -->
+          <article class="wall-card" data-dept="QA">
+            <div class="wall-card-header">
+              <div class="author-info">
+                <div class="author-avatar">SR</div>
+                <div>
+                  <h3 class="author-name">Siti Rahmawati</h3>
+                  <div class="author-dept">QA Automation &bull; Selesai 3 hari lalu</div>
+                </div>
+              </div>
+              <span class="training-tag-pill" title="End-to-End Testing dengan Playwright">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                E2E Testing Playwright
+              </span>
+            </div>
+
+            <p class="wall-card-quote">
+              Insight terbesar dari sesi ini adalah fitur tracing &amp; auto-waiting Playwright. Kita tidak butuh lagi `sleep()` atau `waitForTimeout()` manual yang bikin test flacky. Script test yang tadinya sering gagal sendiri di CI/CD sekarang 100% konsisten hijau.
+            </p>
+
+            <div class="wall-card-takeaway">
+              <strong>Tips Praktis yang Bisa Dicoba Rekan Tim:</strong>
+              Gunakan mode `trace: 'on-first-retry'` di file konfigurasi Playwright supaya bisa memutar video rekaman klik persis saat ada test yang fail.
+            </div>
+
+            <div class="wall-card-meta">
+              <div class="wall-reactions">
+                <button class="btn-reaction reacted" onclick="toggleReaction(this)">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                  <span>Bermanfaat</span>
+                  <span class="count">21</span>
+                </button>
+                <button class="btn-reaction" onclick="toggleReaction(this)">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg>
+                  <span>Mau Coba</span>
+                  <span class="count">11</span>
+                </button>
+              </div>
+              <span class="post-timestamp">TRN-20260928-QA-02</span>
+            </div>
+          </article>
+
+          <!-- POST 3: Anonim Rekan Finance -->
+          <article class="wall-card" data-dept="Finance">
+            <div class="wall-card-header">
+              <div class="author-info">
+                <div class="author-avatar anon">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                </div>
+                <div>
+                  <h3 class="author-name">Alumni Tim Finance</h3>
+                  <div class="author-dept">Departemen Finance &bull; Selesai 5 hari lalu</div>
+                </div>
+              </div>
+              <span class="training-tag-pill" title="Workshop Pemodelan Cashflow Excel Lanjutan">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                Pemodelan Cashflow Excel
+              </span>
+            </div>
+
+            <p class="wall-card-quote">
+              Ternyata kombinasi fungsi `XLOOKUP` dengan dynamic array `LAMBDA` bisa memangkas rumus panjang bertingkat yang rawan error saat rekapitulasi budget bulanan. Template audit yang tadinya butuh 3 jam, sekarang selesai di bawah 30 menit.
+            </p>
+
+            <div class="wall-card-takeaway">
+              <strong>Tips Praktis yang Bisa Dicoba Rekan Tim:</strong>
+              Hindari hardcode range pada formula Excel, ubah seluruh data transaksi menjadi format Tabel resmi (`Ctrl + T`) agar rumus ekspansi otomatis.
+            </div>
+
+            <div class="wall-card-meta">
+              <div class="wall-reactions">
+                <button class="btn-reaction" onclick="toggleReaction(this)">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                  <span>Bermanfaat</span>
+                  <span class="count">19</span>
+                </button>
+                <button class="btn-reaction" onclick="toggleReaction(this)">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg>
+                  <span>Mau Coba</span>
+                  <span class="count">15</span>
+                </button>
+              </div>
+              <span class="post-timestamp">TRN-20260920-FIN-01</span>
+            </div>
+          </article>
+
+          <!-- POST 4: Rian Pratama (Customer Experience) -->
+          <article class="wall-card" data-dept="CX">
+            <div class="wall-card-header">
+              <div class="author-info">
+                <div class="author-avatar">RP</div>
+                <div>
+                  <h3 class="author-name">Rian Pratama</h3>
+                  <div class="author-dept">Customer Experience &bull; Selesai 1 minggu lalu</div>
+                </div>
+              </div>
+              <span class="training-tag-pill" title="Komunikasi Empatik &amp; De-eskalasi Masalah Klien">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                Komunikasi Empatik Klien
+              </span>
+            </div>
+
+            <p class="wall-card-quote">
+              Kunci utama saat menghadapi klien yang sedang marah bukan langsung memberi bantahan teknis, melainkan melakukan validasi emosi dulu selama 60 detik pertama ("Saya paham situasi ini menghambat operasional bapak..."). Begitu tensi turun, baru tawarkan 2 opsi solusi konkret.
+            </p>
+
+            <div class="wall-card-takeaway">
+              <strong>Tips Praktis yang Bisa Dicoba Rekan Tim:</strong>
+              Gunakan teknik LASR: Listen (dengar tanpa potong) &rarr; Acknowledge (akui dampak masalahnya) &rarr; Solve (berikan tindakan) &rarr; Reassure (beri estimasi waktu update).
+            </div>
+
+            <div class="wall-card-meta">
+              <div class="wall-reactions">
+                <button class="btn-reaction" onclick="toggleReaction(this)">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                  <span>Bermanfaat</span>
+                  <span class="count">27</span>
+                </button>
+                <button class="btn-reaction" onclick="toggleReaction(this)">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg>
+                  <span>Mau Coba</span>
+                  <span class="count">9</span>
+                </button>
+              </div>
+              <span class="post-timestamp">TRN-20260914-CX-03</span>
+            </div>
+          </article>
+
+        </div>
+      </section>
+
+      <!-- KOLOM KANAN: Simulasi Pengisian Tanpa Login (Zero-Friction Sharing) -->
+      <aside>
+        <div class="sim-panel">
+          <h2 class="sim-panel-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+            <span>Simulasi Kirim Insight</span>
+          </h2>
+          <p class="sim-panel-subtitle">
+            Begini tampilan form ringan saat karyawan berbagi intisari (tanpa perlu buat akun/login):
+          </p>
+
+          <form id="simPostForm" onsubmit="event.preventDefault(); submitSimulatedPost();">
+            
+            <!-- Identitas Diri (Auto-terisi dari session/localStorage) -->
+            <div class="sim-form-group">
+              <label class="sim-label" for="simName">Nama Peserta / Email Kantor</label>
+              <input type="text" id="simName" class="sim-input" value="Budi Santoso" placeholder="Nama Anda...">
+            </div>
+
+            <div class="sim-form-group">
+              <label class="sim-label" for="simDept">Departemen</label>
+              <select id="simDept" class="sim-select">
+                <option value="IT">Web Developer / IT</option>
+                <option value="QA">Quality Assurance</option>
+                <option value="Finance">Finance &amp; Akuntansi</option>
+                <option value="CX">Customer Experience</option>
+                <option value="HR">People &amp; Talent</option>
+              </select>
+            </div>
+
+            <div class="sim-form-group">
+              <label class="sim-label" for="simTraining">Pelatihan yang Diikuti</label>
+              <select id="simTraining" class="sim-select">
+                <option value="Workshop Golang Backend">Workshop Golang Backend</option>
+                <option value="End-to-End Testing Playwright">End-to-End Testing Playwright</option>
+                <option value="Pemodelan Cashflow Excel">Pemodelan Cashflow Excel</option>
+                <option value="Komunikasi Empatik Klien">Komunikasi Empatik Klien</option>
+              </select>
+            </div>
+
+            <!-- Insight Singkat -->
+            <div class="sim-form-group">
+              <label class="sim-label" for="simQuote">Apa hal paling berharga yang kamu pelajari?</label>
+              <textarea id="simQuote" class="sim-textarea" placeholder="Tuliskan 1-2 kalimat insight atau pemahaman baru yang kamu dapatkan..."></textarea>
+            </div>
+
+            <!-- Tips Praktis Aplikatif -->
+            <div class="sim-form-group">
+              <label class="sim-label" for="simTakeaway">1 tips praktis yang bisa langsung dicoba rekan tim:</label>
+              <input type="text" id="simTakeaway" class="sim-input" placeholder="Contoh: Pakai formula XLOOKUP daripada VLOOKUP manual...">
+            </div>
+
+            <!-- Pilihan Tampilan Identitas (Nama vs Anonim Departemen) -->
+            <label class="sim-label">Pilihan Tampilan Identitas di Wall:</label>
+            <div class="identity-selector">
+              <label class="identity-option">
+                <input type="radio" name="identChoice" value="public" checked>
+                <div class="identity-text">
+                  <strong>Tampilkan Nama &amp; Departemen</strong>
+                  <span>Nama saya tampil jelas untuk apresiasi &amp; reputasi kompetensi tim</span>
+                </div>
+              </label>
+              <label class="identity-option">
+                <input type="radio" name="identChoice" value="anon">
+                <div class="identity-text">
+                  <strong>Samarkan Nama (Hanya Departemen)</strong>
+                  <span>Tampil sebagai "Alumni Tim Web Developer" agar nyaman berbagi</span>
+                </div>
+              </label>
+            </div>
+
+            <!-- Tombol Submit -->
+            <button type="submit" class="btn-submit-insight">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+              <span>Bagikan ke Learning Wall</span>
+            </button>
+          </form>
+
+          <div class="sim-info-footer">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink-faint)" stroke-width="2" style="flex-shrink:0;margin-top:2px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+            <div>Form ini bisa disisipkan otomatis di akhir <strong>Form Evaluasi Pasca-Training</strong> atau dibuka via link khusus di email peserta.</div>
+          </div>
+        </div>
+      </aside>
+
+    </div>
+
+  </div>
+
+  <script>
+    // Filter feed berdasarkan departemen
+    function filterWall(dept, btn) {
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      const cards = document.querySelectorAll('.wall-card');
+      cards.forEach(card => {
+        if (dept === 'all' || card.getAttribute('data-dept') === dept) {
+          card.style.display = 'block';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    }
+
+    // Toggle Reaksi (Bermanfaat / Mau Coba)
+    function toggleReaction(btn) {
+      const countSpan = btn.querySelector('.count');
+      let count = parseInt(countSpan.textContent, 10) || 0;
+      
+      if (btn.classList.contains('reacted')) {
+        btn.classList.remove('reacted');
+        countSpan.textContent = Math.max(0, count - 1);
+      } else {
+        btn.classList.add('reacted');
+        countSpan.textContent = count + 1;
+      }
+    }
+
+    // Simulasi Submit Postingan Baru
+    function submitSimulatedPost() {
+      const nameInput = document.getElementById('simName').value.trim() || 'Karyawan TDS';
+      const dept = document.getElementById('simDept').value;
+      const deptText = document.getElementById('simDept').options[document.getElementById('simDept').selectedIndex].text;
+      const training = document.getElementById('simTraining').value;
+      const quote = document.getElementById('simQuote').value.trim();
+      const takeaway = document.getElementById('simTakeaway').value.trim();
+      const isAnon = document.querySelector('input[name="identChoice"][value="anon"]').checked;
+
+      if (!quote) {
+        alert('Silakan tuliskan minimal 1 kalimat insight yang didapatkan.');
+        return;
+      }
+
+      // Generate inisial atau anon
+      let authorHtml = '';
+      if (isAnon) {
+        authorHtml = `
+          <div class="author-info">
+            <div class="author-avatar anon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            </div>
+            <div>
+              <h3 class="author-name">Alumni Tim ${deptText}</h3>
+              <div class="author-dept">Departemen ${deptText} &bull; Baru saja</div>
+            </div>
+          </div>
+        `;
+      } else {
+        const initials = nameInput.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase() || 'KR';
+        authorHtml = `
+          <div class="author-info">
+            <div class="author-avatar">${initials}</div>
+            <div>
+              <h3 class="author-name">${nameInput}</h3>
+              <div class="author-dept">${deptText} &bull; Baru saja</div>
+            </div>
+          </div>
+        `;
+      }
+
+      let takeawayHtml = '';
+      if (takeaway) {
+        takeawayHtml = `
+          <div class="wall-card-takeaway">
+            <strong>Tips Praktis yang Bisa Dicoba Rekan Tim:</strong>
+            ${takeaway}
+          </div>
+        `;
+      }
+
+      const newCard = document.createElement('article');
+      newCard.className = 'wall-card';
+      newCard.setAttribute('data-dept', dept);
+      newCard.style.animation = 'fadeIn 0.3s ease';
+      newCard.innerHTML = `
+        <div class="wall-card-header">
+          ${authorHtml}
+          <span class="training-tag-pill" title="${training}">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+            ${training}
+          </span>
+        </div>
+        <p class="wall-card-quote">${quote}</p>
+        ${takeawayHtml}
+        <div class="wall-card-meta">
+          <div class="wall-reactions">
+            <button class="btn-reaction" onclick="toggleReaction(this)">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+              <span>Bermanfaat</span>
+              <span class="count">1</span>
+            </button>
+            <button class="btn-reaction" onclick="toggleReaction(this)">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg>
+              <span>Mau Coba</span>
+              <span class="count">0</span>
+            </button>
+          </div>
+          <span class="post-timestamp">Baru diterbitkan</span>
+        </div>
+      `;
+
+      const feedList = document.getElementById('feedList');
+      feedList.insertBefore(newCard, feedList.firstChild);
+
+      // Reset form
+      document.getElementById('simQuote').value = '';
+      document.getElementById('simTakeaway').value = '';
+      alert('Insight berhasil diposting ke Learning Wall!');
+    }
+  </script>
+</body>
+</html>

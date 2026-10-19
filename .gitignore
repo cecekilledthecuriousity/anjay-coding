@@ -71,4 +71,5 @@ test_*.txt
 # AI Assistant Scratch & Artifacts
 .gemini/
 .claude/
+.superpowers/
 *.patch

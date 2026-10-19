@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" width="300" height="300">
+  <defs>
+    <path id="master-top-arc" d="M 45 150 A 105 105 0 0 1 255 150" fill="none" />
+    <filter id="ink-bleed-5" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="3" result="noise" />
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.7" xChannelSelector="R" yChannelSelector="G" />
+    </filter>
+  </defs>
+
+  <g filter="url(#ink-bleed-5)">
+    <!-- 24-Point Scalloped Starburst -->
+    <polygon points="288.0,150.0 272.9,166.2 283.3,185.7 264.6,197.5 269.5,219.0 248.4,225.5 247.6,247.6 225.5,248.4 219.0,269.5 197.5,264.6 185.7,283.3 166.2,272.9 150.0,288.0 133.8,272.9 114.3,283.3 102.5,264.6 81.0,269.5 74.5,248.4 52.4,247.6 51.6,225.5 30.5,219.0 35.4,197.5 16.7,185.7 27.1,166.2 12.0,150.0 27.1,133.8 16.7,114.3 35.4,102.5 30.5,81.0 51.6,74.5 52.4,52.4 74.5,51.6 81.0,30.5 102.5,35.4 114.3,16.7 133.8,27.1 150.0,12.0 166.2,27.1 185.7,16.7 197.5,35.4 219.0,30.5 225.5,51.6 247.6,52.4 248.4,74.5 269.5,81.0 264.6,102.5 283.3,114.3 272.9,133.8" fill="none" stroke="#2b394a" stroke-width="2.5" stroke-linejoin="round" />
+    <!-- Inner Concentric Rings -->
+    <circle cx="150" cy="150" r="118" fill="none" stroke="#2b394a" stroke-width="1.2" stroke-dasharray="4 2" />
+    <circle cx="150" cy="150" r="110" fill="none" stroke="#2b394a" stroke-width="2.2" />
+
+    <!-- Top Curved Text -->
+    <text fill="#2b394a" font-family="'Inter', 'Arial Black', sans-serif" font-size="11" font-weight="900" letter-spacing="3">
+      <textPath href="#master-top-arc" startOffset="50%" text-anchor="middle">
+        ★ PROFESSIONAL COMPETENCY ★
+      </textPath>
+    </text>
+
+    <!-- Center 3 Heraldic Stars -->
+    <g transform="translate(150, 96)">
+      <polygon points="-30.0,-2.0 -28.3,2.6 -23.3,2.8 -27.2,5.9 -25.9,10.7 -30.0,7.9 -34.1,10.7 -32.8,5.9 -36.7,2.8 -31.7,2.6" fill="#2b394a" />
+      <polygon points="0.0,-13.0 2.5,-6.4 9.5,-6.1 4.0,-1.7 5.9,5.1 0.0,1.2 -5.9,5.1 -4.0,-1.7 -9.5,-6.1 -2.5,-6.4" fill="#2b394a" />
+      <polygon points="30.0,-2.0 31.7,2.6 36.7,2.8 32.8,5.9 34.1,10.7 30.0,7.9 25.9,10.7 27.2,5.9 23.3,2.8 28.3,2.6" fill="#2b394a" />
+    </g>
+
+    <!-- Main Title Banner -->
+    <g transform="translate(150, 138)">
+      <rect x="-90" y="-12" width="180" height="25" rx="2" fill="#2b394a" fill-opacity="0.12" stroke="#2b394a" stroke-width="2" />
+      <text x="0" y="5.5" text-anchor="middle" fill="#2b394a" font-family="'Inter', 'Arial Black', sans-serif" font-size="14.5" font-weight="900" letter-spacing="3.5">
+        TDS MASTERED
+      </text>
+    </g>
+
+    <!-- Subtitle -->
+    <text x="150" y="164" text-anchor="middle" fill="#2b394a" font-family="sans-serif" font-size="8" font-weight="800" letter-spacing="2">
+      OFFICIAL ATTESTATION SEAL
+    </text>
+
+    <!-- Clean Dynamic Date/Hours Area -->
+    <g transform="translate(150, 200)">
+      <line x1="-64" y1="-16" x2="64" y2="-16" stroke="#2b394a" stroke-width="1.2" stroke-dasharray="4 2" />
+      <line x1="-64" y1="18" x2="64" y2="18" stroke="#2b394a" stroke-width="1.2" stroke-dasharray="4 2" />
+    </g>
+
+    <!-- Bottom Footer Text -->
+    <text x="150" y="228" text-anchor="middle" fill="#2b394a" font-family="'Inter', sans-serif" font-size="8" font-weight="800" letter-spacing="2">
+      ★ TDS MASTER RECORD ★
+    </text>
+  </g>
+</svg>

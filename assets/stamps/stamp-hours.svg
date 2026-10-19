@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" width="300" height="300">
+  <defs>
+    <path id="hours-top-arc" d="M 40 150 A 115 88 0 0 1 260 150" fill="none" />
+    <filter id="ink-bleed-3" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="3" result="noise" />
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.7" xChannelSelector="R" yChannelSelector="G" />
+    </filter>
+  </defs>
+
+  <g filter="url(#ink-bleed-3)">
+    <!-- Outer Heavy Oval -->
+    <ellipse cx="150" cy="150" rx="136" ry="106" fill="none" stroke="#996300" stroke-width="3" />
+    <!-- Inner Dotted Oval -->
+    <ellipse cx="150" cy="150" rx="127" ry="97" fill="none" stroke="#996300" stroke-width="1.2" stroke-dasharray="4 3" />
+    <!-- Core Boundary Oval -->
+    <ellipse cx="150" cy="150" rx="116" ry="86" fill="none" stroke="#996300" stroke-width="2" />
+
+    <!-- Top Curved Text: CONTINUING EDUCATION CREDIT (No Visa) -->
+    <text fill="#996300" font-family="'Inter', 'Arial Black', sans-serif" font-size="10.5" font-weight="900" letter-spacing="2.8">
+      <textPath href="#hours-top-arc" startOffset="50%" text-anchor="middle">
+        ★ CONTINUING EDUCATION CREDIT ★
+      </textPath>
+    </text>
+
+    <!-- Center Hourglass & Ornaments -->
+    <g transform="translate(150, 102)">
+      <line x1="-16" y1="-16" x2="16" y2="-16" stroke="#996300" stroke-width="2.2" stroke-linecap="round" />
+      <line x1="-16" y1="16" x2="16" y2="16" stroke="#996300" stroke-width="2.2" stroke-linecap="round" />
+      <path d="M -13,-16 C -13,-4 -3,-1 0,0 C 3,-1 13,-4 13,-16 Z" fill="#996300" fill-opacity="0.1" stroke="#996300" stroke-width="1.6" />
+      <path d="M -13,16 C -13,4 -3,1 0,0 C 3,1 13,4 13,16 Z" fill="#996300" fill-opacity="0.25" stroke="#996300" stroke-width="1.6" />
+      <circle cx="0" cy="4" r="1.3" fill="#996300" stroke="none" />
+      <polygon points="-5,14 5,14 0,7" fill="#996300" stroke="none" />
+      <polygon points="-32.0,-3.5 -31.1,-1.2 -28.7,-1.1 -30.6,0.5 -29.9,2.8 -32.0,1.5 -34.1,2.8 -33.4,0.5 -35.3,-1.1 -32.9,-1.2" fill="#996300" />
+      <polygon points="32.0,-3.5 32.9,-1.2 35.3,-1.1 33.4,0.5 34.1,2.8 32.0,1.5 29.9,2.8 30.6,0.5 28.7,-1.1 31.1,-1.2" fill="#996300" />
+    </g>
+
+    <!-- Main Title: LEARNING HOURS (No Visa) -->
+    <g transform="translate(150, 138)">
+      <rect x="-86" y="-12" width="172" height="24" rx="2" fill="#996300" fill-opacity="0.1" stroke="#996300" stroke-width="1.8" />
+      <text x="0" y="5" text-anchor="middle" fill="#996300" font-family="'Inter', 'Arial Black', sans-serif" font-size="14" font-weight="900" letter-spacing="3">
+        LEARNING HOURS
+      </text>
+    </g>
+
+    <!-- Subtitle -->
+    <text x="150" y="162" text-anchor="middle" fill="#996300" font-family="sans-serif" font-size="8" font-weight="800" letter-spacing="2">
+      ACCREDITED DURATION
+    </text>
+
+    <!-- Clean Dynamic Date/Hours Area -->
+    <g transform="translate(150, 196)">
+      <line x1="-60" y1="-14" x2="60" y2="-14" stroke="#996300" stroke-width="1.2" stroke-dasharray="4 2" />
+      <line x1="-60" y1="16" x2="60" y2="16" stroke="#996300" stroke-width="1.2" stroke-dasharray="4 2" />
+    </g>
+
+    <!-- Bottom Footer Text: OFFICIALLY ACCREDITED (No Visa) -->
+    <text x="150" y="222" text-anchor="middle" fill="#996300" font-family="'Inter', sans-serif" font-size="7.5" font-weight="800" letter-spacing="2">
+      ★ OFFICIALLY ACCREDITED ★
+    </text>
+  </g>
+</svg>

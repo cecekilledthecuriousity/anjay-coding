@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Preview UI: Learning Passport dengan Stempel Paspor Asli</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body {
+      background: #F8F9FA;
+      padding: 30px 16px 80px;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      color: var(--ink, #3F5A44);
+    }
+    .preview-container {
+      max-width: 860px;
+      margin: 0 auto;
+    }
+    .preview-notice {
+      background: #EEF3FA;
+      border: 1px solid rgba(63, 90, 68, 0.12);
+      border-radius: 12px;
+      padding: 12px 18px;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      color: #48544C;
+    }
+    .lp-search-card {
+      background: #FAF9F5;
+      border: 1px solid var(--line, rgba(63, 90, 68, 0.12));
+      border-radius: 14px;
+      padding: 18px 22px;
+      margin-bottom: 22px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    }
+    .lp-search-field {
+      flex: 1;
+      position: relative;
+    }
+    .lp-search-input {
+      width: 100%;
+      padding: 11px 14px 11px 38px;
+      border: 1.5px solid var(--line, rgba(63, 90, 68, 0.15));
+      border-radius: 10px;
+      font-size: 14px;
+      background: #FFFFFF;
+      color: #3F5A44;
+      box-sizing: border-box;
+      outline: none;
+    }
+    .lp-search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #8D93C2;
+    }
+    .lp-btn-search {
+      background: #3F5A44;
+      color: #FFFFFF;
+      border: none;
+      padding: 11px 22px;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 13.5px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 2px 8px rgba(63, 90, 68, 0.2);
+    }
+    .lp-profile-card {
+      background: #FFFFFF;
+      border: 1px solid var(--line, rgba(63, 90, 68, 0.12));
+      border-radius: 16px;
+      padding: 24px 28px;
+      margin-bottom: 26px;
+      box-shadow: 0 4px 16px rgba(63, 90, 68, 0.04);
+      border-top: 4px solid #B78628;
+    }
+    .lp-profile-top {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      margin-bottom: 22px;
+      flex-wrap: wrap;
+    }
+    .lp-avatar {
+      width: 58px;
+      height: 58px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #B78628, #3F5A44);
+      color: #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      font-weight: 700;
+      box-shadow: 0 4px 12px rgba(63, 90, 68, 0.2);
+    }
+    .lp-name-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .lp-profile-info h2 {
+      margin: 0;
+      font-size: 22px;
+      font-weight: 700;
+      color: #3F5A44;
+    }
+    /* LP Appreciation Card (Employee Recognition Banner) */
+    .lp-appreciation-card {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: linear-gradient(135deg, rgba(183, 134, 40, 0.08) 0%, rgba(250, 249, 245, 0.95) 100%);
+      border: 1px solid rgba(183, 134, 40, 0.28);
+      border-radius: 14px;
+      padding: 16px 20px;
+      margin: 18px 0 22px;
+      position: relative;
+      box-shadow: 0 4px 14px -3px rgba(183, 134, 40, 0.12);
+    }
+    .lp-appreciation-icon-wrap {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: rgba(183, 134, 40, 0.14);
+      color: #B78628;
+      border: 1px solid rgba(183, 134, 40, 0.32);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .lp-appreciation-text {
+      flex: 1;
+      min-width: 0;
+    }
+    .lp-appreciation-kicker {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: #B78628;
+      margin-bottom: 3px;
+      line-height: 1.2;
+    }
+    .lp-appreciation-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #3F5A44;
+      margin: 0 0 4px 0;
+      line-height: 1.3;
+    }
+    .lp-appreciation-desc {
+      font-size: 13px;
+      color: #48544C;
+      margin: 0;
+      line-height: 1.5;
+    }
+    .lp-appreciation-tag-wrap {
+      flex-shrink: 0;
+    }
+    .lp-appreciation-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(183, 134, 40, 0.12);
+      color: #B78628;
+      border: 1px solid rgba(183, 134, 40, 0.3);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      white-space: nowrap;
+    }
+    @media (max-width: 720px) {
+      .lp-appreciation-card {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 14px 16px;
+      }
+      .lp-appreciation-title { font-size: 15px; }
+      .lp-appreciation-desc { font-size: 12.5px; }
+      .lp-appreciation-tag-wrap { width: 100%; }
+    }
+    .lp-profile-sub {
+      font-size: 13.5px;
+      color: #48544C;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-top: 4px;
+    }
+    .lp-badge-dept {
+      background: rgba(75, 150, 255, 0.12);
+      color: #3F5A44;
+      padding: 3px 10px;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 12px;
+    }
+    .lp-metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+    .lp-metric-card {
+      background: #EEF3FA;
+      border: 1px solid rgba(63, 90, 68, 0.08);
+      border-radius: 12px;
+      padding: 14px 18px;
+      text-align: center;
+    }
+    .lp-metric-card span {
+      font-size: 12px;
+      color: #48544C;
+      margin-bottom: 4px;
+      display: block;
+      font-weight: 500;
+    }
+    .lp-metric-card strong {
+      font-size: 22px;
+      font-weight: 700;
+      color: #3F5A44;
+    }
+    .lp-goal-box {
+      background: #FAF9F5;
+      border: 1px solid rgba(63, 90, 68, 0.08);
+      border-radius: 12px;
+      padding: 14px 18px;
+    }
+    .lp-goal-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12.5px;
+      color: #48544C;
+      margin-bottom: 8px;
+    }
+    .lp-goal-track {
+      height: 8px;
+      background: rgba(63, 90, 68, 0.08);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .lp-goal-fill {
+      height: 100%;
+      width: 80%;
+      background: linear-gradient(90deg, #B78628, #3F5A44);
+      border-radius: 4px;
+    }
+    .lp-section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .lp-section-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: #3F5A44;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .lp-cards-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    @media (max-width: 720px) {
+      .lp-cards-grid { grid-template-columns: 1fr; }
+      .lp-metrics-grid { grid-template-columns: 1fr; }
+    }
+    
+    /* ========================================================
+       KARTU PELATIHAN DENGAN STEMPEL PASPOR REALISTIS
+       ======================================================== */
+    .lp-training-card {
+      background: #FFFFFF;
+      border: 1px solid var(--line, rgba(63, 90, 68, 0.12));
+      border-radius: 14px;
+      padding: 20px 22px;
+      box-shadow: 0 2px 8px rgba(63, 90, 68, 0.04);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.18s ease, box-shadow 0.18s ease;
+    }
+    .lp-training-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(63, 90, 68, 0.08);
+    }
+    .lp-card-content {
+      position: relative;
+      z-index: 2;
+      max-width: 70%;
+    }
+    .lp-card-tag-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .lp-code-tag {
+      font-size: 11px;
+      color: #8D93C2;
+      font-family: monospace;
+      font-weight: 600;
+    }
+    .lp-card-title {
+      font-size: 15.5px;
+      font-weight: 700;
+      color: #3F5A44;
+      margin: 0 0 8px;
+      line-height: 1.35;
+    }
+    .lp-card-meta {
+      font-size: 12.5px;
+      color: #48544C;
+      line-height: 1.55;
+      margin-bottom: 12px;
+    }
+    .lp-duration-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(75, 150, 255, 0.10);
+      color: #3F5A44;
+      font-weight: 700;
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 6px;
+    }
+    .lp-card-actions {
+      margin-top: 16px;
+      padding-top: 14px;
+      border-top: 1px solid rgba(63, 90, 68, 0.08);
+      position: relative;
+      z-index: 2;
+    }
+    .lp-btn-materi {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #3F5A44;
+      background: #FAF9F5;
+      border: 1px solid rgba(63, 90, 68, 0.15);
+      padding: 7px 14px;
+      border-radius: 8px;
+      text-decoration: none;
+      transition: all 0.15s ease;
+    }
+    .lp-btn-materi:hover {
+      background: #EEF3FA;
+      border-color: #B78628;
+    }
+
+    /* ========================================================
+       DESAIN STEMPEL PASPOR ASLI (PASSPORT STAMPS + DYNAMIC OVERLAY)
+       ======================================================== */
+    .lp-stamp-wrapper {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 105px;
+      height: 105px;
+      pointer-events: none;
+      user-select: none;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .lp-stamp-img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+      filter: drop-shadow(0 1px 2px rgba(0,0,0,0.06));
+    }
+    .lp-stamp-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      padding-bottom: 25px;
+      box-sizing: border-box;
+      text-align: center;
+    }
+    .lp-stamp-date {
+      font-family: 'Courier New', Courier, 'Consolas', monospace;
+      font-size: 8.5px;
+      font-weight: 800;
+      letter-spacing: 1.4px;
+      line-height: 1.1;
+      text-transform: uppercase;
+    }
+    .lp-stamp-hours {
+      font-family: 'Courier New', Courier, 'Consolas', monospace;
+      font-size: 7.5px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-top: 1px;
+    }
+
+    /* Ink Colors for Stamp Overlay */
+    .overlay-moss { color: #2E7D32; }
+    .overlay-blue { color: #3F5A44; }
+    .overlay-gold { color: #B78628; }
+    .overlay-purple { color: #6B21A8; }
+    .overlay-dark { color: #374151; }
+  </style>
+</head>
+<body>
+
+  <div class="preview-container">
+    <div class="preview-notice">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+      <span><strong>Pratinjau Desain:</strong> Halaman <strong>Learning Passport</strong> lengkap dengan stempel paspor pembelajaran letterpress asli (PNG transparan) &amp; tanggal dinamis ditimpa otomatis.</span>
+    </div>
+
+    <!-- 1. PENCARIAN KARYAWAN -->
+    <div class="lp-search-card">
+      <div class="lp-search-field">
+        <svg class="lp-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input type="text" class="lp-search-input" value="Budi Santoso (budi@perusahaan.com)" readonly>
+      </div>
+      <button type="button" class="lp-btn-search">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <span>Cari Karyawan</span>
+      </button>
+    </div>
+
+    <!-- 2. KARTU IDENTITAS PASPOR -->
+    <div class="lp-profile-card">
+      <div class="lp-profile-top">
+        <div class="lp-avatar">BS</div>
+        <div class="lp-profile-info">
+          <div class="lp-name-row">
+            <h2>Budi Santoso</h2>
+            <span class="lp-badge-dept">WEB DEVELOPER</span>
+          </div>
+          <div class="lp-profile-sub">
+            <span>budi@perusahaan.com</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Blok Apresiasi Pembelajaran Karyawan (Professional Recognition Banner) -->
+      <div class="lp-appreciation-card">
+        <div class="lp-appreciation-icon-wrap">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="8" r="6"></circle>
+            <path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"></path>
+          </svg>
+        </div>
+        <div class="lp-appreciation-text">
+          <div class="lp-appreciation-kicker">Apresiasi Pembelajaran</div>
+          <h3 class="lp-appreciation-title">Pencapaian &amp; Komitmen Belajar Terverifikasi</h3>
+          <p class="lp-appreciation-desc">
+            Apresiasi atas dedikasi dan keaktifan Anda yang telah menyelesaikan <strong>3 program pelatihan</strong> dengan akumulasi <strong>24 jam belajar</strong> untuk penguatan kapabilitas profesional.
+          </p>
+        </div>
+        <div class="lp-appreciation-tag-wrap">
+          <span class="lp-appreciation-badge">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <span>Alumni Terverifikasi</span>
+          </span>
+        </div>
+      </div>
+
+      <!-- 3 Metrik Utama -->
+      <div class="lp-metrics-grid">
+        <div class="lp-metric-card">
+          <span>Total Jam Belajar</span>
+          <strong>24 Jam</strong>
+        </div>
+        <div class="lp-metric-card">
+          <span>Rata-rata Kehadiran</span>
+          <strong>95%</strong>
+        </div>
+        <div class="lp-metric-card">
+          <span>Pelatihan Diikuti</span>
+          <strong>3 Program</strong>
+        </div>
+      </div>
+
+      <!-- Progres Jam Belajar -->
+      <div class="lp-goal-box">
+        <div class="lp-goal-meta">
+          <span><strong>Progres Jam Belajar</strong></span>
+          <span><strong>24 Jam Terakumulasi</strong></span>
+        </div>
+        <div class="lp-goal-track">
+          <div class="lp-goal-fill" style="width: 80%;"></div>
+        </div>
+        <p style="margin: 8px 0 0; font-size: 11.5px; color: #48544C; line-height: 1.45;">
+          Jam pelatihan yang telah diselesaikan akan tercatat otomatis. Progress bar di Learning Passport akan terisi seiring penyelesaian program pelatihan.
+        </p>
+      </div>
+    </div>
+
+    <!-- 3. GRID RIWAYAT PELATIHAN DENGAN STEMPEL PASPOR ASLI -->
+    <div class="lp-section-header">
+      <h3 class="lp-section-title">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+        <span>Riwayat Pelatihan &amp; Stempel Paspor Pembelajaran</span>
+      </h3>
+    </div>
+
+    <!-- PANDUAN KATEGORI STEMPEL RESMI TDS -->
+    <div style="background:#FFFFFF;border:1px solid rgba(63, 90, 68,0.12);border-radius:12px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:space-between;">
+      <div style="font-size:12px;font-weight:700;color:#3F5A44;display:flex;align-items:center;gap:6px;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+        <span>Ketentuan Kategori Cap Paspor:</span>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;font-size:11.5px;">
+        <span style="display:inline-flex;align-items:center;gap:4px;color:#2E7D32;background:rgba(46,125,50,0.08);padding:3px 8px;border-radius:6px;font-weight:600;">
+          <span style="width:8px;height:8px;border-radius:50%;background:#2E7D32;"></span>
+          Completed: Reguler
+        </span>
+        <span style="display:inline-flex;align-items:center;gap:4px;color:#3F5A44;background:rgba(63, 90, 68,0.08);padding:3px 8px;border-radius:6px;font-weight:600;">
+          <span style="width:8px;height:8px;border-radius:50%;background:#3F5A44;"></span>
+          Verified: Sertifikasi
+        </span>
+        <span style="display:inline-flex;align-items:center;gap:4px;color:#B78628;background:rgba(183,134,40,0.08);padding:3px 8px;border-radius:6px;font-weight:600;">
+          <span style="width:8px;height:8px;border-radius:50%;background:#B78628;"></span>
+          Hours: Intensif (&ge;6 Jam)
+        </span>
+        <span style="display:inline-flex;align-items:center;gap:4px;color:#6B21A8;background:rgba(107,33,168,0.08);padding:3px 8px;border-radius:6px;font-weight:600;">
+          <span style="width:8px;height:8px;border-radius:50%;background:#6B21A8;"></span>
+          Achievement: Tingkat Lanjut
+        </span>
+        <span style="display:inline-flex;align-items:center;gap:4px;color:#374151;background:rgba(55,65,81,0.08);padding:3px 8px;border-radius:6px;font-weight:600;">
+          <span style="width:8px;height:8px;border-radius:50%;background:#374151;"></span>
+          Mastery: Spesialisasi
+        </span>
+      </div>
+    </div>
+
+    <div class="lp-cards-grid">
+      <!-- Kartu 1: Completed - Moss Green (Reguler, Basic) -->
+      <div class="lp-training-card">
+        <div class="lp-stamp-wrapper" style="transform: rotate(-8deg);" title="Completed: Tanda kelulusan program reguler">
+          <img src="assets/stamps/stamp-completed.png" class="lp-stamp-img" alt="Completed Stamp">
+          <div class="lp-stamp-overlay overlay-moss">
+            <div class="lp-stamp-date">10.09.2026</div>
+            <div class="lp-stamp-hours">3 HOURS</div>
+          </div>
+        </div>
+
+        <div class="lp-card-content">
+          <div class="lp-card-tag-row">
+            <span class="lp-code-tag">TRN-20260910-GEN-01</span>
+            <span style="font-size:11px;font-weight:600;color:#2E7D32;background:rgba(46,125,50,0.08);padding:2px 7px;border-radius:4px;">Reguler</span>
+          </div>
+          <h4 class="lp-card-title">Orientation &amp; Git Workflow Essentials</h4>
+          <div class="lp-card-meta">
+            <div><strong>Tanggal:</strong> 10 September 2026</div>
+            <div><strong>Trainer:</strong> Tim Internal &bull; <strong>Level:</strong> Basic</div>
+          </div>
+          <div class="lp-duration-chip">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            <span>3 Jam Pembelajaran</span>
+          </div>
+        </div>
+        <div class="lp-card-actions">
+          <a href="#" class="lp-btn-materi" onclick="alert('Membuka link Google Drive materi'); return false;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+            <span>Buka Materi (Google Drive)</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Kartu 2: Verified - Blue Ink (Bersertifikasi Resmi) -->
+      <div class="lp-training-card">
+        <div class="lp-stamp-wrapper" style="transform: rotate(6deg);" title="Verified: Program pelatihan bersertifikasi resmi">
+          <img src="assets/stamps/stamp-verified.png" class="lp-stamp-img" alt="Verified Stamp">
+          <div class="lp-stamp-overlay overlay-blue">
+            <div class="lp-stamp-date">21.09.2026</div>
+            <div class="lp-stamp-hours">5 HOURS</div>
+          </div>
+        </div>
+
+        <div class="lp-card-content">
+          <div class="lp-card-tag-row">
+            <span class="lp-code-tag">TRN-20260921-SEC-02</span>
+            <span style="font-size:11px;font-weight:600;color:#3F5A44;background:rgba(63, 90, 68,0.08);padding:2px 7px;border-radius:4px;">Bersertifikasi</span>
+          </div>
+          <h4 class="lp-card-title">Corporate Cybersecurity &amp; ISO Compliance</h4>
+          <div class="lp-card-meta">
+            <div><strong>Tanggal:</strong> 21 September 2026</div>
+            <div><strong>Trainer:</strong> Vendor Akreditasi &bull; <strong>Sertifikat:</strong> Resmi</div>
+          </div>
+          <div class="lp-duration-chip">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            <span>5 Jam Pembelajaran</span>
+          </div>
+        </div>
+        <div class="lp-card-actions">
+          <a href="#" class="lp-btn-materi" onclick="alert('Membuka link Google Drive materi'); return false;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+            <span>Buka Materi (Google Drive)</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Kartu 3: Hours Record - Classic Gold (Durasi Intensif >= 6 Jam) -->
+      <div class="lp-training-card">
+        <div class="lp-stamp-wrapper" style="transform: rotate(-5deg);" title="Hours Record: Pengakuan durasi jam intensif">
+          <img src="assets/stamps/stamp-hours.png" class="lp-stamp-img" alt="Hours Stamp">
+          <div class="lp-stamp-overlay overlay-gold">
+            <div class="lp-stamp-date">28.09.2026</div>
+            <div class="lp-stamp-hours">8 HOURS</div>
+          </div>
+        </div>
+
+        <div class="lp-card-content">
+          <div class="lp-card-tag-row">
+            <span class="lp-code-tag">TRN-20260928-OPS-03</span>
+            <span style="font-size:11px;font-weight:600;color:#B78628;background:rgba(183,134,40,0.08);padding:2px 7px;border-radius:4px;">Intensif &ge;6 Jam</span>
+          </div>
+          <h4 class="lp-card-title">Full-Day Bootcamp Docker &amp; K8s Infrastructure</h4>
+          <div class="lp-card-meta">
+            <div><strong>Tanggal:</strong> 28 September 2026</div>
+            <div><strong>Trainer:</strong> Rian Saputra &bull; <strong>Metode:</strong> Full Day</div>
+          </div>
+          <div class="lp-duration-chip">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            <span>8 Jam Pembelajaran</span>
+          </div>
+        </div>
+        <div class="lp-card-actions">
+          <a href="#" class="lp-btn-materi" onclick="alert('Membuka link Google Drive materi'); return false;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+            <span>Buka Materi (Google Drive)</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Kartu 4: Achievement - Royal Purple (Tingkat Lanjut / Intermediate) -->
+      <div class="lp-training-card">
+        <div class="lp-stamp-wrapper" style="transform: rotate(7deg);" title="Achievement: Pencapaian kompetensi tingkat lanjut">
+          <img src="assets/stamps/stamp-achievement.png" class="lp-stamp-img" alt="Achievement Stamp">
+          <div class="lp-stamp-overlay overlay-purple">
+            <div class="lp-stamp-date">05.10.2026</div>
+            <div class="lp-stamp-hours">4 HOURS</div>
+          </div>
+        </div>
+
+        <div class="lp-card-content">
+          <div class="lp-card-tag-row">
+            <span class="lp-code-tag">TRN-20261005-ENG-04</span>
+            <span style="font-size:11px;font-weight:600;color:#6B21A8;background:rgba(107,33,168,0.08);padding:2px 7px;border-radius:4px;">Tingkat Lanjut</span>
+          </div>
+          <h4 class="lp-card-title">Clean Architecture, DDD &amp; Test-Driven Dev</h4>
+          <div class="lp-card-meta">
+            <div><strong>Tanggal:</strong> 05 Oktober 2026</div>
+            <div><strong>Trainer:</strong> Alex Chandra &bull; <strong>Level:</strong> Intermediate</div>
+          </div>
+          <div class="lp-duration-chip">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            <span>4 Jam Pembelajaran</span>
+          </div>
+        </div>
+        <div class="lp-card-actions">
+          <a href="#" class="lp-btn-materi" onclick="alert('Membuka link Google Drive materi'); return false;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+            <span>Buka Materi (Google Drive)</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Kartu 5: Mastery - Deep Ink / Slate (Spesialisasi Keahlian Strategis / Advanced) -->
+      <div class="lp-training-card">
+        <div class="lp-stamp-wrapper" style="transform: rotate(-6deg);" title="Mastery: Program spesialisasi keahlian strategis">
+          <img src="assets/stamps/stamp-mastery.png" class="lp-stamp-img" alt="Mastery Stamp">
+          <div class="lp-stamp-overlay overlay-dark">
+            <div class="lp-stamp-date">12.10.2026</div>
+            <div class="lp-stamp-hours">4 HOURS</div>
+          </div>
+        </div>
+
+        <div class="lp-card-content">
+          <div class="lp-card-tag-row">
+            <span class="lp-code-tag">TRN-20261012-SYS-05</span>
+            <span style="font-size:11px;font-weight:600;color:#374151;background:rgba(55,65,81,0.08);padding:2px 7px;border-radius:4px;">Spesialisasi</span>
+          </div>
+          <h4 class="lp-card-title">High-Throughput Distributed System Scaling</h4>
+          <div class="lp-card-meta">
+            <div><strong>Tanggal:</strong> 12 Oktober 2026</div>
+            <div><strong>Trainer:</strong> Principal Architect &bull; <strong>Level:</strong> Advanced</div>
+          </div>
+          <div class="lp-duration-chip">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            <span>4 Jam Pembelajaran</span>
+          </div>
+        </div>
+        <div class="lp-card-actions">
+          <a href="#" class="lp-btn-materi" onclick="alert('Membuka link Google Drive materi'); return false;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+            <span>Buka Materi (Google Drive)</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
