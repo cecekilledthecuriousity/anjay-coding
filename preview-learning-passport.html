@@ -6,19 +6,33 @@
   <title>Preview UI: Learning Passport dengan Stempel Paspor Asli</title>
   <link rel="stylesheet" href="css/style.css">
   <style>
+    :root {
+      --ink: #00178F;
+      --ink-soft: #4A4F8F;
+      --ink-faint: #8D93C2;
+      --paper: #EEF3FA;
+      --panel-solid: #FFFFFF;
+      --sand-panel: #F4F7FC;
+      --line: rgba(0, 23, 143, 0.10);
+      --line-soft: rgba(0, 23, 143, 0.07);
+      --accent: #4B96FF;
+      --accent-dark: #00178F;
+      --accent-tint: rgba(75, 150, 255, 0.10);
+      --accent-tint-strong: rgba(75, 150, 255, 0.16);
+    }
     body {
       background: #F8F9FA;
       padding: 30px 16px 80px;
       font-family: 'Inter', system-ui, -apple-system, sans-serif;
-      color: var(--ink, #3F5A44);
+      color: var(--ink);
     }
     .preview-container {
       max-width: 860px;
       margin: 0 auto;
     }
     .preview-notice {
-      background: #EEF3FA;
-      border: 1px solid rgba(63, 90, 68, 0.12);
+      background: var(--paper);
+      border: 1px solid var(--line);
       border-radius: 12px;
       padding: 12px 18px;
       margin-bottom: 24px;
@@ -26,18 +40,18 @@
       align-items: center;
       gap: 10px;
       font-size: 13px;
-      color: #48544C;
+      color: var(--ink-soft);
     }
     .lp-search-card {
-      background: #FAF9F5;
-      border: 1px solid var(--line, rgba(63, 90, 68, 0.12));
+      background: var(--panel-solid);
+      border: 1px solid var(--line);
       border-radius: 14px;
       padding: 18px 22px;
       margin-bottom: 22px;
       display: flex;
       gap: 12px;
       align-items: center;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+      box-shadow: 0 2px 8px rgba(0, 23, 143, 0.04);
     }
     .lp-search-field {
       flex: 1;
@@ -46,11 +60,11 @@
     .lp-search-input {
       width: 100%;
       padding: 11px 14px 11px 38px;
-      border: 1.5px solid var(--line, rgba(63, 90, 68, 0.15));
+      border: 1.5px solid var(--line);
       border-radius: 10px;
       font-size: 14px;
-      background: #FFFFFF;
-      color: #3F5A44;
+      background: var(--sand-panel);
+      color: var(--ink);
       box-sizing: border-box;
       outline: none;
     }
@@ -59,10 +73,10 @@
       left: 12px;
       top: 50%;
       transform: translateY(-50%);
-      color: #8D93C2;
+      color: var(--ink-faint);
     }
     .lp-btn-search {
-      background: #3F5A44;
+      background: var(--accent-dark);
       color: #FFFFFF;
       border: none;
       padding: 11px 22px;
@@ -73,16 +87,20 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      box-shadow: 0 2px 8px rgba(63, 90, 68, 0.2);
+      box-shadow: 0 2px 8px rgba(0, 23, 143, 0.2);
+      transition: all 0.15s ease;
+    }
+    .lp-btn-search:hover {
+      background: #001270;
     }
     .lp-profile-card {
-      background: #FFFFFF;
-      border: 1px solid var(--line, rgba(63, 90, 68, 0.12));
+      background: var(--panel-solid);
+      border: 1px solid var(--line);
       border-radius: 16px;
       padding: 24px 28px;
       margin-bottom: 26px;
-      box-shadow: 0 4px 16px rgba(63, 90, 68, 0.04);
-      border-top: 4px solid #B78628;
+      box-shadow: 0 4px 16px rgba(0, 23, 143, 0.04);
+      border-top: 4px solid var(--accent);
     }
     .lp-profile-top {
       display: flex;
@@ -95,14 +113,14 @@
       width: 58px;
       height: 58px;
       border-radius: 16px;
-      background: linear-gradient(135deg, #B78628, #3F5A44);
+      background: linear-gradient(135deg, var(--accent), var(--accent-dark));
       color: #FFFFFF;
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 22px;
       font-weight: 700;
-      box-shadow: 0 4px 12px rgba(63, 90, 68, 0.2);
+      box-shadow: 0 4px 12px rgba(0, 23, 143, 0.2);
     }
     .lp-name-row {
       display: flex;
@@ -114,28 +132,28 @@
       margin: 0;
       font-size: 22px;
       font-weight: 700;
-      color: #3F5A44;
+      color: var(--ink);
     }
     /* LP Appreciation Card (Employee Recognition Banner) */
     .lp-appreciation-card {
       display: flex;
       align-items: center;
       gap: 16px;
-      background: linear-gradient(135deg, rgba(183, 134, 40, 0.08) 0%, rgba(250, 249, 245, 0.95) 100%);
-      border: 1px solid rgba(183, 134, 40, 0.28);
+      background: linear-gradient(135deg, rgba(75, 150, 255, 0.10) 0%, rgba(238, 243, 250, 0.95) 100%);
+      border: 1px solid rgba(75, 150, 255, 0.28);
       border-radius: 14px;
       padding: 16px 20px;
       margin: 18px 0 22px;
       position: relative;
-      box-shadow: 0 4px 14px -3px rgba(183, 134, 40, 0.12);
+      box-shadow: 0 4px 14px -3px rgba(0, 23, 143, 0.08);
     }
     .lp-appreciation-icon-wrap {
       width: 44px;
       height: 44px;
       border-radius: 12px;
-      background: rgba(183, 134, 40, 0.14);
-      color: #B78628;
-      border: 1px solid rgba(183, 134, 40, 0.32);
+      background: rgba(75, 150, 255, 0.14);
+      color: var(--accent-dark);
+      border: 1px solid rgba(75, 150, 255, 0.30);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -150,20 +168,20 @@
       font-weight: 700;
       letter-spacing: 0.05em;
       text-transform: uppercase;
-      color: #B78628;
+      color: var(--accent);
       margin-bottom: 3px;
       line-height: 1.2;
     }
     .lp-appreciation-title {
       font-size: 16px;
       font-weight: 700;
-      color: #3F5A44;
+      color: var(--ink);
       margin: 0 0 4px 0;
       line-height: 1.3;
     }
     .lp-appreciation-desc {
       font-size: 13px;
-      color: #48544C;
+      color: var(--ink-soft);
       margin: 0;
       line-height: 1.5;
     }
@@ -174,9 +192,9 @@
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      background: rgba(183, 134, 40, 0.12);
-      color: #B78628;
-      border: 1px solid rgba(183, 134, 40, 0.3);
+      background: #FFFFFF;
+      color: var(--accent-dark);
+      border: 1px solid rgba(75, 150, 255, 0.32);
       padding: 6px 14px;
       border-radius: 20px;
       font-size: 12px;
@@ -197,7 +215,7 @@
     }
     .lp-profile-sub {
       font-size: 13.5px;
-      color: #48544C;
+      color: var(--ink-soft);
       display: flex;
       gap: 8px;
       align-items: center;
@@ -205,8 +223,8 @@
       margin-top: 4px;
     }
     .lp-badge-dept {
-      background: rgba(75, 150, 255, 0.12);
-      color: #3F5A44;
+      background: var(--accent-tint);
+      color: var(--accent-dark);
       padding: 3px 10px;
       border-radius: 6px;
       font-weight: 600;
@@ -219,15 +237,15 @@
       margin-bottom: 20px;
     }
     .lp-metric-card {
-      background: #EEF3FA;
-      border: 1px solid rgba(63, 90, 68, 0.08);
+      background: var(--paper);
+      border: 1px solid var(--line-soft);
       border-radius: 12px;
       padding: 14px 18px;
       text-align: center;
     }
     .lp-metric-card span {
       font-size: 12px;
-      color: #48544C;
+      color: var(--ink-soft);
       margin-bottom: 4px;
       display: block;
       font-weight: 500;
@@ -235,11 +253,11 @@
     .lp-metric-card strong {
       font-size: 22px;
       font-weight: 700;
-      color: #3F5A44;
+      color: var(--ink);
     }
     .lp-goal-box {
-      background: #FAF9F5;
-      border: 1px solid rgba(63, 90, 68, 0.08);
+      background: var(--sand-panel);
+      border: 1px solid var(--line-soft);
       border-radius: 12px;
       padding: 14px 18px;
     }
@@ -247,19 +265,19 @@
       display: flex;
       justify-content: space-between;
       font-size: 12.5px;
-      color: #48544C;
+      color: var(--ink-soft);
       margin-bottom: 8px;
     }
     .lp-goal-track {
       height: 8px;
-      background: rgba(63, 90, 68, 0.08);
+      background: rgba(0, 23, 143, 0.08);
       border-radius: 4px;
       overflow: hidden;
     }
     .lp-goal-fill {
       height: 100%;
       width: 80%;
-      background: linear-gradient(90deg, #B78628, #3F5A44);
+      background: linear-gradient(90deg, var(--accent), var(--accent-dark));
       border-radius: 4px;
     }
     .lp-section-header {
@@ -273,7 +291,7 @@
     .lp-section-title {
       font-size: 17px;
       font-weight: 700;
-      color: #3F5A44;
+      color: var(--ink);
       margin: 0;
       display: flex;
       align-items: center;
@@ -293,11 +311,11 @@
        KARTU PELATIHAN DENGAN STEMPEL PASPOR REALISTIS
        ======================================================== */
     .lp-training-card {
-      background: #FFFFFF;
-      border: 1px solid var(--line, rgba(63, 90, 68, 0.12));
+      background: var(--panel-solid);
+      border: 1px solid var(--line);
       border-radius: 14px;
       padding: 20px 22px;
-      box-shadow: 0 2px 8px rgba(63, 90, 68, 0.04);
+      box-shadow: 0 2px 8px rgba(0, 23, 143, 0.04);
       display: flex;
       flex-direction: column;
       justify-content: space-between;
@@ -307,7 +325,7 @@
     }
     .lp-training-card:hover {
       transform: translateY(-2px);
-      box-shadow: 0 8px 24px rgba(63, 90, 68, 0.08);
+      box-shadow: 0 8px 24px rgba(0, 23, 143, 0.08);
     }
     .lp-card-content {
       position: relative;
@@ -322,20 +340,20 @@
     }
     .lp-code-tag {
       font-size: 11px;
-      color: #8D93C2;
+      color: var(--ink-faint);
       font-family: monospace;
       font-weight: 600;
     }
     .lp-card-title {
       font-size: 15.5px;
       font-weight: 700;
-      color: #3F5A44;
+      color: var(--ink);
       margin: 0 0 8px;
       line-height: 1.35;
     }
     .lp-card-meta {
       font-size: 12.5px;
-      color: #48544C;
+      color: var(--ink-soft);
       line-height: 1.55;
       margin-bottom: 12px;
     }
@@ -343,8 +361,8 @@
       display: inline-flex;
       align-items: center;
       gap: 5px;
-      background: rgba(75, 150, 255, 0.10);
-      color: #3F5A44;
+      background: var(--accent-tint);
+      color: var(--accent-dark);
       font-weight: 700;
       font-size: 12px;
       padding: 4px 10px;
@@ -353,7 +371,7 @@
     .lp-card-actions {
       margin-top: 16px;
       padding-top: 14px;
-      border-top: 1px solid rgba(63, 90, 68, 0.08);
+      border-top: 1px solid var(--line-soft);
       position: relative;
       z-index: 2;
     }
@@ -363,17 +381,17 @@
       gap: 6px;
       font-size: 12px;
       font-weight: 600;
-      color: #3F5A44;
-      background: #FAF9F5;
-      border: 1px solid rgba(63, 90, 68, 0.15);
+      color: var(--accent-dark);
+      background: var(--sand-panel);
+      border: 1px solid var(--line);
       padding: 7px 14px;
       border-radius: 8px;
       text-decoration: none;
       transition: all 0.15s ease;
     }
     .lp-btn-materi:hover {
-      background: #EEF3FA;
-      border-color: #B78628;
+      background: var(--paper);
+      border-color: var(--accent);
     }
 
     /* ========================================================
@@ -432,7 +450,7 @@
 
     /* Ink Colors for Stamp Overlay */
     .overlay-moss { color: #2E7D32; }
-    .overlay-blue { color: #3F5A44; }
+    .overlay-blue { color: #00178F; }
     .overlay-gold { color: #B78628; }
     .overlay-purple { color: #6B21A8; }
     .overlay-dark { color: #374151; }
@@ -488,12 +506,6 @@
             Apresiasi atas dedikasi dan keaktifan Anda yang telah menyelesaikan <strong>3 program pelatihan</strong> dengan akumulasi <strong>24 jam belajar</strong> untuk penguatan kapabilitas profesional.
           </p>
         </div>
-        <div class="lp-appreciation-tag-wrap">
-          <span class="lp-appreciation-badge">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            <span>Alumni Terverifikasi</span>
-          </span>
-        </div>
       </div>
 
       <!-- 3 Metrik Utama -->
@@ -521,7 +533,7 @@
         <div class="lp-goal-track">
           <div class="lp-goal-fill" style="width: 80%;"></div>
         </div>
-        <p style="margin: 8px 0 0; font-size: 11.5px; color: #48544C; line-height: 1.45;">
+        <p style="margin: 8px 0 0; font-size: 11.5px; color: var(--ink-soft); line-height: 1.45;">
           Jam pelatihan yang telah diselesaikan akan tercatat otomatis. Progress bar di Learning Passport akan terisi seiring penyelesaian program pelatihan.
         </p>
       </div>
@@ -536,8 +548,8 @@
     </div>
 
     <!-- PANDUAN KATEGORI STEMPEL RESMI TDS -->
-    <div style="background:#FFFFFF;border:1px solid rgba(63, 90, 68,0.12);border-radius:12px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:space-between;">
-      <div style="font-size:12px;font-weight:700;color:#3F5A44;display:flex;align-items:center;gap:6px;">
+    <div style="background:#FFFFFF;border:1px solid var(--line);border-radius:12px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:space-between;">
+      <div style="font-size:12px;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:6px;">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
         <span>Ketentuan Kategori Cap Paspor:</span>
       </div>
@@ -546,8 +558,8 @@
           <span style="width:8px;height:8px;border-radius:50%;background:#2E7D32;"></span>
           Completed: Reguler
         </span>
-        <span style="display:inline-flex;align-items:center;gap:4px;color:#3F5A44;background:rgba(63, 90, 68,0.08);padding:3px 8px;border-radius:6px;font-weight:600;">
-          <span style="width:8px;height:8px;border-radius:50%;background:#3F5A44;"></span>
+        <span style="display:inline-flex;align-items:center;gap:4px;color:#00178F;background:rgba(75, 150, 255, 0.12);padding:3px 8px;border-radius:6px;font-weight:600;">
+          <span style="width:8px;height:8px;border-radius:50%;background:#00178F;"></span>
           Verified: Sertifikasi
         </span>
         <span style="display:inline-flex;align-items:center;gap:4px;color:#B78628;background:rgba(183,134,40,0.08);padding:3px 8px;border-radius:6px;font-weight:600;">
@@ -612,7 +624,7 @@
         <div class="lp-card-content">
           <div class="lp-card-tag-row">
             <span class="lp-code-tag">TRN-20260921-SEC-02</span>
-            <span style="font-size:11px;font-weight:600;color:#3F5A44;background:rgba(63, 90, 68,0.08);padding:2px 7px;border-radius:4px;">Bersertifikasi</span>
+            <span style="font-size:11px;font-weight:600;color:#00178F;background:rgba(75, 150, 255, 0.12);padding:2px 7px;border-radius:4px;">Bersertifikasi</span>
           </div>
           <h4 class="lp-card-title">Corporate Cybersecurity &amp; ISO Compliance</h4>
           <div class="lp-card-meta">

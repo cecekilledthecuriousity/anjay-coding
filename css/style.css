@@ -379,6 +379,54 @@ input[type="time"]::-webkit-datetime-edit-text {
   width: 100%;
 }
 
+/* 3b. Standard Text Input with Prefix Line SVG Icon (e.g. Trainer/Fasilitator) */
+.input-icon-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.input-icon-wrap .input-prefix-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-dark);
+  z-index: 2;
+  opacity: 0.95;
+  background: transparent;
+  border: none;
+  padding: 0;
+  pointer-events: none;
+}
+
+.input-icon-wrap input,
+.field .input-icon-wrap input {
+  padding-left: 38px !important;
+  padding-right: 14px !important;
+  width: 100%;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: #1F2421;
+  background: #FAFBFD;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  transition: all 0.15s ease;
+  cursor: text;
+}
+
+.input-icon-wrap input:focus {
+  border-color: var(--accent);
+  outline: none;
+  background: #FFFFFF;
+  box-shadow: 0 0 0 3px var(--accent-tint-strong);
+}
+
 .datetime-field-wrap .datetime-prefix-icon {
   position: absolute;
   left: 12px;
@@ -7752,22 +7800,22 @@ body.projector-mode .att-qr-box svg {
   display: flex;
   align-items: center;
   gap: 16px;
-  background: linear-gradient(135deg, rgba(183, 134, 40, 0.08) 0%, rgba(250, 249, 245, 0.95) 100%);
-  border: 1px solid rgba(183, 134, 40, 0.28);
+  background: linear-gradient(135deg, rgba(75, 150, 255, 0.10) 0%, rgba(238, 243, 250, 0.95) 100%);
+  border: 1px solid rgba(75, 150, 255, 0.28);
   border-radius: 14px;
   padding: 16px 20px;
   margin: 18px 0 22px;
   position: relative;
-  box-shadow: 0 4px 14px -3px rgba(183, 134, 40, 0.12);
+  box-shadow: 0 4px 14px -3px rgba(0, 23, 143, 0.08);
 }
 
 .lp-appreciation-icon-wrap {
   width: 44px;
   height: 44px;
   border-radius: 12px;
-  background: rgba(183, 134, 40, 0.14);
-  color: var(--accent-gold, #B78628);
-  border: 1px solid rgba(183, 134, 40, 0.32);
+  background: rgba(75, 150, 255, 0.14);
+  color: var(--accent-dark, #00178F);
+  border: 1px solid rgba(75, 150, 255, 0.30);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -7784,7 +7832,7 @@ body.projector-mode .att-qr-box svg {
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: var(--accent-gold, #B78628);
+  color: var(--accent, #4B96FF);
   margin-bottom: 3px;
   line-height: 1.2;
 }
@@ -7812,9 +7860,9 @@ body.projector-mode .att-qr-box svg {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: rgba(183, 134, 40, 0.12);
-  color: var(--accent-gold, #B78628);
-  border: 1px solid rgba(183, 134, 40, 0.3);
+  background: #FFFFFF;
+  color: var(--accent-dark, #00178F);
+  border: 1px solid rgba(75, 150, 255, 0.32);
   padding: 6px 14px;
   border-radius: 20px;
   font-size: 12px;
@@ -7827,9 +7875,9 @@ body.projector-mode .att-qr-box svg {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  background: rgba(183, 134, 40, 0.12);
-  color: var(--accent-gold, #B78628);
-  border: 1px solid rgba(183, 134, 40, 0.32);
+  background: var(--accent-tint, rgba(75, 150, 255, 0.12));
+  color: var(--accent-dark, #00178F);
+  border: 1px solid rgba(75, 150, 255, 0.30);
   padding: 3px 10px;
   border-radius: 20px;
   font-size: 12px;

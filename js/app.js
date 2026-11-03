@@ -270,7 +270,7 @@ function toggleTimePicker(targetInputOrId, event) {
     event.stopPropagation();
   }
   let input = typeof targetInputOrId === 'string' ? document.getElementById(targetInputOrId) : targetInputOrId;
-  if (!input) return;
+  if (!input || input.id === 'trainer') return;
 
   const fieldId = input.id || ('tp_' + Math.random().toString(36).substring(2, 9));
   if (!input.id) input.id = fieldId;
@@ -458,7 +458,7 @@ window.closeTimePicker = closeTimePicker;
 // Pengikatan listener klik langsung ke seluruh field waktu & ikon prefix
 function bindAllTimePickers() {
   document.querySelectorAll('.datetime-field-wrap').forEach(wrap => {
-    const input = wrap.querySelector('input[type="time"], input[type="text"]');
+    const input = wrap.querySelector('input[type="time"]');
     if (input && !input.dataset.tpBound) {
       input.dataset.tpBound = 'true';
       input.addEventListener('click', function(e) {
@@ -469,7 +469,7 @@ function bindAllTimePickers() {
     if (icon && !icon.dataset.tpBound) {
       icon.dataset.tpBound = 'true';
       icon.addEventListener('click', function(e) {
-        const inp = this.closest('.datetime-field-wrap')?.querySelector('input');
+        const inp = this.closest('.datetime-field-wrap')?.querySelector('input[type="time"]');
         if (inp) toggleTimePicker(inp, e);
       });
     }
@@ -789,6 +789,8 @@ function validateStep(step) {
     }
     const nameVal = (document.getElementById('trainingName')?.value || '').trim();
     const leaderVal = (document.getElementById('leaderName')?.value || '').trim();
+    const leaderEmailInput = document.getElementById('leaderEmail');
+    const leaderEmailVal = (leaderEmailInput?.value || '').trim();
     const deptVal = (document.getElementById('deptName')?.value || '').trim();
     const dasarSelect = document.getElementById('dasarKebutuhan');
     const dasarVal = (dasarSelect?.value || '').trim();
@@ -796,13 +798,16 @@ function validateStep(step) {
     const alasanVal = (document.getElementById('alasanPrioritas')?.value || '').trim();
     const goalsVal = (document.getElementById('goals')?.value || '').trim();
 
-    if (!nameVal || !leaderVal || !deptVal || !dasarVal || (dasarVal === 'custom' && !customDasarVal) || !alasanVal || !goalsVal) {
+    if (!nameVal || !leaderVal || !leaderEmailVal || !deptVal || !dasarVal || (dasarVal === 'custom' && !customDasarVal) || !alasanVal || !goalsVal) {
       if (!nameVal) {
         showToast('Mohon lengkapi Nama Training / Topik Pelatihan.', 'error');
         document.getElementById('trainingName')?.focus();
       } else if (!leaderVal) {
         showToast('Mohon lengkapi Nama Pengaju dengan nama lengkap resmi Anda.', 'error');
         document.getElementById('leaderName')?.focus();
+      } else if (!leaderEmailVal) {
+        showToast('Mohon lengkapi Email Pengaju (contoh: nama@cpssoft.com).', 'error');
+        leaderEmailInput?.focus();
       } else if (!deptVal) {
         showToast('Mohon pilih Departemen / Divisi pengaju.', 'error');
         document.getElementById('deptName')?.focus();
@@ -821,6 +826,12 @@ function validateStep(step) {
       }
       return false;
     }
+
+    if (!leaderEmailVal.includes('@') || !leaderEmailVal.includes('.')) {
+      showToast('Format Email Pengaju tidak valid (contoh: nama@cpssoft.com).', 'error');
+      leaderEmailInput?.focus();
+      return false;
+    }
   }
 
   if (step === 2) {
@@ -833,7 +844,7 @@ function validateStep(step) {
     }
 
     const metode = document.getElementById('metode')?.value || 'Onsite';
-    if (metode === 'Onsite') {
+    if (metode === 'Onsite' || metode === 'Hybrid') {
       const lokasi = (document.getElementById('lokasi')?.value || '').trim();
       const customVal = (document.getElementById('customLokasiInput')?.value || '').trim();
       if (!lokasi || (lokasi === 'custom' && !customVal)) {
@@ -5748,7 +5759,7 @@ function submitPlan() {
   }
 
   const metode = document.getElementById('metode')?.value || 'Onsite';
-  if (metode === 'Onsite') {
+  if (metode === 'Onsite' || metode === 'Hybrid') {
     const lokasi = (document.getElementById('lokasi')?.value || '').trim();
     const customVal = (document.getElementById('customLokasiInput')?.value || '').trim();
     if (!lokasi || (lokasi === 'custom' && !customVal)) {
@@ -12715,12 +12726,6 @@ function renderLearningPassportProfile(data) {
             ? `Apresiasi atas dedikasi dan keaktifan Anda yang telah menyelesaikan <strong>${data.completedCount} program pelatihan</strong> dengan akumulasi <strong>${data.totalHours} jam belajar</strong> untuk penguatan kapabilitas profesional.`
             : `Selamat atas keikutsertaan Anda dalam program pembelajaran TDS. Selesaikan seluruh sesi pelatihan terjadwal untuk mengumpulkan jam belajar dan stempel kompetensi resmi.`}
         </p>
-      </div>
-      <div class="lp-appreciation-tag-wrap">
-        <span class="lp-appreciation-badge">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-          <span>${hasCompleted ? 'Alumni Terverifikasi' : 'Peserta Terdaftar'}</span>
-        </span>
       </div>
     </div>
 

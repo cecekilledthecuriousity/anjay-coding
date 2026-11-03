@@ -59,7 +59,14 @@ Aplikasi memiliki 5 kondisi tampilan (*state*) yang dikendalikan oleh validasi s
    - Tombol toggle `[Ringkas / Detail Kriteria]` untuk meminimalisasi ruang layar (*low cognitive load*).
 4. **Dropdown Accordion Bagian Evaluasi**:
    - **Bagian I: Leadership & Role Competencies (Bobot 60%)**: 6 indikator teknis & kepemimpinan per jabatan. Masing-masing butir menggunakan format **Opsi 3: Kartu Vertikal + Definisi Langsung** (`1 Kurang`, `2 Cukup`, `3 Baik`, `4 Sangat Baik`) dengan deskripsi operasional skala tercantum langsung di tiap kartu pilihan.
-   - **Bagian II: ELASTIC — Corporate Core Values (Bobot 40%)**: 7 nilai budaya perusahaan (Enthusiastic, Loving, Adaptive, Synergistic, Trustworthy, Innovative, Consistent).
+   - **Bagian II: ELASTIC — Corporate Core Values (Bobot 40%)**: 7 nilai budaya perusahaan yang ditetapkan secara baku (tidak boleh diubah-ubah):
+     1. **Enthusiasm** — *Semangat tinggi dalam bekerja, proaktif, dan membawa energi positif.*
+     2. **Learning continuously** — *Terus belajar, berkembang, dan terbuka terhadap pengetahuan baru.*
+     3. **Accountability & Dependability** — *Bertanggung jawab dan dapat diandalkan dalam menyelesaikan tugas.*
+     4. **Simplicity** — *Menyederhanakan proses agar lebih efektif, efisien, dan mudah dipahami.*
+     5. **Teamwork** — *Bekerja sama secara kolaboratif untuk mencapai tujuan bersama.*
+     6. **Integrity** — *Bertindak jujur, konsisten, dan menjunjung tinggi nilai moral.*
+     7. **Creatively Bold** — *Berani berpikir kreatif dan mengambil inisiatif dalam berinovasi.*
    - **Bagian III: Ulasan Kualitatif 360°**: Dua area feedback naratif terbuka: *Pencapaian & Kekuatan Utama (Key Strengths)* dan *Area Pengembangan & Saran (Areas for Improvement)*.
    - Tombol kendali cepat: `[Buka Semua / Tutup Semua]` di atas daftar bagian.
 5. **Floating Corner Progress Widget (`corner-progress-fab`)**:
@@ -104,12 +111,12 @@ Menyimpan daftar kompetensi per role jabatan/divisi:
 | `Bobot_Kategori` | Number | Bobot kategori (default: 60%) |
 
 ### 3.3. Sheet: `PR_Core_Values`
-Menyimpan 7 pilar budaya ELASTIC:
+Menyimpan 7 pilar budaya ELASTIC (baku & tetap):
 | Kolom | Tipe | Keterangan |
 |---|---|---|
 | `Pilar_Key` | String | `E`, `L`, `A`, `S`, `T`, `I`, `C` |
-| `Nama_Pilar` | String | Misal: `Enthusiastic`, `Adaptive`, `Consistent` |
-| `Deskripsi_Perilaku`| String | Penjelasan implementasi nilai di lingkungan kerja |
+| `Nama_Pilar` | String | `Enthusiasm`, `Learning continuously`, `Accountability & Dependability`, `Simplicity`, `Teamwork`, `Integrity`, `Creatively Bold` |
+| `Deskripsi_Perilaku`| String | Penjelasan baku implementasi nilai ELASTIC |
 | `Bobot_Kategori` | Number | Bobot kategori (default: 40%) |
 
 ### 3.4. Sheet: `PR_Vault_Submissions` (Brankas Tertutup)

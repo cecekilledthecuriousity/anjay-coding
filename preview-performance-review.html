@@ -1778,6 +1778,396 @@
       color: #FFFFFF !important;
       box-shadow: 0 0 8px rgba(37, 99, 235, 0.4);
     }
+
+    /* ======================================================== */
+    /* LEADER TEAM HUB STYLES (MULTI-ANGGOTA)                   */
+    /* ======================================================== */
+    .leader-hub-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .leader-hero-card {
+      background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+      border-radius: 14px;
+      padding: 22px 24px;
+      color: #FFFFFF;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 4px 20px rgba(15, 23, 42, 0.12);
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 18px;
+    }
+    .leader-hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(37, 99, 235, 0.25);
+      color: #93C5FD;
+      border: 1px solid rgba(147, 197, 253, 0.3);
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 8px;
+    }
+    .leader-hero-title {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.2px;
+      margin-bottom: 6px;
+    }
+    .leader-hero-desc {
+      font-size: 12.5px;
+      color: #94A3B8;
+      max-width: 620px;
+      line-height: 1.5;
+    }
+    .leader-token-pill {
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 10px;
+      padding: 12px 18px;
+      text-align: right;
+    }
+    .leader-token-lbl {
+      font-size: 10px;
+      text-transform: uppercase;
+      color: #94A3B8;
+      letter-spacing: 0.6px;
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+    .leader-token-code {
+      font-family: var(--font-mono);
+      font-size: 14px;
+      font-weight: 800;
+      color: #60A5FA;
+    }
+
+    /* Team KPI Grid */
+    .leader-kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-top: 14px;
+      width: 100%;
+    }
+    .leader-kpi-box {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      padding: 12px 14px;
+    }
+    .leader-kpi-num {
+      font-size: 20px;
+      font-weight: 800;
+      font-family: var(--font-mono);
+      color: #FFFFFF;
+      line-height: 1.2;
+    }
+    .leader-kpi-lbl {
+      font-size: 11px;
+      color: #94A3B8;
+      margin-top: 2px;
+      font-weight: 600;
+    }
+
+    /* Overall Progress Bar */
+    .leader-overall-progress {
+      background: #FFFFFF;
+      border: 1px solid var(--pr-slate-200);
+      border-radius: 12px;
+      padding: 16px 20px;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.02);
+    }
+    .leader-progress-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--pr-navy-900);
+    }
+    .leader-progress-track {
+      width: 100%;
+      height: 8px;
+      background: var(--pr-slate-100);
+      border-radius: 100px;
+      overflow: hidden;
+    }
+    .leader-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #2563EB 0%, #059669 100%);
+      border-radius: 100px;
+      transition: width 0.4s ease;
+    }
+
+    /* Member Cards Grid */
+    .leader-members-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 6px;
+    }
+    .leader-members-title {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--pr-navy-900);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .leader-member-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+      gap: 16px;
+    }
+    .leader-member-card {
+      background: #FFFFFF;
+      border: 1.5px solid var(--pr-slate-200);
+      border-radius: 14px;
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: all 0.2s ease;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.02);
+    }
+    .leader-member-card:hover {
+      border-color: #94A3B8;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+      transform: translateY(-2px);
+    }
+    .leader-card-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .leader-card-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 15px;
+      color: #FFFFFF;
+      flex-shrink: 0;
+    }
+    .leader-card-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .leader-card-name {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--pr-navy-900);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .leader-card-role {
+      font-size: 12px;
+      color: var(--pr-primary);
+      font-weight: 600;
+      margin-top: 1px;
+    }
+    .leader-card-meta {
+      font-size: 11px;
+      color: var(--pr-slate-400);
+      margin-top: 2px;
+      font-family: var(--font-mono);
+    }
+
+    /* Subordinate Status Badge */
+    .leader-status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 9px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      width: fit-content;
+    }
+    .leader-status-done {
+      background: #ECFDF5;
+      color: #059669;
+      border: 1px solid #A7F3D0;
+    }
+    .leader-status-draft {
+      background: #FEF3C7;
+      color: #D97706;
+      border: 1px solid #FCD34D;
+    }
+    .leader-status-empty {
+      background: #F1F5F9;
+      color: #64748B;
+      border: 1px solid #E2E8F0;
+    }
+
+    .leader-card-metrics {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      background: var(--pr-slate-50);
+      border: 1px solid var(--pr-slate-200);
+      border-radius: 8px;
+      padding: 8px 10px;
+      margin-bottom: 14px;
+      font-size: 11px;
+    }
+    .leader-metric-lbl {
+      color: var(--pr-slate-500);
+    }
+    .leader-metric-val {
+      font-weight: 700;
+      color: var(--pr-navy-900);
+      font-family: var(--font-mono);
+    }
+
+    .btn-evaluate-member {
+      width: 100%;
+      padding: 9px 14px;
+      border-radius: 8px;
+      font-size: 12.5px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+      border: none;
+    }
+    .btn-eval-done {
+      background: var(--pr-slate-100);
+      color: var(--pr-navy-900);
+      border: 1px solid var(--pr-slate-300);
+    }
+    .btn-eval-done:hover {
+      background: var(--pr-slate-200);
+    }
+    .btn-eval-draft {
+      background: #D97706;
+      color: #FFFFFF;
+      box-shadow: 0 2px 8px rgba(217, 119, 6, 0.25);
+    }
+    .btn-eval-draft:hover {
+      background: #B45309;
+    }
+    .btn-eval-empty {
+      background: var(--pr-primary);
+      color: #FFFFFF;
+      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+    }
+    .btn-eval-empty:hover {
+      background: var(--pr-primary-hover);
+    }
+
+    /* Breadcrumb / Return to Leader Hub Banner */
+    .leader-back-nav {
+      background: #FFFFFF;
+      border: 1px solid var(--pr-slate-200);
+      border-radius: 10px;
+      padding: 10px 16px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .btn-return-hub {
+      background: var(--pr-slate-100);
+      color: var(--pr-navy-900);
+      border: 1px solid var(--pr-slate-300);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+    .btn-return-hub:hover {
+      background: #EFF6FF;
+      border-color: #93C5FD;
+      color: #1D4ED8;
+    }
+    .sim-btn.leader-hub-btn.active {
+      background: #059669 !important;
+      border-color: #059669 !important;
+      box-shadow: 0 2px 8px rgba(5, 150, 105, 0.4) !important;
+    }
+
+    /* Modal Kustomisasi Leader Team */
+    .leader-modal-member-row {
+      display: grid;
+      grid-template-columns: 1.4fr 1.3fr 1.1fr 1.2fr auto;
+      gap: 8px;
+      align-items: center;
+      background: #F8FAFC;
+      border: 1px solid var(--pr-slate-200);
+      padding: 8px 10px;
+      border-radius: 8px;
+      margin-bottom: 8px;
+    }
+    @media (max-width: 768px) {
+      .leader-modal-member-row {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+    .btn-del-member {
+      background: #FEF2F2;
+      border: 1px solid #FECACA;
+      color: #DC2626;
+      border-radius: 6px;
+      padding: 6px 9px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      line-height: 1;
+    }
+    .btn-del-member:hover {
+      background: #FEE2E2;
+      border-color: #F87171;
+    }
+    .btn-add-member {
+      background: #EFF6FF;
+      color: #1D4ED8;
+      border: 1.5px dashed #93C5FD;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+      width: 100%;
+      justify-content: center;
+      margin-top: 4px;
+    }
+    .btn-add-member:hover {
+      background: #DBEAFE;
+      border-color: #3B82F6;
+    }
   </style>
 </head>
 <body>
@@ -1806,6 +2196,10 @@
       <button class="sim-btn" id="simModeSubmitted" onclick="setSimState('submitted')">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
         <span>Sudah Diserahkan</span>
+      </button>
+      <button class="sim-btn leader-hub-btn" id="simModeLeaderHub" onclick="setSimState('leader_hub')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <span>Leader Hub (Tim Budi)</span>
       </button>
       <button class="sim-btn approver-btn" id="simModeApprover" onclick="setSimState('approver')">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
@@ -2109,6 +2503,22 @@
         </div>
       </div>
 
+      <!-- Leader Hub Breadcrumb Navigation Banner (Muncul saat Leader menilai salah satu tim) -->
+      <div id="leaderHubBackBanner" class="leader-back-nav" style="display:none;">
+        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+          <button type="button" class="btn-return-hub" onclick="returnToLeaderHub()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+            <span>&larr; Kembali ke Dashboard Tim (Budi Pratama)</span>
+          </button>
+          <span style="font-size: 12px; color: var(--pr-slate-500);">
+            Mode Penilaian Tim: <strong id="leaderNavEmpName" style="color:var(--pr-navy-900);">Dimas Ardiansyah</strong> &bull; Divisi Technology &amp; Engineering
+          </span>
+        </div>
+        <div style="font-size: 11.5px; font-weight: 700; color: #059669; background: #ECFDF5; border: 1px solid #A7F3D0; padding: 4px 10px; border-radius: 6px;">
+          Tim Engineering (4 Anggota)
+        </div>
+      </div>
+
       <!-- 1. Executive Document Header & Employee Profile (Humanized & Dignified) -->
       <section class="doc-header-card">
         <div class="doc-header-main">
@@ -2361,7 +2771,7 @@
           <article class="pr-item-card" data-category="core" id="itemCore1">
             <div class="pr-item-top">
               <div class="pr-item-name">1. Enthusiasm</div>
-              <div class="pr-item-desc">Semangat tinggi dalam bekerja, proaktif, dan membawa energi positif ke lingkungan tim.</div>
+              <div class="pr-item-desc">Semangat tinggi dalam bekerja, proaktif, dan membawa energi positif.</div>
             </div>
             <div class="pr-rating-group">
               <button class="pr-rate-btn" onclick="selectRating('core_1', 1, 25)"><span class="btn-score">1</span><span class="btn-label">Kurang</span></button>
@@ -2373,8 +2783,8 @@
 
           <article class="pr-item-card" data-category="core" id="itemCore2">
             <div class="pr-item-top">
-              <div class="pr-item-name">2. Learning Continuously</div>
-              <div class="pr-item-desc">Terus belajar, berkembang, dan selalu terbuka terhadap pengetahuan baru serta feedback konstruktif.</div>
+              <div class="pr-item-name">2. Learning continuously</div>
+              <div class="pr-item-desc">Terus belajar, berkembang, dan terbuka terhadap pengetahuan baru.</div>
             </div>
             <div class="pr-rating-group">
               <button class="pr-rate-btn" onclick="selectRating('core_2', 1, 25)"><span class="btn-score">1</span><span class="btn-label">Kurang</span></button>
@@ -2387,7 +2797,7 @@
           <article class="pr-item-card" data-category="core" id="itemCore3">
             <div class="pr-item-top">
               <div class="pr-item-name">3. Accountability &amp; Dependability</div>
-              <div class="pr-item-desc">Bertanggung jawab penuh, konsisten terhadap komitmen rilis, dan dapat diandalkan dalam menyelesaikan tugas kritis.</div>
+              <div class="pr-item-desc">Bertanggung jawab dan dapat diandalkan dalam menyelesaikan tugas.</div>
             </div>
             <div class="pr-rating-group">
               <button class="pr-rate-btn" onclick="selectRating('core_3', 1, 25)"><span class="btn-score">1</span><span class="btn-label">Kurang</span></button>
@@ -2400,7 +2810,7 @@
           <article class="pr-item-card" data-category="core" id="itemCore4">
             <div class="pr-item-top">
               <div class="pr-item-name">4. Simplicity</div>
-              <div class="pr-item-desc">Menyederhanakan proses arsitektur kode agar lebih efektif, efisien, rapi, dan mudah dipahami rekan pengembang lain.</div>
+              <div class="pr-item-desc">Menyederhanakan proses agar lebih efektif, efisien, dan mudah dipahami.</div>
             </div>
             <div class="pr-rating-group">
               <button class="pr-rate-btn" onclick="selectRating('core_4', 1, 25)"><span class="btn-score">1</span><span class="btn-label">Kurang</span></button>
@@ -2413,7 +2823,7 @@
           <article class="pr-item-card" data-category="core" id="itemCore5">
             <div class="pr-item-top">
               <div class="pr-item-name">5. Teamwork</div>
-              <div class="pr-item-desc">Bekerja sama secara kolaboratif lintas tim pengembang untuk mencapai target sprint dan tujuan bersama perusahaan.</div>
+              <div class="pr-item-desc">Bekerja sama secara kolaboratif untuk mencapai tujuan bersama.</div>
             </div>
             <div class="pr-rating-group">
               <button class="pr-rate-btn" onclick="selectRating('core_5', 1, 25)"><span class="btn-score">1</span><span class="btn-label">Kurang</span></button>
@@ -2426,7 +2836,7 @@
           <article class="pr-item-card" data-category="core" id="itemCore6">
             <div class="pr-item-top">
               <div class="pr-item-name">6. Integrity</div>
-              <div class="pr-item-desc">Bertindak jujur, transparan dalam pelaporan kendala, konsisten, dan selalu menjunjung tinggi kode etik profesional.</div>
+              <div class="pr-item-desc">Bertindak jujur, konsisten, dan menjunjung tinggi nilai moral.</div>
             </div>
             <div class="pr-rating-group">
               <button class="pr-rate-btn" onclick="selectRating('core_6', 1, 25)"><span class="btn-score">1</span><span class="btn-label">Kurang</span></button>
@@ -2439,7 +2849,7 @@
           <article class="pr-item-card" data-category="core" id="itemCore7">
             <div class="pr-item-top">
               <div class="pr-item-name">7. Creatively Bold</div>
-              <div class="pr-item-desc">Berani berpikir kreatif di luar kebiasaan, mengusulkan solusi inovatif, dan berani mengambil inisiatif terukur.</div>
+              <div class="pr-item-desc">Berani berpikir kreatif dan mengambil inisiatif dalam berinovasi.</div>
             </div>
             <div class="pr-rating-group">
               <button class="pr-rate-btn" onclick="selectRating('core_7', 1, 25)"><span class="btn-score">1</span><span class="btn-label">Kurang</span></button>
@@ -2518,7 +2928,10 @@
             <button type="button" class="btn-test-incomplete" onclick="simulateIncompleteState()" title="Simulasikan 3 butir belum terisi untuk menguji coba modal peringatan">
               ⚡ Tes: Kosongkan 3 Butir
             </button>
-            <button class="btn-save-draft" onclick="alert('Draf berhasil disimpan secara lokal!')">Simpan Draf</button>
+            <button type="button" class="btn-return-hub" id="btnBottomReturnHub" onclick="returnToLeaderHub()" style="display:none;">
+              &larr; Simpan &amp; Daftar Tim
+            </button>
+            <button class="btn-save-draft" onclick="alert('Draf penilaian untuk ' + (employeesData[currentToken] ? employeesData[currentToken].nama : 'karyawan') + ' berhasil disimpan!')">Simpan Draf</button>
             <button class="btn-submit-final" onclick="handleSubmitButtonClick()">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
               Submit Evaluasi Final
@@ -2843,6 +3256,86 @@
 
     </div>
 
+    <!-- Screen 5: SIMULASI LEADER HUB (DASHBOARD PENILAIAN TIM MULTI-ANGGOTA) -->
+    <div id="screenLeaderHub" class="leader-hub-wrap" style="display:none;">
+      
+      <!-- Leader Hero Header -->
+      <section class="leader-hero-card">
+        <div>
+          <div class="leader-hero-badge">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            Portal Penilai Atasan • Leader Team Hub
+          </div>
+          <h1 class="leader-hero-title" id="leaderHeroTitle">Evaluasi Kinerja Tim: Technology &amp; Engineering</h1>
+          <p class="leader-hero-desc" id="leaderHeroDesc">
+            Selamat datang, <strong>Budi Pratama, M.Kom</strong> (Head of Engineering). Terdapat <strong>4 anggota tim</strong> yang ditugaskan kepada Anda untuk dievaluasi pada siklus PR 2026. Anda dapat menilai satu per satu, menyimpan draf, atau memperbarui penilaian sebelum batas waktu cutoff.
+          </p>
+          <div style="margin-top: 14px;">
+            <button type="button" class="btn-edit-emp-profile" onclick="openEditLeaderTeamModal()" style="background: rgba(255,255,255,0.12); color:#FFFFFF; border:1px solid rgba(255,255,255,0.25);">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+              <span>⚙️ Kustomisasi Data Leader &amp; Tim</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="leader-token-pill">
+          <div class="leader-token-lbl">Sesi Token Leader:</div>
+          <div class="leader-token-code" id="leaderHeroToken">LEADER-ENG-BP26</div>
+          <div style="font-size:11px; color:#94A3B8; margin-top:3px;" id="leaderHeroDeadline">Batasan: 18 Okt 2026, 23:59 WIB</div>
+        </div>
+
+        <!-- Team KPI Summary Grid -->
+        <div class="leader-kpi-grid">
+          <div class="leader-kpi-box">
+            <div class="leader-kpi-num" id="kpiLeaderTotal">4</div>
+            <div class="leader-kpi-lbl">Total Anggota Tim</div>
+          </div>
+          <div class="leader-kpi-box">
+            <div class="leader-kpi-num" id="kpiLeaderDone" style="color: #34D399;">1</div>
+            <div class="leader-kpi-lbl" id="kpiLeaderDoneLbl">Selesai Diserahkan (25%)</div>
+          </div>
+          <div class="leader-kpi-box">
+            <div class="leader-kpi-num" id="kpiLeaderDraft" style="color: #FBBF24;">1</div>
+            <div class="leader-kpi-lbl" id="kpiLeaderDraftLbl">Draf Tersimpan (25%)</div>
+          </div>
+          <div class="leader-kpi-box">
+            <div class="leader-kpi-num" id="kpiLeaderEmpty" style="color: #94A3B8;">2</div>
+            <div class="leader-kpi-lbl" id="kpiLeaderEmptyLbl">Belum Dimulai (50%)</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Overall Team Progress Track -->
+      <section class="leader-overall-progress">
+        <div class="leader-progress-header">
+          <span>Progres Penilaian Seluruh Tim</span>
+          <span id="leaderOverallProgressPct" style="color: var(--pr-primary); font-family: var(--font-mono);">20 / 52 Butir Terisi (38%)</span>
+        </div>
+        <div class="leader-progress-track">
+          <div class="leader-progress-fill" id="leaderProgressFillBar" style="width: 38%;"></div>
+        </div>
+      </section>
+
+      <!-- Team Members Grid Section -->
+      <section>
+        <div class="leader-members-header">
+          <div class="leader-members-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+            <span id="leaderMembersTitleHeader">Daftar Anggota Tim yang Wajib Dinilai (4 Orang)</span>
+          </div>
+          <button type="button" class="btn-edit-emp-profile" onclick="openEditLeaderTeamModal()">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            <span>+ Tambah / Edit Anggota Tim</span>
+          </button>
+        </div>
+
+        <div class="leader-member-grid" id="leaderMemberGridContainer" style="margin-top: 14px;">
+          <!-- Rendered dynamically by renderLeaderTeamHub() -->
+        </div>
+      </section>
+
+    </div>
+
   </main>
 
   <!-- Modal 0: Ubah Identitas Karyawan Riil (Dummy Tester) -->
@@ -2943,6 +3436,88 @@
           <button type="button" class="btn-modal-cancel" onclick="closeEditEmployeeModal()">Batal</button>
           <button type="submit" class="btn-modal-confirm" style="background: #2563EB; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);">
             Terapkan ke Formulir &rarr;
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Kustomisasi Data Leader & Tim -->
+  <div class="pr-modal-overlay" id="editLeaderTeamModal">
+    <div class="pr-modal" style="max-width: 680px; text-align: left;">
+      <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 14px;">
+        <div>
+          <div style="font-size: 11px; font-weight: 700; color: #059669; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">
+            Simulasi Multi-Anggota
+          </div>
+          <h3 style="margin: 0; font-size: 18px; color: var(--pr-navy-900);">Kustomisasi Data Leader &amp; Anggota Tim</h3>
+        </div>
+        <button type="button" onclick="closeEditLeaderTeamModal()" style="background: none; border: none; font-size: 22px; color: var(--pr-slate-400); cursor: pointer; padding: 0 4px; line-height: 1;">&times;</button>
+      </div>
+
+      <p style="margin: 0 0 16px 0; font-size: 12px; color: var(--pr-slate-500); line-height: 1.45;">
+        Sesuaikan nama Leader, divisi, dan daftar anggota tim di bawahnya. Anda dapat menambah atau mengurangi anggota sesuai struktur tim di perusahaan Anda.
+      </p>
+
+      <form id="formLeaderTeamCustom" onsubmit="event.preventDefault(); applyLeaderTeamCustomization();" style="display: flex; flex-direction: column; gap: 14px;">
+        <!-- Data Leader -->
+        <div style="background: #F8FAFC; border: 1px solid var(--pr-slate-200); border-radius: 10px; padding: 14px;">
+          <div style="font-size: 12px; font-weight: 800; color: var(--pr-navy-900); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px;">
+            1. Profil Atasan / Leader Penilai
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+            <div>
+              <label style="display: block; font-size: 11px; font-weight: 700; color: var(--pr-slate-700); margin-bottom: 4px;">
+                Nama Leader *
+              </label>
+              <input type="text" id="inpLeaderCustomName" required placeholder="Contoh: Budi Pratama, M.Kom" style="width: 100%; padding: 8px 10px; border: 1.5px solid var(--pr-slate-300); border-radius: 7px; font-size: 12.5px; font-weight: 600;">
+            </div>
+            <div>
+              <label style="display: block; font-size: 11px; font-weight: 700; color: var(--pr-slate-700); margin-bottom: 4px;">
+                Jabatan Leader *
+              </label>
+              <input type="text" id="inpLeaderCustomRole" required placeholder="Contoh: Head of Engineering" style="width: 100%; padding: 8px 10px; border: 1.5px solid var(--pr-slate-300); border-radius: 7px; font-size: 12.5px;">
+            </div>
+          </div>
+          <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 10px;">
+            <div>
+              <label style="display: block; font-size: 11px; font-weight: 700; color: var(--pr-slate-700); margin-bottom: 4px;">
+                Divisi / Departemen *
+              </label>
+              <input type="text" id="inpLeaderCustomDivisi" required placeholder="Contoh: Technology & Engineering" style="width: 100%; padding: 8px 10px; border: 1.5px solid var(--pr-slate-300); border-radius: 7px; font-size: 12.5px; font-weight: 600;">
+            </div>
+            <div>
+              <label style="display: block; font-size: 11px; font-weight: 700; color: var(--pr-slate-700); margin-bottom: 4px;">
+                Sesi Token Leader
+              </label>
+              <input type="text" id="inpLeaderCustomToken" placeholder="Contoh: LEADER-ENG-BP26" style="width: 100%; padding: 8px 10px; border: 1.5px solid var(--pr-slate-300); border-radius: 7px; font-size: 12.5px; font-family: var(--font-mono);">
+            </div>
+          </div>
+        </div>
+
+        <!-- Daftar Anggota Tim -->
+        <div>
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+            <div style="font-size: 12px; font-weight: 800; color: var(--pr-navy-900); text-transform: uppercase; letter-spacing: 0.5px;">
+              2. Daftar Anggota Tim yang Dinilai
+            </div>
+            <span style="font-size: 11px; color: var(--pr-slate-500);">Nama &bull; Jabatan &bull; NIK &bull; Status Awal</span>
+          </div>
+
+          <div id="leaderModalMembersList">
+            <!-- Dynamic member input rows rendered here -->
+          </div>
+
+          <button type="button" class="btn-add-member" onclick="addMemberRowToModal()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span>+ Tambah Anggota Tim Baru</span>
+          </button>
+        </div>
+
+        <div class="pr-modal-btns" style="margin-top: 10px;">
+          <button type="button" class="btn-modal-cancel" onclick="closeEditLeaderTeamModal()">Batal</button>
+          <button type="submit" class="btn-modal-confirm" style="background: #059669; box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);">
+            Terapkan ke Dashboard Tim &rarr;
           </button>
         </div>
       </form>
@@ -3180,6 +3755,108 @@
           hrCalibNote: "Formulir baru sedang dalam proses penilaian.",
           officialFinal: "Menunggu Penilaian & Kalibrasi"
         }
+      },
+      "PR26-3912": {
+        token: "PR26-3912",
+        nik: "EMP-2024-099",
+        nama: "Farhan Maulana",
+        avatar: "FM",
+        avatarBg: "#4F46E5",
+        divisi: "Technology & Engineering",
+        jabatan: "Senior Backend Engineer",
+        evaluator: "Budi Pratama, M.Kom",
+        evaluatorTitle: "Head of Engineering",
+        competenciesPreset: "tech",
+        competencies: JSON.parse(JSON.stringify(competencyPresets.tech.items)),
+        scores: {
+          comp: { comp_1: 75, comp_2: 100, comp_3: 75, comp_4: 100, comp_5: 0, comp_6: 0 },
+          core: { core_1: 75, core_2: 75, core_3: 100, core_4: 0, core_5: 0, core_6: 0, core_7: 0 }
+        },
+        strengths: "Sangat fokus pada optimasi database PostgreSQL dan pembersihan query lambat. Responsif dalam troubleshooting incident.",
+        improvements: "Dapat lebih aktif membagikan dokumentasi best practice arsitektur backend ke rekan insinyur lainnya.",
+        approverData: {
+          tag: "PANEL KALIBRASI HR #PR26-3912",
+          empTitle: "Hasil Evaluasi Lengkap: Farhan Maulana",
+          leaderName: "Oleh: Budi Pratama (Head of Engineering)",
+          subName: "Oleh: Farhan Maulana",
+          compWeightScore: "87.5 <span style=\"color:var(--pr-slate-400); font-weight:500; margin:0 2px;\">&rarr;</span> 52.5",
+          coreWeightScore: "83.3 <span style=\"color:var(--pr-slate-400); font-weight:500; margin:0 2px;\">&rarr;</span> 33.3",
+          leaderSubtotal: "85.8 / 100",
+          leaderNote: 'Kinerja backend sangat andal, sedang dalam proses penyelesaian review.',
+          upwardNote: 'Pak Budi selalu memberikan ruang eksplorasi dan bimbingan yang solutif.',
+          upwardScore: "94.0 / 100",
+          hrDiscipline: 95,
+          hrCalibNote: "Sedang dalam proses kalibrasi.",
+          officialFinal: "Menunggu Submit Final"
+        }
+      },
+      "PR26-5821": {
+        token: "PR26-5821",
+        nik: "EMP-2025-014",
+        nama: "Siti Rahma",
+        avatar: "SR",
+        avatarBg: "#0D9488",
+        divisi: "Technology & Engineering",
+        jabatan: "Frontend Specialist",
+        evaluator: "Budi Pratama, M.Kom",
+        evaluatorTitle: "Head of Engineering",
+        competenciesPreset: "tech",
+        competencies: JSON.parse(JSON.stringify(competencyPresets.tech.items)),
+        scores: {
+          comp: { comp_1: 0, comp_2: 0, comp_3: 0, comp_4: 0, comp_5: 0, comp_6: 0 },
+          core: { core_1: 0, core_2: 0, core_3: 0, core_4: 0, core_5: 0, core_6: 0, core_7: 0 }
+        },
+        strengths: "",
+        improvements: "",
+        approverData: {
+          tag: "PANEL KALIBRASI HR #PR26-5821",
+          empTitle: "Hasil Evaluasi Lengkap: Siti Rahma",
+          leaderName: "Oleh: Budi Pratama (Head of Engineering)",
+          subName: "Oleh: Siti Rahma",
+          compWeightScore: "0.0 <span style=\"color:var(--pr-slate-400); font-weight:500; margin:0 2px;\">&rarr;</span> 0.0",
+          coreWeightScore: "0.0 <span style=\"color:var(--pr-slate-400); font-weight:500; margin:0 2px;\">&rarr;</span> 0.0",
+          leaderSubtotal: "0.0 / 100",
+          leaderNote: 'Belum dinilai oleh leader.',
+          upwardNote: '',
+          upwardScore: "0.0 / 100",
+          hrDiscipline: 100,
+          hrCalibNote: "Menunggu penilaian leader.",
+          officialFinal: "Belum Dimulai"
+        }
+      },
+      "PR26-9044": {
+        token: "PR26-9044",
+        nik: "EMP-2025-031",
+        nama: "Rian Pratama",
+        avatar: "RP",
+        avatarBg: "#D97706",
+        divisi: "Technology & Engineering",
+        jabatan: "DevOps & Cloud Engineer",
+        evaluator: "Budi Pratama, M.Kom",
+        evaluatorTitle: "Head of Engineering",
+        competenciesPreset: "tech",
+        competencies: JSON.parse(JSON.stringify(competencyPresets.tech.items)),
+        scores: {
+          comp: { comp_1: 0, comp_2: 0, comp_3: 0, comp_4: 0, comp_5: 0, comp_6: 0 },
+          core: { core_1: 0, core_2: 0, core_3: 0, core_4: 0, core_5: 0, core_6: 0, core_7: 0 }
+        },
+        strengths: "",
+        improvements: "",
+        approverData: {
+          tag: "PANEL KALIBRASI HR #PR26-9044",
+          empTitle: "Hasil Evaluasi Lengkap: Rian Pratama",
+          leaderName: "Oleh: Budi Pratama (Head of Engineering)",
+          subName: "Oleh: Rian Pratama",
+          compWeightScore: "0.0 <span style=\"color:var(--pr-slate-400); font-weight:500; margin:0 2px;\">&rarr;</span> 0.0",
+          coreWeightScore: "0.0 <span style=\"color:var(--pr-slate-400); font-weight:500; margin:0 2px;\">&rarr;</span> 0.0",
+          leaderSubtotal: "0.0 / 100",
+          leaderNote: 'Belum dinilai oleh leader.',
+          upwardNote: '',
+          upwardScore: "0.0 / 100",
+          hrDiscipline: 100,
+          hrCalibNote: "Menunggu penilaian leader.",
+          officialFinal: "Belum Dimulai"
+        }
       }
     };
 
@@ -3347,13 +4024,13 @@
     };
 
     const coreValuesList = [
-      { id: "core_1", name: "1. Enthusiasm (E)", desc: "Semangat tinggi dalam bekerja, proaktif, dan membawa energi positif ke lingkungan tim." },
-      { id: "core_2", name: "2. Loving (L)", desc: "Kepedulian terhadap sesama rekan kerja, empati, dan membangun hubungan kerja yang harmonis." },
-      { id: "core_3", name: "3. Adaptive (A)", desc: "Mampu beradaptasi cepat dengan dinamika bisnis, perubahan prioritas, dan tantangan baru." },
-      { id: "core_4", name: "4. Synergistic (S)", desc: "Kolaborasi efektif antar anggota dan lintas divisi untuk mencapai sasaran bersama." },
-      { id: "core_5", name: "5. Trustworthy (T)", desc: "Integritas tinggi, memegang komitmen, dapat diandalkan, dan transparan dalam bekerja." },
-      { id: "core_6", name: "6. Innovative (I)", desc: "Selalu mencari cara kerja yang lebih efisien, kreatif, dan memberikan solusi berdampak." },
-      { id: "core_7", name: "7. Consistent (C)", desc: "Konsisten dalam menjaga mutu hasil kerja, kepatuhan proses, dan kedisiplinan kerja." }
+      { id: "core_1", name: "1. Enthusiasm", desc: "Semangat tinggi dalam bekerja, proaktif, dan membawa energi positif." },
+      { id: "core_2", name: "2. Learning continuously", desc: "Terus belajar, berkembang, dan terbuka terhadap pengetahuan baru." },
+      { id: "core_3", name: "3. Accountability & Dependability", desc: "Bertanggung jawab dan dapat diandalkan dalam menyelesaikan tugas." },
+      { id: "core_4", name: "4. Simplicity", desc: "Menyederhanakan proses agar lebih efektif, efisien, dan mudah dipahami." },
+      { id: "core_5", name: "5. Teamwork", desc: "Bekerja sama secara kolaboratif untuk mencapai tujuan bersama." },
+      { id: "core_6", name: "6. Integrity", desc: "Bertindak jujur, konsisten, dan menjunjung tinggi nilai moral." },
+      { id: "core_7", name: "7. Creatively Bold", desc: "Berani berpikir kreatif dan mengambil inisiatif dalam berinovasi." }
     ];
 
     // Opsi 3: Kartu Vertikal + Definisi Langsung (Desain Terpilih)
@@ -3823,22 +4500,403 @@
     }
     function executeSubmitFinal() {
       closeConfirmModal();
-      setSimState('submitted');
+      if (isLeaderHubOrigin) {
+        alert('Evaluasi untuk ' + (employeesData[currentToken] ? employeesData[currentToken].nama : 'karyawan') + ' telah berhasil diserahkan!\n\nStatus tim telah diperbarui. Mengalihkan Anda kembali ke Dashboard Tim...');
+        setSimState('leader_hub');
+      } else {
+        setSimState('submitted');
+      }
     }
 
-    // Simulation States (Directory, Active, Expired, Submitted, Approver)
+    // ========================================================
+    // LEADER TEAM HUB DYNAMIC DATA & CUSTOMIZATION
+    // ========================================================
+    let leaderTeamConfig = {
+      leaderName: "Budi Pratama, M.Kom",
+      leaderRole: "Head of Engineering",
+      division: "Technology & Engineering",
+      token: "LEADER-ENG-BP26",
+      deadline: "18 Okt 2026, 23:59 WIB",
+      members: [
+        {
+          token: "PR26-8492",
+          name: "Dimas Ardiansyah",
+          role: "Lead System Architect",
+          nik: "EMP-2024-082",
+          status: "done",
+          compFilled: 6,
+          coreFilled: 7,
+          feedbackStatus: "Lengkap (Strengths &amp; Improvements)"
+        },
+        {
+          token: "PR26-3912",
+          name: "Farhan Maulana",
+          role: "Senior Backend Engineer",
+          nik: "EMP-2024-099",
+          status: "draft",
+          compFilled: 4,
+          coreFilled: 3,
+          feedbackStatus: "Draf Tersimpan"
+        },
+        {
+          token: "PR26-5821",
+          name: "Siti Rahma",
+          role: "Frontend Specialist",
+          nik: "EMP-2025-014",
+          status: "empty",
+          compFilled: 0,
+          coreFilled: 0,
+          feedbackStatus: "Belum Diisi"
+        },
+        {
+          token: "PR26-9044",
+          name: "Rian Pratama",
+          role: "DevOps &amp; Cloud Engineer",
+          nik: "EMP-2025-031",
+          status: "empty",
+          compFilled: 0,
+          coreFilled: 0,
+          feedbackStatus: "Belum Diisi"
+        }
+      ]
+    };
+
+    function renderLeaderTeamHub() {
+      const titleEl = document.getElementById('leaderHeroTitle');
+      if (titleEl) titleEl.textContent = "Evaluasi Kinerja Tim: " + leaderTeamConfig.division;
+
+      const descEl = document.getElementById('leaderHeroDesc');
+      if (descEl) {
+        descEl.innerHTML = "Selamat datang, <strong>" + leaderTeamConfig.leaderName + "</strong> (" + leaderTeamConfig.leaderRole + "). Terdapat <strong>" + leaderTeamConfig.members.length + " anggota tim</strong> yang ditugaskan kepada Anda untuk dievaluasi pada siklus PR 2026. Anda dapat menilai satu per satu, menyimpan draf, atau memperbarui penilaian sebelum batas waktu cutoff.";
+      }
+
+      const tokEl = document.getElementById('leaderHeroToken');
+      if (tokEl) tokEl.textContent = leaderTeamConfig.token;
+
+      // Calculate KPIs
+      const total = leaderTeamConfig.members.length;
+      const doneCount = leaderTeamConfig.members.filter(m => m.status === 'done').length;
+      const draftCount = leaderTeamConfig.members.filter(m => m.status === 'draft').length;
+      const emptyCount = leaderTeamConfig.members.filter(m => m.status === 'empty').length;
+
+      const donePct = total > 0 ? Math.round((doneCount / total) * 100) : 0;
+      const draftPct = total > 0 ? Math.round((draftCount / total) * 100) : 0;
+      const emptyPct = total > 0 ? Math.round((emptyCount / total) * 100) : 0;
+
+      const kpiTotal = document.getElementById('kpiLeaderTotal');
+      if (kpiTotal) kpiTotal.textContent = total;
+      const kpiDone = document.getElementById('kpiLeaderDone');
+      if (kpiDone) kpiDone.textContent = doneCount;
+      const kpiDoneLbl = document.getElementById('kpiLeaderDoneLbl');
+      if (kpiDoneLbl) kpiDoneLbl.textContent = "Selesai Diserahkan (" + donePct + "%)";
+
+      const kpiDraft = document.getElementById('kpiLeaderDraft');
+      if (kpiDraft) kpiDraft.textContent = draftCount;
+      const kpiDraftLbl = document.getElementById('kpiLeaderDraftLbl');
+      if (kpiDraftLbl) kpiDraftLbl.textContent = "Draf Tersimpan (" + draftPct + "%)";
+
+      const kpiEmpty = document.getElementById('kpiLeaderEmpty');
+      if (kpiEmpty) kpiEmpty.textContent = emptyCount;
+      const kpiEmptyLbl = document.getElementById('kpiLeaderEmptyLbl');
+      if (kpiEmptyLbl) kpiEmptyLbl.textContent = "Belum Dimulai (" + emptyPct + "%)";
+
+      // Overall Progress
+      const totalFilledItems = leaderTeamConfig.members.reduce((acc, m) => acc + (m.compFilled + m.coreFilled), 0);
+      const maxItems = total * 13;
+      const overallPct = maxItems > 0 ? Math.round((totalFilledItems / maxItems) * 100) : 0;
+
+      const progPctEl = document.getElementById('leaderOverallProgressPct');
+      if (progPctEl) progPctEl.textContent = totalFilledItems + " / " + maxItems + " Butir Terisi (" + overallPct + "%)";
+      const progBar = document.getElementById('leaderProgressFillBar');
+      if (progBar) progBar.style.width = overallPct + "%";
+
+      const titleHeader = document.getElementById('leaderMembersTitleHeader');
+      if (titleHeader) titleHeader.textContent = "Daftar Anggota Tim yang Wajib Dinilai (" + total + " Orang)";
+
+      // Render Cards
+      const container = document.getElementById('leaderMemberGridContainer');
+      if (!container) return;
+
+      const avatarColors = ["#0F172A", "#4F46E5", "#0D9488", "#D97706", "#2563EB", "#7C3AED", "#DB2777"];
+
+      let cardsHtml = '';
+      leaderTeamConfig.members.forEach((m, idx) => {
+        const initials = m.name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase() || 'EM';
+        const color = avatarColors[idx % avatarColors.length];
+
+        let badgeHtml = '';
+        let buttonHtml = '';
+        let borderStyle = '';
+
+        if (m.status === 'done') {
+          badgeHtml = '<div class="leader-status-badge leader-status-done"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span>Selesai Diserahkan (13/13)</span></div>';
+          buttonHtml = '<button type="button" class="btn-evaluate-member btn-eval-done" onclick="openEmployeeFromLeaderHub(\'' + m.token + '\')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span>Lihat / Periksa Evaluasi ' + m.name.split(' ')[0] + '</span></button>';
+        } else if (m.status === 'draft') {
+          borderStyle = 'border-color: #FCD34D;';
+          badgeHtml = '<div class="leader-status-badge leader-status-draft"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span>Draf Tersimpan (' + (m.compFilled + m.coreFilled) + '/13 Butir)</span></div>';
+          buttonHtml = '<button type="button" class="btn-evaluate-member btn-eval-draft" onclick="openEmployeeFromLeaderHub(\'' + m.token + '\')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg><span>Lanjutkan Penilaian ' + m.name.split(' ')[0] + ' (' + (m.compFilled + m.coreFilled) + '/13) &rarr;</span></button>';
+        } else {
+          badgeHtml = '<div class="leader-status-badge leader-status-empty"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span>Belum Dimulai (0/13)</span></div>';
+          buttonHtml = '<button type="button" class="btn-evaluate-member btn-eval-empty" onclick="openEmployeeFromLeaderHub(\'' + m.token + '\')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg><span>Mulai Nilai ' + m.name.split(' ')[0] + ' &rarr;</span></button>';
+        }
+
+        cardsHtml += `
+          <article class="leader-member-card" style="${borderStyle}">
+            <div>
+              <div class="leader-card-header">
+                <div class="leader-card-avatar" style="background: ${color};">${initials}</div>
+                <div class="leader-card-info">
+                  <div class="leader-card-name" title="${m.name}">${m.name}</div>
+                  <div class="leader-card-role">${m.role}</div>
+                  <div class="leader-card-meta">NIK: ${m.nik} &bull; Token: ${m.token}</div>
+                </div>
+              </div>
+
+              ${badgeHtml}
+
+              <div class="leader-card-metrics">
+                <div>
+                  <span class="leader-metric-lbl">Kompetensi:</span>
+                  <div class="leader-metric-val" style="color:${m.compFilled > 0 ? '#059669' : 'var(--pr-slate-400)'};">${m.compFilled} / 6 Terisi</div>
+                </div>
+                <div>
+                  <span class="leader-metric-lbl">ELASTIC Core:</span>
+                  <div class="leader-metric-val" style="color:${m.coreFilled > 0 ? '#059669' : 'var(--pr-slate-400)'};">${m.coreFilled} / 7 Terisi</div>
+                </div>
+                <div style="grid-column: 1 / -1;">
+                  <span class="leader-metric-lbl">Ulasan 360&deg;:</span>
+                  <div class="leader-metric-val" style="color:${m.feedbackStatus !== 'Belum Diisi' ? '#059669' : 'var(--pr-slate-400)'};">${m.feedbackStatus}</div>
+                </div>
+              </div>
+            </div>
+
+            ${buttonHtml}
+          </article>
+        `;
+      });
+
+      container.innerHTML = cardsHtml;
+    }
+
+    // Modal Kustomisasi Data Leader & Tim Handlers
+    function openEditLeaderTeamModal() {
+      document.getElementById('inpLeaderCustomName').value = leaderTeamConfig.leaderName;
+      document.getElementById('inpLeaderCustomRole').value = leaderTeamConfig.leaderRole;
+      document.getElementById('inpLeaderCustomDivisi').value = leaderTeamConfig.division;
+      document.getElementById('inpLeaderCustomToken').value = leaderTeamConfig.token;
+
+      const listContainer = document.getElementById('leaderModalMembersList');
+      if (listContainer) {
+        listContainer.innerHTML = '';
+        leaderTeamConfig.members.forEach(m => addMemberRowToModal(m));
+      }
+
+      document.getElementById('editLeaderTeamModal').classList.add('active');
+    }
+
+    function closeEditLeaderTeamModal() {
+      document.getElementById('editLeaderTeamModal').classList.remove('active');
+    }
+
+    function addMemberRowToModal(m) {
+      const listContainer = document.getElementById('leaderModalMembersList');
+      if (!listContainer) return;
+
+      const count = listContainer.children.length + 1;
+      const defToken = m ? m.token : ("PR26-M" + (1000 + Math.floor(Math.random() * 9000)));
+      const defName = m ? m.name : ("Anggota Tim " + count);
+      const defRole = m ? m.role : "Staff";
+      const defNik = m ? m.nik : ("EMP-2026-" + (100 + count));
+      const defStatus = m ? m.status : "empty";
+
+      const row = document.createElement('div');
+      row.className = 'leader-modal-member-row';
+      row.innerHTML = `
+        <div>
+          <label style="font-size:10px; color:var(--pr-slate-500); display:block; margin-bottom:2px;">Nama Anggota</label>
+          <input type="text" class="m-inp-name" value="${defName}" required placeholder="Nama Lengkap" style="width:100%; padding:6px 8px; border:1px solid var(--pr-slate-300); border-radius:6px; font-size:12px; font-weight:600;">
+        </div>
+        <div>
+          <label style="font-size:10px; color:var(--pr-slate-500); display:block; margin-bottom:2px;">Jabatan / Role</label>
+          <input type="text" class="m-inp-role" value="${defRole}" required placeholder="Jabatan" style="width:100%; padding:6px 8px; border:1px solid var(--pr-slate-300); border-radius:6px; font-size:12px;">
+        </div>
+        <div>
+          <label style="font-size:10px; color:var(--pr-slate-500); display:block; margin-bottom:2px;">NIK</label>
+          <input type="text" class="m-inp-nik" value="${defNik}" placeholder="NIK" style="width:100%; padding:6px 8px; border:1px solid var(--pr-slate-300); border-radius:6px; font-size:11.5px; font-family:var(--font-mono);">
+        </div>
+        <div>
+          <label style="font-size:10px; color:var(--pr-slate-500); display:block; margin-bottom:2px;">Status Nilai</label>
+          <select class="m-inp-status" style="width:100%; padding:6px 6px; border:1px solid var(--pr-slate-300); border-radius:6px; font-size:11px; font-weight:600;">
+            <option value="empty" ${defStatus === 'empty' ? 'selected' : ''}>Belum Diisi (0/13)</option>
+            <option value="draft" ${defStatus === 'draft' ? 'selected' : ''}>Draf (7/13)</option>
+            <option value="done" ${defStatus === 'done' ? 'selected' : ''}>Selesai (13/13)</option>
+          </select>
+        </div>
+        <div style="padding-top:16px;">
+          <input type="hidden" class="m-inp-token" value="${defToken}">
+          <button type="button" class="btn-del-member" onclick="removeMemberRow(this)" title="Hapus Anggota">&times;</button>
+        </div>
+      `;
+      listContainer.appendChild(row);
+    }
+
+    function removeMemberRow(btn) {
+      const listContainer = document.getElementById('leaderModalMembersList');
+      if (listContainer && listContainer.children.length <= 1) {
+        alert("Minimal harus ada 1 anggota di dalam tim!");
+        return;
+      }
+      btn.closest('.leader-modal-member-row').remove();
+    }
+
+    function applyLeaderTeamCustomization() {
+      const leaderName = document.getElementById('inpLeaderCustomName').value.trim() || 'Leader Tim';
+      const leaderRole = document.getElementById('inpLeaderCustomRole').value.trim() || 'Leader';
+      const division = document.getElementById('inpLeaderCustomDivisi').value.trim() || 'Divisi';
+      const token = document.getElementById('inpLeaderCustomToken').value.trim() || 'LEADER-TIM-2026';
+
+      const rows = document.querySelectorAll('#leaderModalMembersList .leader-modal-member-row');
+      const updatedMembers = [];
+
+      rows.forEach((row, idx) => {
+        const name = row.querySelector('.m-inp-name').value.trim() || ('Anggota ' + (idx + 1));
+        const role = row.querySelector('.m-inp-role').value.trim() || 'Staff';
+        const nik = row.querySelector('.m-inp-nik').value.trim() || ('EMP-2026-0' + (idx + 1));
+        const status = row.querySelector('.m-inp-status').value;
+        const tok = row.querySelector('.m-inp-token').value || ('PR26-M' + (1000 + idx));
+
+        let compFilled = 0;
+        let coreFilled = 0;
+        let feedbackStatus = "Belum Diisi";
+
+        if (status === 'done') {
+          compFilled = 6;
+          coreFilled = 7;
+          feedbackStatus = "Lengkap";
+        } else if (status === 'draft') {
+          compFilled = 4;
+          coreFilled = 3;
+          feedbackStatus = "Draf Tersimpan";
+        }
+
+        updatedMembers.push({
+          token: tok,
+          name: name,
+          role: role,
+          nik: nik,
+          status: status,
+          compFilled: compFilled,
+          coreFilled: coreFilled,
+          feedbackStatus: feedbackStatus
+        });
+
+        // Sinkronisasi data anggota ke employeesData agar form evaluasi aktif berfungsi saat diklik
+        if (!employeesData[tok]) {
+          const avatar = name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase() || 'EM';
+          employeesData[tok] = {
+            token: tok,
+            nik: nik,
+            nama: name,
+            avatar: avatar,
+            avatarBg: '#2563EB',
+            divisi: division,
+            jabatan: role,
+            evaluator: leaderName,
+            evaluatorTitle: leaderRole,
+            competenciesPreset: 'general',
+            competencies: JSON.parse(JSON.stringify(competencyPresets.general.items)),
+            scores: {
+              comp: { comp_1: status === 'done' ? 100 : (status === 'draft' ? 75 : 0), comp_2: status === 'done' ? 100 : (status === 'draft' ? 100 : 0), comp_3: status === 'done' ? 100 : (status === 'draft' ? 75 : 0), comp_4: status === 'done' ? 100 : (status === 'draft' ? 100 : 0), comp_5: status === 'done' ? 100 : 0, comp_6: status === 'done' ? 100 : 0 },
+              core: { core_1: status === 'done' ? 100 : (status === 'draft' ? 75 : 0), core_2: status === 'done' ? 100 : (status === 'draft' ? 75 : 0), core_3: status === 'done' ? 100 : (status === 'draft' ? 100 : 0), core_4: status === 'done' ? 100 : 0, core_5: status === 'done' ? 100 : 0, core_6: status === 'done' ? 100 : 0, core_7: status === 'done' ? 100 : 0 }
+            },
+            strengths: status !== 'empty' ? 'Kinerja dan kontribusi anggota sangat positif dan kooperatif.' : '',
+            improvements: status !== 'empty' ? 'Terus kembangkan kemampuan analisis dan inisiatif mandiri.' : '',
+            approverData: {
+              tag: "PANEL KALIBRASI HR #" + tok,
+              empTitle: "Hasil Evaluasi Lengkap: " + name,
+              leaderName: "Oleh: " + leaderName + " (" + leaderRole + ")",
+              subName: "Oleh: " + name,
+              compWeightScore: status === 'done' ? "100.0 → 60.0" : "0.0 → 0.0",
+              coreWeightScore: status === 'done' ? "100.0 → 40.0" : "0.0 → 0.0",
+              leaderSubtotal: status === 'done' ? "100.0 / 100" : "0.0 / 100",
+              leaderNote: 'Penilaian tim leader.',
+              upwardNote: '',
+              upwardScore: "0.0 / 100",
+              hrDiscipline: 100,
+              hrCalibNote: "Menunggu kalibrasi.",
+              officialFinal: status === 'done' ? "Selesai Evaluasi" : "Dalam Proses"
+            }
+          };
+        } else {
+          employeesData[tok].nama = name;
+          employeesData[tok].jabatan = role;
+          employeesData[tok].nik = nik;
+          employeesData[tok].divisi = division;
+          employeesData[tok].evaluator = leaderName;
+          employeesData[tok].evaluatorTitle = leaderRole;
+        }
+      });
+
+      leaderTeamConfig.leaderName = leaderName;
+      leaderTeamConfig.leaderRole = leaderRole;
+      leaderTeamConfig.division = division;
+      leaderTeamConfig.token = token;
+      leaderTeamConfig.members = updatedMembers;
+
+      closeEditLeaderTeamModal();
+      renderLeaderTeamHub();
+    }
+
+    // Leader Hub Multi-Member Navigation
+    let isLeaderHubOrigin = false;
+
+    function openEmployeeFromLeaderHub(token) {
+      isLeaderHubOrigin = true;
+      switchActiveEmployee(token);
+      setSimState('active');
+
+      const backNav = document.getElementById('leaderHubBackBanner');
+      if (backNav) {
+        backNav.style.display = 'flex';
+        const empName = document.getElementById('leaderNavEmpName');
+        if (empName && employeesData[token]) {
+          empName.textContent = employeesData[token].nama;
+        }
+      }
+    }
+
+    function returnToLeaderHub() {
+      setSimState('leader_hub');
+    }
+
+    // Simulation States (Directory, Active, Expired, Submitted, Leader Hub, Approver)
     function setSimState(state) {
       document.getElementById('simModeDirectory').classList.toggle('active', state === 'directory');
       document.getElementById('simModeActive').classList.toggle('active', state === 'active');
       document.getElementById('simModeExpired').classList.toggle('active', state === 'expired');
       document.getElementById('simModeSubmitted').classList.toggle('active', state === 'submitted');
+      const btnHub = document.getElementById('simModeLeaderHub');
+      if (btnHub) btnHub.classList.toggle('active', state === 'leader_hub');
       document.getElementById('simModeApprover').classList.toggle('active', state === 'approver');
 
       document.getElementById('screenDirectory').style.display = (state === 'directory') ? 'flex' : 'none';
       document.getElementById('screenActive').style.display = (state === 'active') ? 'block' : 'none';
       document.getElementById('screenExpired').style.display = (state === 'expired') ? 'block' : 'none';
       document.getElementById('screenSubmitted').style.display = (state === 'submitted') ? 'block' : 'none';
+      const screenHub = document.getElementById('screenLeaderHub');
+      if (screenHub) screenHub.style.display = (state === 'leader_hub') ? 'flex' : 'none';
       document.getElementById('screenApprover').style.display = (state === 'approver') ? 'block' : 'none';
+
+      // Kontrol banner kembali ke hub saat berada di form evaluasi
+      const backNav = document.getElementById('leaderHubBackBanner');
+      if (backNav) {
+        backNav.style.display = (state === 'active' && isLeaderHubOrigin) ? 'flex' : 'none';
+      }
+      const bottomHub = document.getElementById('btnBottomReturnHub');
+      if (bottomHub) {
+        bottomHub.style.display = (state === 'active' && isLeaderHubOrigin) ? 'inline-flex' : 'none';
+      }
+
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
@@ -3854,6 +4912,7 @@
 
     // Initial render
     switchActiveEmployee('PR26-8492');
+    renderLeaderTeamHub();
     setSimState('active');
   </script>
 </body>
