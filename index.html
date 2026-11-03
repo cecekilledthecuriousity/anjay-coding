@@ -106,10 +106,6 @@
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
         <span>Kalender</span>
       </button>
-      <button type="button" class="tds-nav-item" data-page="training-saya" data-tooltip="Training Saya" title="Training Saya" onclick="goToPage('training-saya')">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-        <span>Training Saya</span>
-      </button>
       <button type="button" class="tds-nav-item" data-page="vendor" data-tooltip="Vendor Directory" title="Vendor Directory" onclick="goToPage('vendor')">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"></path><path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"></path><path d="M9 8h1"></path><path d="M9 12h1"></path><path d="M9 16h1"></path><path d="M14 8h1"></path><path d="M14 12h1"></path><path d="M14 16h1"></path></svg>
         <span>Vendor</span>
@@ -2514,40 +2510,6 @@
       </section>
 
 
-      <!-- ================= 4. PAGE: TRAINING SAYA (#page-training-saya) ================= -->
-            <section class="tds-page" id="page-training-saya">
-        <div style="margin-bottom:20px;">
-          <h2 class="voice" style="font-size:22px;margin:0 0 4px;color:var(--ink);">Training Saya</h2>
-          <span class="helper-note" style="margin:0;font-size:13px;">Lacak status pengajuan pelatihan Anda dalam papan status Kanban.</span>
-        </div>
-
-        <!-- Search Bar -->
-        <div class="form-card" style="padding:16px 20px;margin-bottom:20px;">
-          <form onsubmit="event.preventDefault(); searchMyTrainings();" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-            <div style="flex:1;min-width:240px;position:relative;">
-              <input type="text" id="myTrainingSearchInput" placeholder="Cari berdasarkan nama Leader Pengaju..." style="width:100%;padding:10px 14px;border:1px solid var(--line);border-radius:10px;font-size:14px;background:#FAF9F5;">
-            </div>
-            <button type="submit" class="btn-primary" style="gap:6px;padding:10px 18px;">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-              Cari
-            </button>
-            <button type="button" class="btn-secondary" onclick="resetMyTrainingSearch()" style="padding:10px 14px;">Reset</button>
-          </form>
-        </div>
-
-        <!-- Search Result Status & Kanban Board Container -->
-        <div id="myTrainingsContainer">
-          <div id="myTrainingsPrompt" class="helper-note" style="padding:40px 20px;text-align:center;background:var(--panel);border-radius:var(--radius);border:1px dashed var(--line);max-width:540px;margin:24px auto;">
-            <div class="card-icon-wrap" style="width:48px;height:48px;border-radius:14px;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;background:var(--accent-tint);color:var(--accent);">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-            </div>
-            <div style="font-weight:600;color:var(--ink);font-size:15px;margin-bottom:4px;">Masukkan nama untuk melihat training yang pernah kamu ajukan</div>
-            <div style="font-size:12.5px;color:var(--ink-soft);">Ketik nama lengkap atau sebagian nama Leader/Pengaju pada kotak pencarian di atas.</div>
-          </div>
-          <div id="myTrainingsKanban" style="display:none;"></div>
-        </div>
-      </section>
-
 
 
       <!-- ================= PAGE: GUIDE CENTER (#page-guide-center) ================= -->
@@ -4470,7 +4432,7 @@
           <details>
             <summary>Bagaimana cara mengecek status persetujuan pengajuan saya?</summary>
             <div class="guide-faq-ans">
-              Buka menu <strong>Training Saya</strong> di sidebar. Anda dapat melacak status dokumen (<em>Pending, Approved, Rejected</em>) secara realtime.
+              Status persetujuan pengajuan akan otomatis dikirimkan melalui email konfirmasi ke alamat email Leader Pengaju secara realtime begitu ditinjau oleh Approver. Anda juga dapat melihat jadwal yang telah disetujui pada menu <strong>Kalender</strong>.
             </div>
           </details>
         </div>

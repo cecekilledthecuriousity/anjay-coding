@@ -3392,7 +3392,7 @@ function goToPage(page) {
   if (page === 'calendar' || page === 'jadwal') page = 'kalender';
   if (page === 'studio' || page === 'ai') page = 'ai-studio';
   if (page === 'admin' || page === 'master' || page === 'data' || page === 'portal-approval' || page === 'approval' || page === 'approver') page = 'portal-approval';
-  if (page === 'my-training' || page === 'mytraining' || page === 'training-saya') page = 'learning-passport';
+  if (page === 'my-training' || page === 'mytraining' || page === 'training-saya') page = 'kalender';
   if (page === 'vendors' || page === 'directory') page = 'vendor';
   if (page === 'skill-matrix' || page === 'matrix' || page === 'skillmatrix' || page === 'skills') page = 'skill-matrix';
   if (page === 'post-training' || page === 'trampoline' || page === 'post-test' || page === 'evidence' || page === 'posttraining') page = 'post-training';
@@ -3468,13 +3468,6 @@ function goToPage(page) {
     }
   } else if (page === 'kalender') {
     renderCalendar();
-  } else if (page === 'training-saya') {
-    const searchInput = document.getElementById('myTrainingSearchInput');
-    if (searchInput && searchInput.value.trim()) {
-      searchMyTrainings();
-    } else {
-      resetMyTrainingSearch();
-    }
   } else if (page === 'learning-passport') {
     initLearningPassportPage();
   } else if (page === 'vendor') {
@@ -3582,7 +3575,7 @@ function handleHashNavigation() {
   } else if (rawHash === 'kalender' || rawHash === 'calendar' || rawHash === 'jadwal') {
     goToPage('kalender');
   } else if (rawHash === 'training-saya' || rawHash === 'my-training' || rawHash === 'mytraining') {
-    goToPage('learning-passport');
+    goToPage('kalender');
   } else if (rawHash.startsWith('learning-passport') || rawHash.startsWith('passport') || rawHash.startsWith('paspor')) {
     goToPage('learning-passport');
   } else if (rawHash === 'vendor' || rawHash === 'vendors' || rawHash === 'directory') {
