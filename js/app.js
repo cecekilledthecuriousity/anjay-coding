@@ -5208,7 +5208,7 @@ function renderDashboardLandingPage() {
 }
 
 // ==========================================
-// Training Saya & Kanban Board Logic (#page-training-saya)
+// Kanban Board Logic
 // ==========================================
 function resetMyTrainingSearch() {
   const searchInput = document.getElementById('myTrainingSearchInput');
