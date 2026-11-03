@@ -1,0 +1,60 @@
+# Version Control & Git
+.git
+.gitignore
+.gitattributes
+.github
+
+# AI Assistant Directories & Local Configuration
+.gemini
+.claude
+.agents
+.superpowers
+
+# Testing & CI
+tests
+test_*.html
+test_*.txt
+*.patch
+
+# Documentation & Markdown
+docs
+README.md
+GEMINI.md
+
+# Operating System Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+[Tt]humbs.db
+[Dd]esktop.ini
+$RECYCLE.BIN/
+
+# Logs, Diagnostics & Temp Files
+*.log
+logs
+temp
+tmp
+*.tmp
+*.bak
+*.orig
+scratch
+
+# Batch & Local Development Scripts
+build.bat
+serve.bat
+
+# Source Modular Templates (Built outputs index.html & training_internal_plan.html are used)
+src
+scripts
+
+# IDE & Editor Settings
+.vscode
+.idea
+*.sublime-project
+*.sublime-workspace
+
+# Cloud & Vercel
+.vercel

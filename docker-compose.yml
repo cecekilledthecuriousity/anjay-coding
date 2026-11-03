@@ -1,0 +1,23 @@
+services:
+  rt-online:
+    container_name: rt-online-app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    volumes:
+      # Mount host Antigravity/Gemini credentials directory read-only
+      - /home/production/.gemini:/root/.gemini:ro
+      # Mount host Antigravity CLI binary read-only
+      - /usr/local/bin/agy:/usr/local/bin/agy:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s

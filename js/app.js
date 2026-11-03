@@ -7477,7 +7477,6 @@ async function executeAiGeneration() {
 
   const level = document.getElementById('aiLevelSelect')?.value || 'Intermediate';
   const format = document.getElementById('aiFormatSelect')?.value || '1_day';
-  const apiKey = getActiveGeminiApiKey();
 
   const loadingEl = document.getElementById('aiLoadingState');
   const previewEl = document.getElementById('aiPreviewContainer');
@@ -7493,18 +7492,16 @@ async function executeAiGeneration() {
   try {
     let plan = null;
 
-    if (apiKey) {
-      if (stepText) stepText.textContent = 'Menganalisis domain kompetensi & menyusun modul...';
-      try {
-        plan = await generateWithGeminiLive(topic, level, format, apiKey);
-      } catch (err) {
-        console.warn('Live AI call failed, falling back to built-in smart engine:', err);
-      }
+    if (stepText) stepText.textContent = 'Menghubungkan ke Antigravity AI Engine di VPS...';
+    try {
+      plan = await generateWithAntigravityBackend(topic, level, format);
+    } catch (err) {
+      console.warn('Antigravity backend AI call failed, falling back to smart offline engine:', err);
     }
 
     if (!plan) {
-      if (stepText) stepText.textContent = 'Menganalisis domain kompetensi & menyusun silabus...';
-      await new Promise(r => setTimeout(r, 80));
+      if (stepText) stepText.textContent = 'Menyusun silabus materi via Smart Engine offline...';
+      await new Promise(r => setTimeout(r, 120));
       plan = generateSmartPlanOffline(topic, level, format);
     }
 
@@ -7522,81 +7519,43 @@ async function executeAiGeneration() {
   }
 }
 
-async function generateWithGeminiLive(topic, level, format, apiKey) {
-  const prompt = `Anda adalah konsultan L&D (Learning & Development) korporat terkemuka.
-Rancanglah rencana program pelatihan karyawan yang aplikatif dan profesional untuk:
-Topik: "${topic}"
-Target Level: ${level}
-Format: ${format}
-
-Output WAJIB berupa JSON murni tanpa markdown formatting, tanpa tanda kutip backtick, dengan struktur spesifik berikut:
-{
-  "namaTraining": "Nama Resmi Training",
-  "kategoriUrgensi": "Kesenjangan Keterampilan",
-  "goals": "Deskripsi tujuan SMART dan capaian yang jelas",
-  "modules": [
-    {
-      "modul": "Sesi 1: Judul Sesi",
-      "jamMulai": "09:00",
-      "jamSelesai": "12:00",
-      "durasi": "3 Jam",
-      "metode": "Praktik / Workshop / Teori",
-      "deskripsi": "Rincian materi yang dipelajari"
-    }
-  ],
-  "hasilDiharapkan": "Kemampuan konkret yang dimiliki peserta",
-  "penerapanPekerjaan": "Bagaimana kompetensi ini diterapkan di workflow tim sehari-hari",
-  "indikatorKeberhasilan": "Target metrik keberhasilan kuantitatif & kualitatif"
-}`;
-
+async function generateWithAntigravityBackend(topic, level, format) {
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 12000);
+  const timeoutId = setTimeout(() => controller.abort(), 60000);
 
-  const cleanKey = apiKey.trim();
-  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${encodeURIComponent(cleanKey)}`;
-
-  let response;
   try {
-    response = await fetch(endpoint, {
+    const response = await fetch('/api/ai/generate-plan', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'x-goog-api-key': cleanKey
+        'Content-Type': 'application/json'
       },
       signal: controller.signal,
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { responseMimeType: 'application/json', temperature: 0.7 }
-      })
+      body: JSON.stringify({ topic, level, format })
     });
 
     if (!response.ok) {
-      // Fallback to gemini-3.5-flash-lite
-      const fallbackEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${encodeURIComponent(cleanKey)}`;
-      response = await fetch(fallbackEndpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-goog-api-key': cleanKey
-        },
-        signal: controller.signal,
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { responseMimeType: 'application/json', temperature: 0.7 }
-        })
-      });
+      throw new Error(`Antigravity AI server returned status ${response.status}`);
     }
+
+    const result = await response.json();
+    if (!result || !result.success) {
+      throw new Error(result?.error || 'Antigravity AI generation returned unsuccessful status');
+    }
+
+    const plan = result.plan || result.data;
+    if (!plan) {
+      throw new Error('Invalid plan payload from Antigravity AI server');
+    }
+
+    return plan;
   } finally {
     clearTimeout(timeoutId);
   }
+}
 
-  if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-  const data = await response.json();
-  const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!rawText) throw new Error('Empty response from Gemini');
-  
-  const cleanJson = rawText.replace(/```json\s*|```/g, '').trim();
-  return JSON.parse(cleanJson);
+// Backward-compatible alias
+async function generateWithGeminiLive(topic, level, format, apiKey) {
+  return generateWithAntigravityBackend(topic, level, format);
 }
 
 function generateSmartPlanOffline(topic, level, format) {
@@ -8072,18 +8031,12 @@ async function runStudioEngine() {
   }
 
   try {
-    const apiKey = getActiveGeminiApiKey();
     let data = null;
 
-    if (apiKey) {
-      try {
-        data = await generateStudioWithGeminiLive(mainTopic, targetLevel, format, targetAudience, userIssue, currentStudioMode, apiKey);
-      } catch (err) {
-        console.warn('Gemini live call in Studio failed, falling back to comprehensive offline blueprint:', err);
-        data = buildComprehensiveLdBlueprint(mainTopic, targetLevel, format, targetAudience, userIssue, currentStudioMode);
-      }
-    } else {
-      await new Promise(r => setTimeout(r, 120));
+    try {
+      data = await generateStudioWithAntigravityBackend(mainTopic, targetLevel, format, targetAudience, userIssue, currentStudioMode);
+    } catch (err) {
+      console.warn('Antigravity backend call in Studio failed, falling back to comprehensive offline blueprint:', err);
       data = buildComprehensiveLdBlueprint(mainTopic, targetLevel, format, targetAudience, userIssue, currentStudioMode);
     }
 
@@ -8098,7 +8051,7 @@ async function runStudioEngine() {
     if (actionsEl) actionsEl.style.display = 'flex';
 
     if (statusBadge) {
-      statusBadge.innerHTML = `<span class="mini-pill approved" style="font-size:11.5px;padding:3px 10px;"><span class="dot"></span>Analisis Selesai</span>`;
+      statusBadge.innerHTML = '<span class="mini-pill approved" style="font-size:11.5px;padding:3px 10px;"><span class="dot"></span>Analisis Selesai</span>';
     }
 
     switchStudioDocTab('overview');
@@ -8113,129 +8066,57 @@ async function runStudioEngine() {
   }
 }
 
-async function generateStudioWithGeminiLive(topic, level, format, audience, issue, mode, apiKey) {
-  const prompt = `Anda adalah seorang Chief Learning Officer & Pakar Senior L&D Korporat.
-Rancanglah cetak biru program L&D dan kurikulum pelatihan mendalam untuk konteks berikut:
-Topik: "${topic}"
-Target Level: ${level}
-Format: ${format}
-Target Audiens: "${audience}"
-Masalah / Gejala Performa: "${issue || 'Kesenjangan keterampilan dan kebutuhan peningkatan efisiensi'}"
-Fokus Mode Saat Ini: ${mode}
-
-Keluarkan HANYA JSON murni (tanpa tanda kutip backtick markdown) dengan skema berikut:
-{
-  "title": "${topic}",
-  "level": "${level}",
-  "format": "${format}",
-  "audience": "${audience}",
-  "summary": "Sasaran strategis & SMART goals yang tajam dan terukur",
-  "tna": {
-    "rootCause": "Analisis akar masalah 5-Whys mengapa kendala ini terjadi",
-    "intervention": "Kombinasi intervensi (Pelatihan teknis, perbaikan SOP, atau tooling)",
-    "roadmap": [
-      { "tahap": "Tahap 1: Penguasaan Dasar", "durasi": "Minggu 1-2", "deskripsi": "Uraian tahap 1" },
-      { "tahap": "Tahap 2: Simulasi Praktik", "durasi": "Minggu 3-4", "deskripsi": "Uraian tahap 2" },
-      { "tahap": "Tahap 3: Pendampingan Kerja", "durasi": "Bulan ke-2", "deskripsi": "Uraian tahap 3" }
-    ]
-  },
-  "modules": [
-    {
-      "modul": "Sesi 1: Judul Modul",
-      "jamMulai": "09:00",
-      "jamSelesai": "12:00",
-      "durasi": "3 Jam",
-      "metode": "Praktik / Workshop / Studi Kasus",
-      "deskripsi": "Uraian materi mendalam dan aktivitas hands-on"
-    }
-  ],
-  "ksa": {
-    "knowledge": ["Point pengetahuan 1", "Point pengetahuan 2", "Point pengetahuan 3"],
-    "skills": ["Point keterampilan 1", "Point keterampilan 2", "Point keterampilan 3"],
-    "attitude": ["Point sikap kerja 1", "Point sikap kerja 2", "Point sikap kerja 3"]
-  },
-  "evaluation": {
-    "level1": { "title": "Level 1: Reaksi & Kepuasan", "metric": "Survei CSAT", "target": "Target skor minimal 4.6/5.0" },
-    "level2": { "title": "Level 2: Pembelajaran", "metric": "Pre-Test vs Post-Test", "target": "Peningkatan nilai rata-rata >= 35%" },
-    "level3": { "title": "Level 3: Perilaku Kerja 30-Hari", "metric": "Observasi Supervisor Langsung", "target": "Penerapan SOP >= 85%" },
-    "level4": { "title": "Level 4: Hasil Bisnis 90-Hari", "metric": "Metrik Performa Operasional", "target": "Efisiensi jam kerja & reduksi defect" },
-    "roiProjection": {
-      "participants": 10,
-      "hoursSavedPerWeek": "4 Jam / Tim",
-      "annualHoursSaved": "200 Jam / Tahun",
-      "estimatedPayback": "2 Bulan"
-    }
-  },
-  "quiz": [
-    {
-      "q": "1. Pertanyaan skenario kasus riil...",
-      "options": ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"],
-      "answer": "B",
-      "explanation": "Alasan mengapa B benar..."
-    }
-  ]
-}`;
-
-  const cleanKey = apiKey.trim();
+async function generateStudioWithAntigravityBackend(topic, level, format, audience, issue, mode) {
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 16000);
+  const timeoutId = setTimeout(() => controller.abort(), 60000);
 
-  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${encodeURIComponent(cleanKey)}`;
-
-  let response;
   try {
-    response = await fetch(endpoint, {
+    const response = await fetch('/api/ai/studio', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'x-goog-api-key': cleanKey
+        'Content-Type': 'application/json'
       },
       signal: controller.signal,
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { responseMimeType: 'application/json', temperature: 0.7 }
-      })
+      body: JSON.stringify({ topic, level, format, audience, issue, mode })
     });
 
     if (!response.ok) {
-      const fallbackEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${encodeURIComponent(cleanKey)}`;
-      response = await fetch(fallbackEndpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-goog-api-key': cleanKey
-        },
-        signal: controller.signal,
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { responseMimeType: 'application/json', temperature: 0.7 }
-        })
-      });
+      throw new Error(`Antigravity AI Studio returned status ${response.status}`);
     }
+
+    const result = await response.json();
+    if (!result || !result.success) {
+      throw new Error(result?.error || 'Antigravity AI Studio returned unsuccessful status');
+    }
+
+    const blueprint = result.data || result.plan;
+    if (!blueprint) {
+      throw new Error('Invalid blueprint payload from Antigravity AI Studio');
+    }
+
+    // Ensure formPlan is available if missing
+    if (!blueprint.formPlan) {
+      blueprint.formPlan = {
+        namaTraining: blueprint.title || topic,
+        kategoriUrgensi: 'Kesenjangan Keterampilan',
+        level: blueprint.level || level,
+        goals: blueprint.summary || '',
+        modules: blueprint.modules || [],
+        hasilDiharapkan: blueprint.evaluation?.level4?.target || blueprint.summary,
+        penerapanPekerjaan: blueprint.evaluation?.level3?.target || 'Penerapan langsung di workflow tim.',
+        indikatorKeberhasilan: blueprint.evaluation?.level2?.target || 'Peningkatan skor evaluasi >= 85%.'
+      };
+    }
+
+    return blueprint;
   } finally {
     clearTimeout(timeoutId);
   }
+}
 
-  if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-  const resData = await response.json();
-  const rawText = resData?.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!rawText) throw new Error('Empty response from Gemini');
-
-  const cleanJson = rawText.replace(/```json\s*|```/g, '').trim();
-  const parsed = JSON.parse(cleanJson);
-
-  parsed.formPlan = {
-    namaTraining: parsed.title || topic,
-    kategoriUrgensi: 'Kesenjangan Keterampilan',
-    level: parsed.level || level,
-    goals: parsed.summary || '',
-    modules: parsed.modules || [],
-    hasilDiharapkan: parsed.evaluation?.level4?.target || parsed.summary,
-    penerapanPekerjaan: parsed.evaluation?.level3?.target || 'Penerapan langsung di workflow tim.',
-    indikatorKeberhasilan: parsed.evaluation?.level2?.target || 'Peningkatan skor evaluasi >= 85%.'
-  };
-
-  return parsed;
+// Backward-compatible alias
+async function generateStudioWithGeminiLive(topic, level, format, audience, issue, mode, apiKey) {
+  return generateStudioWithAntigravityBackend(topic, level, format, audience, issue, mode);
 }
 
 // Deep Intelligence Blueprint Builder (Multi-Dimensional L&D Engine)
@@ -8723,6 +8604,10 @@ function applyStudioPlanAndGoToForm() {
 window.openAiAssistantModal = openAiAssistantModal;
 window.setAiTopic = setAiTopic;
 window.saveAiApiKey = saveAiApiKey;
+window.generateWithAntigravityBackend = generateWithAntigravityBackend;
+window.generateStudioWithAntigravityBackend = generateStudioWithAntigravityBackend;
+window.generateWithGeminiLive = generateWithGeminiLive;
+window.generateStudioWithGeminiLive = generateStudioWithGeminiLive;
 window.executeAiGeneration = executeAiGeneration;
 window.applyAiPlanToForm = applyAiPlanToForm;
 window.initAiStudioPage = initAiStudioPage;

@@ -4,6 +4,8 @@
   "private": true,
   "description": "Training & Development System with Modular Static HTML Assembler",
   "scripts": {
+    "start": "node server.js",
+    "test": "node tests/test-server.js",
     "build": "node scripts/build.js",
     "watch": "node scripts/build.js --watch"
   }

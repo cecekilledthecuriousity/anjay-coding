@@ -14,6 +14,9 @@ form-training/
 │   └── style.css               # Styling murni (Pure CSS, custom SVG dropdown, anti-collision mobile)
 ├── js/
 │   └── app.js                  # Logika wizard, auto-calculate, quick paste Excel, & Sheet sync
+├── server.js                   # Node.js backend server (HTTP API, static server, & Antigravity bridge)
+├── Dockerfile                  # Container definition (node:20-bookworm-slim dengan glibc support)
+├── docker-compose.yml          # Konfigurasi orkestrasi Docker dengan volume mount agy host
 ├── google-apps-script.js       # Backend Google Apps Script (headers & row mapper lengkap)
 └── README.md                   # Dokumentasi teknis dan panduan penggunaan
 ```
@@ -113,3 +116,51 @@ Halaman formulir sengaja dibuat bersih (*clean*) tanpa tombol navigasi master da
    - Tersedia tombol **Export CSV** untuk mendownload data.
    - Tersedia tombol **Kunci** untuk mengunci kembali sesi admin.
    - Tersedia tombol **Kembali ke Form** untuk kembali ke formulir utama yang bersih.
+
+---
+
+## 🐳 5. Panduan Deployment Docker di VPS (Integrasi Antigravity Host)
+
+Aplikasi ini mendukung deployment containerized menggunakan **Docker** dan **Docker Compose** di VPS Linux (misal Ubuntu/Debian), dengan integrasi langsung ke instalasi Antigravity CLI (`agy`) yang sudah terotentikasi di host VPS.
+
+### ⚙️ Prasyarat di Host VPS
+1. **Docker & Docker Compose** sudah terpasang dan berjalan di VPS.
+2. Binary **Antigravity CLI** terinstal pada host di `/usr/local/bin/agy`.
+3. Kredensial akun produksi telah terotentikasi di direktori `/home/production/.gemini` host.
+
+### 🚀 Cara Menjalankan Container
+Jalankan perintah berikut di direktori proyek pada VPS untuk membangun image dan menjalankan container di background:
+
+```bash
+docker compose up -d --build
+```
+
+Aplikasi akan otomatis berjalan pada port `3000` (atau port sesuai variabel lingkungan `PORT`).
+
+### 📦 Penjelasan Volume Mounts (`docker-compose.yml`)
+Konfigurasi `docker-compose.yml` menggunakan dua volume mount bertipe *read-only* (`:ro`) untuk menghubungkan container dengan host:
+- **`/usr/local/bin/agy:/usr/local/bin/agy:ro`**:
+  Memetakan binary executable Antigravity CLI dari host ke dalam container. Container menggunakan image `node:20-bookworm-slim` berbasis Debian yang menjamin kompatibilitas biner `glibc` dengan sistem Linux host.
+- **`/home/production/.gemini:/root/.gemini:ro`**:
+  Memetakan direktori konfigurasi dan credential otentikasi Antigravity/Gemini pengguna host ke `/root/.gemini` di dalam container. Dengan demikian, container dapat mengeksekusi CLI `agy` secara langsung tanpa perlu login ulang atau menyimpan token/credential baru di dalam container image.
+
+### 🔍 Pemantauan & Pengecekan Kesehatan (Health Check)
+- **Cek Status Health Endpoint**:
+  ```bash
+  curl http://localhost:3000/health
+  ```
+  Endpoint akan mengembalikan respons JSON berupa status server dan ketersediaan `agy`:
+  ```json
+  {"status":"ok","agyAvailable":true,"timestamp":"2026-11-03T05:00:00.000Z"}
+  ```
+- **Melihat Log Container**:
+  ```bash
+  docker compose logs -f
+  ```
+- **Melihat Status Container**:
+  ```bash
+  docker compose ps
+  ```
+
+### 🛡️ Graceful Fallback (Smart Engine)
+Jika container dijalankan di lingkungan tanpa binary `agy` (misalnya saat pengujian offline, mesin lokal developer tanpa instalasi Antigravity CLI, atau jika volume mount tidak disertakan), server backend (`server.js`) secara otomatis beralih menggunakan **Smart Engine Fallback**. Fitur AI Training Plan Generator dan AI Studio tetap beroperasi secara mulus menghasilkan struktur kurikulum dan blueprint pelatihan yang relevan tanpa downtime (*graceful degradation*).
