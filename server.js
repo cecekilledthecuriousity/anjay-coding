@@ -370,11 +370,24 @@ function serveStaticFile(req, res, pathname) {
 
   fs.stat(targetPath, (err, stats) => {
     if (err) {
+      // Fallback alias for /approval.js -> /approval/approval.js
+      if (cleanPath === '/approval.js') {
+        const fallbackPath = path.join(PUBLIC_DIR, 'approval', 'approval.js');
+        if (fs.existsSync(fallbackPath)) {
+          return streamFile(res, fallbackPath);
+        }
+      }
       res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
       return res.end(`404 Not Found: ${cleanPath}`);
     }
 
     if (stats.isDirectory()) {
+      if (!cleanPath.endsWith('/')) {
+        const queryIdx = (req.url || '').indexOf('?');
+        const query = queryIdx !== -1 ? (req.url || '').slice(queryIdx) : '';
+        res.writeHead(301, { 'Location': cleanPath + '/' + query });
+        return res.end();
+      }
       const indexPath = path.join(targetPath, 'index.html');
       fs.stat(indexPath, (idxErr, idxStats) => {
         if (idxErr || !idxStats.isFile()) {
@@ -393,9 +406,12 @@ function serveStaticFile(req, res, pathname) {
 function streamFile(res, filePath) {
   const ext = path.extname(filePath).toLowerCase();
   const contentType = MIME_TYPES[ext] || 'application/octet-stream';
+  const cacheControl = ext === '.html'
+    ? 'no-cache, must-revalidate'
+    : 'public, max-age=3600';
   res.writeHead(200, {
     'Content-Type': contentType,
-    'Cache-Control': 'public, max-age=3600'
+    'Cache-Control': cacheControl
   });
   const stream = fs.createReadStream(filePath);
   stream.on('error', () => {

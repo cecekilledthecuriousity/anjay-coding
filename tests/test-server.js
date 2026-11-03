@@ -97,6 +97,31 @@ async function runTests() {
       assert.match(res.headers.get('content-type'), /text\/html/);
     });
 
+    // 3b. GET /approval redirects to /approval/ (directory trailing slash redirect)
+    await test('GET /approval redirects to /approval/ with 301', async () => {
+      const res = await fetch(`${baseUrl}/approval`, { redirect: 'manual' });
+      assert.strictEqual(res.status, 301);
+      assert.strictEqual(res.headers.get('location'), '/approval/');
+    });
+
+    // 3c. GET /approval/ serves approval/index.html
+    await test('GET /approval/ returns 200 approval index.html', async () => {
+      const res = await fetch(`${baseUrl}/approval/`);
+      assert.strictEqual(res.status, 200);
+      assert.match(res.headers.get('content-type'), /text\/html/);
+      const text = await res.text();
+      assert.ok(text.includes('Portal Approval Training'));
+    });
+
+    // 3d. GET /approval.js fallback alias serves approval/approval.js
+    await test('GET /approval.js serves approval.js via fallback alias', async () => {
+      const res = await fetch(`${baseUrl}/approval.js`);
+      assert.strictEqual(res.status, 200);
+      assert.match(res.headers.get('content-type'), /text\/javascript/);
+      const text = await res.text();
+      assert.ok(text.includes('DEFAULT_ADMIN_PIN'));
+    });
+
     // Helper for raw HTTP requests bypassing client-side URL normalization
     function rawGet(reqPath) {
       return new Promise((resolve, reject) => {
