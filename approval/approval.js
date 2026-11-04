@@ -392,6 +392,9 @@ function goToApprPage(page) {
     applyFilterAndSearch();
   } else if (page === 'evidence') {
     fetchEvidenceData();
+  } else if (page === 'attendance') {
+    fetchAttendanceData();
+    renderAttendancePage();
   }
 }
 window.goToApprPage = goToApprPage;
@@ -669,6 +672,7 @@ async function fetchSubmissions(forceRefresh = false) {
   applyFilterAndSearch();
   renderApprCalendar();
   fetchEvidenceData();
+  fetchAttendanceData();
   checkUrlDeepLink();
 }
 
@@ -3214,3 +3218,904 @@ window.closeAuthSheetModal = closeAuthSheetModal;
 window.printAuthSheet = printAuthSheet;
 
 
+
+
+// ==============================================================================
+// 18. LIVE QR ATTENDANCE RECAP & APPROVAL INTEGRATION (REKAPAN LIVE ABSENSI)
+// ==============================================================================
+
+const ATTENDANCE_STORAGE_KEY = 'training_attendance_master_logs';
+let allAttendanceLogs = [];
+let currentAttTrainingId = 'all';
+let currentAttFilterStatus = 'all'; // 'all' | 'present' | 'low' | 'none'
+let currentAttSearchQuery = '';
+
+/**
+ * Mengambil log presensi lokal dari localStorage
+ */
+function getStoredAttendanceLogs() {
+  try {
+    const raw = localStorage.getItem(ATTENDANCE_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+/**
+ * Menyimpan log presensi ke localStorage
+ */
+function saveStoredAttendanceLogs(logs) {
+  try {
+    localStorage.setItem(ATTENDANCE_STORAGE_KEY, JSON.stringify(logs));
+  } catch (e) {}
+}
+
+/**
+ * Mengambil data presensi dari backend Google Apps Script dan sinkronisasi dengan localStorage
+ */
+async function fetchAttendanceData(forceRefresh = false) {
+  let remoteLogs = [];
+  let fetchOk = false;
+
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 6500);
+    const res = await fetch(`${GOOGLE_SCRIPT_URL}?action=getAttendanceLogs&_ts=${Date.now()}`, {
+      method: 'GET',
+      cache: forceRefresh ? 'no-cache' : 'default',
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+
+    if (res.ok) {
+      const json = await res.json();
+      if (Array.isArray(json)) {
+        remoteLogs = json;
+        fetchOk = true;
+      }
+    }
+  } catch (err) {
+    fetchOk = false;
+  }
+
+  // Gabungkan dengan log presensi lokal
+  const localLogs = getStoredAttendanceLogs();
+  const mergedMap = new Map();
+
+  // 1. Masukkan log lokal
+  localLogs.forEach(l => {
+    if (!l) return;
+    const trn = String(l.trainingId || '').trim().toUpperCase();
+    const mod = String(l.moduleId || 'Sesi 1').trim().toLowerCase();
+    const user = String(l.participantEmail || l.participantName || '').trim().toLowerCase();
+    const key = `${trn}_${mod}_${user}`;
+    if (key && trn) mergedMap.set(key, l);
+  });
+
+  // 2. Timpa/tambahkan dengan log remote
+  if (fetchOk && Array.isArray(remoteLogs)) {
+    remoteLogs.forEach(l => {
+      if (!l) return;
+      const trn = String(l.trainingId || '').trim().toUpperCase();
+      const mod = String(l.moduleId || 'Sesi 1').trim().toLowerCase();
+      const user = String(l.participantEmail || l.participantName || '').trim().toLowerCase();
+      const key = `${trn}_${mod}_${user}`;
+      if (key && trn) mergedMap.set(key, l);
+    });
+  }
+
+  allAttendanceLogs = Array.from(mergedMap.values());
+  saveStoredAttendanceLogs(allAttendanceLogs);
+
+  // Update badge jumlah absensi aktif pada sidebar
+  const badge = document.getElementById('sidebarAttendanceBadge');
+  if (badge) {
+    badge.textContent = allAttendanceLogs.length;
+  }
+
+  // Jika halaman attendance sedang aktif, render ulang
+  if (currentApprPage === 'attendance') {
+    renderAttendancePage();
+  }
+
+  if (forceRefresh) {
+    showToast('Data Live Absensi berhasil disinkronkan dengan Google Sheets.', 'success');
+  }
+}
+
+/**
+ * Menghitung kalkulasi rekapan absensi lengkap untuk 1 pelatihan spesifik
+ * @param {string} trainingId ID pelatihan (misal TRN-YYYYMMDD-DEPT-CAT)
+ * @param {Object} [specificSubmission] Obyek submission jika sudah ada di konteks
+ */
+function calculateTrainingAttendance(trainingId, specificSubmission = null) {
+  const cleanId = String(trainingId || '').trim().toUpperCase();
+  const norm = (s) => String(s || '').replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+  const targetNorm = norm(cleanId);
+
+  const sub = specificSubmission || allSubmissions.find(s => {
+    if (!s || !s.id) return false;
+    const sId = String(s.id).trim().toUpperCase();
+    return sId === cleanId || norm(sId) === targetNorm;
+  });
+
+  const raw = (sub && sub.rawEntry) ? sub.rawEntry : {};
+  const meta = raw.meta || {};
+  const modules = Array.isArray(raw.modules) ? raw.modules : [];
+  const totalSessions = Math.max(modules.length, 1);
+  const rawParts = Array.isArray(raw.participants) ? raw.participants : [];
+
+  // Filter seluruh log absensi yang cocok dengan ID training ini
+  const trnLogs = allAttendanceLogs.filter(l => {
+    const lTrn = String(l.trainingId || '').trim().toUpperCase();
+    return lTrn === cleanId || norm(lTrn) === targetNorm;
+  });
+
+  // Map modul yang diikuti per orang
+  const attendedModulesByPerson = new Map();
+  const lastLogByPerson = new Map();
+
+  trnLogs.forEach(l => {
+    const emailKey = String(l.participantEmail || '').toLowerCase().trim();
+    const nameKey = String(l.participantName || '').toLowerCase().trim();
+    const modName = String(l.moduleId || 'Sesi 1').trim();
+
+    const keys = [emailKey, nameKey].filter(Boolean);
+    keys.forEach(k => {
+      if (!attendedModulesByPerson.has(k)) {
+        attendedModulesByPerson.set(k, new Set());
+      }
+      attendedModulesByPerson.get(k).add(modName);
+      lastLogByPerson.set(k, l);
+    });
+  });
+
+  const participantsList = [];
+  const processedKeys = new Set();
+
+  // 1. Peserta Terdaftar
+  rawParts.forEach(p => {
+    const pNama = (p.nama || p.name || p.namaPeserta || '').trim();
+    const pEmail = (p.email || p.emailPeserta || '').trim();
+    const pDept = (p.departemen || p.divisi || p.department || '-').trim();
+    const emailKey = pEmail.toLowerCase();
+    const nameKey = pNama.toLowerCase();
+
+    if (emailKey) processedKeys.add(emailKey);
+    if (nameKey) processedKeys.add(nameKey);
+
+    const attendedSet = (emailKey ? attendedModulesByPerson.get(emailKey) : null) ||
+                        (nameKey ? attendedModulesByPerson.get(nameKey) : null) ||
+                        new Set();
+
+    const attendedCount = attendedSet.size;
+    const persen = totalSessions > 0 ? Math.round((attendedCount / totalSessions) * 100) : 0;
+    const lastLog = (emailKey ? lastLogByPerson.get(emailKey) : null) || (nameKey ? lastLogByPerson.get(nameKey) : null) || null;
+
+    let status = 'none'; // 'good' | 'low' | 'none'
+    if (persen >= 75) {
+      status = 'good';
+    } else if (attendedCount > 0) {
+      status = 'low';
+    }
+
+    participantsList.push({
+      nama: pNama,
+      email: pEmail,
+      departemen: pDept,
+      isWalkIn: false,
+      attendedModules: Array.from(attendedSet),
+      attendedCount: attendedCount,
+      totalSessions: totalSessions,
+      persen: persen,
+      status: status,
+      lastLog: lastLog
+    });
+  });
+
+  // 2. Peserta Walk-in (Hadir di log namun belum ada di daftar pendaftaran)
+  trnLogs.forEach(l => {
+    const pNama = (l.participantName || '').trim();
+    const pEmail = (l.participantEmail || '').trim();
+    const pDept = (l.department || '-').trim();
+    const emailKey = pEmail.toLowerCase();
+    const nameKey = pNama.toLowerCase();
+
+    if ((emailKey && processedKeys.has(emailKey)) || (nameKey && processedKeys.has(nameKey))) {
+      return;
+    }
+
+    if (emailKey) processedKeys.add(emailKey);
+    if (nameKey) processedKeys.add(nameKey);
+
+    const attendedSet = (emailKey ? attendedModulesByPerson.get(emailKey) : null) ||
+                        (nameKey ? attendedModulesByPerson.get(nameKey) : null) ||
+                        new Set();
+
+    const attendedCount = attendedSet.size;
+    const persen = totalSessions > 0 ? Math.round((attendedCount / totalSessions) * 100) : 0;
+    const lastLog = l;
+
+    let status = 'none';
+    if (persen >= 75) status = 'good';
+    else if (attendedCount > 0) status = 'low';
+
+    participantsList.push({
+      nama: pNama,
+      email: pEmail,
+      departemen: pDept,
+      isWalkIn: true,
+      attendedModules: Array.from(attendedSet),
+      attendedCount: attendedCount,
+      totalSessions: totalSessions,
+      persen: persen,
+      status: status,
+      lastLog: lastLog
+    });
+  });
+
+  // Urutkan alfabetis
+  participantsList.sort((a, b) => a.nama.localeCompare(b.nama));
+
+  // Modul Summary
+  const modulesSummary = modules.map((m, idx) => {
+    const modName = (m.modul || `Sesi ${idx + 1}`).trim();
+    const modLogs = trnLogs.filter(l => String(l.moduleId || '').trim().toLowerCase() === modName.toLowerCase());
+    const uniqueAttendees = new Set(modLogs.map(l => String(l.participantEmail || l.participantName || '').toLowerCase().trim()));
+    return {
+      modul: modName,
+      tanggal: m.tanggal || '-',
+      jam: `${m.jamMulai || ''} - ${m.jamSelesai || ''}`.trim(),
+      pic: m.pic || '-',
+      attendedCount: uniqueAttendees.size
+    };
+  });
+
+  const totalParticipants = participantsList.length;
+  const attendedAtLeastOnce = participantsList.filter(p => p.attendedCount > 0).length;
+  const eligibleCount = participantsList.filter(p => p.status === 'good').length;
+  const lowCount = participantsList.filter(p => p.status === 'low').length;
+  const noneCount = participantsList.filter(p => p.status === 'none').length;
+  const avgPercent = totalParticipants > 0
+    ? Math.round(participantsList.reduce((acc, p) => acc + p.persen, 0) / totalParticipants)
+    : 0;
+
+  return {
+    trainingId: cleanId,
+    submission: sub,
+    hasLogs: trnLogs.length > 0,
+    totalLogsCount: trnLogs.length,
+    totalParticipants: totalParticipants,
+    attendedAtLeastOnce: attendedAtLeastOnce,
+    eligibleCount: eligibleCount,
+    lowCount: lowCount,
+    noneCount: noneCount,
+    avgPercent: avgPercent,
+    participantsList: participantsList,
+    modulesSummary: modulesSummary
+  };
+}
+
+/**
+ * Membangun elemen HTML Rekapan Absensi Peserta di dalam Modal Detail Proposal
+ */
+function buildModalAttendanceSectionHtml(item) {
+  if (!item || !item.id) return '';
+  const att = calculateTrainingAttendance(item.id, item);
+
+  if (!att.hasLogs) {
+    return `
+      <!-- Rekapan Live Absensi (Belum Ada Catatan) -->
+      <div style="background:#FFFFFF;border:1px solid rgba(46,125,50,0.18);border-radius:14px;padding:20px;margin-top:20px;margin-bottom:18px;box-shadow:var(--shadow-sm);">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:10px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="width:28px;height:28px;border-radius:8px;background:rgba(46,125,50,0.12);color:#2E7D32;display:flex;align-items:center;justify-content:center;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <polyline points="16 11 18 13 22 9"></polyline>
+              </svg>
+            </div>
+            <div>
+              <div style="font-size:14px;font-weight:700;color:var(--ink);">Rekapan Absensi Peserta (Live Absensi)</div>
+              <div style="font-size:11.5px;color:var(--ink-soft);">Terintegrasi otomatis dengan sistem Live QR Hub proyektor &amp; mobile check-in</div>
+            </div>
+          </div>
+          <span class="mini-pill" style="font-size:11px;background:rgba(0,0,0,0.05);color:var(--ink-soft);padding:3px 10px;">
+            <span class="dot" style="background:#888;"></span>Belum Ada Check-in
+          </span>
+        </div>
+        <div style="background:#FAFBFD;border:1px dashed rgba(46,125,50,0.25);border-radius:10px;padding:16px 18px;font-size:12.5px;color:var(--ink-soft);line-height:1.6;">
+          <div style="font-weight:600;color:var(--ink);margin-bottom:3px;">Presensi Otomatis Hari-H Pelatihan</div>
+          Data rekapan absensi akan tampil secara realtime di sini begitu trainer membuka sesi pada menu <strong>Live Absensi</strong> dan peserta melakukan scan QR menggunakan kamera smartphone.
+        </div>
+      </div>
+    `;
+  }
+
+  // Render Penuh Jika Ada Log Absen
+  return `
+    <div style="background:#FFFFFF;border:1.5px solid rgba(46,125,50,0.24);border-radius:16px;padding:22px;margin-top:22px;margin-bottom:18px;box-shadow:0 4px 16px -4px rgba(46,125,50,0.10);">
+      <!-- Header Section -->
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg, #15803D 0%, #22C55E 100%);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(34,197,94,0.3);">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <polyline points="16 11 18 13 22 9"></polyline>
+            </svg>
+          </div>
+          <div>
+            <div style="font-size:15px;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:8px;">
+              <span>Rekapan Absensi Peserta</span>
+              <span class="mini-pill approved" style="font-size:10.5px;padding:1px 7px;">Live Absensi Realtime</span>
+            </div>
+            <span style="font-size:12px;color:var(--ink-soft);">Hasil sinkronisasi data presensi dari pemindaian QR &amp; checklist trainer</span>
+          </div>
+        </div>
+
+        <button type="button" class="btn-secondary" onclick="exportSingleTrainingAttendanceCsv('${escapeHtml(item.id)}')" style="font-size:12px;padding:6px 12px;gap:6px;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          <span>Export CSV Absensi</span>
+        </button>
+      </div>
+
+      <!-- Quick Metrics Strip -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(140px, 1fr));gap:10px;margin-bottom:16px;">
+        <div style="background:var(--paper);border:1px solid var(--line-soft);border-radius:10px;padding:10px 14px;">
+          <div style="font-size:10px;font-weight:700;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:2px;">Rata-rata Kehadiran</div>
+          <div style="font-size:18px;font-weight:700;color:${att.avgPercent >= 75 ? '#15803D' : '#D97706'};">${att.avgPercent}%</div>
+        </div>
+        <div style="background:var(--paper);border:1px solid var(--line-soft);border-radius:10px;padding:10px 14px;">
+          <div style="font-size:10px;font-weight:700;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:2px;">Peserta Hadir (Unik)</div>
+          <div style="font-size:15px;font-weight:700;color:var(--ink);">${att.attendedAtLeastOnce} / ${att.totalParticipants} <small style="font-weight:500;font-size:11px;color:var(--ink-soft);">Orang</small></div>
+        </div>
+        <div style="background:var(--paper);border:1px solid var(--line-soft);border-radius:10px;padding:10px 14px;">
+          <div style="font-size:10px;font-weight:700;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:2px;">Memenuhi Syarat (&ge;75%)</div>
+          <div style="font-size:15px;font-weight:700;color:#15803D;">${att.eligibleCount} <small style="font-weight:500;font-size:11px;color:var(--ink-soft);">Lolos</small></div>
+        </div>
+        <div style="background:var(--paper);border:1px solid var(--line-soft);border-radius:10px;padding:10px 14px;">
+          <div style="font-size:10px;font-weight:700;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:2px;">Perlu Follow-up (&lt;75%)</div>
+          <div style="font-size:15px;font-weight:700;color:${att.lowCount > 0 ? '#C53030' : 'var(--ink-soft)'};">${att.lowCount} <small style="font-weight:500;font-size:11px;color:var(--ink-soft);">Perlu Aksi</small></div>
+        </div>
+      </div>
+
+      <!-- Sesi Pelatihan Summary Pills -->
+      ${att.modulesSummary.length > 0 ? `
+        <div style="margin-bottom:16px;">
+          <div style="font-size:11px;font-weight:700;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;">Kehadiran per Sesi Modul:</div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;">
+            ${att.modulesSummary.map(m => `
+              <span class="mini-pill" style="font-size:11.5px;padding:4px 10px;background:#FFF;border:1px solid var(--line);color:var(--ink);">
+                <strong>${escapeHtml(m.modul)}:</strong> ${m.attendedCount} / ${att.totalParticipants} Hadir (${att.totalParticipants > 0 ? Math.round((m.attendedCount/att.totalParticipants)*100) : 0}%)
+              </span>
+            `).join('')}
+          </div>
+        </div>
+      ` : ''}
+
+      <!-- Tabel Rincian Kehadiran Peserta -->
+      <div class="tbl-wrap" style="max-height:280px;overflow-y:auto;border:1px solid var(--line);border-radius:10px;background:#FFF;margin-bottom:4px;">
+        <table class="master" style="font-size:12.5px;margin:0;">
+          <thead>
+            <tr>
+              <th style="width:36px;text-align:center;">#</th>
+              <th>Nama Peserta</th>
+              <th>Departemen</th>
+              <th style="text-align:center;">Sesi Hadir</th>
+              <th style="min-width:130px;">Persentase</th>
+              <th style="text-align:center;">Status</th>
+              <th>Catatan Check-in Terakhir</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${att.participantsList.map((p, idx) => {
+              const isGood = p.status === 'good';
+              const isLow = p.status === 'low';
+              const statusPill = isGood
+                ? `<span class="att-badge-good"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> Memenuhi</span>`
+                : isLow
+                  ? `<span class="att-badge-followup"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg> Follow-up</span>`
+                  : `<span class="att-badge-waiting">Belum Absen</span>`;
+
+              const lastLogInfo = p.lastLog
+                ? `<span style="color:var(--ink);font-weight:500;">${escapeHtml(p.lastLog.timestamp || '-')}</span> <small style="color:var(--ink-soft);display:block;">[${escapeHtml(p.lastLog.method || 'QR Web')}]</small>`
+                : `<span style="color:var(--ink-faint);">-</span>`;
+
+              return `
+                <tr style="${isLow ? 'background:rgba(220,38,38,0.03);' : ''}">
+                  <td style="text-align:center;color:var(--ink-faint);font-weight:600;">${idx + 1}</td>
+                  <td>
+                    <div style="font-weight:600;color:var(--ink);display:flex;align-items:center;gap:6px;">
+                      <span>${escapeHtml(p.nama)}</span>
+                      ${p.isWalkIn ? '<span class="mini-pill" style="font-size:9.5px;padding:1px 5px;background:rgba(217,119,6,0.12);color:#B45309;font-weight:700;">Walk-in</span>' : ''}
+                    </div>
+                    <div style="font-size:11px;color:var(--ink-soft);">${escapeHtml(p.email || '-')}</div>
+                  </td>
+                  <td>${escapeHtml(p.departemen || '-')}</td>
+                  <td style="text-align:center;font-weight:600;">${p.attendedCount} / ${p.totalSessions}</td>
+                  <td>
+                    <div class="att-indiv-progress-cell">
+                      <div class="att-indiv-bar-bg">
+                        <div class="att-indiv-bar-fill ${isGood ? 'ok' : 'low'}" style="width:${p.persen}%;"></div>
+                      </div>
+                      <span class="att-indiv-bar-num ${isGood ? 'ok' : 'low'}">${p.persen}%</span>
+                    </div>
+                  </td>
+                  <td style="text-align:center;">${statusPill}</td>
+                  <td style="font-size:11.5px;">${lastLogInfo}</td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+/**
+ * Render Halaman Utama Rekap Absensi (#page-attendance)
+ */
+function renderAttendancePage() {
+  const selTraining = document.getElementById('attPageTrainingSelect');
+  if (selTraining) {
+    const curVal = currentAttTrainingId;
+    selTraining.innerHTML = '<option value="all">-- Semua Pelatihan (Tinjauan Global) --</option>';
+
+    allSubmissions.forEach(sub => {
+      const att = calculateTrainingAttendance(sub.id, sub);
+      const opt = document.createElement('option');
+      opt.value = sub.id;
+      let label = `${sub.id} - ${sub.namaTraining}`;
+      if (att.hasLogs) {
+        label += ` [🔥 ${att.attendedAtLeastOnce}/${att.totalParticipants} Hadir (${att.avgPercent}%)]`;
+      } else {
+        label += ' [Belum ada absen]';
+      }
+      opt.textContent = label;
+      selTraining.appendChild(opt);
+    });
+
+    selTraining.value = curVal;
+  }
+
+  // Hitung Global KPIs
+  let globalTotalLogs = allAttendanceLogs.length;
+  let activeTrainingsWithLogs = 0;
+  let totalAttPercentSum = 0;
+  let totalEligibleGlobal = 0;
+  let totalLowGlobal = 0;
+
+  allSubmissions.forEach(sub => {
+    const att = calculateTrainingAttendance(sub.id, sub);
+    if (att.hasLogs) {
+      activeTrainingsWithLogs++;
+      totalAttPercentSum += att.avgPercent;
+      totalEligibleGlobal += att.eligibleCount;
+      totalLowGlobal += att.lowCount;
+    }
+  });
+
+  const globalAvg = activeTrainingsWithLogs > 0 ? Math.round(totalAttPercentSum / activeTrainingsWithLogs) : 0;
+
+  const elTotalLogs = document.getElementById('kpiAttTotalLogs');
+  const elAvgRate = document.getElementById('kpiAttAvgRate');
+  const elEligible = document.getElementById('kpiAttEligibleCount');
+  const elLow = document.getElementById('kpiAttLowCount');
+
+  if (elTotalLogs) elTotalLogs.textContent = globalTotalLogs;
+  if (elAvgRate) elAvgRate.textContent = `${globalAvg}%`;
+  if (elEligible) elEligible.textContent = totalEligibleGlobal;
+  if (elLow) elLow.textContent = totalLowGlobal;
+
+  // Render Table Header & Body
+  const thead = document.getElementById('attTableHeader');
+  const tbody = document.getElementById('attTableBody');
+  const emptyState = document.getElementById('attEmptyState');
+  const banner = document.getElementById('attSelectedTrainingBanner');
+
+  if (!thead || !tbody) return;
+
+  if (currentAttTrainingId === 'all') {
+    // Mode Global: Tampilkan daftar semua pelatihan dan status kehadiran masing-masing
+    if (banner) banner.style.display = 'none';
+
+    thead.innerHTML = `
+      <tr>
+        <th style="width:36px;text-align:center;">#</th>
+        <th>ID &amp; Pelatihan</th>
+        <th>Departemen / Pengaju</th>
+        <th>Jadwal Pelaksanaan</th>
+        <th style="text-align:center;">Total Peserta</th>
+        <th style="text-align:center;">Peserta Hadir</th>
+        <th style="min-width:140px;">Rata-rata Presensi</th>
+        <th style="text-align:center;">Status Live Absensi</th>
+        <th style="text-align:center;width:120px;">Aksi</th>
+      </tr>
+    `;
+
+    const q = (currentAttSearchQuery || '').toLowerCase().trim();
+    const filteredSubs = allSubmissions.filter(sub => {
+      const att = calculateTrainingAttendance(sub.id, sub);
+
+      // Filter status
+      if (currentAttFilterStatus === 'present' && (!att.hasLogs || att.avgPercent < 75)) return false;
+      if (currentAttFilterStatus === 'low' && (!att.hasLogs || att.avgPercent >= 75)) return false;
+      if (currentAttFilterStatus === 'none' && att.hasLogs) return false;
+
+      // Filter pencarian
+      if (q) {
+        const matchTitle = (sub.namaTraining || '').toLowerCase().includes(q);
+        const matchId = (sub.id || '').toLowerCase().includes(q);
+        const matchDept = (sub.departemen || '').toLowerCase().includes(q);
+        const matchPengaju = (sub.pengaju || '').toLowerCase().includes(q);
+        if (!matchTitle && !matchId && !matchDept && !matchPengaju) return false;
+      }
+      return true;
+    });
+
+    if (filteredSubs.length === 0) {
+      tbody.innerHTML = '';
+      if (emptyState) emptyState.style.display = 'block';
+      return;
+    }
+
+    if (emptyState) emptyState.style.display = 'none';
+    tbody.innerHTML = filteredSubs.map((sub, idx) => {
+      const att = calculateTrainingAttendance(sub.id, sub);
+      const isOk = att.avgPercent >= 75;
+
+      const statusTag = att.hasLogs
+        ? (isOk
+            ? `<span class="att-badge-good"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#2E7D32;"></span> Memenuhi (${att.avgPercent}%)</span>`
+            : `<span class="att-badge-followup"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#C53030;"></span> Butuh Follow-up</span>`)
+        : `<span class="att-badge-waiting">Belum Ada Presensi</span>`;
+
+      return `
+        <tr>
+          <td style="text-align:center;color:var(--ink-faint);font-weight:600;">${idx + 1}</td>
+          <td>
+            <div style="font-weight:700;color:var(--ink);">${escapeHtml(sub.namaTraining)}</div>
+            <div style="font-family:monospace;font-size:11.5px;color:var(--accent);">${escapeHtml(sub.id)}</div>
+          </td>
+          <td>
+            <div style="font-weight:600;color:var(--ink);">${escapeHtml(sub.departemen)}</div>
+            <div style="font-size:11.5px;color:var(--ink-soft);">Pengaju: ${escapeHtml(sub.pengaju)}</div>
+          </td>
+          <td style="font-size:12.5px;">${escapeHtml(sub.jadwal)}</td>
+          <td style="text-align:center;font-weight:600;">${att.totalParticipants} Orang</td>
+          <td style="text-align:center;font-weight:700;color:${att.attendedAtLeastOnce > 0 ? '#15803D' : 'var(--ink-faint)'};">
+            ${att.attendedAtLeastOnce} Orang
+          </td>
+          <td>
+            <div class="att-indiv-progress-cell">
+              <div class="att-indiv-bar-bg">
+                <div class="att-indiv-bar-fill ${isOk ? 'ok' : 'low'}" style="width:${att.avgPercent}%;"></div>
+              </div>
+              <span class="att-indiv-bar-num ${isOk ? 'ok' : 'low'}">${att.avgPercent}%</span>
+            </div>
+          </td>
+          <td style="text-align:center;">${statusTag}</td>
+          <td style="text-align:center;">
+            <button type="button" class="btn-secondary" onclick="viewTrainingAttendanceDetail('${escapeHtml(sub.id)}')" style="font-size:11.5px;padding:5px 10px;gap:5px;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+              <span>Rincian</span>
+            </button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+  } else {
+    // Mode Spesifik: Tampilkan Banner Pelatihan dan Rincian Peserta Pelatihan yang Dipilih
+    const sub = allSubmissions.find(s => s.id === currentAttTrainingId);
+    if (!sub) return;
+
+    const att = calculateTrainingAttendance(sub.id, sub);
+
+    // Tampilkan & Isi Banner Detail
+    if (banner) {
+      banner.style.display = 'block';
+      const bId = document.getElementById('attBannerId');
+      const bDept = document.getElementById('attBannerDept');
+      const bStatus = document.getElementById('attBannerStatus');
+      const bTitle = document.getElementById('attBannerTitle');
+      const bMeta = document.getElementById('attBannerMeta');
+      const bMods = document.getElementById('attBannerModulesList');
+
+      if (bId) bId.textContent = sub.id;
+      if (bDept) bDept.textContent = sub.departemen;
+      if (bStatus) {
+        bStatus.className = `mini-pill ${sub.statusClass}`;
+        bStatus.innerHTML = `<span class="dot"></span>${escapeHtml(sub.status)}`;
+      }
+      if (bTitle) bTitle.textContent = sub.namaTraining;
+      if (bMeta) bMeta.textContent = `Jadwal: ${sub.jadwal} • Trainer: ${sub.trainer || '-'} • Venue: ${sub.venue || '-'}`;
+
+      if (bMods) {
+        bMods.innerHTML = att.modulesSummary.map(m => `
+          <span class="mini-pill" style="font-size:11.5px;padding:4px 10px;background:#FFF;border:1px solid var(--line);color:var(--ink);">
+            <strong>${escapeHtml(m.modul)}:</strong> ${m.attendedCount} / ${att.totalParticipants} Hadir (${att.totalParticipants > 0 ? Math.round((m.attendedCount/att.totalParticipants)*100) : 0}%)
+          </span>
+        `).join('') || '<span style="font-size:12px;color:var(--ink-soft);">Tidak ada rincian modul sesi.</span>';
+      }
+    }
+
+    thead.innerHTML = `
+      <tr>
+        <th style="width:36px;text-align:center;">#</th>
+        <th>Nama Peserta</th>
+        <th>Departemen</th>
+        <th>Email Kantor</th>
+        <th style="text-align:center;">Sesi Hadir</th>
+        <th style="min-width:140px;">Persentase</th>
+        <th style="text-align:center;">Status Presensi</th>
+        <th>Log Absen Terakhir &amp; Metode</th>
+      </tr>
+    `;
+
+    const q = (currentAttSearchQuery || '').toLowerCase().trim();
+    const filteredParts = att.participantsList.filter(p => {
+      // Filter status
+      if (currentAttFilterStatus === 'present' && p.status !== 'good') return false;
+      if (currentAttFilterStatus === 'low' && p.status !== 'low') return false;
+      if (currentAttFilterStatus === 'none' && p.status !== 'none') return false;
+
+      // Filter search
+      if (q) {
+        const matchNama = (p.nama || '').toLowerCase().includes(q);
+        const matchEmail = (p.email || '').toLowerCase().includes(q);
+        const matchDept = (p.departemen || '').toLowerCase().includes(q);
+        if (!matchNama && !matchEmail && !matchDept) return false;
+      }
+      return true;
+    });
+
+    if (filteredParts.length === 0) {
+      tbody.innerHTML = '';
+      if (emptyState) emptyState.style.display = 'block';
+      return;
+    }
+
+    if (emptyState) emptyState.style.display = 'none';
+    tbody.innerHTML = filteredParts.map((p, idx) => {
+      const isGood = p.status === 'good';
+      const isLow = p.status === 'low';
+      const statusPill = isGood
+        ? `<span class="att-badge-good"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> Memenuhi</span>`
+        : isLow
+          ? `<span class="att-badge-followup"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg> Follow-up</span>`
+          : `<span class="att-badge-waiting">Belum Absen</span>`;
+
+      const lastLogInfo = p.lastLog
+        ? `<span style="color:var(--ink);font-weight:600;">${escapeHtml(p.lastLog.timestamp || '-')}</span> <small style="color:var(--ink-soft);display:block;">[${escapeHtml(p.lastLog.method || 'QR Web')}] Sesi: ${escapeHtml(p.lastLog.moduleId || '-')}</small>`
+        : `<span style="color:var(--ink-faint);">-</span>`;
+
+      return `
+        <tr style="${isLow ? 'background:rgba(220,38,38,0.03);' : ''}">
+          <td style="text-align:center;color:var(--ink-faint);font-weight:600;">${idx + 1}</td>
+          <td>
+            <div style="font-weight:700;color:var(--ink);display:flex;align-items:center;gap:6px;">
+              <span>${escapeHtml(p.nama)}</span>
+              ${p.isWalkIn ? '<span class="mini-pill" style="font-size:9.5px;padding:1px 5px;background:rgba(217,119,6,0.12);color:#B45309;font-weight:700;">Walk-in</span>' : ''}
+            </div>
+          </td>
+          <td>${escapeHtml(p.departemen || '-')}</td>
+          <td style="color:var(--ink-soft);">${escapeHtml(p.email || '-')}</td>
+          <td style="text-align:center;font-weight:600;">${p.attendedCount} / ${p.totalSessions}</td>
+          <td>
+            <div class="att-indiv-progress-cell">
+              <div class="att-indiv-bar-bg">
+                <div class="att-indiv-bar-fill ${isGood ? 'ok' : 'low'}" style="width:${p.persen}%;"></div>
+              </div>
+              <span class="att-indiv-bar-num ${isGood ? 'ok' : 'low'}">${p.persen}%</span>
+            </div>
+          </td>
+          <td style="text-align:center;">${statusPill}</td>
+          <td style="font-size:12px;">${lastLogInfo}</td>
+        </tr>
+      `;
+    }).join('');
+  }
+}
+
+/**
+ * Pilihan pelatihan pada dropdown rekap absensi diubah
+ */
+function onAttendanceTrainingSelectChange() {
+  const sel = document.getElementById('attPageTrainingSelect');
+  if (sel) {
+    currentAttTrainingId = sel.value;
+    renderAttendancePage();
+  }
+}
+
+/**
+ * Filter pencarian teks absensi diubah
+ */
+function onAttendanceFilterChange() {
+  const inp = document.getElementById('attPageSearchInput');
+  currentAttSearchQuery = inp ? inp.value : '';
+  renderAttendancePage();
+}
+
+/**
+ * Filter status kehadiran absensi (Semua / Hadir / Follow-up / Belum)
+ */
+function setAttendanceStatusFilter(status) {
+  currentAttFilterStatus = status || 'all';
+  ['btnAttFilterAll', 'btnAttFilterPresent', 'btnAttFilterLow', 'btnAttFilterNone'].forEach(id => {
+    const btn = document.getElementById(id);
+    if (btn) btn.classList.remove('active');
+  });
+
+  const activeId = status === 'present' ? 'btnAttFilterPresent'
+    : status === 'low' ? 'btnAttFilterLow'
+    : status === 'none' ? 'btnAttFilterNone'
+    : 'btnAttFilterAll';
+
+  const activeBtn = document.getElementById(activeId);
+  if (activeBtn) activeBtn.classList.add('active');
+
+  renderAttendancePage();
+}
+
+/**
+ * Reset seluruh filter absensi
+ */
+function resetAttendanceFilters() {
+  currentAttSearchQuery = '';
+  currentAttFilterStatus = 'all';
+  const inp = document.getElementById('attPageSearchInput');
+  if (inp) inp.value = '';
+  setAttendanceStatusFilter('all');
+}
+
+/**
+ * Buka detail absensi pelatihan tertentu dari mode global
+ */
+function viewTrainingAttendanceDetail(trainingId) {
+  currentAttTrainingId = trainingId;
+  const sel = document.getElementById('attPageTrainingSelect');
+  if (sel) sel.value = trainingId;
+  renderAttendancePage();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/**
+ * Membuka modal review proposal dari halaman absensi
+ */
+function openReviewModalFromAttendance() {
+  if (currentAttTrainingId && currentAttTrainingId !== 'all') {
+    openReviewModal(currentAttTrainingId);
+  }
+}
+
+/**
+ * Export CSV Rekap Absensi Pelatihan
+ */
+function exportAttendanceCsv() {
+  if (!allAttendanceLogs || allAttendanceLogs.length === 0) {
+    showToast('Belum ada data rekapan absensi untuk diekspor.', 'error');
+    return;
+  }
+
+  const escapeCsv = (val) => {
+    const s = String(val || '').replace(/"/g, '""');
+    return `"${s}"`;
+  };
+
+  const headers = [
+    'Timestamp Check-in',
+    'ID Training',
+    'Nama Training',
+    'Sesi / Modul',
+    'Tanggal Sesi',
+    'Nama Peserta',
+    'Email Peserta',
+    'Departemen',
+    'Metode Absen',
+    'Status Kehadiran',
+    'Catatan'
+  ];
+
+  const rows = allAttendanceLogs.map(l => [
+    escapeCsv(l.timestamp),
+    escapeCsv(l.trainingId),
+    escapeCsv(l.trainingTitle),
+    escapeCsv(l.moduleId),
+    escapeCsv(l.sessionDate),
+    escapeCsv(l.participantName),
+    escapeCsv(l.participantEmail),
+    escapeCsv(l.department),
+    escapeCsv(l.method),
+    escapeCsv(l.status),
+    escapeCsv(l.note)
+  ]);
+
+  const csvContent = [headers.map(escapeCsv).join(','), ...rows.map(r => r.join(','))].join('\r\n');
+  const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.setAttribute('href', url);
+  const today = new Date().toISOString().slice(0, 10);
+  link.setAttribute('download', `rekap_live_absensi_training_${today}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+  showToast('Rekapan absensi CSV berhasil diunduh.', 'success');
+}
+
+/**
+ * Export CSV untuk 1 training spesifik
+ */
+function exportSingleTrainingAttendanceCsv(trainingId) {
+  const att = calculateTrainingAttendance(trainingId);
+  if (!att.hasLogs) {
+    showToast('Belum ada log presensi untuk pelatihan ini.', 'info');
+    return;
+  }
+
+  const escapeCsv = (val) => {
+    const s = String(val || '').replace(/"/g, '""');
+    return `"${s}"`;
+  };
+
+  const headers = [
+    'ID Training',
+    'Nama Peserta',
+    'Email Peserta',
+    'Departemen',
+    'Status Peserta',
+    'Sesi Hadir',
+    'Total Sesi',
+    'Persentase Kehadiran',
+    'Status Kelulusan Presensi',
+    'Waktu Absen Terakhir',
+    'Metode Absen'
+  ];
+
+  const rows = att.participantsList.map(p => [
+    escapeCsv(trainingId),
+    escapeCsv(p.nama),
+    escapeCsv(p.email),
+    escapeCsv(p.departemen),
+    escapeCsv(p.isWalkIn ? 'Walk-in' : 'Terdaftar'),
+    escapeCsv(p.attendedCount),
+    escapeCsv(p.totalSessions),
+    escapeCsv(`${p.persen}%`),
+    escapeCsv(p.status === 'good' ? 'Memenuhi Syarat (>=75%)' : p.status === 'low' ? 'Perlu Follow-up (<75%)' : 'Belum Absen'),
+    escapeCsv(p.lastLog ? p.lastLog.timestamp : '-'),
+    escapeCsv(p.lastLog ? p.lastLog.method : '-')
+  ]);
+
+  const csvContent = [headers.map(escapeCsv).join(','), ...rows.map(r => r.join(','))].join('\r\n');
+  const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.setAttribute('href', url);
+  link.setAttribute('download', `rekap_absensi_${trainingId}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+  showToast(`Rekapan absensi ${trainingId} berhasil diunduh.`, 'success');
+}
+
+// Window exports
+window.fetchAttendanceData = fetchAttendanceData;
+window.renderAttendancePage = renderAttendancePage;
+window.calculateTrainingAttendance = calculateTrainingAttendance;
+window.buildModalAttendanceSectionHtml = buildModalAttendanceSectionHtml;
+window.onAttendanceTrainingSelectChange = onAttendanceTrainingSelectChange;
+window.onAttendanceFilterChange = onAttendanceFilterChange;
+window.setAttendanceStatusFilter = setAttendanceStatusFilter;
+window.resetAttendanceFilters = resetAttendanceFilters;
+window.viewTrainingAttendanceDetail = viewTrainingAttendanceDetail;
+window.openReviewModalFromAttendance = openReviewModalFromAttendance;
+window.exportAttendanceCsv = exportAttendanceCsv;
+window.exportSingleTrainingAttendanceCsv = exportSingleTrainingAttendanceCsv;

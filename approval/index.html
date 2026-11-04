@@ -306,6 +306,16 @@
           <span id="sidebarEvidenceBadge" class="mini-pill approved" style="margin-left:auto;font-size:11px;padding:1px 7px;font-weight:700;">0</span>
         </button>
 
+                <button type="button" class="tds-nav-item" data-page="attendance" data-tooltip="Rekap Absensi" title="Rekap Absensi (Live Absensi)" onclick="goToApprPage('attendance')">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <polyline points="16 11 18 13 22 9"></polyline>
+          </svg>
+          <span>Rekap Absensi</span>
+          <span id="sidebarAttendanceBadge" class="mini-pill" style="margin-left:auto;font-size:11px;padding:1px 7px;font-weight:700;background:rgba(46,125,50,0.12);color:#2E7D32;">0</span>
+        </button>
+
         <button type="button" class="tds-nav-item" data-page="reports" data-tooltip="Rekap &amp; Laporan" title="Rekap &amp; Laporan" onclick="goToApprPage('reports')">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
             <line x1="18" y1="20" x2="18" y2="10"></line>
@@ -840,6 +850,133 @@
             <div style="font-weight:700;font-size:16px;color:var(--ink);margin-bottom:4px;">Belum Ada Bukti / Dokumentasi</div>
             <div class="helper-note" style="margin:0 0 16px;font-size:13px;">Belum ada berkas foto atau dokumentasi pelatihan yang cocok dengan kriteria pencarian saat ini.</div>
             <button type="button" class="btn-secondary" onclick="resetEvidenceFilters()" style="margin:0 auto;font-size:12.5px;">Reset Filter Pencarian</button>
+          </div>
+        </section>
+        <!-- ================= 6. PAGE: REKAP ABSENSI (LIVE ABSENSI) (#page-attendance) ================= -->
+        <section class="tds-page" id="page-attendance" style="display:none;">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:28px;">
+            <div>
+              <div style="display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;color:#2E7D32;background:rgba(46,125,50,0.1);padding:3px 10px;border-radius:20px;margin-bottom:8px;">
+                <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#2E7D32;box-shadow:0 0 0 2px rgba(46,125,50,0.25);"></span>
+                Terintegrasi Live QR Attendance Hub
+              </div>
+              <h2 class="voice" style="font-size:24px;margin:0 0 6px;color:var(--ink);">Rekapitulasi Live Absensi Pelatihan</h2>
+              <span class="helper-note" style="margin:0;font-size:13.5px;line-height:1.5;">Pantau tingkat kehadiran peserta, verifikasi kepatuhan modul, dan audit presensi berbasis pemindaian QR &amp; input trainer.</span>
+            </div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+              <button type="button" class="btn-secondary" onclick="fetchAttendanceData(true)" title="Sinkronkan data presensi dari Google Sheets" style="gap:7px;font-size:12.5px;padding:8px 14px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+                <span>Sinkronkan Absensi</span>
+              </button>
+              <button type="button" class="btn-primary" onclick="exportAttendanceCsv()" title="Unduh rekapitulasi kehadiran ke format CSV" style="gap:7px;font-size:12.5px;padding:8px 14px;background:linear-gradient(135deg, #00178F 0%, #4B96FF 100%);border:none;box-shadow:0 4px 14px rgba(0, 23, 143, 0.25);">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                <span>Export CSV Absensi</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- KPI Summary Strip -->
+          <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:18px;margin-bottom:28px;">
+            <div class="kpi-card" style="border-left:4px solid #2E7D32;padding:20px 18px;border-radius:14px;">
+              <span class="kpi-label">Total Log Presensi</span>
+              <span class="kpi-value" id="kpiAttTotalLogs">0</span>
+              <span class="kpi-sub">Check-in Terverifikasi</span>
+            </div>
+            <div class="kpi-card" style="border-left:4px solid #00178F;padding:20px 18px;border-radius:14px;">
+              <span class="kpi-label">Rata-rata Kehadiran</span>
+              <span class="kpi-value" id="kpiAttAvgRate">0%</span>
+              <span class="kpi-sub">Seluruh Peserta Terdaftar</span>
+            </div>
+            <div class="kpi-card" style="border-left:4px solid #16A34A;padding:20px 18px;border-radius:14px;">
+              <span class="kpi-label">Memenuhi Syarat (&ge;75%)</span>
+              <span class="kpi-value" id="kpiAttEligibleCount">0</span>
+              <span class="kpi-sub">Lolos Syarat Sertifikat</span>
+            </div>
+            <div class="kpi-card" style="border-left:4px solid #C53030;padding:20px 18px;border-radius:14px;">
+              <span class="kpi-label">Perlu Follow-up (&lt;75%)</span>
+              <span class="kpi-value" id="kpiAttLowCount">0</span>
+              <span class="kpi-sub">Kehadiran di Bawah Ambang</span>
+            </div>
+          </div>
+
+          <!-- Filter & Training Selector Toolbar -->
+          <div class="approval-filter-bar" style="margin-bottom:24px;background:var(--panel-strong);border:1px solid var(--line);border-radius:14px;padding:16px 20px;box-shadow:var(--shadow-sm);">
+            <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;width:100%;">
+              <!-- Training Selector -->
+              <div style="flex:1;min-width:280px;">
+                <label for="attPageTrainingSelect" style="display:block;font-size:11px;font-weight:700;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:5px;">Pilih Pelatihan</label>
+                <select id="attPageTrainingSelect" class="field" style="padding:9px 14px;border:1px solid var(--line);border-radius:8px;font-size:13px;width:100%;background:var(--panel);" onchange="onAttendanceTrainingSelectChange()">
+                  <option value="all">-- Semua Pelatihan (Tinjauan Global) --</option>
+                </select>
+              </div>
+
+              <!-- Search input -->
+              <div class="search-input-wrap" style="flex:1;min-width:240px;margin-top:16px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input type="text" id="attPageSearchInput" placeholder="Cari nama peserta, departemen, email..." oninput="onAttendanceFilterChange()">
+              </div>
+
+              <!-- Status filter tabs -->
+              <div style="margin-top:16px;">
+                <div class="view-tabs" style="margin:0;gap:4px;">
+                  <button type="button" class="tab-btn active" id="btnAttFilterAll" onclick="setAttendanceStatusFilter('all')">Semua</button>
+                  <button type="button" class="tab-btn" id="btnAttFilterPresent" onclick="setAttendanceStatusFilter('present')">Hadir (&ge;75%)</button>
+                  <button type="button" class="tab-btn" id="btnAttFilterLow" onclick="setAttendanceStatusFilter('low')">Follow-up (&lt;75%)</button>
+                  <button type="button" class="tab-btn" id="btnAttFilterNone" onclick="setAttendanceStatusFilter('none')">Belum Absen</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Training Detail Banner (appears if a specific training is selected) -->
+          <div id="attSelectedTrainingBanner" style="display:none;background:linear-gradient(135deg, #FFFFFF 0%, #F5F8FF 100%);border:1px solid rgba(0,23,143,0.12);border-radius:14px;padding:16px 20px;margin-bottom:20px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+              <div>
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+                  <span id="attBannerId" style="font-family:monospace;font-size:12px;font-weight:700;background:rgba(0,23,143,0.08);color:var(--ink);padding:2px 8px;border-radius:6px;">TRN-XXXX</span>
+                  <span id="attBannerDept" class="mini-pill" style="font-size:11px;">Divisi</span>
+                  <span id="attBannerStatus" class="mini-pill approved" style="font-size:11px;">Disetujui</span>
+                </div>
+                <h3 id="attBannerTitle" class="voice" style="font-size:17px;margin:0 0 4px;color:var(--ink);">Judul Pelatihan</h3>
+                <div id="attBannerMeta" style="font-size:12px;color:var(--ink-soft);">Jadwal: - &bull; Trainer: - &bull; Total Modul: -</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px;">
+                <button type="button" class="btn-secondary" onclick="openReviewModalFromAttendance()" style="font-size:12px;padding:7px 14px;gap:6px;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                  <span>Tinjau Proposal Training</span>
+                </button>
+              </div>
+            </div>
+            <!-- Per session modules attendance pills -->
+            <div id="attBannerModulesList" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid rgba(0,23,143,0.08);">
+            </div>
+          </div>
+
+          <!-- Attendance Content Table Container -->
+          <div class="form-card" style="padding:0;overflow:hidden;border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow-sm);background:#FFF;">
+            <div class="tbl-wrap" style="margin:0;">
+              <table class="master" style="margin:0;font-size:13px;">
+                <thead id="attTableHeader">
+                  <!-- Diisi dinamis sesuai mode (Global atau Spesifik) -->
+                </thead>
+                <tbody id="attTableBody">
+                  <!-- Diisi dinamis -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Empty State -->
+          <div id="attEmptyState" style="display:none;padding:48px 24px;text-align:center;background:var(--panel);border-radius:var(--radius);border:1px dashed var(--line);margin-top:20px;">
+            <div style="width:52px;height:52px;border-radius:50%;background:rgba(46,125,50,0.08);color:#2E7D32;display:inline-flex;align-items:center;justify-content:center;margin-bottom:12px;">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><polyline points="16 11 18 13 22 9"></polyline></svg>
+            </div>
+            <div style="font-weight:700;font-size:16px;color:var(--ink);margin-bottom:4px;">Tidak Ada Data Presensi yang Cocok</div>
+            <div class="helper-note" style="margin:0 0 16px;font-size:13px;">Tidak ditemukan data presensi untuk kriteria filter atau pencarian saat ini.</div>
+            <button type="button" class="btn-secondary" onclick="resetAttendanceFilters()" style="margin:0 auto;font-size:12.5px;">Reset Filter Pencarian</button>
           </div>
         </section>
 

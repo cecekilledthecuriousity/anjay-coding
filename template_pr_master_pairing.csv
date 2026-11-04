@@ -1,0 +1,7 @@
+"Token_Akses","Tipe_Evaluasi","ID_Karyawan","Nama_Karyawan","Divisi_Karyawan","Jabatan_Karyawan","Email_Penilai","Nama_Penilai","Periode_Mulai","Periode_Selesai","Status","Submit_At"
+"PR26-8492","TOP_DOWN","EMP-2024-082","Dimas Ardiansyah","Technology & Engineering","Lead System Architect","budi.pratama@perusahaan.com","Budi Pratama, M.Kom","2026-10-15 08:00:00","2026-10-18 23:59:59","SUBMITTED","2026-10-16 14:22:10"
+"PR26-7319","TOP_DOWN","EMP-2023-045","Anita Wijaya, S.E.","Finance & Accounting","Senior Financial Analyst","dedi.firmansyah@perusahaan.com","Dedi Firmansyah, S.E., M.Ak","2026-10-15 08:00:00","2026-10-18 23:59:59","SUBMITTED","2026-10-16 16:05:44"
+"PR26-3912","TOP_DOWN","EMP-2024-099","Farhan Maulana","Technology & Engineering","Senior Backend Engineer","budi.pratama@perusahaan.com","Budi Pratama, M.Kom","2026-10-15 08:00:00","2026-10-18 23:59:59","DRAFT",""
+"PR26-5821","TOP_DOWN","EMP-2025-014","Siti Rahma","Technology & Engineering","Frontend Specialist","budi.pratama@perusahaan.com","Budi Pratama, M.Kom","2026-10-15 08:00:00","2026-10-18 23:59:59","PENDING",""
+"PR26-9044","TOP_DOWN","EMP-2025-031","Rian Pratama","Technology & Engineering","DevOps & Cloud Engineer","budi.pratama@perusahaan.com","Budi Pratama, M.Kom","2026-10-15 08:00:00","2026-10-18 23:59:59","PENDING",""
+"PR26-BLANK","TOP_DOWN","EMP-2026-NEW","Ahmad Fauzi","Sales & Marketing","Account Executive","hendra.wijaya@perusahaan.com","Hendra Wijaya","2026-10-15 08:00:00","2026-10-18 23:59:59","PENDING",""

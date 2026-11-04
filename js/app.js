@@ -7004,7 +7004,19 @@ function loadMasterData() {
       <td>${m['Departemen / divisi'] || '-'}</td>
       <td>${m['Kategori training'] || '-'} [${m['Target level kemahiran'] || 'General'}]</td>
       <td><span class="mini-pill ${cls}"><span class="dot"></span>${entry.status || 'Diajukan'}</span></td>
-      <td>${(entry.participants || []).filter(p => p.nama).length} peserta</td>
+      <td>
+        <div>${(entry.participants || []).filter(p => p.nama).length} peserta</div>
+        ${(() => {
+          const trnId = String(m['ID training'] || entry.id || '').trim();
+          const allLogs = (typeof getStoredAttendanceLogs === 'function') ? getStoredAttendanceLogs() : [];
+          const trnLogs = allLogs.filter(l => String(l.trainingId || '').trim().toUpperCase() === trnId.toUpperCase());
+          if (trnLogs.length === 0) return '';
+          const uniqueAttendees = new Set(trnLogs.map(l => String(l.participantEmail || l.participantName || '').toLowerCase().trim()));
+          const totalParts = (entry.participants || []).filter(p => p.nama).length;
+          const rate = totalParts > 0 ? Math.round((uniqueAttendees.size / totalParts) * 100) : 0;
+          return `<div style="margin-top:2px;"><span class="att-badge-good" style="font-size:10.5px;padding:1px 6px;"><span style="display:inline-block;width:5px;height:5px;border-radius:50%;background:#2E7D32;"></span> ${uniqueAttendees.size}/${totalParts} Hadir (${rate}%)</span></div>`;
+        })()}
+      </td>
       <td>${date}</td>
     `;
     tr.addEventListener('click', () => showDetail(entry, idx));
@@ -7092,6 +7104,98 @@ function showDetail(entry, index) {
       <div style="font-weight:600;margin:14px 0 6px;">Modul Training:</div>
       <div style="font-size:13px;line-height:1.7;">${modulesList}</div>
       ${approvalsList ? `<div style="font-weight:600;margin:14px 0 6px;">Alur Approval:</div><div style="font-size:13px;line-height:1.7;">${approvalsList}</div>` : ''}
+
+      <!-- Rekapan Absensi (Live Absensi) -->
+      ${(() => {
+        const trnId = String(m['ID training'] || entry.id || '').trim();
+        const allAttLogs = (typeof getStoredAttendanceLogs === 'function') ? getStoredAttendanceLogs() : [];
+        const trnAttLogs = allAttLogs.filter(l => String(l.trainingId || '').trim().toUpperCase() === trnId.toUpperCase());
+        const entryParts = Array.isArray(entry.participants) ? entry.participants.filter(p => p.nama) : [];
+        const entryMods = Array.isArray(entry.modules) ? entry.modules.filter(mo => mo.modul) : [];
+        const totalModSessions = Math.max(entryMods.length, 1);
+
+        if (trnAttLogs.length === 0) {
+          return `
+            <div style="font-weight:600;margin:16px 0 6px;">Rekapan Absensi (Live Absensi):</div>
+            <div style="font-size:12px;color:var(--ink-soft);background:rgba(46,125,50,0.06);border:1px dashed rgba(46,125,50,0.25);border-radius:8px;padding:10px 14px;margin-bottom:12px;">
+              Belum ada catatan presensi tercatat. Presensi akan tersinkronisasi otomatis saat trainer membuka sesi di menu Live Absensi.
+            </div>
+          `;
+        }
+
+        const attendedMap = new Map();
+        trnAttLogs.forEach(l => {
+          const k = String(l.participantEmail || l.participantName || '').toLowerCase().trim();
+          if (!attendedMap.has(k)) attendedMap.set(k, new Set());
+          attendedMap.get(k).add(String(l.moduleId || 'Sesi 1').trim());
+        });
+
+        const partsAttendance = entryParts.map(p => {
+          const ek = String(p.email || '').toLowerCase().trim();
+          const nk = String(p.nama || '').toLowerCase().trim();
+          const attSet = (ek ? attendedMap.get(ek) : null) || (nk ? attendedMap.get(nk) : null) || new Set();
+          const hadirCount = attSet.size;
+          const persen = Math.round((hadirCount / totalModSessions) * 100);
+          return {
+            nama: p.nama,
+            email: p.email,
+            departemen: p.departemen,
+            hadir: hadirCount,
+            total: totalModSessions,
+            persen: persen
+          };
+        });
+
+        const totalPresent = partsAttendance.filter(p => p.hadir > 0).length;
+        const avgRate = partsAttendance.length > 0
+          ? Math.round(partsAttendance.reduce((acc, p) => acc + p.persen, 0) / partsAttendance.length)
+          : 0;
+
+        return `
+          <div style="font-weight:600;margin:16px 0 6px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+            <span style="display:flex;align-items:center;gap:6px;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:#2E7D32;"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><polyline points="16 11 18 13 22 9"></polyline></svg>
+              Rekapan Absensi Peserta (Live Absensi):
+            </span>
+            <span class="mini-pill approved" style="font-size:11px;padding:2px 8px;">${totalPresent}/${entryParts.length} Hadir (${avgRate}%)</span>
+          </div>
+          <div class="tbl-wrap" style="max-height:190px;overflow-y:auto;border:1px solid var(--line);border-radius:8px;margin-bottom:12px;background:#FFF;">
+            <table class="master" style="font-size:12px;margin:0;">
+              <thead>
+                <tr>
+                  <th style="width:30px;text-align:center;">#</th>
+                  <th>Nama Peserta</th>
+                  <th>Departemen</th>
+                  <th style="text-align:center;">Sesi Hadir</th>
+                  <th style="min-width:110px;">Persentase</th>
+                  <th style="text-align:center;">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${partsAttendance.map((p, idx) => `
+                  <tr>
+                    <td style="text-align:center;color:var(--ink-faint);font-weight:600;">${idx + 1}</td>
+                    <td><strong>${escapeHtml(p.nama)}</strong><div style="font-size:10.5px;color:var(--ink-soft);">${escapeHtml(p.email || '-')}</div></td>
+                    <td>${escapeHtml(p.departemen || '-')}</td>
+                    <td style="text-align:center;font-weight:600;">${p.hadir}/${p.total}</td>
+                    <td>
+                      <div class="att-indiv-progress-cell">
+                        <div class="att-indiv-bar-bg">
+                          <div class="att-indiv-bar-fill ${p.persen >= 75 ? 'ok' : 'low'}" style="width:${p.persen}%;"></div>
+                        </div>
+                        <span class="att-indiv-bar-num ${p.persen >= 75 ? 'ok' : 'low'}">${p.persen}%</span>
+                      </div>
+                    </td>
+                    <td style="text-align:center;">
+                      ${p.persen >= 75 ? '<span class="att-badge-good">Memenuhi</span>' : (p.hadir > 0 ? '<span class="att-badge-followup">Follow-up</span>' : '<span class="att-badge-waiting">Belum Absen</span>')}
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        `;
+      })()}
     </div>
   `;
 

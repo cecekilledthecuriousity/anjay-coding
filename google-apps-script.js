@@ -25,6 +25,13 @@ const SHEET_NAME = "Training Submissions";
 const POST_TRAINING_SHEET_NAME = "Post Training";
 const ATTENDANCE_SHEET_NAME = "Training Attendance";
 
+// Nama Sheet Modul Performance Review (PR) Terpadu TDS
+const PR_MASTER_PAIRING_SHEET = "PR_Master_Pairing";
+const PR_MATRIX_KOMPETENSI_SHEET = "PR_Matrix_Kompetensi";
+const PR_CORE_VALUES_SHEET = "PR_Core_Values";
+const PR_VAULT_SUBMISSIONS_SHEET = "PR_Vault_Submissions";
+const PR_CALIBRATION_MASTER_SHEET = "PR_Calibration_Master";
+
 // ID Folder Utama Google Drive untuk menyimpan bukti foto (evidence).
 // Kosongkan "" untuk menyimpan di My Drive utama akun pelaksana (training@cpssoft.com),
 // atau isi dengan Folder ID Google Drive jika ingin dimasukkan ke folder spesifik/Shared Drive.
@@ -952,6 +959,9 @@ function setupInitialSpreadsheet() {
     postSheet = ss.insertSheet(POST_TRAINING_SHEET_NAME, 2);
   }
   setupPostTrainingSheet(postSheet);
+
+  // 4. Inisialisasi Seluruh Sheet Performance Review (PR)
+  setupPerformanceReviewSheets();
 
   Logger.log("=================================================");
   Logger.log("✅ INISIALISASI SPREADSHEET BERHASIL!");
@@ -4692,4 +4702,195 @@ function testGetParticipantAttendanceRates() {
   });
   Logger.log("=== TEST getParticipantAttendanceRates SELESAI ===");
   return rates;
+}
+
+
+/**
+ * ==============================================================================
+ * MODUL PERFORMANCE REVIEW (PR) TERPADU TDS - BACKEND & SPREADSHEET MANAGER
+ * ==============================================================================
+ */
+
+const PR_MASTER_PAIRING_HEADERS = [
+  "Token_Akses",
+  "Tipe_Evaluasi",
+  "ID_Karyawan",
+  "Nama_Karyawan",
+  "Divisi_Karyawan",
+  "Jabatan_Karyawan",
+  "Email_Penilai",
+  "Nama_Penilai",
+  "Periode_Mulai",
+  "Periode_Selesai",
+  "Status",
+  "Submit_At"
+];
+
+const PR_MATRIX_KOMPETENSI_HEADERS = [
+  "Role_Key",
+  "No_Urut",
+  "Nama_Kompetensi",
+  "Deskripsi_Panduan",
+  "Bobot_Kategori"
+];
+
+const PR_CORE_VALUES_HEADERS = [
+  "Pilar_Key",
+  "Nama_Pilar",
+  "Deskripsi_Perilaku",
+  "Bobot_Kategori"
+];
+
+const PR_VAULT_SUBMISSIONS_HEADERS = [
+  "Submission_ID",
+  "Token_Akses",
+  "Scores_Raw_JSON",
+  "Strengths_Feedback",
+  "Improvement_Feedback",
+  "Ip_Address_Hash",
+  "Timestamp"
+];
+
+const PR_CALIBRATION_MASTER_HEADERS = [
+  "ID_Karyawan",
+  "Nama_Karyawan",
+  "Divisi",
+  "Skor_TopDown_Raw",
+  "Skor_Upward_Raw",
+  "Skor_Disiplin_HR",
+  "Skor_Akhir_Komposit",
+  "Predikat_Resmi",
+  "Catatan_Kalibrasi_HR",
+  "Status_Rilis",
+  "Rilis_At"
+];
+
+/**
+ * Setup seluruh lembar kerja modul Performance Review (PR).
+ * Dapat dijalankan langsung dari menu drop-down fungsi Google Apps Script.
+ */
+function setupPerformanceReviewSheets() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+
+  // 1. Tab PR_Master_Pairing
+  const pairingSheet = setupSinglePRSheet(ss, PR_MASTER_PAIRING_SHEET, PR_MASTER_PAIRING_HEADERS, "#00178F");
+  if (pairingSheet.getLastRow() <= 1) {
+    const samplePairings = [
+      ["PR26-8492", "TOP_DOWN", "EMP-2024-082", "Dimas Ardiansyah", "Technology & Engineering", "Lead System Architect", "budi.pratama@perusahaan.com", "Budi Pratama, M.Kom", "2026-10-15 08:00:00", "2026-10-18 23:59:59", "SUBMITTED", "2026-10-16 14:22:10"],
+      ["PR26-7319", "TOP_DOWN", "EMP-2023-045", "Anita Wijaya, S.E.", "Finance & Accounting", "Senior Financial Analyst", "dedi.firmansyah@perusahaan.com", "Dedi Firmansyah, S.E., M.Ak", "2026-10-15 08:00:00", "2026-10-18 23:59:59", "SUBMITTED", "2026-10-16 16:05:44"],
+      ["PR26-3912", "TOP_DOWN", "EMP-2024-099", "Farhan Maulana", "Technology & Engineering", "Senior Backend Engineer", "budi.pratama@perusahaan.com", "Budi Pratama, M.Kom", "2026-10-15 08:00:00", "2026-10-18 23:59:59", "DRAFT", ""],
+      ["PR26-5821", "TOP_DOWN", "EMP-2025-014", "Siti Rahma", "Technology & Engineering", "Frontend Specialist", "budi.pratama@perusahaan.com", "Budi Pratama, M.Kom", "2026-10-15 08:00:00", "2026-10-18 23:59:59", "PENDING", ""],
+      ["PR26-9044", "TOP_DOWN", "EMP-2025-031", "Rian Pratama", "Technology & Engineering", "DevOps & Cloud Engineer", "budi.pratama@perusahaan.com", "Budi Pratama, M.Kom", "2026-10-15 08:00:00", "2026-10-18 23:59:59", "PENDING", ""],
+      ["PR26-BLANK", "TOP_DOWN", "EMP-2026-NEW", "Ahmad Fauzi", "Sales & Marketing", "Account Executive", "hendra.wijaya@perusahaan.com", "Hendra Wijaya", "2026-10-15 08:00:00", "2026-10-18 23:59:59", "PENDING", ""]
+    ];
+    pairingSheet.getRange(2, 1, samplePairings.length, PR_MASTER_PAIRING_HEADERS.length).setValues(samplePairings);
+  }
+
+  // 2. Tab PR_Matrix_Kompetensi
+  const matrixSheet = setupSinglePRSheet(ss, PR_MATRIX_KOMPETENSI_SHEET, PR_MATRIX_KOMPETENSI_HEADERS, "#00178F");
+  if (matrixSheet.getLastRow() <= 1) {
+    const sampleMatrix = [
+      ["GENERAL", 1, "Kualitas & Akurasi Hasil Kerja", "Ketelitian, ketepatan, dan konsistensi mutu hasil kerja terhadap standar baku perusahaan.", "60%"],
+      ["GENERAL", 2, "Problem Solving & Pemikiran Kritis", "Kemampuan mengidentifikasi akar masalah, menganalisa situasi, dan menawarkan solusi yang efektif.", "60%"],
+      ["GENERAL", 3, "Manajemen Waktu & Keandalan", "Disiplin terhadap timeline dan SLA, komitmen rilis, serta dapat diandalkan dalam tugas kritis.", "60%"],
+      ["GENERAL", 4, "Komunikasi & Keselarasan Tim", "Komunikasi terbuka, aktif berkoordinasi lintas divisi, serta menjaga iklim kerja yang harmonis.", "60%"],
+      ["GENERAL", 5, "Adaptabilitas & Kemauan Belajar", "Cepat menyesuaikan diri terhadap dinamika bisnis, perubahan prioritas, dan antusias mempelajari hal baru.", "60%"],
+      ["GENERAL", 6, "Inisiatif & Ownership", "Proaktif mengambil tindakan tanpa harus selalu menunggu instruksi dan bertanggung jawab atas hasil kerja.", "60%"],
+      ["TECH", 1, "Analytical & Adaptability", "Kemampuan menganalisa situasi dan mempertimbangkan solusi secara logis dalam pengembangan teknologi.", "60%"],
+      ["TECH", 2, "Attention to Detail & Code Quality", "Ketelitian dalam menjaga standar kode bersih, modular, dan meminimalisir bug atau regresi teknis.", "60%"],
+      ["TECH", 3, "System Architecture & Scalability", "Kemampuan merancang infrastruktur sistem yang andal, scalable, dan berperforma tinggi.", "60%"],
+      ["TECH", 4, "Technical Leadership & Problem Solving", "Ketangguhan memecahkan incident teknis kritis dan memandu rekan insinyur secara efektif.", "60%"],
+      ["TECH", 5, "Code Security & Data Integrity", "Kepatuhan penuh pada keamanan aplikasi, enkripsi data sensitif, dan best practice industri.", "60%"],
+      ["TECH", 6, "Mentoring & Knowledge Sharing", "Kepedulian mendokumentasikan best practice dan membimbing anggota tim baru.", "60%"],
+      ["FINANCE", 1, "Financial Modeling & Forecasting", "Akurasi dalam merancang proyeksi arus kas, analisis variance anggaran, dan pemodelan profitabilitas.", "60%"],
+      ["FINANCE", 2, "Attention to Numerical Detail", "Ketelitian ekstrem dalam audit rekonsiliasi akun, jurnal penyesuaian, dan pencegahan selisih laporan.", "60%"],
+      ["FINANCE", 3, "Budgeting & Cost Control Governance", "Efektivitas monitoring kepatuhan anggaran per divisi dan analisis efisiensi belanja modal (CapEx/OpEx).", "60%"],
+      ["FINANCE", 4, "Regulatory Compliance & Tax Accuracy", "Kepatuhan penuh terhadap PSAK terbaru, regulasi perpajakan korporasi, dan audit eksternal.", "60%"],
+      ["FINANCE", 5, "Strategic Insight & Decision Support", "Kemampuan menyajikan insight finansial berbasis data bagi jajaran manajemen untuk pertimbangan investasi.", "60%"],
+      ["FINANCE", 6, "Stakeholder Collaboration", "Komunikasi dan diplomasi harmonis dengan pimpinan divisi terkait verifikasi budget dan procurement.", "60%"],
+      ["MARKETING", 1, "Campaign Strategy & Execution", "Kemampuan merancang strategi pemasaran yang terukur dan mengeksekusi kampanye secara presisi.", "60%"],
+      ["MARKETING", 2, "Customer Centricity & Market Insight", "Kepekaan memahami tren pasar, pain point audiens, dan perilaku konsumen untuk memenangkan kompetisi.", "60%"],
+      ["MARKETING", 3, "Commercial Acumen & Target Achievement", "Fokus kuat pada pencapaian target revenue/leads dan optimalisasi alokasi budget marketing.", "60%"],
+      ["MARKETING", 4, "Creative Thinking & Brand Voice", "Inovasi ide kreatif yang orisinal, konsistensi identitas merek, dan resonansi pesan yang kuat.", "60%"],
+      ["MARKETING", 5, "Data Analytics & ROI Optimization", "Kemampuan membaca metrik konversi (CAC, ROAS, LTV) untuk pengambilan keputusan berbasis data.", "60%"],
+      ["MARKETING", 6, "Agility & Speed of Execution", "Kecepatan merespons dinamika pasar, testing ide baru, dan adaptasi taktik secara lincah.", "60%"],
+      ["OPERATIONS", 1, "Service Excellence & SLA Adherence", "Dedikasi melayani pemangku kepentingan internal dengan ramah, solutif, dan tepat waktu sesuai SLA.", "60%"],
+      ["OPERATIONS", 2, "Process Improvement & Efficiency", "Kemampuan mengeliminasi bottleneck birokrasi dan menyederhanakan alur kerja operasional.", "60%"],
+      ["OPERATIONS", 3, "Workplace Empathy & People Relations", "Kecerdasan emosional dalam mediasi konflik kerja, mendengarkan masukan, dan membina engagement tim.", "60%"],
+      ["OPERATIONS", 4, "Crisis & Incident Management", "Ketenangan dan ketegasan dalam menangani kendala mendesak atau situasi darurat operasional.", "60%"],
+      ["OPERATIONS", 5, "Compliance & SOP Governance", "Kepatuhan konsisten terhadap regulasi ketenagakerjaan, SOP keselamatan, dan kode etik perusahaan.", "60%"],
+      ["OPERATIONS", 6, "Talent Empowerment & Enablement", "Mendukung pengembangan potensi karyawan dan fasilitasi lingkungan kerja yang produktif.", "60%"]
+    ];
+    matrixSheet.getRange(2, 1, sampleMatrix.length, PR_MATRIX_KOMPETENSI_HEADERS.length).setValues(sampleMatrix);
+  }
+
+  // 3. Tab PR_Core_Values (7 Pilar ELASTIC Baku)
+  const coreValuesSheet = setupSinglePRSheet(ss, PR_CORE_VALUES_SHEET, PR_CORE_VALUES_HEADERS, "#00178F");
+  if (coreValuesSheet.getLastRow() <= 1) {
+    const sampleCoreValues = [
+      ["E", "Enthusiasm", "Semangat tinggi dalam bekerja, proaktif, dan membawa energi positif ke dalam lingkungan kerja.", "40%"],
+      ["L", "Learning continuously", "Terus belajar, berkembang, terbuka terhadap pengetahuan baru, dan aktif meningkatkan kapabilitas diri.", "40%"],
+      ["A", "Accountability & Dependability", "Bertanggung jawab penuh atas hasil kerja, dapat diandalkan dalam tugas kritis, serta menepati komitmen.", "40%"],
+      ["S", "Simplicity", "Menyederhanakan proses yang rumit agar lebih efektif, efisien, terstruktur, dan mudah dipahami.", "40%"],
+      ["T", "Teamwork", "Bekerja sama secara harmonis, kolaboratif lintas divisi, dan saling mendukung demi mencapai tujuan bersama.", "40%"],
+      ["I", "Integrity", "Bertindak jujur, transparan, konsisten antara perkataan dan perbuatan, serta menjunjung tinggi etika moral.", "40%"],
+      ["C", "Creatively Bold", "Berani berpikir inovatif, mengeksplorasi ide solutif baru yang berdampak positif, dan tanggap terhadap perubahan.", "40%"]
+    ];
+    coreValuesSheet.getRange(2, 1, sampleCoreValues.length, PR_CORE_VALUES_HEADERS.length).setValues(sampleCoreValues);
+  }
+
+  // 4. Tab PR_Vault_Submissions
+  setupSinglePRSheet(ss, PR_VAULT_SUBMISSIONS_SHEET, PR_VAULT_SUBMISSIONS_HEADERS, "#00178F");
+
+  // 5. Tab PR_Calibration_Master
+  const calibSheet = setupSinglePRSheet(ss, PR_CALIBRATION_MASTER_SHEET, PR_CALIBRATION_MASTER_HEADERS, "#00178F");
+  if (calibSheet.getLastRow() <= 1) {
+    const sampleCalib = [
+      ["EMP-2024-082", "Dimas Ardiansyah", "Technology & Engineering", 97.5, "-", 100, 98.0, "Sangat Baik (Exceeds)", "Kinerja dan kepemimpinan teknis terverifikasi sangat memuaskan, kedisiplinan 100%. Direkomendasikan untuk promosi / penyesuaian tier kompetensi periode depan.", "RELEASED", "2026-10-18 10:00:00"],
+      ["EMP-2023-045", "Anita Wijaya, S.E.", "Finance & Accounting", 96.8, "-", 100, 97.4, "Sangat Baik (Exceeds)", "Integritas pelaporan keuangan luar biasa, kedisiplinan dan kepatuhan SOP sangat prima. Direkomendasikan sertifikasi Chartered Accountant.", "RELEASED", "2026-10-18 10:15:00"]
+    ];
+    calibSheet.getRange(2, 1, sampleCalib.length, PR_CALIBRATION_MASTER_HEADERS.length).setValues(sampleCalib);
+  }
+
+  Logger.log("=================================================");
+  Logger.log("✅ INISIALISASI SHEET PERFORMANCE REVIEW (PR) SELESAI!");
+  Logger.log("- Tab 1: '" + PR_MASTER_PAIRING_SHEET + "' (Pasangan Penilai & Token Akses)");
+  Logger.log("- Tab 2: '" + PR_MATRIX_KOMPETENSI_SHEET + "' (Bank Kompetensi Role & Bobot)");
+  Logger.log("- Tab 3: '" + PR_CORE_VALUES_SHEET + "' (7 Pilar Budaya ELASTIC)");
+  Logger.log("- Tab 4: '" + PR_VAULT_SUBMISSIONS_SHEET + "' (Brankas Tertutup Jawaban Penilai)");
+  Logger.log("- Tab 5: '" + PR_CALIBRATION_MASTER_SHEET + "' (Kalibrasi HR & Skor Komposit)");
+  Logger.log("=================================================");
+}
+
+/**
+ * Helper untuk membuat atau memperbarui header sheet PR tunggal
+ */
+function setupSinglePRSheet(ss, sheetName, headers, headerColor) {
+  let sheet = ss.getSheetByName(sheetName);
+  if (!sheet) {
+    sheet = ss.insertSheet(sheetName);
+  }
+
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow(headers);
+    const headerRange = sheet.getRange(1, 1, 1, headers.length);
+    headerRange.setFontWeight("bold");
+    headerRange.setBackground(headerColor || "#00178F");
+    headerRange.setFontColor("#FFFFFF");
+    sheet.setFrozenRows(1);
+  } else {
+    const currentHeaders = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0].map(h => String(h).trim());
+    const currentLower = currentHeaders.map(h => h.toLowerCase());
+    const missingHeaders = headers.filter(h => !currentLower.includes(h.toLowerCase()));
+    if (missingHeaders.length > 0) {
+      const startCol = currentHeaders.length + 1;
+      sheet.getRange(1, startCol, 1, missingHeaders.length).setValues([missingHeaders]);
+      const headerRange = sheet.getRange(1, startCol, 1, missingHeaders.length);
+      headerRange.setFontWeight("bold");
+      headerRange.setBackground(headerColor || "#00178F");
+      headerRange.setFontColor("#FFFFFF");
+    }
+  }
+
+  return sheet;
 }

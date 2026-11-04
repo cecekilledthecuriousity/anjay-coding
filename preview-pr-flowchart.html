@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dokumentasi Alur Sistem Performance Review - TDS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --brand-navy: #00178F;
+      --brand-navy-dark: #001066;
+      --brand-navy-subtle: #EEF2FF;
+      --text-main: #1E293B;
+      --text-muted: #64748B;
+      --text-faint: #94A3B8;
+      --surface-page: #F8FAFC;
+      --surface-card: #FFFFFF;
+      --surface-muted: #F1F5F9;
+      --border-line: #E2E8F0;
+      --border-strong: #CBD5E1;
+      
+      --status-done-bg: #DCFCE7;
+      --status-done-text: #166534;
+      --status-draft-bg: #FEF3C7;
+      --status-draft-text: #854D0E;
+      --status-alert-bg: #FEE2E2;
+      --status-alert-text: #991B1B;
+
+      --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--surface-page);
+      color: var(--text-main);
+      line-height: 1.6;
+      padding: 40px 24px 80px 24px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .doc-container {
+      max-width: 1040px;
+      margin: 0 auto;
+    }
+
+    /* Document Header */
+    .doc-header {
+      background: var(--surface-card);
+      border: 1px solid var(--border-line);
+      border-radius: 8px;
+      padding: 32px;
+      margin-bottom: 32px;
+    }
+
+    .doc-meta-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-line);
+      padding-bottom: 16px;
+      margin-bottom: 20px;
+      font-size: 13px;
+      color: var(--text-muted);
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .doc-meta-item strong {
+      color: var(--text-main);
+      font-weight: 600;
+    }
+
+    .doc-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--brand-navy);
+      letter-spacing: -0.3px;
+      margin-bottom: 10px;
+    }
+
+    .doc-summary {
+      font-size: 14.5px;
+      color: #334155;
+      max-width: 860px;
+      line-height: 1.6;
+    }
+
+    /* Step Timeline Strip */
+    .timeline-nav {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 8px;
+      margin-top: 24px;
+    }
+    @media (max-width: 900px) {
+      .timeline-nav { grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (max-width: 600px) {
+      .timeline-nav { grid-template-columns: 1fr; }
+    }
+
+    .nav-step {
+      background: var(--surface-muted);
+      border: 1px solid var(--border-line);
+      border-radius: 6px;
+      padding: 10px 12px;
+      text-decoration: none;
+      color: var(--text-main);
+      font-size: 12.5px;
+      font-weight: 500;
+      transition: background 0.15s, border-color 0.15s;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .nav-step:hover {
+      background: var(--surface-card);
+      border-color: var(--brand-navy);
+    }
+    .nav-step-num {
+      font-size: 11px;
+      font-family: var(--font-mono);
+      color: var(--brand-navy);
+      font-weight: 600;
+    }
+
+    /* Section Cards */
+    .stage-section {
+      background: var(--surface-card);
+      border: 1px solid var(--border-line);
+      border-radius: 8px;
+      margin-bottom: 28px;
+      overflow: hidden;
+    }
+
+    .stage-header {
+      padding: 20px 28px;
+      border-bottom: 1px solid var(--border-line);
+      background: #FAFAFC;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .stage-title-wrap {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+    }
+
+    .stage-index {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--brand-navy);
+      background: var(--brand-navy-subtle);
+      padding: 3px 8px;
+      border-radius: 4px;
+      border: 1px solid rgba(0, 23, 143, 0.15);
+    }
+
+    .stage-heading {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .stage-actor-tag {
+      font-size: 12px;
+      color: var(--text-muted);
+      background: var(--surface-muted);
+      padding: 4px 10px;
+      border-radius: 4px;
+      border: 1px solid var(--border-line);
+    }
+
+    .stage-body {
+      padding: 28px;
+      display: grid;
+      grid-template-columns: 1fr 1.08fr;
+      gap: 28px;
+    }
+    @media (max-width: 860px) {
+      .stage-body { grid-template-columns: 1fr; gap: 20px; }
+    }
+
+    /* Content & Explanations */
+    .stage-details {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .detail-block h4 {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--text-main);
+      margin-bottom: 4px;
+    }
+
+    .detail-block p {
+      font-size: 13px;
+      color: #475569;
+      line-height: 1.55;
+    }
+
+    .spec-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      margin-top: 8px;
+    }
+    .spec-table th, .spec-table td {
+      padding: 6px 10px;
+      border: 1px solid var(--border-line);
+      text-align: left;
+    }
+    .spec-table th {
+      background: var(--surface-muted);
+      color: var(--text-main);
+      font-weight: 600;
+    }
+
+    /* Technical preview panel */
+    .tech-panel {
+      border: 1px solid var(--border-strong);
+      border-radius: 6px;
+      background: #FFFFFF;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .tech-panel-header {
+      background: #F8FAFC;
+      border-bottom: 1px solid var(--border-line);
+      padding: 8px 14px;
+      font-size: 11.5px;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .tech-panel-body {
+      padding: 18px;
+      font-size: 12.5px;
+      background: #FFFFFF;
+      flex: 1;
+    }
+
+    .token-box {
+      font-family: var(--font-mono);
+      background: var(--surface-muted);
+      border: 1px solid var(--border-line);
+      padding: 6px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      display: inline-block;
+      margin: 4px 0;
+      color: var(--brand-navy);
+      font-weight: 600;
+    }
+
+    /* Member List Preview */
+    .member-row {
+      border: 1px solid var(--border-line);
+      border-radius: 6px;
+      padding: 10px 14px;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+    }
+
+    .status-badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+    .status-done { background: var(--status-done-bg); color: var(--status-done-text); }
+    .status-draft { background: var(--status-draft-bg); color: var(--status-draft-text); }
+    .status-alert { background: var(--status-alert-bg); color: var(--status-alert-text); }
+
+    /* Rubric layout preview */
+    .rubric-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      margin: 10px 0;
+    }
+    .rubric-cell {
+      border: 1px solid var(--border-line);
+      border-radius: 4px;
+      padding: 8px;
+      text-align: center;
+      font-size: 11px;
+    }
+    .rubric-cell.selected {
+      border-color: var(--brand-navy);
+      background: var(--brand-navy-subtle);
+      font-weight: 600;
+      color: var(--brand-navy);
+    }
+
+    /* Directional flow indicators between stages */
+    .flow-step-arrow {
+      text-align: center;
+      padding: 10px 0;
+      color: var(--text-faint);
+      font-size: 18px;
+    }
+
+    /* Document Footer */
+    .doc-footer {
+      border-top: 1px solid var(--border-line);
+      padding-top: 24px;
+      margin-top: 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+      color: var(--text-muted);
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .btn-link-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--brand-navy);
+      color: #FFFFFF;
+      text-decoration: none;
+      padding: 9px 18px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      transition: background 0.15s;
+    }
+    .btn-link-action:hover {
+      background: var(--brand-navy-dark);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="doc-container">
+
+    <!-- Document Header -->
+    <header class="doc-header">
+      <div class="doc-meta-row">
+        <div class="doc-meta-item">Dokumentasi Sistem: <strong>TDS Performance Review (PR)</strong></div>
+        <div class="doc-meta-item">Status: <strong>Spesifikasi Desain &amp; Alur Operasional</strong></div>
+        <div class="doc-meta-item">Pemilik: <strong>People Operations &amp; HR Tech</strong></div>
+      </div>
+
+      <h1 class="doc-title">Panduan Alur Kerja Sistem Performance Review</h1>
+      <p class="doc-summary">
+        Diagram alur operasional evaluasi kinerja tahunan karyawan: mulai dari penyiapan data dan pembentukan token oleh HR, proses evaluasi mandiri oleh penilai di formulir aman, hingga proses kalibrasi internal dan pengiriman laporan resmi ke karyawan.
+      </p>
+
+      <nav class="timeline-nav" aria-label="Navigasi Tahapan">
+        <a href="#tahap-0" class="nav-step">
+          <span class="nav-step-num">Tahap 00</span>
+          <span>Kamus Kompetensi HR</span>
+        </a>
+        <a href="#tahap-1" class="nav-step">
+          <span class="nav-step-num">Tahap 01</span>
+          <span>Penyiapan &amp; Token</span>
+        </a>
+        <a href="#tahap-2" class="nav-step">
+          <span class="nav-step-num">Tahap 02</span>
+          <span>Portal Leader Hub</span>
+        </a>
+        <a href="#tahap-3" class="nav-step">
+          <span class="nav-step-num">Tahap 03</span>
+          <span>Formulir Penilai</span>
+        </a>
+        <a href="#tahap-4" class="nav-step">
+          <span class="nav-step-num">Tahap 04</span>
+          <span>Kalibrasi HR</span>
+        </a>
+        <a href="#tahap-5" class="nav-step">
+          <span class="nav-step-num">Tahap 05</span>
+          <span>Email Laporan Hasil</span>
+        </a>
+      </nav>
+    </header>
+
+    <!-- TAHAP 0 -->
+    <section class="stage-section" id="tahap-0">
+      <div class="stage-header">
+        <div class="stage-title-wrap">
+          <span class="stage-index">Tahap 00</span>
+          <h2 class="stage-heading">Manajemen Kamus Kompetensi Jabatan (Kewenangan HR)</h2>
+        </div>
+        <span class="stage-actor-tag">Kewenangan Eksklusif: People Operations (HR)</span>
+      </div>
+
+      <div class="stage-body">
+        <div class="stage-details">
+          <div class="detail-block">
+            <h4>1. Penetapan Standar Kompetensi Peran (Bagian I, Bobot 60%)</h4>
+            <p>
+              Sebelum siklus review dimulai, HR menetapkan 6 indikator kompetensi khusus untuk setiap jabatan. Atasan tidak dapat mengubah butir kompetensi ini secara sepihak, sehingga standar penilaian tetap objektif dan selaras dengan standar organisasi.
+            </p>
+          </div>
+
+          <div class="detail-block">
+            <h4>2. Skema Kerja Dua Pintu (Hybrid Opsi A + B)</h4>
+            <p>
+              HR memiliki dua cara fleksibel untuk mengelola dan menambahkan butir kompetensi:
+            </p>
+            <table class="spec-table">
+              <thead>
+                <tr>
+                  <th>Pintu Input</th>
+                  <th>Kapan Digunakan</th>
+                  <th>Kelebihan Operasional</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Pintu A: Portal Web Admin TDS</strong></td>
+                  <td>Penambahan jabatan baru atau revisi cepat butir kompetensi</td>
+                  <td>Praktis via modal web interaktif, tervalidasi otomatis, tanpa perlu buka file sheet</td>
+                </tr>
+                <tr>
+                  <td><strong>Pintu B: Sheet PR_Matrix_Kompetensi</strong></td>
+                  <td>Setup awal tahun atau migrasi data massal (bulk input)</td>
+                  <td>Bisa langsung copy-paste puluhan baris dari dokumen Excel lama perusahaan</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="detail-block">
+            <h4>3. Sinkronisasi Dinamis ke Formulir Evaluator</h4>
+            <p>
+              Kedua pintu terhubung ke sumber data yang sama (*Single Source of Truth*). Saat atasan membuka link penilaian untuk posisi tertentu (misal: *Lead Architect*), sistem otomatis me-load 6 butir kompetensi terkini yang sudah divalidasi oleh HR.
+            </p>
+          </div>
+        </div>
+
+        <div class="tech-panel">
+          <div class="tech-panel-header">
+            <span>Struktur Data: PR_Matrix_Kompetensi</span>
+            <span>Basis Data Master &bull; Dua Pintu</span>
+          </div>
+          <div class="tech-panel-body">
+            <div style="font-weight:600; color:var(--brand-navy); margin-bottom:6px;">Contoh Matriks Berdasarkan Jabatan:</div>
+            
+            <table class="spec-table" style="margin-bottom:12px;">
+              <thead>
+                <tr>
+                  <th>Divisi &amp; Jabatan</th>
+                  <th>No</th>
+                  <th>Nama Kompetensi</th>
+                  <th>Panduan Perilaku (1-4)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Tech &bull; Backend Lead</strong></td>
+                  <td>01</td>
+                  <td>System Architecture</td>
+                  <td>Mendesain sistem scalable, modular &amp; resilient</td>
+                </tr>
+                <tr>
+                  <td><strong>Finance &bull; AP Specialist</strong></td>
+                  <td>01</td>
+                  <td>Financial Accuracy</td>
+                  <td>Kecermatan rekonsiliasi faktur &amp; kepatuhan audit</td>
+                </tr>
+                <tr>
+                  <td><strong>Sales &bull; Account Exec</strong></td>
+                  <td>01</td>
+                  <td>Client Negotiation</td>
+                  <td>Kemampuan closing deal &amp; retensi kemitraan</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div style="font-size:11.5px; background:#F8FAFC; border:1px solid var(--border-line); border-radius:6px; padding:10px; color:#475569;">
+              <strong>Aturan Penguncian Nilai Budaya:</strong> Sementara Bagian I (Kompetensi Jabatan) dikelola dinamis per peran oleh HR, <strong>Bagian II (7 Pilar ELASTIC, bobot 40%)</strong> bersifat baku dan seragam untuk seluruh karyawan tanpa pengecualian.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="flow-step-arrow" aria-hidden="true">&darr;</div>
+
+    <!-- TAHAP 1 -->
+    <section class="stage-section" id="tahap-1">
+      <div class="stage-header">
+        <div class="stage-title-wrap">
+          <span class="stage-index">Tahap 01</span>
+          <h2 class="stage-heading">Penyiapan Pasangan Evaluator &amp; Distribusi Token</h2>
+        </div>
+        <span class="stage-actor-tag">Pelaksana: Tim People Operations (HR)</span>
+      </div>
+
+      <div class="stage-body">
+        <div class="stage-details">
+          <div class="detail-block">
+            <h4>1. Perekaman Daftar Pasangan di Spreadsheet</h4>
+            <p>
+              HR memasukkan daftar penilai dan anggota tim yang dinilai ke dalam sheet <code>PR_Master_Pairing</code>. Data mencakup NIK, nama lengkap, divisi, jabatan, email penilai, dan tanggal batas akhir pengisian.
+            </p>
+          </div>
+
+          <div class="detail-block">
+            <h4>2. Pembentukan Token Unik Singkat</h4>
+            <p>
+              Sistem backend (Google Apps Script) meng-generate kode token pendek untuk menjaga kesederhanaan akses tanpa perlu login akun rumit. Token memiliki batas kedaluwarsa otomatis tepat pada pukul 00:00 WIB di hari terakhir siklus.
+            </p>
+            <table class="spec-table">
+              <thead>
+                <tr>
+                  <th>Tipe Sesi</th>
+                  <th>Format Contoh</th>
+                  <th>Penggunaan</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Sesi Tim (Leader Hub)</td>
+                  <td><code>LEADER-ENG-BP26</code></td>
+                  <td>1 atasan menilai seluruh anggota tim</td>
+                </tr>
+                <tr>
+                  <td>Sesi Mandiri / Peer</td>
+                  <td><code>PR26-8492</code></td>
+                  <td>Penilaian individual 1-on-1</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="detail-block">
+            <h4>3. Pengiriman Undangan Pengisian</h4>
+            <p>
+              Sistem mengirimkan email resmi ke masing-masing penilai yang memuat batas waktu resmi, panduan pengisian objektif, dan tautan langsung berparameter token.
+            </p>
+          </div>
+        </div>
+
+        <div class="tech-panel">
+          <div class="tech-panel-header">
+            <span>Struktur Data: PR_Master_Pairing</span>
+            <span>Tab Spreadsheet</span>
+          </div>
+          <div class="tech-panel-body">
+            <div style="font-weight:600; color:var(--brand-navy); margin-bottom:6px;">Contoh Record Sesi Aktif:</div>
+            <p style="font-size:12px; color:#475569; margin-bottom:10px;">
+              Data yang tercatat saat trigger token selesai dijalankan:
+            </p>
+
+            <div style="font-size:12px; line-height:1.7; background:#F8FAFC; border:1px solid var(--border-line); border-radius:6px; padding:12px;">
+              <div>• <strong>Token Sesi:</strong> <span class="token-box">LEADER-ENG-BP26</span></div>
+              <div>• <strong>Penilai:</strong> Budi Pratama, M.Kom (Head of Tech)</div>
+              <div>• <strong>Email Tujuan:</strong> budi.pratama@perusahaan.com</div>
+              <div>• <strong>Bawahan Terdaftar:</strong> 4 Orang (Dimas, Siti, Denny, Rina)</div>
+              <div>• <strong>Waktu Cutoff:</strong> 18 Oktober 2026, 23:59:59 WIB</div>
+              <div>• <strong>Status Awal:</strong> <span class="status-badge status-draft">PENDING</span></div>
+            </div>
+
+            <div style="margin-top:12px; font-size:11.5px; color:#64748B; border-left:2px solid var(--brand-navy); padding-left:10px;">
+              Keamanan: Validasi batas waktu berjalan di sisi server (GAS). Pengisian setelah 00:00 otomatis ditolak walau waktu perangkat evaluator diubah manual.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="flow-step-arrow" aria-hidden="true">&darr;</div>
+
+    <!-- TAHAP 2 -->
+    <section class="stage-section" id="tahap-2">
+      <div class="stage-header">
+        <div class="stage-title-wrap">
+          <span class="stage-index">Tahap 02</span>
+          <h2 class="stage-heading">Pemantauan &amp; Pengelolaan Tim (Leader Hub)</h2>
+        </div>
+        <span class="stage-actor-tag">Pelaksana: Atasan Langsung / Team Leader</span>
+      </div>
+
+      <div class="stage-body">
+        <div class="stage-details">
+          <div class="detail-block">
+            <h4>1. Akses Portal Tim Terpusat</h4>
+            <p>
+              Atasan membuka tautan dengan parameter token sesinya. Halaman langsung mengenali identitas penilai dan menampilkan ringkasan seluruh anggota tim yang menjadi tanggung jawabnya.
+            </p>
+          </div>
+
+          <div class="detail-block">
+            <h4>2. Indikator Progres &amp; Status Anggota</h4>
+            <p>
+              Atasan dapat melihat ringkasan status pengerjaan setiap karyawan secara transparan: berapa yang telah berstatus selesai, sedang berupa draf, dan belum dimulai.
+            </p>
+          </div>
+
+          <div class="detail-block">
+            <h4>3. Penilaian Fleksibel Tanpa Kehilangan Data</h4>
+            <p>
+              Atasan dapat menilai satu anggota tim, menyimpan draf, lalu beralih ke anggota lain kapan saja sebelum batas waktu penutupan berakhir.
+            </p>
+          </div>
+        </div>
+
+        <div class="tech-panel">
+          <div class="tech-panel-header">
+            <span>Antarmuka: Leader Team Hub</span>
+            <span>State: screenLeaderHub</span>
+          </div>
+          <div class="tech-panel-body">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid var(--border-line);">
+              <div>
+                <strong style="color:var(--brand-navy);">Tim Technology &amp; Engineering</strong>
+                <div style="font-size:11.5px; color:#64748B;">4 Anggota &bull; Sesi: LEADER-ENG-BP26</div>
+              </div>
+              <span class="status-badge status-draft">Batas: 18 Okt, 23:59 WIB</span>
+            </div>
+
+            <!-- Member rows -->
+            <div class="member-row">
+              <div>
+                <strong>Dimas Ardiansyah</strong>
+                <div style="font-size:11px; color:#64748B;">Lead Architect &bull; 13/13 Butir</div>
+              </div>
+              <span class="status-badge status-done">Selesai Diserahkan</span>
+            </div>
+
+            <div class="member-row">
+              <div>
+                <strong>Siti Nurhaliza</strong>
+                <div style="font-size:11px; color:#64748B;">Senior Backend &bull; 8/13 Butir</div>
+              </div>
+              <span class="status-badge status-draft">Draf Tersimpan</span>
+            </div>
+
+            <div class="member-row">
+              <div>
+                <strong>Denny Setiawan</strong>
+                <div style="font-size:11px; color:#64748B;">Web Developer &bull; 0/13 Butir</div>
+              </div>
+              <span class="status-badge" style="background:#F1F5F9; color:#475569;">Belum Dimulai</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="flow-step-arrow" aria-hidden="true">&darr;</div>
+
+    <!-- TAHAP 3 -->
+    <section class="stage-section" id="tahap-3">
+      <div class="stage-header">
+        <div class="stage-title-wrap">
+          <span class="stage-index">Tahap 03</span>
+          <h2 class="stage-heading">Pengisian Lembar Evaluasi Karyawan</h2>
+        </div>
+        <span class="stage-actor-tag">Pelaksana: Evaluator yang Ditunjuk</span>
+      </div>
+
+      <div class="stage-body">
+        <div class="stage-details">
+          <div class="detail-block">
+            <h4>1. Rubrik Skala 1–4 Sesuai Rumusan Resmi</h4>
+            <p>
+              Penilaian menggunakan 4 skala baku tanpa bias: <strong>1 (Kurang)</strong>, <strong>2 (Cukup)</strong>, <strong>3 (Baik)</strong>, dan <strong>4 (Sangat Baik)</strong>. Tiap butir dilengkapi penjelasan perilaku operasional konkret.
+            </p>
+          </div>
+
+          <div class="detail-block">
+            <h4>2. Struktur 3 Bagian Penilaian</h4>
+            <p>
+              • <strong>Bagian I (Bobot 60%)</strong>: 6 indikator kompetensi teknis &amp; peran jabatan.<br>
+              • <strong>Bagian II (Bobot 40%)</strong>: 7 pilar nilai budaya perusahaan <strong>ELASTIC</strong> (Enthusiasm, Learning, Accountability, Simplicity, Teamwork, Integrity, Creatively Bold).<br>
+              • <strong>Bagian III</strong>: Ulasan kualitatif 360° (Pencapaian utama &amp; area perbaikan).
+            </p>
+          </div>
+
+          <div class="detail-block">
+            <h4>3. Prinsip Kerahasiaan Nilai (Score Secrecy)</h4>
+            <p>
+              Penilai tidak melihat rumus agregat atau skor komposit saat mengisi. Ini menjaga agar evaluasi berfokus pada perilaku kerja riil, bukan mengotak-atik target angka.
+            </p>
+          </div>
+        </div>
+
+        <div class="tech-panel">
+          <div class="tech-panel-header">
+            <span>Formulir Evaluasi Aktif</span>
+            <span>State: screenActive</span>
+          </div>
+          <div class="tech-panel-body">
+            <div style="font-size:12px; margin-bottom:8px; font-weight:600; color:#334155;">Contoh Butir: Bagian I (Kompetensi Jabatan)</div>
+            
+            <div style="border:1px solid var(--border-line); border-radius:6px; padding:10px; margin-bottom:12px;">
+              <div style="font-size:12px; font-weight:600; color:var(--brand-navy);">1. System Architecture &amp; Scalability</div>
+              <div style="font-size:11px; color:#64748B; margin-top:2px;">Kemampuan merancang arsitektur sistem yang modular dan tahan uji.</div>
+              
+              <div class="rubric-grid">
+                <div class="rubric-cell">1: Kurang</div>
+                <div class="rubric-cell">2: Cukup</div>
+                <div class="rubric-cell selected">3: Baik &check;</div>
+                <div class="rubric-cell">4: Sangat Baik</div>
+              </div>
+            </div>
+
+            <div style="border:1px solid var(--border-line); border-radius:6px; padding:10px; font-size:11.5px; background:#F8FAFC;">
+              <strong>Pencegahan Butir Kosong:</strong> Jika penilai menekan tombol submit saat ada butir terlewat, sistem menampilkan daftar butir yang belum terisi dan mengarahkan layar langsung ke butir tersebut.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="flow-step-arrow" aria-hidden="true">&darr;</div>
+
+    <!-- TAHAP 4 -->
+    <section class="stage-section" id="tahap-4">
+      <div class="stage-header">
+        <div class="stage-title-wrap">
+          <span class="stage-index">Tahap 04</span>
+          <h2 class="stage-heading">Penyimpanan di Brankas &amp; Kalibrasi Nilai oleh HR</h2>
+        </div>
+        <span class="stage-actor-tag">Pelaksana: HR Committee &amp; Approver</span>
+      </div>
+
+      <div class="stage-body">
+        <div class="stage-details">
+          <div class="detail-block">
+            <h4>1. Penyimpanan Terisolasi (PR_Vault_Submissions)</h4>
+            <p>
+              Hasil evaluasi yang diserahkan otomatis terkunci permanen di brankas tertutup. Token tidak dapat dipakai untuk mengubah jawaban lagi.
+            </p>
+          </div>
+
+          <div class="detail-block">
+            <h4>2. Integrasi Skor Kedisiplinan &amp; Presensi</h4>
+            <p>
+              Melalui Portal Kalibrasi HR, tim People Operations memasukkan metrik data objektif berupa persentase kehadiran dan kepatuhan jam kerja (bobot 10–15%).
+            </p>
+          </div>
+
+          <div class="detail-block">
+            <h4>3. Kalkulasi Skor Komposit Resmi</h4>
+            <p>
+              Sistem menghitung nilai akhir resmi menggunakan rumus gabungan:
+              <br><code>Skor Akhir = (85% × Nilai Evaluator) + (15% × Disiplin HR)</code>
+              <br>Sistem kemudian memetakan nilai ke predikat resmi perusahaan.
+            </p>
+          </div>
+        </div>
+
+        <div class="tech-panel">
+          <div class="tech-panel-header">
+            <span>Portal Kalibrasi HR</span>
+            <span>State: screenApprover</span>
+          </div>
+          <div class="tech-panel-body">
+            <div style="font-size:12px; font-weight:600; color:var(--brand-navy); margin-bottom:8px;">
+              Formulasi Kalibrasi: Dimas Ardiansyah (EMP-2024-082)
+            </div>
+
+            <table class="spec-table" style="margin-bottom:12px;">
+              <tbody>
+                <tr>
+                  <td>Rata-rata Nilai Atasan (85%)</td>
+                  <td><strong>95.4 / 100</strong></td>
+                </tr>
+                <tr>
+                  <td>Skor Presensi &amp; Disiplin HR (15%)</td>
+                  <td><strong>98.0 / 100</strong> (Input HR)</td>
+                </tr>
+                <tr style="background:#F0FDF4;">
+                  <td><strong>Skor Komposit Terkalibrasi</strong></td>
+                  <td><strong style="color:#166534;">95.8 &bull; Sangat Baik</strong></td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div style="font-size:11.5px; color:#475569;">
+              HR menambahkan catatan komite karier, lalu menekan tombol <strong>[Setujui &amp; Rilis Resmi]</strong> untuk memvalidasi nilai.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="flow-step-arrow" aria-hidden="true">&darr;</div>
+
+    <!-- TAHAP 5 -->
+    <section class="stage-section" id="tahap-5">
+      <div class="stage-header">
+        <div class="stage-title-wrap">
+          <span class="stage-index">Tahap 05</span>
+          <h2 class="stage-heading">Distribusi Laporan Hasil Evaluasi</h2>
+        </div>
+        <span class="stage-actor-tag">Sistem: Dispatcher Email Otomatis</span>
+      </div>
+
+      <div class="stage-body">
+        <div class="stage-details">
+          <div class="detail-block">
+            <h4>1. Penyampaian Hasil Resmi ke Karyawan</h4>
+            <p>
+              Karyawan menerima notifikasi email resmi berisi rangkuman predikat, nilai akhir, poin pencapaian utama, serta catatan area pengembangan diri untuk periode berikutnya.
+            </p>
+          </div>
+
+          <div class="detail-block">
+            <h4>2. Konfirmasi Penyelesaian ke Leader</h4>
+            <p>
+              Atasan menerima rekap resmi bahwa evaluasi seluruh anggota timnya telah divalidasi HR dan proses PR tahunan tim tersebut telah resmi ditutup.
+            </p>
+          </div>
+
+          <div class="detail-block">
+            <h4>3. Umpan Balik ke Program Training Perusahaan (TDS)</h4>
+            <p>
+              Area pengembangan yang tercatat di PR langsung dapat dijadikan rujukan kebutuhan saat leader mengajukan training internal (menggunakan pilihan: <em>Dasar Kebutuhan: Hasil Performance Review</em>).
+            </p>
+          </div>
+        </div>
+
+        <div class="tech-panel">
+          <div class="tech-panel-header">
+            <span>Ringkasan Email yang Diterima</span>
+            <span>GmailApp Dispatcher</span>
+          </div>
+          <div class="tech-panel-body">
+            <div style="border:1px solid var(--border-line); border-radius:6px; padding:12px; margin-bottom:10px;">
+              <div style="font-size:11px; color:#64748B;">Penerima: dimas@perusahaan.com (Karyawan)</div>
+              <div style="font-weight:600; color:var(--brand-navy); margin-top:2px;">Hasil Evaluasi Kinerja Tahunan 2026</div>
+              <div style="font-size:12px; color:#334155; margin-top:6px;">
+                Predikat: <strong>Sangat Baik</strong> (Skor: 95.8)
+                <br>Kekuatan: Perancangan arsitektur handal &amp; konsistensi penyelesaian target.
+                <br>Fokus Pengembangan: Memperluas mentoring teknis ke engineer junior.
+              </div>
+            </div>
+
+            <div style="border:1px solid var(--border-line); border-radius:6px; padding:10px; font-size:11.5px; color:#475569; background:#F8FAFC;">
+              <strong>Penerima: atasan &amp; arsip HR:</strong> Salinan rekapitulasi tersimpan aman di spreadsheet <code>PR_Calibration_Master</code> untuk arsip kompensasi dan perencanaan karier.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Document Footer -->
+    <footer class="doc-footer">
+      <div>
+        File sumber: <code>preview-pr-flowchart.html</code> &bull; Training &amp; Development System (TDS)
+      </div>
+      <div>
+        <a href="preview-performance-review.html" target="_blank" class="btn-link-action">
+          Buka Prototipe Interaktif (Preview UI) &rarr;
+        </a>
+      </div>
+    </footer>
+
+  </div>
+
+</body>
+</html>

@@ -6,35 +6,46 @@
   <title>Preview UI: Performance Review & Portal Approver HR - TDS</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <style>
     :root {
-      /* Palette: Executive Slate Navy & Cool Steel (Bukan Deep Forest Moss) */
-      --pr-navy-950: #0B0F19;
-      --pr-navy-900: #0F172A;
-      --pr-navy-800: #1E293B;
-      --pr-navy-700: #334155;
-      --pr-slate-500: #64748B;
-      --pr-slate-400: #94A3B8;
-      --pr-slate-300: #CBD5E1;
-      --pr-slate-200: #E2E8F0;
-      --pr-slate-100: #F1F5F9;
-      --pr-slate-50:  #F8FAFC;
-      --pr-white:     #FFFFFF;
+      /* Palette: TDS (Training & Development System) Signature Palette */
+      /* Earth Ink, Royal Navy (#00178F), Deep Forest Moss (#3F5A44), Accent Gold (#B78628), Sand Panel (#FAF9F5) */
+      --tds-ink:             #00178F;
+      --tds-ink-soft:        #4A4F8F;
+      --tds-ink-faint:       #8D93C2;
+      --tds-earth-ink:       #1F2421;
+      --tds-forest-moss:     #3F5A44;
+      --tds-accent-gold:     #B78628;
+      --tds-accent:          #4B96FF;
+      --tds-sand-panel:      #FAF9F5;
 
-      --pr-primary:   #2563EB;
-      --pr-primary-hover: #1D4ED8;
-      --pr-primary-light: #EFF6FF;
+      /* Mapped to Performance Review Tokens */
+      --pr-navy-950:         #0B1021;
+      --pr-navy-900:         #00178F;          /* Signature TDS Royal Navy */
+      --pr-navy-800:         #1A2548;
+      --pr-navy-700:         #334170;
+      --pr-slate-500:        #4A4F8F;          /* Soft Navy */
+      --pr-slate-400:        #8D93C2;          /* Faint Navy */
+      --pr-slate-300:        #CAD3E8;
+      --pr-slate-200:        rgba(0, 23, 143, 0.11);
+      --pr-slate-100:        #EEF3FA;          /* Cool Paper */
+      --pr-slate-50:         #FAF9F5;          /* Signature TDS Sand Panel */
+      --pr-white:            #FFFFFF;
 
-      --pr-amber:     #D97706;
-      --pr-amber-light: #FEF3C7;
-      --pr-emerald:   #059669;
-      --pr-emerald-light: #ECFDF5;
-      --pr-rose:      #E11D48;
-      --pr-indigo:    #4F46E5;
+      --pr-primary:          #4B96FF;          /* TDS Cobalt Action Blue */
+      --pr-primary-hover:    #00178F;          /* Deep Royal Navy */
+      --pr-primary-light:    rgba(75, 150, 255, 0.10);
 
-      --font-main: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-      --font-mono: 'JetBrains Mono', monospace;
+      --pr-amber:            #B78628;          /* TDS Signature Accent Gold */
+      --pr-amber-light:      rgba(183, 134, 40, 0.12);
+      --pr-emerald:          #3F5A44;          /* TDS Deep Forest Moss */
+      --pr-emerald-light:    rgba(63, 90, 68, 0.12);
+      --pr-rose:             #D2483B;          /* TDS Danger / Clay */
+      --pr-indigo:           #00178F;          /* TDS Deep Navy */
+
+      --font-main:           'Inter', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      --font-mono:           'JetBrains Mono', monospace;
     }
 
     * {
@@ -45,16 +56,20 @@
 
     body {
       font-family: var(--font-main);
-      background-color: #F8FAFC;
-      color: var(--pr-navy-900);
+      background-color: #F8F9FA;
+      background-image:
+        radial-gradient(at 0% 0%, rgba(63, 90, 68, 0.05) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(183, 134, 40, 0.04) 0px, transparent 50%);
+      background-attachment: fixed;
+      color: #1F2421;
       line-height: 1.5;
       padding-bottom: 90px;
     }
 
     /* Simulation Control Bar */
     .sim-bar {
-      background: var(--pr-navy-900);
-      color: var(--pr-white);
+      background: #00178F;
+      color: #FFFFFF;
       padding: 12px 20px;
       display: flex;
       align-items: center;
@@ -64,8 +79,8 @@
       position: sticky;
       top: 0;
       z-index: 100;
-      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 4px 16px rgba(0, 23, 143, 0.2);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.14);
     }
     .sim-title {
       display: flex;
@@ -76,13 +91,13 @@
       letter-spacing: 0.3px;
     }
     .sim-badge {
-      background: rgba(37, 99, 235, 0.3);
-      color: #93C5FD;
+      background: rgba(0, 23, 143, 0.35);
+      color: #CAD3E8;
       padding: 3px 8px;
       border-radius: 6px;
       font-size: 11px;
       font-family: var(--font-mono);
-      border: 1px solid rgba(147, 197, 253, 0.25);
+      border: 1px solid rgba(202, 211, 232, 0.3);
     }
     .sim-actions {
       display: flex;
@@ -114,9 +129,9 @@
       box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4);
     }
     .sim-btn.approver-btn.active {
-      background: var(--pr-indigo);
-      border-color: var(--pr-indigo);
-      box-shadow: 0 2px 8px rgba(79, 70, 229, 0.4);
+      background: #B78628 !important;
+      border-color: #B78628 !important;
+      box-shadow: 0 2px 8px rgba(183, 134, 40, 0.4) !important;
     }
 
     /* Container */
@@ -128,17 +143,17 @@
 
     /* Countdown Banner (Quiet & Functional) */
     .pr-countdown-card {
-      background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%);
+      background: linear-gradient(135deg, #00178F 0%, #172E5A 60%, #1F3628 100%);
       border-radius: 14px;
       padding: 14px 20px;
-      color: var(--pr-white);
+      color: #FFFFFF;
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 16px;
       margin-bottom: 18px;
-      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.1);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 6px 20px rgba(0, 23, 143, 0.18);
+      border: 1px solid rgba(255, 255, 255, 0.12);
     }
     .pr-countdown-info {
       display: flex;
@@ -149,12 +164,12 @@
       width: 36px;
       height: 36px;
       border-radius: 8px;
-      background: rgba(37, 99, 235, 0.2);
-      border: 1px solid rgba(147, 197, 253, 0.3);
+      background: rgba(183, 134, 40, 0.2);
+      border: 1px solid rgba(183, 134, 40, 0.35);
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #93C5FD;
+      color: #E8BE65;
       flex-shrink: 0;
     }
     .pr-countdown-title {
@@ -182,7 +197,7 @@
     .pr-timer-num {
       font-size: 15px;
       font-weight: 700;
-      color: #60A5FA;
+      color: #F3CA65;
       line-height: 1;
     }
     .pr-timer-lbl {
@@ -522,14 +537,14 @@
       font-family: var(--font-mono);
     }
     .chip-complete {
-      background: #ECFDF5;
-      color: var(--pr-emerald);
-      border: 1px solid #A7F3D0;
+      background: rgba(63, 90, 68, 0.10);
+      color: var(--tds-forest-moss);
+      border: 1px solid rgba(63, 90, 68, 0.25);
     }
     .chip-incomplete {
-      background: #FEF3C7;
-      color: #D97706;
-      border: 1px solid #FCD34D;
+      background: rgba(183, 134, 40, 0.12);
+      color: var(--tds-accent-gold);
+      border: 1px solid rgba(183, 134, 40, 0.25);
     }
 
     /* Accordion Body */
@@ -593,9 +608,9 @@
       transform: translateY(-1px);
     }
     .pr-rate-btn.selected {
-      border-color: var(--pr-primary);
-      background: #EFF6FF;
-      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+      border-color: var(--tds-ink);
+      background: rgba(75, 150, 255, 0.10);
+      box-shadow: 0 0 0 2px rgba(0, 23, 143, 0.15);
     }
     .pr-rate-btn.selected .btn-score {
       color: var(--pr-primary);
@@ -695,7 +710,7 @@
     }
     .corner-ring-fg {
       fill: none;
-      stroke: #34D399;
+      stroke: #B78628;
       stroke-width: 3.5;
       stroke-dasharray: 75.4;
       stroke-dashoffset: 0;
@@ -853,8 +868,8 @@
       width: 54px;
       height: 54px;
       border-radius: 50%;
-      background: #EFF6FF;
-      color: var(--pr-primary);
+      background: rgba(0, 23, 143, 0.08);
+      color: var(--tds-ink);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -948,13 +963,13 @@
       display: none;
     }
     .hr-header-card {
-      background: linear-gradient(135deg, #1E1B4B 0%, #0F172A 100%);
+      background: linear-gradient(135deg, #00178F 0%, #1B2958 55%, #283C2C 100%);
       border-radius: 16px;
       padding: 22px 26px;
-      color: var(--pr-white);
+      color: #FFFFFF;
       margin-bottom: 20px;
-      box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.2);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 10px 28px -5px rgba(0, 23, 143, 0.25);
+      border: 1px solid rgba(255, 255, 255, 0.14);
     }
     .hr-header-top {
       display: flex;
@@ -978,7 +993,7 @@
     .hr-kpi-card .num {
       font-size: 22px;
       font-weight: 800;
-      color: #A5B4FC;
+      color: #E8BE65;
       font-family: var(--font-mono);
       margin-bottom: 2px;
     }
@@ -1045,14 +1060,14 @@
       font-size: 11px;
       font-weight: 600;
     }
-    .badge-ready { background: #EEF2FF; color: var(--pr-indigo); border: 1px solid #C7D2FE; }
-    .badge-waiting { background: #FEF3C7; color: var(--pr-amber); border: 1px solid #FDE68A; }
-    .badge-done { background: #ECFDF5; color: var(--pr-emerald); border: 1px solid #A7F3D0; }
+    .badge-ready { background: rgba(0, 23, 143, 0.08); color: var(--tds-ink); border: 1px solid rgba(0, 23, 143, 0.2); }
+    .badge-waiting { background: rgba(183, 134, 40, 0.12); color: var(--tds-accent-gold); border: 1px solid rgba(183, 134, 40, 0.25); }
+    .badge-done { background: rgba(63, 90, 68, 0.10); color: var(--tds-forest-moss); border: 1px solid rgba(63, 90, 68, 0.25); }
 
     /* Detail Calibration Modal / Box */
     .calibration-box {
-      background: var(--pr-slate-50);
-      border: 1.5px solid #C7D2FE;
+      background: var(--tds-sand-panel);
+      border: 1.5px solid rgba(0, 23, 143, 0.15);
       border-radius: 14px;
       padding: 20px;
       margin-top: 20px;
@@ -1095,7 +1110,7 @@
     }
     .calib-hr-section {
       background: #FFFFFF;
-      border: 1.5px solid #E0E7FF;
+      border: 1.5px solid rgba(0, 23, 143, 0.12);
       border-radius: 10px;
       padding: 18px;
       margin-top: 14px;
@@ -1191,8 +1206,8 @@
       align-items: center;
       gap: 6px;
       padding: 4px 10px;
-      background: #EFF6FF;
-      color: #1D4ED8;
+      background: rgba(0, 23, 143, 0.08);
+      color: var(--tds-ink);
       border-radius: 6px;
       font-size: 11px;
       font-weight: 700;
@@ -1303,9 +1318,9 @@
       transition: all 0.15s ease;
     }
     .shortcut-chip:hover {
-      background: #EFF6FF;
-      border-color: #BFDBFE;
-      color: #1D4ED8;
+      background: rgba(75, 150, 255, 0.12);
+      border-color: rgba(75, 150, 255, 0.4);
+      color: var(--tds-ink);
     }
     .shortcut-chip-danger {
       color: #DC2626;
@@ -1494,9 +1509,9 @@
       color: #FFFFFF;
     }
     .sim-emp-btn.active {
-      background: #2563EB;
+      background: var(--tds-ink);
       color: #FFFFFF;
-      border-color: #3B82F6;
+      border-color: var(--tds-accent);
       font-weight: 700;
     }
 
@@ -1525,17 +1540,17 @@
       user-select: none;
     }
     .pr-stacked-row:hover {
-      border-color: #93C5FD;
-      background: #F8FAFC;
+      border-color: rgba(75, 150, 255, 0.4);
+      background: var(--tds-sand-panel);
     }
     .pr-stacked-row:focus-visible {
       outline: 2px solid var(--pr-primary);
       outline-offset: 1px;
     }
     .pr-stacked-row.selected {
-      border-color: var(--pr-primary);
-      background: #EFF6FF;
-      box-shadow: 0 1px 4px rgba(37, 99, 235, 0.14);
+      border-color: var(--tds-ink);
+      background: rgba(75, 150, 255, 0.09);
+      box-shadow: 0 1px 4px rgba(0, 23, 143, 0.12);
     }
     .pr-stacked-radio {
       width: 18px;
@@ -1550,8 +1565,8 @@
       background: #FFFFFF;
     }
     .pr-stacked-row.selected .pr-stacked-radio {
-      border-color: var(--pr-primary);
-      background: var(--pr-primary);
+      border-color: var(--tds-ink);
+      background: var(--tds-ink);
     }
     .pr-stacked-radio-inner {
       width: 6px;
@@ -1575,8 +1590,8 @@
       flex-shrink: 0;
     }
     .pr-stacked-row.selected .pr-stacked-badge {
-      background: #DBEAFE;
-      color: #1D4ED8;
+      background: rgba(0, 23, 143, 0.10);
+      color: var(--tds-ink);
     }
     .pr-stacked-title {
       font-size: 13px;
@@ -1586,7 +1601,7 @@
       flex-shrink: 0;
     }
     .pr-stacked-row.selected .pr-stacked-title {
-      color: #1D4ED8;
+      color: var(--tds-ink);
     }
     .pr-stacked-desc {
       font-size: 12px;
@@ -1668,7 +1683,7 @@
       border-bottom: none;
     }
     .incomplete-item-row:hover {
-      background: #FEF3C7;
+      background: rgba(183, 134, 40, 0.08);
     }
     .incomplete-item-info {
       display: flex;
@@ -1679,7 +1694,7 @@
     .incomplete-item-cat {
       font-size: 10px;
       font-weight: 700;
-      color: #9A3412;
+      color: var(--tds-accent-gold);
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
@@ -1704,25 +1719,25 @@
       transition: all 0.15s ease;
     }
     .incomplete-item-row:hover .btn-jump-item {
-      background: #D97706;
-      border-color: #D97706;
+      background: var(--tds-accent-gold);
+      border-color: var(--tds-accent-gold);
       color: #FFFFFF;
     }
     @keyframes pulseHighlight {
       0% {
-        box-shadow: 0 0 0 0 rgba(217, 119, 6, 0.5);
+        box-shadow: 0 0 0 0 rgba(183, 134, 40, 0.5);
       }
       50% {
-        box-shadow: 0 0 0 10px rgba(217, 119, 6, 0);
+        box-shadow: 0 0 0 10px rgba(183, 134, 40, 0);
       }
       100% {
-        box-shadow: 0 0 0 0 rgba(217, 119, 6, 0);
+        box-shadow: 0 0 0 0 rgba(183, 134, 40, 0);
       }
     }
     .item-highlight-pulse {
       animation: pulseHighlight 1.5s ease-out 2 !important;
-      border-color: #F59E0B !important;
-      background: #FFFBEB !important;
+      border-color: var(--tds-accent-gold) !important;
+      background: rgba(183, 134, 40, 0.08) !important;
       transition: all 0.3s ease;
     }
     .btn-test-incomplete {
@@ -1759,24 +1774,24 @@
       box-shadow: 0 1px 2px rgba(0,0,0,0.03);
     }
     .btn-edit-emp-profile:hover {
-      background: #EFF6FF;
-      border-color: #93C5FD;
-      color: #1D4ED8;
+      background: rgba(75, 150, 255, 0.10);
+      border-color: rgba(75, 150, 255, 0.4);
+      color: var(--tds-ink);
     }
     .btn-sim-blank {
-      background: rgba(37, 99, 235, 0.2) !important;
-      border-color: rgba(96, 165, 250, 0.4) !important;
-      color: #93C5FD !important;
+      background: rgba(0, 23, 143, 0.25) !important;
+      border-color: rgba(75, 150, 255, 0.4) !important;
+      color: #CAD3E8 !important;
     }
     .btn-sim-blank:hover {
-      background: rgba(37, 99, 235, 0.35) !important;
+      background: rgba(0, 23, 143, 0.45) !important;
       color: #FFFFFF !important;
     }
     .btn-sim-blank.active {
-      background: #2563EB !important;
-      border-color: #3B82F6 !important;
+      background: var(--tds-ink) !important;
+      border-color: var(--tds-accent) !important;
       color: #FFFFFF !important;
-      box-shadow: 0 0 8px rgba(37, 99, 235, 0.4);
+      box-shadow: 0 0 8px rgba(0, 23, 143, 0.4);
     }
 
     /* ======================================================== */
@@ -1788,12 +1803,12 @@
       gap: 20px;
     }
     .leader-hero-card {
-      background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+      background: linear-gradient(135deg, #00178F 0%, #172D4D 55%, #253D2F 100%);
       border-radius: 14px;
       padding: 22px 24px;
       color: #FFFFFF;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      box-shadow: 0 4px 20px rgba(15, 23, 42, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      box-shadow: 0 6px 24px rgba(0, 23, 143, 0.2);
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
@@ -1804,9 +1819,9 @@
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      background: rgba(37, 99, 235, 0.25);
-      color: #93C5FD;
-      border: 1px solid rgba(147, 197, 253, 0.3);
+      background: rgba(183, 134, 40, 0.20);
+      color: #E8BE65;
+      border: 1px solid rgba(183, 134, 40, 0.35);
       padding: 4px 10px;
       border-radius: 6px;
       font-size: 11px;
@@ -1846,7 +1861,7 @@
       font-family: var(--font-mono);
       font-size: 14px;
       font-weight: 800;
-      color: #60A5FA;
+      color: #E8BE65;
     }
 
     /* Team KPI Grid */
@@ -1903,7 +1918,7 @@
     }
     .leader-progress-fill {
       height: 100%;
-      background: linear-gradient(90deg, #2563EB 0%, #059669 100%);
+      background: linear-gradient(90deg, #4B96FF 0%, #B78628 50%, #3F5A44 100%);
       border-radius: 100px;
       transition: width 0.4s ease;
     }
@@ -2002,19 +2017,19 @@
       width: fit-content;
     }
     .leader-status-done {
-      background: #ECFDF5;
-      color: #059669;
-      border: 1px solid #A7F3D0;
+      background: rgba(63, 90, 68, 0.10);
+      color: var(--tds-forest-moss);
+      border: 1px solid rgba(63, 90, 68, 0.25);
     }
     .leader-status-draft {
-      background: #FEF3C7;
-      color: #D97706;
-      border: 1px solid #FCD34D;
+      background: rgba(183, 134, 40, 0.12);
+      color: var(--tds-accent-gold);
+      border: 1px solid rgba(183, 134, 40, 0.25);
     }
     .leader-status-empty {
       background: #F1F5F9;
-      color: #64748B;
-      border: 1px solid #E2E8F0;
+      color: var(--tds-ink-soft);
+      border: 1px solid var(--pr-slate-200);
     }
 
     .leader-card-metrics {
@@ -2052,28 +2067,28 @@
       border: none;
     }
     .btn-eval-done {
-      background: var(--pr-slate-100);
-      color: var(--pr-navy-900);
-      border: 1px solid var(--pr-slate-300);
+      background: var(--tds-sand-panel);
+      color: var(--tds-forest-moss);
+      border: 1px solid var(--tds-forest-moss);
     }
     .btn-eval-done:hover {
-      background: var(--pr-slate-200);
+      background: rgba(63, 90, 68, 0.12);
     }
     .btn-eval-draft {
-      background: #D97706;
+      background: var(--tds-accent-gold);
       color: #FFFFFF;
-      box-shadow: 0 2px 8px rgba(217, 119, 6, 0.25);
+      box-shadow: 0 2px 8px rgba(183, 134, 40, 0.25);
     }
     .btn-eval-draft:hover {
-      background: #B45309;
+      background: #966C1E;
     }
     .btn-eval-empty {
-      background: var(--pr-primary);
+      background: var(--tds-ink);
       color: #FFFFFF;
-      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+      box-shadow: 0 2px 8px rgba(0, 23, 143, 0.25);
     }
     .btn-eval-empty:hover {
-      background: var(--pr-primary-hover);
+      background: #00126E;
     }
 
     /* Breadcrumb / Return to Leader Hub Banner */
@@ -2104,14 +2119,14 @@
       transition: all 0.15s ease;
     }
     .btn-return-hub:hover {
-      background: #EFF6FF;
-      border-color: #93C5FD;
-      color: #1D4ED8;
+      background: rgba(75, 150, 255, 0.10);
+      border-color: rgba(75, 150, 255, 0.4);
+      color: var(--tds-ink);
     }
     .sim-btn.leader-hub-btn.active {
-      background: #059669 !important;
-      border-color: #059669 !important;
-      box-shadow: 0 2px 8px rgba(5, 150, 105, 0.4) !important;
+      background: #3F5A44 !important;
+      border-color: #3F5A44 !important;
+      box-shadow: 0 2px 8px rgba(63, 90, 68, 0.4) !important;
     }
 
     /* Modal Kustomisasi Leader Team */
@@ -2148,9 +2163,9 @@
       border-color: #F87171;
     }
     .btn-add-member {
-      background: #EFF6FF;
-      color: #1D4ED8;
-      border: 1.5px dashed #93C5FD;
+      background: rgba(75, 150, 255, 0.08);
+      color: var(--tds-ink);
+      border: 1.5px dashed rgba(0, 23, 143, 0.25);
       padding: 8px 14px;
       border-radius: 8px;
       font-size: 12px;
@@ -2165,8 +2180,8 @@
       margin-top: 4px;
     }
     .btn-add-member:hover {
-      background: #DBEAFE;
-      border-color: #3B82F6;
+      background: rgba(75, 150, 255, 0.16);
+      border-color: var(--tds-accent);
     }
   </style>
 </head>
@@ -2175,7 +2190,7 @@
   <!-- Top Simulation Toolbar -->
   <header class="sim-bar">
     <div class="sim-title">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#60A5FA" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4B96FF" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
       <span>TDS Performance Review Preview</span>
       <span class="sim-badge">Executive &amp; Confidential</span>
     </div>
@@ -2243,7 +2258,7 @@
         <div class="dir-token-tester">
           <div class="dir-tester-header">
             <span class="dir-tester-lbl">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#00178F" stroke-width="2.2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
               Coba Buka Kunci Formulir dengan Cryptic Code:
             </span>
             <span style="font-size: 11px; color: var(--pr-slate-500);">Simulasi Autentikasi Penilai</span>
@@ -2267,7 +2282,7 @@
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
               <span>Anita Wijaya (PR26-7319)</span>
             </button>
-            <button type="button" class="shortcut-chip" style="background:#EFF6FF; border-color:#93C5FD; color:#1D4ED8; font-weight:700;" onclick="quickFillToken('PR26-BLANK')">
+            <button type="button" class="shortcut-chip" style="background:rgba(75, 150, 255, 0.10); border-color:rgba(75, 150, 255, 0.35); color:#00178F; font-weight:700;" onclick="quickFillToken('PR26-BLANK')">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
               <span>✨ Template Kosong (PR26-BLANK)</span>
             </button>
@@ -2285,7 +2300,7 @@
       <section class="dir-division-section">
         <div class="dir-division-header">
           <div class="dir-division-title">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00178F" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
             Divisi Technology &amp; Engineering
           </div>
           <span class="dir-division-badge">1 Karyawan Terdaftar</span>
@@ -2332,7 +2347,7 @@
       <section class="dir-division-section">
         <div class="dir-division-header">
           <div class="dir-division-title">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3F5A44" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
             Divisi Finance &amp; Accounting
           </div>
           <span class="dir-division-badge">1 Karyawan Terdaftar</span>
@@ -2379,17 +2394,17 @@
       <section class="dir-division-section" style="border: 2px dashed #93C5FD; background: #F8FAFC;">
         <div class="dir-division-header" style="border-bottom-color: #E2E8F0;">
           <div class="dir-division-title" style="color: var(--pr-primary);">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00178F" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
             Uji Coba: Lembar Evaluasi Kosong (Real Employee Dummy)
           </div>
-          <span class="dir-division-badge" style="background: #EFF6FF; color: #1D4ED8; font-weight:700;">Template Kosong Tersedia</span>
+          <span class="dir-division-badge" style="background: rgba(0, 23, 143, 0.08); color: #00178F; font-weight:700;">Template Kosong Tersedia</span>
         </div>
 
         <div class="dir-cards-grid">
-          <article class="dir-card" style="border-color: #BFDBFE; background: #FFFFFF;">
+          <article class="dir-card" style="border-color: rgba(0, 23, 143, 0.2); background: #FAF9F5;">
             <div>
               <div class="dir-card-top">
-                <div class="dir-avatar" id="dirCustomAvatarDisplay" style="background: #2563EB;">✨</div>
+                <div class="dir-avatar" id="dirCustomAvatarDisplay" style="background: #00178F;">✨</div>
                 <div class="dir-card-info">
                   <div class="dir-card-name" id="dirCustomNameDisplay">Formulir Evaluasi Kosong (Custom Karyawan)</div>
                   <div class="dir-card-role" id="dirCustomRoleDisplay">Bebas diisi untuk nama, NIK, dan divisi karyawan riil Anda</div>
@@ -2402,18 +2417,18 @@
             </div>
 
             <!-- Cryptic Code Box -->
-            <div class="cryptic-box" style="background:#EFF6FF; border-color:#BFDBFE;">
+            <div class="cryptic-box" style="background:rgba(75, 150, 255, 0.08); border-color:rgba(0, 23, 143, 0.2);">
               <div class="cryptic-meta">
                 <span class="cryptic-lbl">Cryptic Access Code:</span>
-                <span class="cryptic-code" style="color:#1D4ED8;">PR26-BLANK</span>
+                <span class="cryptic-code" style="color:#00178F;">PR26-BLANK</span>
               </div>
-              <span class="dir-lock-status" style="background:#DBEAFE; color:#1E40AF;">
+              <span class="dir-lock-status" style="background:rgba(0, 23, 143, 0.08); color:#00178F;">
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                 Siap Dibuka
               </span>
             </div>
 
-            <button class="btn-card-unlock" style="background:#2563EB;" onclick="unlockAndOpenEmployee('PR26-BLANK')">
+            <button class="btn-card-unlock" style="background:#00178F;" onclick="unlockAndOpenEmployee('PR26-BLANK')">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
               <span>Buka Template Kosong (PR26-BLANK)</span>
             </button>
@@ -2476,27 +2491,27 @@
       </section>
 
       <!-- Template Kosong Active Banner -->
-      <div id="blankEmployeeBanner" style="display:none; background: #EFF6FF; border: 1.5px solid #BFDBFE; border-radius: 12px; padding: 12px 18px; margin-bottom: 16px; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+      <div id="blankEmployeeBanner" style="display:none; background: #FAF9F5; border: 1.5px solid rgba(0, 23, 143, 0.18); border-radius: 12px; padding: 12px 18px; margin-bottom: 16px; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
         <div style="display: flex; align-items: center; gap: 12px;">
-          <div style="width: 36px; height: 36px; border-radius: 9px; background: #2563EB; color: #FFF; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0;">
+          <div style="width: 36px; height: 36px; border-radius: 9px; background: #00178F; color: #FFF; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0;">
             ✨
           </div>
           <div>
-            <div style="font-size: 13.5px; font-weight: 800; color: #1E3A8A; display: flex; align-items: center; gap: 8px;">
+            <div style="font-size: 13.5px; font-weight: 800; color: #00178F; display: flex; align-items: center; gap: 8px;">
               <span>Mode Uji Coba: Template Formulir Kosong (0/13 Terisi)</span>
-              <span style="font-size: 10.5px; font-weight: 700; background: #DBEAFE; color: #1D4ED8; padding: 2px 7px; border-radius: 4px; font-family: var(--font-mono);">PR26-BLANK</span>
+              <span style="font-size: 10.5px; font-weight: 700; background: rgba(0, 23, 143, 0.08); color: #00178F; padding: 2px 7px; border-radius: 4px; font-family: var(--font-mono);">PR26-BLANK</span>
             </div>
-            <div style="font-size: 12px; color: #3B82F6; margin-top: 2px;">
+            <div style="font-size: 12px; color: #4A4F8F; margin-top: 2px;">
               Formulir ini dalam kondisi bersih (semua butir bernilai 0). Anda dapat mengganti identitas dengan <strong>karyawan riil di perusahaan Anda</strong> dan memilih preset kompetensinya.
             </div>
           </div>
         </div>
         <div style="display: flex; align-items: center; gap: 8px;">
-          <button type="button" onclick="openEditEmployeeModal()" style="background: #2563EB; color: #FFFFFF; border: none; padding: 8px 14px; border-radius: 7px; font-size: 12px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(37,99,235,0.25);">
+          <button type="button" onclick="openEditEmployeeModal()" style="background: #00178F; color: #FFFFFF; border: none; padding: 8px 14px; border-radius: 7px; font-size: 12px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(0,23,143,0.25);">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
             <span>Ubah Data Karyawan &amp; Divisi</span>
           </button>
-          <button type="button" onclick="resetBlankFormToZero()" style="background: #FFFFFF; color: #1E40AF; border: 1px solid #BFDBFE; padding: 8px 12px; border-radius: 7px; font-size: 12px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;">
+          <button type="button" onclick="resetBlankFormToZero()" style="background: #FFFFFF; color: #00178F; border: 1px solid rgba(0, 23, 143, 0.2); padding: 8px 12px; border-radius: 7px; font-size: 12px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
             <span>Reset ke 0</span>
           </button>
@@ -2514,7 +2529,7 @@
             Mode Penilaian Tim: <strong id="leaderNavEmpName" style="color:var(--pr-navy-900);">Dimas Ardiansyah</strong> &bull; Divisi Technology &amp; Engineering
           </span>
         </div>
-        <div style="font-size: 11.5px; font-weight: 700; color: #059669; background: #ECFDF5; border: 1px solid #A7F3D0; padding: 4px 10px; border-radius: 6px;">
+        <div style="font-size: 11.5px; font-weight: 700; color: #3F5A44; background: rgba(63, 90, 68, 0.10); border: 1px solid rgba(63, 90, 68, 0.25); padding: 4px 10px; border-radius: 6px;">
           Tim Engineering (4 Anggota)
         </div>
       </div>
@@ -2959,7 +2974,7 @@
 
     <!-- Screen 3: SIMULASI SUDAH DISUBMIT (SUBMITTED & ONE-TIME LOCK) -->
     <div id="screenSubmitted" class="state-screen">
-      <div class="state-icon-box" style="background:#ECFDF5; color:#059669;">
+      <div class="state-icon-box" style="background:rgba(63, 90, 68, 0.12); color:#3F5A44;">
         <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
       </div>
       <h2>Evaluasi Telah Berhasil Diserahkan</h2>
@@ -2969,7 +2984,7 @@
           <span>Waktu Submit:</span>
           <strong>13 Okt 2026, 19:45 WIB</strong>
           <span>• Status:</span>
-          <strong style="color:#059669">COMPLETED & LOCKED</strong>
+          <strong style="color:#3F5A44">COMPLETED & LOCKED</strong>
         </div>
       </div>
       <p style="font-size:12.5px; color:var(--pr-slate-400);">Hasil kompilasi dan skor akhir akan dikalibrasi oleh HR di portal approver sebelum dirilis resmi.</p>
@@ -2982,7 +2997,7 @@
       <section class="hr-header-card">
         <div class="hr-header-top">
           <div>
-            <div style="font-size:11.5px; color:#A5B4FC; text-transform:uppercase; font-weight:700; letter-spacing:1px; margin-bottom:3px;">
+            <div style="font-size:11.5px; color:#CAD3E8; text-transform:uppercase; font-weight:700; letter-spacing:1px; margin-bottom:3px;">
               Executive HR Portal • TDS Approver Hub
             </div>
             <h2 style="font-size:20px; font-weight:800; color:#FFFFFF;">Monitoring & Kalibrasi Nilai PR 2026</h2>
@@ -3047,7 +3062,7 @@
                   <div style="font-size:11px; color:var(--pr-slate-500)">Lead System Architect</div>
                 </td>
                 <td>
-                  <span style="font-family:var(--font-mono); font-size:11px; font-weight:700; background:#EFF6FF; color:#1D4ED8; padding:3px 7px; border-radius:4px;">PR26-8492</span>
+                  <span style="font-family:var(--font-mono); font-size:11px; font-weight:700; background:rgba(75, 150, 255, 0.10); color:#00178F; padding:3px 7px; border-radius:4px;">PR26-8492</span>
                 </td>
                 <td>Budi Pratama</td>
                 <td><span class="badge-status badge-done"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Selesai (96.0)</span></td>
@@ -3070,7 +3085,7 @@
                   <div style="font-size:11px; color:var(--pr-slate-500)">Senior Financial Analyst</div>
                 </td>
                 <td>
-                  <span style="font-family:var(--font-mono); font-size:11px; font-weight:700; background:#ECFDF5; color:#065F46; padding:3px 7px; border-radius:4px;">PR26-7319</span>
+                  <span style="font-family:var(--font-mono); font-size:11px; font-weight:700; background:rgba(63, 90, 68, 0.12); color:#3F5A44; padding:3px 7px; border-radius:4px;">PR26-7319</span>
                 </td>
                 <td>Ratna Dewi</td>
                 <td><span class="badge-status badge-done"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Selesai (98.0)</span></td>
@@ -3083,7 +3098,7 @@
                   </button>
                 </td>
               </tr>
-              <tr id="hrRowBlank" style="border-left: 3px solid #2563EB;">
+              <tr id="hrRowBlank" style="border-left: 3px solid #00178F;">
                 <td>
                   <strong id="hrBlankName">Ahmad Fauzi (Custom)</strong>
                   <div style="font-size:11px; color:var(--pr-slate-500)" id="hrBlankNik">NIK: EMP-2026-NEW</div>
@@ -3093,12 +3108,12 @@
                   <div style="font-size:11px; color:var(--pr-slate-500)" id="hrBlankRole">Digital Marketing Specialist</div>
                 </td>
                 <td>
-                  <span style="font-family:var(--font-mono); font-size:11px; font-weight:700; background:#DBEAFE; color:#1E40AF; padding:3px 7px; border-radius:4px;">PR26-BLANK</span>
+                  <span style="font-family:var(--font-mono); font-size:11px; font-weight:700; background:rgba(0, 23, 143, 0.08); color:#00178F; padding:3px 7px; border-radius:4px;">PR26-BLANK</span>
                 </td>
                 <td id="hrBlankLeader">Siti Rahma</td>
                 <td><span class="badge-status" id="hrBlankStatusLeader" style="background:#FEF3C7; color:#92400E;">Dalam Pengisian</span></td>
                 <td><span class="badge-status" style="background:#F1F5F9; color:#475569;">Belum Dimulai</span></td>
-                <td><span class="badge-status" style="background:#EFF6FF; color:#1D4ED8;">Template Kosong</span></td>
+                <td><span class="badge-status" style="background:rgba(75, 150, 255, 0.10); color:#00178F;">Template Kosong</span></td>
                 <td>
                   <button onclick="loadApproverCalibration('PR26-BLANK')" style="background:var(--pr-primary); color:#FFF; border:none; padding:6px 12px; border-radius:6px; font-size:11px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:5px;">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
@@ -3136,7 +3151,7 @@
         <div class="calibration-box">
           <div class="calib-header">
             <div>
-              <span id="calibTag" style="font-size:10.5px; font-weight:700; background:#E0E7FF; color:#4338CA; padding:3px 7px; border-radius:4px; font-family:var(--font-mono)">
+              <span id="calibTag" style="font-size:10.5px; font-weight:700; background:rgba(0, 23, 143, 0.08); color:#00178F; padding:3px 7px; border-radius:4px; font-family:var(--font-mono)">
                 PANEL KALIBRASI HR #PR26-8492
               </span>
               <h3 id="calibEmpName" style="font-size:16px; font-weight:800; color:var(--pr-navy-900); margin-top:3px;">
@@ -3320,7 +3335,7 @@
       <section>
         <div class="leader-members-header">
           <div class="leader-members-title">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00178F" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
             <span id="leaderMembersTitleHeader">Daftar Anggota Tim yang Wajib Dinilai (4 Orang)</span>
           </div>
           <button type="button" class="btn-edit-emp-profile" onclick="openEditLeaderTeamModal()">
@@ -3343,7 +3358,7 @@
     <div class="pr-modal" style="max-width: 540px; text-align: left;">
       <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 14px;">
         <div>
-          <div style="font-size: 11px; font-weight: 700; color: #2563EB; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">
+          <div style="font-size: 11px; font-weight: 700; color: #00178F; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">
             Simulasi Karyawan Perusahaan Anda
           </div>
           <h3 style="margin: 0; font-size: 18px; color: var(--pr-navy-900);">Atur Data Karyawan yang Dinilai</h3>
@@ -3427,14 +3442,14 @@
 
         <div style="background: #F8FAFC; border: 1px solid var(--pr-slate-200); border-radius: 8px; padding: 10px 12px; margin-top: 4px;">
           <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--pr-slate-700); cursor: pointer; user-select: none;">
-            <input type="checkbox" id="chkResetScores" checked style="width: 15px; height: 15px; accent-color: #2563EB;">
+            <input type="checkbox" id="chkResetScores" checked style="width: 15px; height: 15px; accent-color: #00178F;">
             <span>Kosongkan semua skor penilaian (0/13) agar siap diisi dari awal</span>
           </label>
         </div>
 
         <div class="pr-modal-btns" style="margin-top: 10px;">
           <button type="button" class="btn-modal-cancel" onclick="closeEditEmployeeModal()">Batal</button>
-          <button type="submit" class="btn-modal-confirm" style="background: #2563EB; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);">
+          <button type="submit" class="btn-modal-confirm" style="background: #00178F; box-shadow: 0 4px 12px rgba(0, 23, 143, 0.25);">
             Terapkan ke Formulir &rarr;
           </button>
         </div>
@@ -3447,7 +3462,7 @@
     <div class="pr-modal" style="max-width: 680px; text-align: left;">
       <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 14px;">
         <div>
-          <div style="font-size: 11px; font-weight: 700; color: #059669; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">
+          <div style="font-size: 11px; font-weight: 700; color: #3F5A44; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">
             Simulasi Multi-Anggota
           </div>
           <h3 style="margin: 0; font-size: 18px; color: var(--pr-navy-900);">Kustomisasi Data Leader &amp; Anggota Tim</h3>
@@ -3516,7 +3531,7 @@
 
         <div class="pr-modal-btns" style="margin-top: 10px;">
           <button type="button" class="btn-modal-cancel" onclick="closeEditLeaderTeamModal()">Batal</button>
-          <button type="submit" class="btn-modal-confirm" style="background: #059669; box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);">
+          <button type="submit" class="btn-modal-confirm" style="background: #3F5A44; box-shadow: 0 4px 12px rgba(63, 90, 68, 0.25);">
             Terapkan ke Dashboard Tim &rarr;
           </button>
         </div>
@@ -3528,7 +3543,7 @@
   <div class="pr-modal-overlay" id="incompleteModal">
     <div class="pr-modal" style="max-width: 520px; text-align: left;">
       <div style="display: flex; align-items: flex-start; gap: 14px; margin-bottom: 14px;">
-        <div class="pr-modal-icon" style="background: #FEF3C7; color: #D97706; margin: 0; flex-shrink: 0;">
+        <div class="pr-modal-icon" style="background: rgba(183, 134, 40, 0.12); color: #B78628; margin: 0; flex-shrink: 0;">
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
             <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
             <line x1="12" y1="9" x2="12" y2="13"/>
@@ -3552,13 +3567,13 @@
       </div>
 
       <div style="background: #F8FAFC; border: 1px solid var(--pr-slate-200); border-radius: 8px; padding: 10px 12px; margin-bottom: 18px; font-size: 11.5px; color: var(--pr-slate-600); display: flex; align-items: center; gap: 8px;">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#00178F" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
         <span>Klik pada salah satu butir di atas untuk langsung menuju ke pertanyaan tersebut.</span>
       </div>
 
       <div class="pr-modal-btns">
         <button class="btn-modal-cancel" onclick="closeIncompleteModal()">Tutup &amp; Cek Dulu</button>
-        <button class="btn-modal-confirm" id="btnJumpFirstIncomplete" onclick="jumpToFirstIncomplete()" style="background: #D97706; box-shadow: 0 4px 12px rgba(217, 119, 6, 0.25);">
+        <button class="btn-modal-confirm" id="btnJumpFirstIncomplete" onclick="jumpToFirstIncomplete()" style="background: #B78628; box-shadow: 0 4px 12px rgba(183, 134, 40, 0.25);">
           Lengkapi Butir Pertama &rarr;
         </button>
       </div>
@@ -3727,7 +3742,7 @@
         nik: "EMP-2026-NEW",
         nama: "Ahmad Fauzi (Custom Karyawan)",
         avatar: "AF",
-        avatarBg: "#2563EB",
+        avatarBg: "#00178F",
         divisi: "Sales & Marketing",
         jabatan: "Digital Marketing Specialist",
         evaluator: "Siti Rahma, S.Kom",
@@ -3829,7 +3844,7 @@
         nik: "EMP-2025-031",
         nama: "Rian Pratama",
         avatar: "RP",
-        avatarBg: "#D97706",
+        avatarBg: "#B78628",
         divisi: "Technology & Engineering",
         jabatan: "DevOps & Cloud Engineer",
         evaluator: "Budi Pratama, M.Kom",
@@ -4121,8 +4136,8 @@
 
       if (employeesData[val]) {
         fb.style.display = 'block';
-        fb.style.background = '#ECFDF5';
-        fb.style.color = '#065F46';
+        fb.style.background = 'rgba(63, 90, 68, 0.10)';
+        fb.style.color = '#3F5A44';
         fb.innerHTML = '<span style="display:inline-flex;align-items:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> <span><strong>Autentikasi Berhasil</strong> &bull; Membuka lembar evaluasi ' + employeesData[val].nama + '...</span></span>';
         setTimeout(() => {
           fb.style.display = 'none';
@@ -4417,9 +4432,9 @@
         const btn = document.querySelector('.btn-test-incomplete');
         if (btn) {
           btn.innerHTML = '🔄 Pulihkan Semua Terisi (100%)';
-          btn.style.background = '#ECFDF5';
-          btn.style.borderColor = '#A7F3D0';
-          btn.style.color = '#065F46';
+          btn.style.background = 'rgba(63, 90, 68, 0.10)';
+          btn.style.borderColor = 'rgba(63, 90, 68, 0.3)';
+          btn.style.color = '#3F5A44';
         }
       } else {
         // Pulihkan nilai semula
@@ -4435,9 +4450,9 @@
         const btn = document.querySelector('.btn-test-incomplete');
         if (btn) {
           btn.innerHTML = '⚡ Tes: Kosongkan 3 Butir';
-          btn.style.background = '#FEF3C7';
-          btn.style.borderColor = '#FCD34D';
-          btn.style.color = '#92400E';
+          btn.style.background = 'rgba(183, 134, 40, 0.10)';
+          btn.style.borderColor = 'rgba(183, 134, 40, 0.3)';
+          btn.style.color = '#B78628';
         }
       }
     }
@@ -4457,7 +4472,7 @@
         rA.style.background = (token === 'PR26-7319') ? '#F0FDF4' : '#FFFFFF';
       }
       if (rB) {
-        rB.style.background = (token === 'PR26-BLANK') ? '#EFF6FF' : '#FFFFFF';
+        rB.style.background = (token === 'PR26-BLANK') ? 'rgba(75, 150, 255, 0.10)' : '#FFFFFF';
       }
 
       const tag = document.getElementById('calibTag');
@@ -4617,7 +4632,7 @@
       const container = document.getElementById('leaderMemberGridContainer');
       if (!container) return;
 
-      const avatarColors = ["#0F172A", "#4F46E5", "#0D9488", "#D97706", "#2563EB", "#7C3AED", "#DB2777"];
+      const avatarColors = ["#00178F", "#3F5A44", "#B78628", "#4B96FF", "#1F2421", "#FF708C", "#4A4F8F"];
 
       let cardsHtml = '';
       leaderTeamConfig.members.forEach((m, idx) => {
@@ -4632,7 +4647,7 @@
           badgeHtml = '<div class="leader-status-badge leader-status-done"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span>Selesai Diserahkan (13/13)</span></div>';
           buttonHtml = '<button type="button" class="btn-evaluate-member btn-eval-done" onclick="openEmployeeFromLeaderHub(\'' + m.token + '\')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span>Lihat / Periksa Evaluasi ' + m.name.split(' ')[0] + '</span></button>';
         } else if (m.status === 'draft') {
-          borderStyle = 'border-color: #FCD34D;';
+          borderStyle = 'border-color: rgba(183, 134, 40, 0.4);';
           badgeHtml = '<div class="leader-status-badge leader-status-draft"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span>Draf Tersimpan (' + (m.compFilled + m.coreFilled) + '/13 Butir)</span></div>';
           buttonHtml = '<button type="button" class="btn-evaluate-member btn-eval-draft" onclick="openEmployeeFromLeaderHub(\'' + m.token + '\')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg><span>Lanjutkan Penilaian ' + m.name.split(' ')[0] + ' (' + (m.compFilled + m.coreFilled) + '/13) &rarr;</span></button>';
         } else {
@@ -4657,15 +4672,15 @@
               <div class="leader-card-metrics">
                 <div>
                   <span class="leader-metric-lbl">Kompetensi:</span>
-                  <div class="leader-metric-val" style="color:${m.compFilled > 0 ? '#059669' : 'var(--pr-slate-400)'};">${m.compFilled} / 6 Terisi</div>
+                  <div class="leader-metric-val" style="color:${m.compFilled > 0 ? '#3F5A44' : 'var(--pr-slate-400)'};">${m.compFilled} / 6 Terisi</div>
                 </div>
                 <div>
                   <span class="leader-metric-lbl">ELASTIC Core:</span>
-                  <div class="leader-metric-val" style="color:${m.coreFilled > 0 ? '#059669' : 'var(--pr-slate-400)'};">${m.coreFilled} / 7 Terisi</div>
+                  <div class="leader-metric-val" style="color:${m.coreFilled > 0 ? '#3F5A44' : 'var(--pr-slate-400)'};">${m.coreFilled} / 7 Terisi</div>
                 </div>
                 <div style="grid-column: 1 / -1;">
                   <span class="leader-metric-lbl">Ulasan 360&deg;:</span>
-                  <div class="leader-metric-val" style="color:${m.feedbackStatus !== 'Belum Diisi' ? '#059669' : 'var(--pr-slate-400)'};">${m.feedbackStatus}</div>
+                  <div class="leader-metric-val" style="color:${m.feedbackStatus !== 'Belum Diisi' ? '#3F5A44' : 'var(--pr-slate-400)'};">${m.feedbackStatus}</div>
                 </div>
               </div>
             </div>
@@ -4798,7 +4813,7 @@
             nik: nik,
             nama: name,
             avatar: avatar,
-            avatarBg: '#2563EB',
+            avatarBg: '#00178F',
             divisi: division,
             jabatan: role,
             evaluator: leaderName,

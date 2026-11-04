@@ -224,6 +224,17 @@ sequenceDiagram
 3. **Sinkronisasi Multi-Screen**:
    - Data karyawan kustom tersinkronisasi otomatis ke kartu Direktori Divisi, Lembar Form Aktif, Banner Khusus, dan Tabel Monitoring di Portal Approver HR.
 
+### 4.6. Manajemen Kamus Kompetensi HR (Skema Hybrid Opsi A+B)
+1. **Kewenangan Eksklusif HR (Fase Pra-Siklus / Tahap 0)**:
+   - Bagian I (Kompetensi Jabatan, bobot 60%) dikontrol penuh oleh People Operations (HR).
+   - Atasan tidak dapat mengubah butir kompetensi peran; atasan hanya bertugas menilai perilaku berdasarkan standar yang telah ditetapkan HR.
+   - Bagian II (7 Pilar Budaya ELASTIC, bobot 40%) tetap bersifat baku dan seragam untuk seluruh karyawan.
+2. **Skema Kerja Dua Pintu (Single Source of Truth: `PR_Matrix_Kompetensi`)**:
+   - **Pintu A (Portal Web Admin HR)**: Form interaktif untuk menambah jabatan baru, merevisi butir kompetensi, atau memperbarui deskripsi operasional skala 1–4 secara langsung dengan validasi form.
+   - **Pintu B (Google Spreadsheet `PR_Matrix_Kompetensi`)**: Pengisian langsung di baris spreadsheet untuk *bulk input* atau menyalin matriks kompetensi massal dari file Excel organisasi saat inisiasi awal tahun.
+3. **Dinamisasi Tampilan Evaluator**:
+   - Saat evaluator membuka token karyawan, sistem mencocokkan `Jabatan_Karyawan` dengan `Role_Key` di sheet matriks, lalu me-load 6 butir kompetensi yang relevan secara otomatis dan real-time.
+
 ---
 
 ## 5. Manifestasi File & Perubahan Kode (File Manifest)
